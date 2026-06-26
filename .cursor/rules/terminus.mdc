@@ -1,0 +1,91 @@
+---
+alwaysApply: true
+---
+
+# Snorkel Terminus / Harbor Task Rules
+
+When helping me with this project, follow these rules.
+
+## instruction.md style
+
+* Do not write instruction.md in a polished AI/GPT style.
+* Keep my wording and tone as much as possible.
+* Do not use “You are an expert programmer…” or similar synthetic language.
+* Do not add emojis.
+* Do not add heavy markdown, long bullet lists, or long sections.
+* Keep the instruction short and natural, like a real engineer asking a coding agent for help.
+* Length should sit between one sentence and three short paragraphs.
+* Give the agent the goal and requirements, but do not give step-by-step solution hints.
+* Use absolute paths for any file paths.
+* No canary string in instruction.md (it means an old skeleton was used).
+* The task should be interesting/useful and noticeably unique from Terminal-Bench 2/3 and Terminus Edition 1.
+* If my wording is unclear, ask me instead of inventing details.
+* Do not rewrite everything from scratch unless I ask.
+* Light grammar cleanup is okay, but my writing should still sound like me.
+
+## Task files
+
+Follow the Terminus/Harbor format:
+
+* instruction.md
+* task.toml
+* environment/Dockerfile or environment/docker-compose.yaml
+* solution/solve.sh
+* tests/test.sh
+* tests/test_outputs.py
+
+For milestone tasks the layout is different (per-milestone `steps/milestone_N/` with its own solution and tests) — ask me before assuming a milestone layout.
+
+## task.toml rules
+
+* Include all required metadata: difficulty, category/task_type, subcategories (empty if none), number_of_milestones (0 if none), codebase_size, languages, tags (3-6 keywords).
+* Set difficulty from the measured accuracy over 5 runs on the two frontier models, not a guess.
+* Set allow_internet = false under [environment].
+* Declare realistic cpus, memory_mb, storage_mb, and agent/verifier/build timeouts. The oracle must pass within them.
+
+## Dockerfile rules
+
+* Keep environment files inside environment/.
+* Digest-pin every FROM (and any compose image:) with @sha256. No floating tags.
+* Use a sanctioned/canonical Terminal-Bench base image for the final runtime stage; if non-canonical, add a short written justification in the Dockerfile or README.md.
+* Install tmux and asciinema — the agent runtime needs both or all runs fail.
+* Pin application dependency versions (pip, npm, apt, etc.) and pin any downloaded binary by version + sha256.
+* Include a .dockerignore for any non-trivial task; prefer narrow `COPY src/ src/` over `COPY . .`.
+* Keep environment/ at or below 100 MiB total and 50 MiB per file.
+* Store source as real files, not heredocs. Do not run apt-get upgrade.
+* Use multi-stage builds to keep build tools out of the runtime image, unless the task itself requires the agent to compile.
+* Do not copy solution/ or tests/ into the Docker image.
+* Do not use privileged mode.
+* Include required runtime tools if needed by the task environment.
+* Keep dependencies reproducible.
+
+## solution/solve.sh rules
+
+* The oracle solution must be deterministic.
+* The solution should be human-written; minimal LLM help for syntax is okay.
+* Do not hardcode the final answer.
+* Show the command sequence that solves the task.
+* Use set -e where appropriate.
+* Do not rely on internet access during the oracle run.
+
+## tests rules
+
+* tests/test.sh is required.
+* tests/test.sh must run Python pytest tests (even for non-Python tasks — drive the CLI/service/files from pytest).
+* tests/test.sh must write /logs/verifier/reward.txt (always, including on failure/error).
+* The reward if/else/fi block is the canonical end of test.sh — do not add a trailing exit after it (check_test_sh fails on this).
+* Do not install packages or download anything inside tests/test.sh.
+* Put test dependencies in the Dockerfile.
+* Every test needs an informative docstring (CI checks this).
+* Tests must pass ruff lint.
+* Tests should check behavior and final correctness, not just source-code text patterns.
+* No order-dependent tests and no hardcoded random values (seed or assert on properties).
+* Tests must match what instruction.md asks for, and everything tested must be stated or clearly implied in instruction.md.
+* Do not test requirements that are not stated or clearly implied in instruction.md.
+
+## General behavior
+
+* Explain important changes before making them.
+* Do not make the task hard only by adding too many edge cases.
+* Keep the task multi-step and terminal/environment based.
+* If something may violate Terminus rules, warn me before editing.

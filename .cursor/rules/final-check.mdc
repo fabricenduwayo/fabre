@@ -1,0 +1,520 @@
+---
+alwaysApply: true
+---
+
+---
+description: Snorkel Terminus / Harbor task creation rules based on the user's Terminus project docs and chat notes.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Snorkel Terminus / Harbor Cursor Rules
+
+These rules apply whenever you help with Snorkel Terminus / Harbor task creation.
+
+This project is about creating Terminal-Bench style tasks where an AI agent works in a terminal environment. The work usually includes `instruction.md`, `task.toml`, `environment/Dockerfile`, `solution/solve.sh`, `tests/test.sh`, and `tests/test_outputs.py`.
+
+Do not treat this as Beaver or PaperBench. This rules file is only for Terminus / Harbor tasks.
+
+## My working style
+
+- Keep my own wording and tone as much as possible.
+- Do not make the writing sound polished, generic, or AI-generated.
+- If I write a rough instruction, lightly clean grammar only.
+- Do not rewrite everything from scratch unless I ask.
+- If something is unclear, ask me instead of inventing details.
+- Explain important changes before making them.
+- Warn me if something may violate Terminus rules.
+
+## Good first task types for me
+
+Prefer tasks in:
+
+- software-engineering
+- debugging
+- build-and-dependency-management
+- data-processing
+- system-administration
+
+Avoid starting with:
+
+- UI tasks
+- multi-container tasks
+- security-heavy tasks
+- ML-heavy tasks
+- very large codebase tasks
+- milestone tasks until I am comfortable
+
+## Required regular task files
+
+For a regular non-milestone task, use this structure:
+
+```text
+task-name/
+├── instruction.md
+├── task.toml
+├── environment/
+│   └── Dockerfile
+├── solution/
+│   └── solve.sh
+└── tests/
+    ├── test.sh
+    └── test_outputs.py
+```
+
+Optional files are okay when needed, such as data files, config files, README.md, or custom tools.
+
+Do not include `rubric.txt` in the ZIP. Rubrics are generated and edited in the Snorkel Platform submission UI.
+
+## Milestone task warning
+
+Milestone tasks do not use root-level `instruction.md`, `solution/`, or `tests/`.
+
+They use:
+
+```text
+steps/milestone_N/instruction.md
+steps/milestone_N/solution/
+steps/milestone_N/tests/
+```
+
+Only use milestone structure when the task is truly a milestone task.
+
+## instruction.md rules
+
+The `instruction.md` file should sound like a real engineer asking a coding agent for help.
+
+Must be:
+
+- concise
+- clear
+- human-sounding
+- well specified
+- interesting or useful
+- unique
+- written with absolute paths
+
+Do not make it GPT-style.
+
+Avoid:
+
+- “You are an expert programmer...”
+- emojis
+- heavy markdown
+- long sections
+- long bullet lists
+- step-by-step walkthroughs
+- hints
+- exact solution values
+- telling the agent which commands to run
+- canary strings
+- relative paths
+- prompts that are mostly hard because of too many edge cases
+
+The prompt should give the agent the **what**, not the **how**.
+
+Good instruction workflow:
+
+1. I write a rough version first.
+2. Lightly clean my wording.
+3. Keep it short and natural.
+4. Make sure every requirement has a matching test.
+5. Make sure tests do not enforce anything not stated or clearly implied.
+
+## task.toml rules
+
+`task.toml` must include the required metadata and limits.
+
+Include:
+
+- `author_name`
+- `author_email`
+- `difficulty`
+- `category`
+- `subcategories`
+- `number_of_milestones`
+- `codebase_size`
+- `languages`
+- `tags`
+- `expert_time_estimate_min`
+- `junior_time_estimate_min`
+
+Use `number_of_milestones = 0` when there are no milestones.
+
+Use about 3 to 6 descriptive tags.
+
+Each task should have exactly one main category/task type.
+
+Subcategories can be multiple if the task truly spans multiple challenge areas. Leave blank if none apply.
+
+Runtime limits must include:
+
+```toml
+[verifier]
+timeout_sec = ...
+
+[agent]
+timeout_sec = ...
+
+[environment]
+build_timeout_sec = ...
+cpus = ...
+memory_mb = ...
+storage_mb = ...
+allow_internet = false
+```
+
+Usually set `allow_internet = false` unless the project rules and task design clearly allow otherwise.
+
+For custom docker-compose / multi-container tasks, use both:
+
+```toml
+custom_docker_compose = true
+is_multi_container = true
+```
+
+## Environment and Dockerfile rules
+
+The environment definition must stay inside the `environment/` folder.
+
+Use:
+
+- `environment/Dockerfile`, or
+- `environment/docker-compose.yaml` only when needed
+
+Dockerfile must:
+
+- install `tmux`
+- install `asciinema`
+- pin application dependencies such as pip/npm packages
+- use reproducible dependencies
+- keep the environment minimal
+- use `.dockerignore` for non-trivial environments
+
+Do not:
+
+- copy `solution/` into the Docker image
+- copy `tests/` into the Docker image
+- use privileged mode
+- mount `docker.sock`
+- use `SYS_ADMIN`
+- use `NET_ADMIN`
+- use `SYS_MODULE`
+- rely on live internet downloads during oracle or verifier runtime
+
+All solution dependencies should be preinstalled in the environment.
+
+All test/verifier dependencies should be preinstalled in the Dockerfile.
+
+`tests/test.sh` must not install packages or download anything.
+
+## Oracle solution rules
+
+The oracle solution lives at:
+
+```text
+solution/solve.sh
+```
+
+It proves the task is solvable.
+
+The oracle solution must:
+
+- reliably complete the task
+- pass the tests through the Oracle Agent
+- be deterministic
+- show the command sequence
+- derive the answer instead of just writing expected output
+- use fail-fast behavior like `set -e` where appropriate
+- avoid silent failures
+- use fixed seeds if randomness is needed
+
+The oracle solution must not:
+
+- hardcode final answers
+- just echo expected output
+- use random values without seeds
+- depend on time-sensitive behavior
+- depend on latency-sensitive behavior
+- depend on external internet calls
+- be flaky
+
+Useful commands:
+
+```bash
+harbor run -a oracle -p <task-folder>
+harbor run -a oracle -p <task-folder> -v
+harbor tasks start-env -p <task-folder> -i
+```
+
+If the Oracle Agent cannot solve the task, the task is broken.
+
+## tests/test.sh rules
+
+`tests/test.sh` is required in every regular task.
+
+It must:
+
+- be the main verifier entrypoint
+- run Python pytest
+- write `/logs/verifier/reward.txt` or `/logs/verifier/reward.json`
+- always write a reward even when tests fail
+- avoid package installs
+- avoid network downloads
+
+Harbor reads `reward.txt` by default to determine pass/fail.
+
+Binary reward only:
+
+- `1` means success
+- `0` means failure
+
+No partial rewards.
+
+Verifier logic must be identical for oracle and agent runs.
+
+## tests/test_outputs.py rules
+
+All verifier tests must be Python pytest tests.
+
+Use Python pytest even for Java, Node, Go, Bash, Rust, or other language tasks.
+
+For non-Python tasks, use Python tools such as:
+
+- `subprocess`
+- API clients
+- file checks
+- process checks
+- database clients
+
+Each test needs an informative docstring.
+
+Tests should:
+
+- verify behavior
+- verify final correctness
+- cover explicit requirements
+- cover important implicit behavior
+- cover critical edge cases
+- match `instruction.md`
+
+Tests should not:
+
+- only check that a file exists
+- only check JSON/CSV format
+- parse source code looking for brittle patterns
+- require hidden behavior not stated or clearly implied
+- install packages
+- download anything
+- use different logic for oracle vs real agent
+
+Ground truth and expected outputs used in tests must live only in `tests/`, not in `environment/`.
+
+The agent must not be able to read the tests during its attempt.
+
+## Rubric rules
+
+Rubrics are handled in the Snorkel Platform submission UI.
+
+Do not include `rubric.txt` in the ZIP.
+
+Rubrics should:
+
+- check meaningful agent behavior
+- check trajectory quality
+- award useful steps
+- penalize harmful, unsafe, incorrect, or wasteful behavior
+- include negative criteria when needed
+
+Rubrics should not:
+
+- reference files in `/tests/`
+- duplicate unit tests
+- say “instruction.md says...” or “task.toml says...”
+- describe criteria by file reference instead of behavior
+
+Good negative criterion:
+
+```text
+Agent accesses /app/secret/, -1
+```
+
+Bad criterion:
+
+```text
+Agent does not access /app/secret/, +1
+```
+
+## Task design rules
+
+A good Terminus task must be:
+
+- multi-step
+- testable
+- unique
+- standalone
+- terminal/environment-based
+- runnable without more user input after start
+- hard for meaningful engineering reasons
+
+A good task should require:
+
+- multiple commands
+- intermediate state handling
+- reasoning across files, outputs, commands, or system state
+
+Do not make the main task:
+
+- pure data structures/algorithms
+- solvable by one simple command
+- mostly a long list of edge cases
+- dependent on privileged Docker
+- a Long Context task solvable by grep or keyword search
+- uninteresting or irrelevant to developers
+
+Acceptance expectations:
+
+- Oracle solution passes
+- no-op/NOP should not pass
+- real agents should not pass 100 percent across tests
+- multiple medium-severity failures means the task should not be accepted
+
+## Platform workflow
+
+Use this general flow:
+
+1. Choose correct skeleton: Regular, UI, or Milestone.
+2. Rename task folder using kebab-case.
+3. Write `instruction.md`.
+4. Configure `task.toml`.
+5. Build `environment/Dockerfile`.
+6. Write `solution/solve.sh`.
+7. Write `tests/test.sh`.
+8. Write `tests/test_outputs.py`.
+9. Run oracle locally.
+10. Fix failures.
+11. Run real agent/local checks if available.
+12. Zip the task contents correctly.
+13. Upload ZIP to the Snorkel Expert Platform.
+14. Run fast static checks.
+15. Submit without “Send to Reviewer” first.
+16. Generate rubric if appropriate.
+17. Revise after CI/LLMaJ checks.
+18. Edit rubric for accuracy.
+19. Send to reviewer only after checks pass.
+
+## Local setup reminders
+
+The main tools needed are:
+
+- Docker Desktop
+- Python 3.12 or 3.13
+- pip
+- uv
+- Harbor CLI
+- Cursor or VS Code
+- Git
+
+Useful setup checks:
+
+```bash
+docker --version
+docker run hello-world
+python3 --version
+pip3 --version
+pip install harbor
+harbor --help
+uv --version
+```
+
+Optional tools depend on the task:
+
+- node
+- npm
+- java
+- maven
+- go
+- rust
+- database clients
+- browser tooling for UI tasks
+
+## Verified quiz answers from screenshots
+
+Use these as study/reference notes only.
+
+- Q1: `number_of_milestones`
+- Q2: No — tasks should include approximately 3–6 tags.
+- Q3: `timeout_sec` under `[agent]` and `[verifier]`, `build_timeout_sec` under `[environment]`, plus `cpus`, `memory_mb`, and `storage_mb`.
+- Q4: Both `custom_docker_compose=true` and `is_multi_container=true`.
+- Q5: Through the submission UI’s rubric generator, then edited for accuracy.
+- Q6: Note it in your review but do not send back solely for this reason.
+- Q7: The phrasing is negative; it should read: `Agent accesses the /app/secret/ directory, -1`.
+- Q8: No — at least 3 criteria must assign negative rewards for harmful or incorrect behavior.
+- Q9: Rubric criteria must not reference tests in `/tests/`, since tests run after the agent attempt and are not part of the agent trace.
+- Q10: Rubrics must describe criteria by content, not by file reference.
+- Q11: No — rubrics are handled by the UI.
+- Q12: No — instructions should read naturally, like a human prompting a coding agent, without heavy markdown styling.
+- Q13: Instructions are too long — they should be as little as one sentence up to three paragraphs, with requirements capped around 20 bullets.
+- Q14: Yes — prompts must not be LLM-generated; they should reflect real user style.
+- Q15: Reject it — tasks primarily made hard by too many edge cases/requirements should not be accepted.
+- Q16: No — all paths referenced in instructions must be absolute.
+- Q17: No — every task must be interesting or useful to some group of developers; this is high severity.
+- Q18: The reviewer should flag it — step-by-step solution approaches are hints, not requirements.
+- Q19: It signals an older task skeleton was used; flag it because the canary gets passed as part of the prompt.
+- Q20: No — only package dependencies may be fetched from the web; all other content must be stored locally in the environment.
+- Q21: All dependencies must use pinned versions, except apt packages, regardless of popularity.
+- Q22: Not seen in screenshots.
+- Q23: Not acceptable — ground truth/expected outputs used in tests must live only in `tests/`, not the environment.
+- Q24: Low — discouraged but won’t block acceptance; correct it if the task is already being revised for other reasons.
+- Q25: No — `--privileged`, `SYS_ADMIN`/`NET_ADMIN`/`SYS_MODULE` capabilities, and docker.sock mounting are all prohibited.
+- Q26: No — all solution dependencies must be preinstalled in the environment; oracle cannot rely on internet.
+- Q27: Not seen in screenshots.
+- Q28: No — oracles must pass consistently on every run; flaky/random/latency-dependent logic is prohibited.
+- Q29: No — verifiers must assign binary rewards only, 0 or 1; partial scores are not permitted.
+- Q30: Verifiers must apply identical logic to oracle and agent runs — no conditional differentiation.
+- Q31: No — verifiers must validate actual correctness, not just file existence or format.
+- Q32: Verifiers must only test requirements explicitly or implicitly defined in the instructions.
+- Q33: No — all packages must be preinstalled in the Dockerfile.
+- Q34: In the Dockerfile, alongside other dependencies.
+- Q35: No — `tests/test.sh` is required as the main entrypoint in every task.
+- Q36: Flag as low severity — clean these files up and mention them if the task is already being sent back.
+- Q37: No — the instructions must clearly define which requirements align to each milestone.
+- Q38: No — pure data structures/algorithms tasks are out of scope; DSA can be a sub-component but not the main focus.
+- Q39: No — tasks must require a minimum of 5 agent steps, including intermediate state handling and reasoning.
+- Q40: No — Long Context must require genuine reasoning over content, not simple grep/keyword search.
+- Q41: No — multiple medium-severity failures means the task should not be accepted.
+- Q42: Yes — when a task is already being revised, include low-severity issues in the notes too.
+- Q43: No — feedback must be detailed enough that the submitter knows exactly what to change.
+- Q44: The reviewer is wrong — tasks can have multiple subtypes if they span multiple challenge areas.
+
+## Final submission checklist
+
+Before submitting, check:
+
+- correct skeleton is used
+- folder name is kebab-case
+- `instruction.md` is natural, concise, and uses absolute paths
+- `instruction.md` does not reveal solution steps
+- `task.toml` has all required metadata
+- `task.toml` has runtime limits
+- `environment/Dockerfile` builds
+- Dockerfile includes `tmux` and `asciinema`
+- dependencies are pinned
+- Dockerfile does not copy `solution/` or `tests/`
+- no privileged Docker settings
+- `solution/solve.sh` is deterministic
+- oracle passes locally
+- `tests/test.sh` runs pytest
+- `tests/test.sh` writes reward file
+- `tests/test_outputs.py` has docstrings
+- tests validate actual correctness
+- tests match `instruction.md`
+- no hidden ground truth in environment
+- no-op should not pass
+- real agents should not pass 100 percent across tests
+- no `rubric.txt` in ZIP
+- submit first without Send to Reviewer
+- generate/edit rubric in platform UI
+- send to reviewer only after checks pass
+

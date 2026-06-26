@@ -1,0 +1,9 @@
+Moving forward, every submission will include 3 new explanation fields that you'll need to fill out before sending. We expect this to not take any more than an 5min or less to do:
+
+
+Difficulty Explanation — "Describe in your own words why this task is hard for humans and agents to solve."
+Solution Explanation — "Describe your high-level approach to the task and the key insights behind your solution."
+Verification Explanation — "Explain how your tests are verifying correctness."
+
+
+We ask that for each, you write roughly a 1 paragraph response (about 4-6 sentences).
