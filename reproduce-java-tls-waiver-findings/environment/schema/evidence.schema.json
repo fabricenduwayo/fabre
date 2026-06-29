@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/evidence.schema.json",
+  "title": "Joined probe evidence",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "service_id",
+      "service_name",
+      "environment",
+      "waiver_type",
+      "waiver_status",
+      "waiver_scope",
+      "waiver_expires_on",
+      "cert_fingerprint",
+      "cert_not_after",
+      "cert_key_algo",
+      "cert_key_bits",
+      "cert_issuer",
+      "probe_tls_version",
+      "probe_verify_ok",
+      "probe_mtls_required",
+      "probe_mtls_presented",
+      "probe_chain_valid",
+      "probe_http_status",
+      "probe_observed_fingerprint"
+    ],
+    "properties": {
+      "service_id": {
+        "type": "string",
+        "pattern": "^svc-[0-9]{3}$"
+      },
+      "service_name": {
+        "type": "string"
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "prod",
+          "staging",
+          "dev"
+        ]
+      },
+      "waiver_type": {
+        "type": "string",
+        "enum": [
+          "tls",
+          "mtls",
+          "chain",
+          "none"
+        ]
+      },
+      "waiver_status": {
+        "type": "string",
+        "enum": [
+          "granted",
+          "revoked",
+          "none"
+        ]
+      },
+      "waiver_scope": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "waiver_expires_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      },
+      "cert_fingerprint": {
+        "type": "string"
+      },
+      "cert_not_after": {
+        "type": "string",
+        "format": "date"
+      },
+      "cert_key_algo": {
+        "type": "string",
+        "enum": [
+          "RSA",
+          "EC"
+        ]
+      },
+      "cert_key_bits": {
+        "type": "integer"
+      },
+      "cert_issuer": {
+        "type": "string"
+      },
+      "probe_tls_version": {
+        "type": "string"
+      },
+      "probe_verify_ok": {
+        "type": "boolean"
+      },
+      "probe_mtls_required": {
+        "type": "boolean"
+      },
+      "probe_mtls_presented": {
+        "type": "boolean"
+      },
+      "probe_chain_valid": {
+        "type": "boolean"
+      },
+      "probe_http_status": {
+        "type": "integer"
+      },
+      "probe_observed_fingerprint": {
+        "type": "string"
+      }
+    }
+  }
+}

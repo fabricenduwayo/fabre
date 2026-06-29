@@ -126,12 +126,20 @@ std::map<std::string, RawAccount> parse_passwd(const std::string& text) {
     return accounts;
 }
 
-std::map<std::string, std::string> parse_shadow(const std::string& text) {
-    std::map<std::string, std::string> out;
+struct ShadowEntry {
+    std::string password;
+    std::string expire;  // 8th field: account-expiry day (days since epoch)
+};
+
+std::map<std::string, ShadowEntry> parse_shadow(const std::string& text) {
+    std::map<std::string, ShadowEntry> out;
     for (const auto& line : splitlines(text)) {
         if (trim(line).empty()) continue;
         auto parts = split(line, ':');
-        out[parts[0]] = parts.size() > 1 ? parts[1] : "";
+        ShadowEntry e;
+        e.password = parts.size() > 1 ? parts[1] : "";
+        e.expire = parts.size() > 7 ? parts[7] : "";
+        out[parts[0]] = e;
     }
     return out;
 }
@@ -158,16 +166,27 @@ std::map<std::string, RawGroup> parse_group(const std::string& text) {
     return out;
 }
 
-// AC-ACCT-LOCK as amended by G-2026-01 (adds "*LK*").
+// AC-ACCT-LOCK as amended by G-2026-01 (adds "*LK*") and G-2026-16 (account
+// expiry: disabled when the shadow expire field is < the reference day).
+const long kRefDay = 20620;
+
 bool is_disabled(const std::string& name,
                  const std::map<std::string, RawAccount>& accounts,
-                 const std::map<std::string, std::string>& shadow) {
+                 const std::map<std::string, ShadowEntry>& shadow) {
     auto sit = shadow.find(name);
     if (sit != shadow.end()) {
-        const std::string& h = sit->second;
+        const std::string& h = sit->second.password;
         if (h.empty() || h == "!" || h == "*" || h == "!!" || h == "*LK*" ||
             h[0] == '!') {
             return true;
+        }
+        const std::string& exp = sit->second.expire;
+        if (!exp.empty()) {
+            try {
+                long e = std::stol(exp);
+                if (e >= 0 && e < kRefDay) return true;
+            } catch (const std::exception&) {
+            }
         }
     }
     auto ait = accounts.find(name);
@@ -194,35 +213,122 @@ std::set<std::string> effective_group_members(
     return members;
 }
 
-// AC-SUDO-NOPASSWD as amended by G-2026-02: only NOPASSWD applied to ALL counts.
+// AC-SUDO-NOPASSWD as amended by G-2026-02 and G-2026-19: only an ALL command
+// set with an effective NOPASSWD tag counts. Sudo command tags are sticky across
+// comma-separated command entries until another tag appears.
 bool grants_all_nopasswd(const std::string& rest) {
-    size_t i = 0;
-    while (true) {
-        size_t j = rest.find("NOPASSWD", i);
-        if (j == std::string::npos) return false;
-        size_t k = j + 8;
-        while (k < rest.size() && (rest[k] == ' ' || rest[k] == '\t')) k++;
-        if (k < rest.size() && rest[k] == ':') {
-            k++;
-            while (k < rest.size() && (rest[k] == ' ' || rest[k] == '\t')) k++;
-            if (rest.compare(k, 3, "ALL") == 0) {
-                size_t e = k + 3;
-                if (e == rest.size() ||
-                    !std::isalnum(static_cast<unsigned char>(rest[e]))) {
-                    return true;
+    std::string commands = rest;
+    size_t eq = commands.find('=');
+    if (eq != std::string::npos) commands = commands.substr(eq + 1);
+    commands = trim(commands);
+    if (!commands.empty() && commands[0] == '(') {
+        size_t rp = commands.find(')');
+        if (rp != std::string::npos) commands = trim(commands.substr(rp + 1));
+    }
+
+    std::string tag;
+    for (const auto& raw : split(commands, ',')) {
+        std::string segment = trim(raw);
+        while (true) {
+            std::string upper = segment;
+            std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+            if (starts_with(upper, "NOPASSWD")) {
+                std::string after = trim(segment.substr(8));
+                if (!after.empty() && after[0] == ':') {
+                    tag = "NOPASSWD";
+                    segment = trim(after.substr(1));
+                    continue;
                 }
             }
+            if (starts_with(upper, "PASSWD")) {
+                std::string after = trim(segment.substr(6));
+                if (!after.empty() && after[0] == ':') {
+                    tag = "PASSWD";
+                    segment = trim(after.substr(1));
+                    continue;
+                }
+            }
+            break;
         }
-        i = j + 1;
+        auto words = ws_split(segment);
+        if (!words.empty() && words[0] == "ALL" && tag == "NOPASSWD") {
+            return true;
+        }
     }
+    return false;
 }
+
+// AC-SUDO-NOPASSWD as amended by G-2026-15: a NOPASSWD: ALL grant only counts
+// when the rule permits running as root. The runas spec is the first
+// parenthesized list after `=`; the user list is the part before any `:`. With
+// no parentheses the rule defaults to root.
+bool runas_permits_root(const std::string& rest) {
+    size_t lp = rest.find('(');
+    if (lp == std::string::npos) return true;
+    size_t rp = rest.find(')', lp);
+    std::string inside = rp == std::string::npos ? rest.substr(lp + 1)
+                                                 : rest.substr(lp + 1, rp - lp - 1);
+    size_t colon = inside.find(':');
+    std::string users = colon == std::string::npos ? inside : inside.substr(0, colon);
+    for (const auto& tok : split(users, ',')) {
+        std::string t = trim(tok);
+        if (t == "root" || t == "ALL") return true;
+    }
+    return false;
+}
+
+// AC-SUDO-NOPASSWD as amended by G-2026-18: a spec applies to this host only when
+// its host field resolves to include the audit host (or ALL).
+const char* kAuditHost = "gw-lab-01";
+
+bool host_applies(const std::string& host_str,
+                  const std::map<std::string, std::vector<std::string>>& host_aliases) {
+    std::function<bool(const std::string&, std::set<std::string>)> matches =
+        [&](const std::string& name, std::set<std::string> seen) -> bool {
+        if (name == "ALL" || name == kAuditHost) return true;
+        auto it = host_aliases.find(name);
+        if (it != host_aliases.end() && !seen.count(name)) {
+            seen.insert(name);
+            bool pos = false, neg = false;
+            for (const auto& m0 : it->second) {
+                std::string m = trim(m0);
+                bool ng = !m.empty() && m[0] == '!';
+                bool hit = matches(ng ? m.substr(1) : m, seen);
+                if (ng && hit) {
+                    neg = true;
+                } else if (!ng && hit) {
+                    pos = true;
+                }
+            }
+            return pos && !neg;
+        }
+        return false;
+    };
+    bool positive = false;
+    for (const auto& tok0 : split(host_str, ',')) {
+        std::string tok = trim(tok0);
+        if (tok.empty()) continue;
+        bool ng = tok[0] == '!';
+        bool hit = matches(ng ? tok.substr(1) : tok, {});
+        if (ng && hit) return false;
+        if (!ng && hit) positive = true;
+    }
+    return positive;
+}
+
+struct SudoSpec {
+    std::string principal;
+    std::string rest;
+    std::string host;
+};
 
 std::set<std::string> parse_sudoers(const std::string& text,
                                     const std::map<std::string, RawGroup>& groups,
                                     const std::map<std::string, RawAccount>& accounts,
                                     const json& sudoers_d) {
     std::map<std::string, std::vector<std::string>> aliases;
-    std::vector<std::pair<std::string, std::string>> specs;
+    std::map<std::string, std::vector<std::string>> host_aliases;
+    std::vector<SudoSpec> specs;
 
     // G-2026-09: `@includedir`/`#includedir` splices /etc/sudoers.d files (sorted
     // by name) inline at the directive position so they share last-match ordering.
@@ -262,9 +368,22 @@ std::set<std::string> parse_sudoers(const std::string& text,
             aliases[name] = members;
             continue;
         }
+        if (starts_with(s, "Host_Alias ")) {
+            std::string body = s.substr(std::string("Host_Alias ").size());
+            auto eq = body.find('=');
+            if (eq == std::string::npos) continue;
+            std::string name = trim(body.substr(0, eq));
+            std::vector<std::string> members;
+            for (auto& m : split(body.substr(eq + 1), ',')) {
+                std::string t = trim(m);
+                if (!t.empty()) members.push_back(t);
+            }
+            host_aliases[name] = members;
+            continue;
+        }
         // G-2026-05: `Defaults:<binder> !authenticate` grants passwordless sudo
         // (NOPASSWD: ALL) to the bound user/group, overriding the body rule that
-        // ignores Defaults lines.
+        // ignores Defaults lines. Defaults overrides are not host-scoped.
         if (starts_with(s, "Defaults:")) {
             std::string tail = trim(s.substr(std::string("Defaults:").size()));
             auto tparts = ws_split(tail);
@@ -282,22 +401,24 @@ std::set<std::string> parse_sudoers(const std::string& text,
                         cur.push_back(c);
                     }
                 }
-                if (noauth) specs.push_back({binder, "NOPASSWD: ALL"});
+                if (noauth) specs.push_back({binder, "NOPASSWD: ALL", "ALL"});
             }
             continue;
         }
         auto toks = ws_split(s);
         std::string first = toks.empty() ? "" : toks[0];
-        if (first == "Host_Alias" || first == "Runas_Alias" ||
-            first == "Cmnd_Alias" || first == "Defaults" ||
-            starts_with(s, "Defaults")) {
+        if (first == "Runas_Alias" || first == "Cmnd_Alias" ||
+            first == "Defaults" || starts_with(s, "Defaults")) {
             continue;
         }
         std::string principal = toks[0];
         std::string rest = s.size() > principal.size()
                                ? s.substr(s.find(principal) + principal.size())
                                : "";
-        specs.push_back({principal, rest});
+        // The host field is everything between the principal and the first `=`.
+        auto eqp = rest.find('=');
+        std::string host_field = eqp == std::string::npos ? rest : rest.substr(0, eqp);
+        specs.push_back({principal, rest, host_field});
     }
 
     std::function<void(const std::string&, std::set<std::string>,
@@ -346,9 +467,11 @@ std::set<std::string> parse_sudoers(const std::string& text,
     // passwordless state (a later non-NOPASSWD:ALL grant revokes an earlier one).
     std::map<std::string, bool> state;
     for (const auto& spec : specs) {
-        bool grants = grants_all_nopasswd(spec.second);
+        // G-2026-18: a spec scoped to other hosts does not apply here.
+        if (!host_applies(spec.host, host_aliases)) continue;
+        bool grants = grants_all_nopasswd(spec.rest) && runas_permits_root(spec.rest);
         std::set<std::string> pos, neg;
-        expand_token(spec.first, {}, pos, neg);
+        expand_token(spec.principal, {}, pos, neg);
         for (const auto& u : pos) state[u] = grants;
     }
     std::set<std::string> passwordless;
@@ -358,12 +481,25 @@ std::set<std::string> parse_sudoers(const std::string& text,
     return passwordless;
 }
 
+bool active_authorized_key_line(const std::string& line) {
+    std::string s = trim(line);
+    if (s.empty() || s[0] == '#' || s[0] == '@') return false;
+    auto fields = ws_split(s);
+    if (fields.empty()) return false;
+    auto key_type = [](const std::string& v) {
+        return starts_with(v, "ssh-") || starts_with(v, "ecdsa-") ||
+               starts_with(v, "sk-ssh-") || starts_with(v, "sk-ecdsa-") ||
+               starts_with(v, "rsa-sha2-");
+    };
+    if (key_type(fields[0])) return true;
+    return fields.size() > 1 && key_type(fields[1]);
+}
+
 std::set<std::string> parse_keys(const json& auth_map) {
     std::set<std::string> out;
     for (auto it = auth_map.begin(); it != auth_map.end(); ++it) {
         for (const auto& line : splitlines(it.value().get<std::string>())) {
-            std::string s = trim(line);
-            if (!s.empty() && s[0] != '#') {
+            if (active_authorized_key_line(line)) {
                 out.insert(it.key());
                 break;
             }
@@ -372,14 +508,113 @@ std::set<std::string> parse_keys(const json& auth_map) {
     return out;
 }
 
-// HD-SSHD-DROPIN: first global occurrence wins; stop at the first Match block.
-std::map<std::string, std::string> parse_sshd(const json& dropins) {
+// HD-SSHD context (G-2026-17): drop-ins are evaluated for a fixed audit
+// connection — connecting user `root` from source address 198.51.100.10.
+const char* kAuditUser = "root";
+const char* kAuditAddr = "198.51.100.10";
+
+long long ip_to_int(const std::string& s) {
+    auto parts = split(s, '.');
+    if (parts.size() != 4) return -1;
+    long long v = 0;
+    for (const auto& p : parts) {
+        if (p.empty()) return -1;
+        for (char c : p) {
+            if (!std::isdigit(static_cast<unsigned char>(c))) return -1;
+        }
+        long n = std::stol(p);
+        if (n < 0 || n > 255) return -1;
+        v = (v << 8) | n;
+    }
+    return v;
+}
+
+// One Address criterion token: exact IPv4 or IPv4 CIDR range.
+bool addr_matches_token(const std::string& token, const std::string& addr) {
+    auto slash = token.find('/');
+    if (slash != std::string::npos) {
+        long long ni = ip_to_int(token.substr(0, slash));
+        long long ai = ip_to_int(addr);
+        std::string bits = token.substr(slash + 1);
+        if (ni < 0 || ai < 0 || bits.empty()) return false;
+        for (char c : bits) {
+            if (!std::isdigit(static_cast<unsigned char>(c))) return false;
+        }
+        int prefix = std::stoi(bits);
+        if (prefix < 0 || prefix > 32) return false;
+        if (prefix == 0) return true;
+        unsigned long mask = (0xFFFFFFFFUL << (32 - prefix)) & 0xFFFFFFFFUL;
+        return (static_cast<unsigned long>(ni) & mask) ==
+               (static_cast<unsigned long>(ai) & mask);
+    }
+    return token == addr;
+}
+
+// User criterion: comma list of patterns with `*` wildcard and `!` negation.
+bool user_matches(const std::string& list, const std::string& user) {
+    bool positive = false;
+    for (const auto& raw : split(list, ',')) {
+        std::string tok = trim(raw);
+        if (tok.empty()) continue;
+        bool neg = tok[0] == '!';
+        std::string pat = neg ? tok.substr(1) : tok;
+        bool hit = (pat == "*" || pat == user);
+        if (neg && hit) return false;
+        if (!neg && hit) positive = true;
+    }
+    return positive;
+}
+
+// A Match block applies iff every criterion matches the audit context.
+bool match_block_active(const std::vector<std::string>& crit,
+                        const std::set<std::string>& root_groups) {
+    if (crit.size() == 1 && lower(crit[0]) == "all") return true;
+    if (crit.empty()) return false;
+    size_t i = 0;
+    while (i < crit.size()) {
+        std::string ctype = lower(crit[i]);
+        if (i + 1 >= crit.size()) return false;
+        std::string cval = crit[i + 1];
+        i += 2;
+        if (ctype == "user") {
+            if (!user_matches(cval, kAuditUser)) return false;
+        } else if (ctype == "group") {
+            bool any = false;
+            for (const auto& g : split(cval, ',')) {
+                if (root_groups.count(trim(g))) { any = true; break; }
+            }
+            if (!any) return false;
+        } else if (ctype == "address") {
+            bool any = false;
+            for (const auto& t : split(cval, ',')) {
+                if (addr_matches_token(trim(t), kAuditAddr)) { any = true; break; }
+            }
+            if (!any) return false;
+        } else {
+            return false;  // unsupported criterion: block never applies
+        }
+    }
+    return true;
+}
+
+// HD-SSHD-DROPIN as amended by G-2026-17: evaluate Match blocks against the
+// audit context; global plus applicable-block lines, first occurrence wins.
+std::map<std::string, std::string> parse_sshd(
+    const json& dropins,
+    const std::map<std::string, RawGroup>& groups,
+    const std::map<std::string, RawAccount>& accounts) {
+    std::set<std::string> root_groups;
+    for (const auto& kv : groups) {
+        auto m = effective_group_members(kv.first, groups, accounts);
+        if (m.count(kAuditUser)) root_groups.insert(kv.first);
+    }
+
     std::vector<std::string> names;
     for (auto it = dropins.begin(); it != dropins.end(); ++it) names.push_back(it.key());
     std::sort(names.begin(), names.end());
 
     std::map<std::string, std::string> effective;
-    bool in_global = true;
+    bool active = true;  // global scope is always active
     for (const auto& name : names) {
         for (const auto& line : splitlines(dropins.at(name).get<std::string>())) {
             std::string s = trim(line);
@@ -387,18 +622,15 @@ std::map<std::string, std::string> parse_sshd(const json& dropins) {
             auto toks = ws_split(s);
             if (toks.empty()) continue;
             if (lower(toks[0]) == "match") {
-                // G-2026-08: `Match all` resumes global scope; other Match blocks
-                // suspend evaluation until the next `Match all` or end of input.
-                std::string crit = toks.size() > 1 ? lower(toks[1]) : "";
-                in_global = (crit == "all");
+                std::vector<std::string> crit(toks.begin() + 1, toks.end());
+                active = match_block_active(crit, root_groups);
                 continue;
             }
-            if (!in_global) continue;
+            if (!active) continue;
             if (toks.size() >= 2) {
                 std::string key = lower(toks[0]);
                 // G-2026-06: ChallengeResponseAuthentication is the deprecated
-                // spelling of KbdInteractiveAuthentication; fold them together so
-                // the first occurrence across either name wins.
+                // spelling of KbdInteractiveAuthentication; fold them together.
                 if (key == "challengeresponseauthentication") {
                     key = "kbdinteractiveauthentication";
                 }
@@ -443,7 +675,7 @@ Normalized parse_snapshot(const json& body) {
     inv.nopasswd_users = parse_sudoers(get_str(files, "sudoers"), groups, raw_accounts,
                                        get_obj(files, "sudoers.d"));
     inv.users_with_keys = parse_keys(get_obj(files, "authorized_keys"));
-    inv.sshd = parse_sshd(get_obj(files, "sshd_config.d"));
+    inv.sshd = parse_sshd(get_obj(files, "sshd_config.d"), groups, raw_accounts);
 
     return inv;
 }

@@ -1,0 +1,9 @@
+# Mariner transport-security policy — operative parameters for the
+# 2026 mid-year TLS waiver review. Consumed by the adjudication pipeline.
+review_date: "2026-06-01"
+rotation_window_days: 45
+allowed_tls_versions:
+  - "TLS1.2"
+  - "TLS1.3"
+mtls_required_environments:
+  - "prod"

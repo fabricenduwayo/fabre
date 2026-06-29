@@ -444,180 +444,201 @@ When in doubt, treat the stricter interpretation as authoritative pending clarif
 - 2023-08: editorial revision to AU-001; clarified scope and wording.
 
 
-### AU-002 — Baseline kernel parameter
+### AU-002 — Standard package provenance
 
-**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** tier-1 laboratory hosts
+**Domain:** Audit and Accountability  **Severity:** High  **Applies to:** all managed hosts
 
-**Rationale.** This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. Operational experience shows that small deviations here cascade into larger exposure during incident response. This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure.
+**Rationale.** This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. The control supports reproducible builds of the host baseline and simplifies forensic comparison. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
 
-**Requirement.** Retain the prior configuration so that a rollback can be performed without rebuilding the host. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
+**Requirement.** Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations.
 
-**Implementation guidance.** Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Changes should be staged in a non-production environment and validated against the verification procedure below. Changes should be staged in a non-production environment and validated against the verification procedure below. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Changes should be staged in a non-production environment and validated against the verification procedure below. Changes should be staged in a non-production environment and validated against the verification procedure below.
+**Implementation guidance.** Changes should be staged in a non-production environment and validated against the verification procedure below. Changes should be staged in a non-production environment and validated against the verification procedure below. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Changes should be staged in a non-production environment and validated against the verification procedure below. Changes should be staged in a non-production environment and validated against the verification procedure below. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions.
 
-**Verification.** Assessors may re-run the audit after applying patches to confirm the host has converged. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Automated property checks generate varied host states to confirm the control behaves consistently. Automated property checks generate varied host states to confirm the control behaves consistently.
+**Verification.** Automated property checks generate varied host states to confirm the control behaves consistently. Automated property checks generate varied host states to confirm the control behaves consistently. The verifier records the before and after state for inclusion in the assessment package.
 
-**References.** Governing Security Policy GSP-2024 §2.4; Governing Security Policy GSP-2024 §5.1; Vendor hardening note VHN-1-0; Lab Operations Runbook ROB-5
+**References.** Governing Security Policy GSP-2024 §5.0; Baseline Configuration Guide BCG-2.9
 
 **Revision history.**
 - 2022-04: editorial revision to AU-002; clarified scope and wording.
-- 2023-03: editorial revision to AU-002; clarified scope and wording.
+- 2024-12: editorial revision to AU-002; clarified scope and wording.
 
 
-### AU-003 — Restricted boot integrity
+### AU-LEDGER — Audit ledger schema and durability
+
+**Domain:** Audit and Accountability  **Severity:** High  **Applies to:** all managed hosts
+
+**Rationale.** The auditor keeps a persistent ledger of the patches it proposes so that operators have a durable record of remediation across runs. A ledger that silently stops recording is itself a reportable failure.
+
+**Requirement.** The auditor shall maintain a persistent JSON ledger. The **current ledger schema is version 2**: the ledger is a JSON object carrying a `schema` field whose value is the integer `2`, and an `entries` field whose value is a JSON array. Each element of `entries` is one proposed patch object, in the same shape the auditor returns from an audit. For every audited request, the auditor shall append each patch it emits to the `entries` array and persist the result.
+
+The on-disk ledger that ships with the host predates the current schema: it is in the **legacy schema 1** layout, a JSON object whose `schema` is `1` (or absent) and whose records are stored under an `audits` array rather than `entries`. The auditor shall **migrate the legacy ledger forward** to schema 2 — moving every existing record from `audits` into `entries` unchanged and setting `schema` to `2` — and then append new patches. Migration shall **preserve every pre-existing record**; a reconciliation that discards history, or that downgrades the in-code schema to keep writing under `audits`, is non-compliant.
+
+**Implementation guidance.** Ledger writes shall be durable: a write that fails is a defect to be fixed, not silently swallowed. The legacy file on disk is authoritative only as to the *records it already holds*, not as to the schema the auditor must write.
+
+**Verification.** After an audit, the ledger is a schema-2 object whose `entries` array contains the pre-existing legacy records plus every patch emitted by the audit.
+
+**References.** Governing Security Policy GSP-2024 §3.4; Prior assessment finding AF-22
+
+**Revision history.**
+- 2023-06: initial publication (schema 1).
+- 2025-10: schema 2 introduced; records moved from `audits` to `entries`.
+
+
+### AU-003 — Approved boot integrity
 
 **Domain:** Audit and Accountability  **Severity:** Moderate  **Applies to:** gateway and bastion hosts
 
-**Rationale.** Consistent enforcement reduces the mean time to detect anomalous access across the estate. Operational experience shows that small deviations here cascade into larger exposure during incident response. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
+**Rationale.** Consistent enforcement reduces the mean time to detect anomalous access across the estate. The control exists to keep remediation deterministic so that repeated audits converge on a stable state. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
 
-**Requirement.** Coordinate with the accounts team before altering anything that affects service-account behavior. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations.
+**Requirement.** Changes should be staged in a non-production environment and validated against the verification procedure below. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
 
-**Implementation guidance.** Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Document any approved deviation in the exceptions register with a scheduled review date. Document any approved deviation in the exceptions register with a scheduled review date. Changes should be staged in a non-production environment and validated against the verification procedure below. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies.
+**Implementation guidance.** Changes should be staged in a non-production environment and validated against the verification procedure below. Coordinate with the accounts team before altering anything that affects service-account behavior. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Document any approved deviation in the exceptions register with a scheduled review date.
 
-**Verification.** The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
+**Verification.** Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
 
-**References.** Baseline Configuration Guide BCG-7.0; Prior assessment finding AF-4; Baseline Configuration Guide BCG-3.5; Governing Security Policy GSP-2024 §5.8
-
-**Revision history.**
-- 2024-09: editorial revision to AU-003; clarified scope and wording.
-- 2024-12: editorial revision to AU-003; clarified scope and wording.
-- 2024-09: editorial revision to AU-003; clarified scope and wording.
-
-
-### AU-004 — Centralized banner presentation
-
-**Domain:** Audit and Accountability  **Severity:** Low  **Applies to:** all managed hosts
-
-**Rationale.** The control supports reproducible builds of the host baseline and simplifies forensic comparison. Consistent enforcement reduces the mean time to detect anomalous access across the estate. Operational experience shows that small deviations here cascade into larger exposure during incident response.
-
-**Requirement.** Document any approved deviation in the exceptions register with a scheduled review date. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
-
-**Implementation guidance.** Retain the prior configuration so that a rollback can be performed without rebuilding the host. Changes should be staged in a non-production environment and validated against the verification procedure below. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes.
-
-**Verification.** The verifier records the before and after state for inclusion in the assessment package. The verifier records the before and after state for inclusion in the assessment package. Automated property checks generate varied host states to confirm the control behaves consistently.
-
-**References.** Lab Operations Runbook ROB-2; Prior assessment finding AF-9; Lab Operations Runbook ROB-2; Governing Security Policy GSP-2024 §7.9
+**References.** Vendor hardening note VHN-1-2; Governing Security Policy GSP-2024 §5.6; Governing Security Policy GSP-2024 §7.3
 
 **Revision history.**
-- 2025-06: editorial revision to AU-004; clarified scope and wording.
-- 2024-02: editorial revision to AU-004; clarified scope and wording.
-- 2024-04: editorial revision to AU-004; clarified scope and wording.
-- 2025-02: editorial revision to AU-004; clarified scope and wording.
+- 2024-03: editorial revision to AU-003; clarified scope and wording.
+- 2024-02: editorial revision to AU-003; clarified scope and wording.
 
 
-### AU-005 — Hardened session timeout
+### AU-004 — Hardened credential rotation
 
-**Domain:** Audit and Accountability  **Severity:** Low  **Applies to:** shared interactive hosts
+**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** tier-1 laboratory hosts
 
-**Rationale.** The control supports reproducible builds of the host baseline and simplifies forensic comparison. The control exists to keep remediation deterministic so that repeated audits converge on a stable state. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure.
-
-**Requirement.** Coordinate with the accounts team before altering anything that affects service-account behavior. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
-
-**Implementation guidance.** Document any approved deviation in the exceptions register with a scheduled review date. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Document any approved deviation in the exceptions register with a scheduled review date. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner.
-
-**Verification.** Automated property checks generate varied host states to confirm the control behaves consistently. The verifier records the before and after state for inclusion in the assessment package. Assessors may re-run the audit after applying patches to confirm the host has converged.
-
-**References.** Lab Operations Runbook ROB-6; Lab Operations Runbook ROB-1; Vendor hardening note VHN-9-9; Vendor hardening note VHN-8-8
-
-**Revision history.**
-- 2022-04: editorial revision to AU-005; clarified scope and wording.
-- 2023-03: editorial revision to AU-005; clarified scope and wording.
-
-
-### AU-006 — Hardened kernel parameter
-
-**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** service-account-bearing hosts
-
-**Rationale.** Consistent enforcement reduces the mean time to detect anomalous access across the estate. This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Operational experience shows that small deviations here cascade into larger exposure during incident response.
-
-**Requirement.** Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
-
-**Implementation guidance.** Retain the prior configuration so that a rollback can be performed without rebuilding the host. Changes should be staged in a non-production environment and validated against the verification procedure below. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. Changes should be staged in a non-production environment and validated against the verification procedure below. Document any approved deviation in the exceptions register with a scheduled review date. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies.
-
-**Verification.** The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
-
-**References.** Governing Security Policy GSP-2024 §1.3; Prior assessment finding AF-8
-
-**Revision history.**
-- 2022-12: editorial revision to AU-006; clarified scope and wording.
-- 2022-09: editorial revision to AU-006; clarified scope and wording.
-
-
-### AU-007 — Restricted session timeout
-
-**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** shared interactive hosts
-
-**Rationale.** Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. Operational experience shows that small deviations here cascade into larger exposure during incident response. This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. The control supports reproducible builds of the host baseline and simplifies forensic comparison.
+**Rationale.** This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations. The control exists to keep remediation deterministic so that repeated audits converge on a stable state. Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment.
 
 **Requirement.** Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
 
-**Implementation guidance.** Document any approved deviation in the exceptions register with a scheduled review date. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Document any approved deviation in the exceptions register with a scheduled review date. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Changes should be staged in a non-production environment and validated against the verification procedure below. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions.
+**Implementation guidance.** Changes should be staged in a non-production environment and validated against the verification procedure below. Coordinate with the accounts team before altering anything that affects service-account behavior. Document any approved deviation in the exceptions register with a scheduled review date. Coordinate with the accounts team before altering anything that affects service-account behavior. Changes should be staged in a non-production environment and validated against the verification procedure below. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Changes should be staged in a non-production environment and validated against the verification procedure below. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies.
 
-**Verification.** Automated property checks generate varied host states to confirm the control behaves consistently. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Automated property checks generate varied host states to confirm the control behaves consistently.
+**Verification.** Assessors may re-run the audit after applying patches to confirm the host has converged. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
 
-**References.** Baseline Configuration Guide BCG-3.7; Vendor hardening note VHN-6-5
+**References.** Vendor hardening note VHN-9-7; Vendor hardening note VHN-3-1; Governing Security Policy GSP-2024 §8.8; Lab Operations Runbook ROB-4
 
 **Revision history.**
-- 2025-02: editorial revision to AU-007; clarified scope and wording.
-- 2022-09: editorial revision to AU-007; clarified scope and wording.
-- 2022-02: editorial revision to AU-007; clarified scope and wording.
-- 2023-09: editorial revision to AU-007; clarified scope and wording.
+- 2022-07: editorial revision to AU-004; clarified scope and wording.
+- 2025-06: editorial revision to AU-004; clarified scope and wording.
+- 2024-02: editorial revision to AU-004; clarified scope and wording.
 
 
-### AU-008 — Baseline log forwarding
+### AU-005 — Verified log forwarding
 
 **Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** all managed hosts
 
-**Rationale.** This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. Consistent enforcement reduces the mean time to detect anomalous access across the estate. Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
+**Rationale.** Consistent enforcement reduces the mean time to detect anomalous access across the estate. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. The control supports reproducible builds of the host baseline and simplifies forensic comparison. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
 
-**Requirement.** Document any approved deviation in the exceptions register with a scheduled review date. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control supports reproducible builds of the host baseline and simplifies forensic comparison.
+**Requirement.** Retain the prior configuration so that a rollback can be performed without rebuilding the host. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
 
-**Implementation guidance.** Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Changes should be staged in a non-production environment and validated against the verification procedure below. Document any approved deviation in the exceptions register with a scheduled review date. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Coordinate with the accounts team before altering anything that affects service-account behavior.
+**Implementation guidance.** Coordinate with the accounts team before altering anything that affects service-account behavior. Document any approved deviation in the exceptions register with a scheduled review date. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. Document any approved deviation in the exceptions register with a scheduled review date. Retain the prior configuration so that a rollback can be performed without rebuilding the host.
 
-**Verification.** Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Automated property checks generate varied host states to confirm the control behaves consistently. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. The verifier records the before and after state for inclusion in the assessment package.
+**Verification.** Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Assessors may re-run the audit after applying patches to confirm the host has converged.
 
-**References.** Governing Security Policy GSP-2024 §5.7; Baseline Configuration Guide BCG-7.5; Baseline Configuration Guide BCG-7.4; Baseline Configuration Guide BCG-3.3
-
-**Revision history.**
-- 2023-08: editorial revision to AU-008; clarified scope and wording.
-- 2025-09: editorial revision to AU-008; clarified scope and wording.
-- 2023-11: editorial revision to AU-008; clarified scope and wording.
-- 2022-07: editorial revision to AU-008; clarified scope and wording.
-
-
-### AU-009 — Baseline interface configuration
-
-**Domain:** Audit and Accountability  **Severity:** Moderate  **Applies to:** service-account-bearing hosts
-
-**Rationale.** This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy. The control exists to keep remediation deterministic so that repeated audits converge on a stable state. This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy.
-
-**Requirement.** Coordinate with the accounts team before altering anything that affects service-account behavior. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
-
-**Implementation guidance.** Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Document any approved deviation in the exceptions register with a scheduled review date. Coordinate with the accounts team before altering anything that affects service-account behavior. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Coordinate with the accounts team before altering anything that affects service-account behavior. Changes should be staged in a non-production environment and validated against the verification procedure below.
-
-**Verification.** The verifier records the before and after state for inclusion in the assessment package. The verifier records the before and after state for inclusion in the assessment package. The verifier records the before and after state for inclusion in the assessment package. Automated property checks generate varied host states to confirm the control behaves consistently. Automated property checks generate varied host states to confirm the control behaves consistently.
-
-**References.** Vendor hardening note VHN-4-5; Vendor hardening note VHN-4-0; Vendor hardening note VHN-1-3; Baseline Configuration Guide BCG-4.5
+**References.** Prior assessment finding AF-5; Lab Operations Runbook ROB-6
 
 **Revision history.**
-- 2022-06: editorial revision to AU-009; clarified scope and wording.
-- 2024-10: editorial revision to AU-009; clarified scope and wording.
+- 2022-05: editorial revision to AU-005; clarified scope and wording.
+- 2025-09: editorial revision to AU-005; clarified scope and wording.
 
 
-### AU-010 — Approved banner presentation
+### AU-006 — Centralized console access
+
+**Domain:** Audit and Accountability  **Severity:** Low  **Applies to:** gateway and bastion hosts
+
+**Rationale.** Consistent enforcement reduces the mean time to detect anomalous access across the estate. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations.
+
+**Requirement.** Coordinate with the accounts team before altering anything that affects service-account behavior. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
+
+**Implementation guidance.** When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Coordinate with the accounts team before altering anything that affects service-account behavior. Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. Coordinate with the accounts team before altering anything that affects service-account behavior. Coordinate with the accounts team before altering anything that affects service-account behavior. Retain the prior configuration so that a rollback can be performed without rebuilding the host.
+
+**Verification.** Automated property checks generate varied host states to confirm the control behaves consistently. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Assessors may re-run the audit after applying patches to confirm the host has converged.
+
+**References.** Lab Operations Runbook ROB-2; Governing Security Policy GSP-2024 §9.0
+
+**Revision history.**
+- 2022-01: editorial revision to AU-006; clarified scope and wording.
+- 2022-04: editorial revision to AU-006; clarified scope and wording.
+
+
+### AU-007 — Controlled umask default
+
+**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** shared interactive hosts
+
+**Rationale.** Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
+
+**Requirement.** Changes should be staged in a non-production environment and validated against the verification procedure below. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
+
+**Implementation guidance.** Prefer explicit values over relying on compiled-in defaults, which may vary between distributions. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Coordinate with the accounts team before altering anything that affects service-account behavior. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Changes should be staged in a non-production environment and validated against the verification procedure below. Coordinate with the accounts team before altering anything that affects service-account behavior.
+
+**Verification.** Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. The verifier records the before and after state for inclusion in the assessment package. The verifier records the before and after state for inclusion in the assessment package.
+
+**References.** Baseline Configuration Guide BCG-3.7; Governing Security Policy GSP-2024 §5.3
+
+**Revision history.**
+- 2025-04: editorial revision to AU-007; clarified scope and wording.
+- 2025-02: editorial revision to AU-007; clarified scope and wording.
+- 2024-03: editorial revision to AU-007; clarified scope and wording.
+- 2025-10: editorial revision to AU-007; clarified scope and wording.
+
+
+### AU-008 — Verified package provenance
+
+**Domain:** Audit and Accountability  **Severity:** Critical  **Applies to:** all managed hosts
+
+**Rationale.** Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. Adversaries routinely probe for misconfigurations of this control when establishing persistence on laboratory infrastructure. Consistent enforcement reduces the mean time to detect anomalous access across the estate.
+
+**Requirement.** Document any approved deviation in the exceptions register with a scheduled review date. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
+
+**Implementation guidance.** When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Changes should be staged in a non-production environment and validated against the verification procedure below. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Changes should be staged in a non-production environment and validated against the verification procedure below.
+
+**Verification.** Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. Automated property checks generate varied host states to confirm the control behaves consistently. Assessors may re-run the audit after applying patches to confirm the host has converged. The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
+
+**References.** Governing Security Policy GSP-2024 §3.3; Vendor hardening note VHN-8-6; Prior assessment finding AF-4
+
+**Revision history.**
+- 2022-05: editorial revision to AU-008; clarified scope and wording.
+- 2025-06: editorial revision to AU-008; clarified scope and wording.
+
+
+### AU-009 — Controlled boot integrity
 
 **Domain:** Audit and Accountability  **Severity:** High  **Applies to:** tier-1 laboratory hosts
 
-**Rationale.** The control exists to keep remediation deterministic so that repeated audits converge on a stable state. Operational experience shows that small deviations here cascade into larger exposure during incident response. The control exists to keep remediation deterministic so that repeated audits converge on a stable state. Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. The control supports reproducible builds of the host baseline and simplifies forensic comparison.
+**Rationale.** Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations. Consistent enforcement reduces the mean time to detect anomalous access across the estate. The control exists to keep remediation deterministic so that repeated audits converge on a stable state.
 
-**Requirement.** Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. This requirement aligns the gateway with the principle of least privilege mandated by the governing security policy.
+**Requirement.** Changes should be staged in a non-production environment and validated against the verification procedure below. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. The control supports reproducible builds of the host baseline and simplifies forensic comparison.
 
-**Implementation guidance.** Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Document any approved deviation in the exceptions register with a scheduled review date. Coordinate with the accounts team before altering anything that affects service-account behavior. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies.
+**Implementation guidance.** Changes should be staged in a non-production environment and validated against the verification procedure below. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Coordinate with the accounts team before altering anything that affects service-account behavior. Changes should be staged in a non-production environment and validated against the verification procedure below. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Document any approved deviation in the exceptions register with a scheduled review date. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner.
 
-**Verification.** Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation. Assessors may re-run the audit after applying patches to confirm the host has converged. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
+**Verification.** Automated property checks generate varied host states to confirm the control behaves consistently. Automated property checks generate varied host states to confirm the control behaves consistently. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. The verifier records the before and after state for inclusion in the assessment package. Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.
 
-**References.** Vendor hardening note VHN-4-4; Lab Operations Runbook ROB-2
+**References.** Lab Operations Runbook ROB-7; Prior assessment finding AF-3; Vendor hardening note VHN-8-6; Vendor hardening note VHN-4-5
 
 **Revision history.**
+- 2023-01: editorial revision to AU-009; clarified scope and wording.
+- 2022-04: editorial revision to AU-009; clarified scope and wording.
+- 2024-04: editorial revision to AU-009; clarified scope and wording.
+- 2024-01: editorial revision to AU-009; clarified scope and wording.
+
+
+### AU-010 — Mandatory package provenance
+
+**Domain:** Audit and Accountability  **Severity:** High  **Applies to:** service-account-bearing hosts
+
+**Rationale.** Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations. Inconsistent application of this requirement across hosts complicates evidence collection and weakens attestations.
+
+**Requirement.** Document any approved deviation in the exceptions register with a scheduled review date. The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. Operational experience shows that small deviations here cascade into larger exposure during incident response.
+
+**Implementation guidance.** Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes. Retain the prior configuration so that a rollback can be performed without rebuilding the host. Where automation is used, ensure the tooling reads the canonical source files rather than cached copies. When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner. Changes should be staged in a non-production environment and validated against the verification procedure below. Operators should prefer configuration that is idempotent so that re-running the auditor produces no further changes.
+
+**Verification.** The verifier records the before and after state for inclusion in the assessment package. Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control. The verifier records the before and after state for inclusion in the assessment package.
+
+**References.** Governing Security Policy GSP-2024 §2.2; Governing Security Policy GSP-2024 §5.0; Governing Security Policy GSP-2024 §4.4
+
+**Revision history.**
+- 2023-02: editorial revision to AU-010; clarified scope and wording.
+- 2023-12: editorial revision to AU-010; clarified scope and wording.
 - 2023-10: editorial revision to AU-010; clarified scope and wording.
 - 2025-04: editorial revision to AU-010; clarified scope and wording.
 
@@ -1009,7 +1030,9 @@ Prefer explicit values over relying on compiled-in defaults, which may vary betw
 
 The auditor evaluates `PermitRootLogin` and `PasswordAuthentication`. For each, when the effective value is absent or is not an accepted value, the auditor shall propose `systemd.set_dropin` with unit `sshd`, the keyword, and value `no`. In the body of this Standard the only accepted value for either keyword is `no`. *(Appendix G broadens the accepted values for one keyword.)*
 
-**Implementation guidance.** Do not let a later fragment or a value inside a `Match` block override an earlier global value; first global occurrence wins.
+*(Appendix G replaces the conditional-block handling of this control with context-based evaluation; see the amendment referencing HD-SSHD-DROPIN.)*
+
+**Implementation guidance.** Do not let a later fragment or a value inside a `Match` block override an earlier global value; first global occurrence wins, subject to the conditional-block evaluation defined in Appendix G.
 
 **Verification.** A compliant host has accepted effective values for both keywords and yields no `systemd.set_dropin` patch.
 
@@ -2622,9 +2645,49 @@ Inconsistent application of this requirement across hosts complicates evidence c
 The following amendments are in force and **supersede** the body of the referenced controls per section 1.4. They are listed in effective-date order.
 
 
+### G-2026-17 — amends HD-SSHD-DROPIN / HD-SSHD-KBDINT
+
+The instruction in HD-SSHD-DROPIN to ignore conditional blocks is superseded. The auditor evaluates the effective value of each sshd keyword for a fixed **audit connection context**: the connecting user is `root` and the source address is `198.51.100.10`. Drop-in fragments are still concatenated in ascending filename order and scanned top to bottom. Lines in global scope (before any `Match`) always apply. A `Match` line opens a conditional block that applies only when ALL of its criteria match the audit context; the supported criteria are: `User <list>` — a comma-separated list of patterns where `*` matches any user and an exact name matches that user, a pattern may be negated with a leading `!`, and a negated pattern that matches causes the criterion to fail, so the criterion matches when the connecting user `root` matches at least one non-negated pattern and no negated pattern; `Group <list>` — matches when `root` is an effective member (per AC-GROUP-EFFECTIVE) of at least one of the comma-separated groups; and `Address <list>` — a comma-separated list of exact IPv4 addresses or IPv4 CIDR ranges (`a.b.c.d/prefix`), matching when the source address `198.51.100.10` equals a listed address or falls within a listed range. `Match all` always applies. A block whose `Match` line contains any other criterion keyword does not apply. The effective value of a keyword is the FIRST occurrence, in concatenated order, that appears in global scope or within an applicable block; occurrences inside non-applicable blocks are skipped. This context evaluation governs HD-SSHD-KBDINT as well.
+
+
+### G-2026-18 — amends AC-SUDO-NOPASSWD
+
+AC-SUDO-NOPASSWD is host-scoped. Each user specification carries a host field — the token(s) between the principal and the first `=` — which is a comma-separated list of `ALL`, hostnames, or `Host_Alias` names, each optionally negated with a leading `!`. The auditor evaluates rules for the audit host whose hostname is `gw-lab-01`. A specification applies to this host only when its host field resolves to include `gw-lab-01`: `ALL` matches, an exact hostname equal to `gw-lab-01` matches, and a `Host_Alias NAME = ...` (whose members may be hostnames, `ALL`, other host aliases, or negated entries) is resolved recursively. A specification that does not apply to the audit host is ignored entirely and therefore does not participate in the last-match-wins ordering of G-2026-07 for its principal. `Defaults:<binder> !authenticate` overrides are not host-scoped and apply on every host.
+
+
+### G-2026-20 — amends AC-KEY-REVOKE
+
+Authorized key files may contain blank lines, comments, marker-style retired entries, and per-key option prefixes. For AC-KEY-REVOKE, an account is considered to possess keys only when at least one line contains an active key record. Blank lines and lines beginning with `#` are ignored. Lines beginning with `@` are marker-style retired entries and do not count as active keys. A line whose first non-option token is a recognized OpenSSH key type (`ssh-*`, `ecdsa-*`, `sk-ssh-*`, `sk-ecdsa-*`, or `rsa-sha2-*`) counts as an active key; option prefixes before that token are permitted. Option-only lines without a following key type do not count.
+
+
+### G-2026-09 — amends AC-SUDO-NOPASSWD
+
+Sudoers include directives shall be resolved. A line beginning with `@includedir` or `#includedir` (the leading `#` here is a directive, not a comment) names a drop-in directory supplied in the snapshot under the `sudoers.d` map. Its files are spliced into the policy **in ascending filename order at the position of the directive**, and the resulting lines participate in alias resolution and in the last-match-wins ordering of G-2026-07 exactly as if they had appeared inline. A specification that follows the include directive in the main file is therefore later than any rule contributed by the included files.
+
+
+### G-2026-12 — amends AU-RETENTION
+
+Audit log retention is extended to 400 days for tier-1 hosts. This amendment does not affect auditor behavior.
+
+
 ### G-2026-05 — amends AC-SUDO-NOPASSWD
 
 In addition to ordinary user specifications, a per-user or per-group `Defaults` override of the form `Defaults:<binder> !authenticate` grants passwordless sudo over the entire command set to `<binder>`, exactly as if that binder held a `NOPASSWD: ALL` user specification. `<binder>` may be a user, a `%group` reference (resolved through AC-GROUP-EFFECTIVE), or a negated principal. This overrides the body of AC-SUDO-NOPASSWD, which otherwise ignores all `Defaults` lines. The resulting principals are subject to the same disabled-account and AC-EXEMPT filtering as any other grant.
+
+
+### G-2026-02 — amends AC-SUDO-NOPASSWD
+
+A user specification qualifies as granting passwordless sudo only when the `NOPASSWD` tag applies to the entire command set, that is, only when the remainder of the rule contains `NOPASSWD: ALL` (whitespace around the colon is insignificant). Grants that attach `NOPASSWD` to specific commands do not qualify and shall not produce a `sudoers.require_password` patch.
+
+
+### G-2026-19 — amends AC-SUDO-NOPASSWD
+
+For command lists, sudo command tags are stateful. A `NOPASSWD:` or `PASSWD:` tag applies to the command entry following the colon and remains in effect for later comma-separated command entries until another password tag appears. Therefore a rule such as `alice ALL=(ALL) NOPASSWD: /usr/bin/id, ALL` grants reportable passwordless sudo because the later `ALL` command inherits `NOPASSWD`. A rule such as `alice ALL=(ALL) NOPASSWD: /usr/bin/id, PASSWD: ALL` does not grant reportable passwordless sudo because the `ALL` command is under `PASSWD`. This amendment narrows how G-2026-02 is evaluated; the runas and host-scoping amendments still apply.
+
+
+### G-2026-14 — amends MA-PATCH-WINDOW
+
+The maintenance window is shifted by one hour for the eastern region. This amendment does not affect auditor behavior.
 
 
 ### G-2026-10 — amends HD-SSHD-DROPIN
@@ -2632,9 +2695,9 @@ In addition to ordinary user specifications, a per-user or per-group `Defaults` 
 For PermitRootLogin, `without-password` is the deprecated spelling of `prohibit-password` and denotes the same effective setting; it is therefore accepted wherever `prohibit-password` is accepted. The accepted value set for the other keywords is unchanged.
 
 
-### G-2026-14 — amends MA-PATCH-WINDOW
+### G-2026-15 — amends AC-SUDO-NOPASSWD
 
-The maintenance window is shifted by one hour for the eastern region. This amendment does not affect auditor behavior.
+AC-SUDO-NOPASSWD is further narrowed so that a user specification grants reportable passwordless sudo only when the rule permits execution as the superuser. The optional Runas specification is the parenthesized list immediately following the `=` in the rule (for example `(ALL)`, `(root)`, `(www-data)`, or `(ALL:ALL)`); the runas *user* list is the portion before any `:` inside the parentheses. When no Runas specification is present the rule defaults to running as `root`. A `NOPASSWD: ALL` rule whose runas user list contains `root` or `ALL` qualifies; a `NOPASSWD: ALL` rule whose runas user list names only non-root principals does not qualify. Under the last-match-wins ordering of G-2026-07, such a non-qualifying line still names its principal and therefore sets that principal's effective state to not-passwordless, just as an ordinary non-NOPASSWD grant would.
 
 
 ### G-2026-11 — amends LG-BANNER-TEXT
@@ -2647,19 +2710,9 @@ The approved pre-authentication banner wording is updated; see Appendix C. This 
 The accumulation model in the body of AC-SUDO-NOPASSWD is superseded by **last-match-wins** semantics, consistent with how sudo resolves privileges. Process user specifications and `Defaults:<binder> !authenticate` overrides in file order; for each principal, the effective passwordless state is established by the **last** line that names that principal. Consequently a later specification that grants the principal sudo without `NOPASSWD: ALL` revokes a passwordless grant made by an earlier line, and a later `NOPASSWD: ALL` line reinstates it. Group and alias principals are resolved as in the body, and the resulting state is applied to each resolved member.
 
 
-### G-2026-02 — amends AC-SUDO-NOPASSWD
+### G-2026-16 — amends AC-ACCT-LOCK
 
-A user specification qualifies as granting passwordless sudo only when the `NOPASSWD` tag applies to the entire command set, that is, only when the remainder of the rule contains `NOPASSWD: ALL` (whitespace around the colon is insignificant). Grants that attach `NOPASSWD` to specific commands do not qualify and shall not produce a `sudoers.require_password` patch.
-
-
-### G-2026-13 — amends NW-NTP-SOURCES
-
-The list of approved time sources is revised. This amendment does not affect auditor behavior.
-
-
-### G-2026-09 — amends AC-SUDO-NOPASSWD
-
-Sudoers include directives shall be resolved. A line beginning with `@includedir` or `#includedir` (the leading `#` here is a directive, not a comment) names a drop-in directory supplied in the snapshot under the `sudoers.d` map. Its files are spliced into the policy **in ascending filename order at the position of the directive**, and the resulting lines participate in alias resolution and in the last-match-wins ordering of G-2026-07 exactly as if they had appeared inline. A specification that follows the include directive in the main file is therefore later than any rule contributed by the included files.
+AC-ACCT-LOCK is extended with an account-expiration criterion. An account is additionally disabled when the account-expiry field of its `shadow` entry — the eighth colon-separated field — is present, non-empty, and a base-ten integer strictly less than the assessment reference day `20620` (counted in days since 1970-01-01). An empty expiry field, or an integer value greater than or equal to `20620`, does not by itself disable the account. This criterion combines with the password-token and login-shell criteria: an account disabled by any one criterion is disabled.
 
 
 ### G-2026-04 — amends HD-SSHD-DROPIN
@@ -2677,14 +2730,9 @@ The service-account user-id ceiling in AC-EXEMPT is lowered from `999` to `499`.
 `ChallengeResponseAuthentication` is the deprecated spelling of `KbdInteractiveAuthentication` and denotes the same effective setting. When computing the effective value for HD-SSHD-KBDINT, occurrences of either keyword shall be treated as the same setting, so the first occurrence of either spelling in drop-in order establishes the effective value. The accepted value set is unchanged and remains `no` only.
 
 
-### G-2026-08 — amends HD-SSHD-DROPIN
+### G-2026-13 — amends NW-NTP-SOURCES
 
-A conditional block opened by `Match` is excluded only while its criteria are active. A line whose criteria are exactly `all` (`Match all`, compared case-insensitively) returns parsing to global scope, so global keyword lines appearing after it are evaluated normally under the first-occurrence rule (this applies to HD-SSHD-KBDINT as well). Only `Match` lines with non-`all` criteria suspend evaluation, up to the next `Match all` or the end of input.
-
-
-### G-2026-12 — amends AU-RETENTION
-
-Audit log retention is extended to 400 days for tier-1 hosts. This amendment does not affect auditor behavior.
+The list of approved time sources is revised. This amendment does not affect auditor behavior.
 
 
 ### G-2026-01 — amends AC-ACCT-LOCK / AC-ACCT-SHELL

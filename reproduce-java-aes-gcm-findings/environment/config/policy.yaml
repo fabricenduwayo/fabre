@@ -1,0 +1,7 @@
+# Mariner AES-GCM forensic policy — operative parameters for the
+# 2026 mid-year media-evidence review.
+review_date: "2026-06-01"
+gif_fixture: "/app/fixtures/evidence.gif"
+jdbc_url: "jdbc:sqlite:/app/data/forensic_audit.db"
+aad_binding: frame_id
+algorithm: AES-256-GCM

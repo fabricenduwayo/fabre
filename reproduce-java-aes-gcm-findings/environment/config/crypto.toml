@@ -1,0 +1,6 @@
+# Vault key-version catalogue cross-reference.
+active_versions = [1, 2, 3, 4]
+
+[gcm]
+nonce_length_bytes = 12
+tag_length_bytes = 16

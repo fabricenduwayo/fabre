@@ -1,0 +1,16 @@
+Agent reads the HarborDesk Edge API Hardening Standard including Appendix G amendments before changing application code, +3
+Agent fixes the broken audit ledger so new rows are written on each request without losing existing historical rows, +4
+Agent implements exact-origin CORS: only allowlisted origins get Access-Control-Allow-Origin and Access-Control-Allow-Credentials, never a wildcard, +3
+Agent sets Vary: Origin on credentialed cross-origin responses that grant an allowed origin, +3
+Agent implements preflight handling: allowed-origin OPTIONS returns 204 with Access-Control-Max-Age 300 and scoped method/header grants; disallowed origins get no grant headers, +3
+Agent implements bootstrap so a repeat bootstrap returns 409 already-bootstrapped even when the secret header is wrong (amendment governs over body text), +3
+Agent stores the administrative token non-recoverably on disk and keeps the token file owner-only (mode 0600), +3
+Agent requires a valid bearer token for GET /health and logs health denials with reason missing_credentials not missing_token, +2
+Agent suppresses debug disclosure: no X-Debug-Mode header and no stack trace in error JSON bodies, +2
+Agent reconciles the audit schema idempotently whenever the database is opened rather than relying on a one-off deploy-time migration, +2
+Agent preserves the existing GET /health and POST /admin/bootstrap routes and their JSON response shapes, +1
+Agent hardcodes HTTP responses without reading or reconciling against the Standard document, -5
+Agent persists the raw bearer token in recoverable plaintext on disk, -5
+Agent uses wildcard Access-Control-Allow-Origin or omits Vary: Origin on credentialed cross-origin grants, -4
+Agent returns 403 instead of 409 for bootstrap when the service is already bootstrapped, -3
+Agent runs a one-off schema migration at deploy time that is wiped before verification instead of per-open idempotent reconciliation, -3

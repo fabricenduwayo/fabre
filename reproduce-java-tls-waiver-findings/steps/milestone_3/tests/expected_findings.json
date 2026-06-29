@@ -1,0 +1,266 @@
+[
+  {
+    "service_id": "svc-001",
+    "service_name": "mariner-edge-gateway",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "fingerprint_mismatch",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-002",
+    "service_name": "mariner-auth-broker",
+    "environment": "staging",
+    "disposition": "deny",
+    "reason_code": "fingerprint_mismatch",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-003",
+    "service_name": "mariner-billing-api",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "waiver_expired",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-004",
+    "service_name": "mariner-fulfillment",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "waiver_expired",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-005",
+    "service_name": "mariner-telemetry",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "waiver_revoked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-006",
+    "service_name": "mariner-config-service",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "waiver_revoked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-007",
+    "service_name": "mariner-search-index",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "tls_version_blocked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-008",
+    "service_name": "mariner-dev-sandbox",
+    "environment": "dev",
+    "disposition": "deny",
+    "reason_code": "tls_version_blocked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-009",
+    "service_name": "mariner-payments-gw",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "mtls_missing",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-010",
+    "service_name": "mariner-partner-api",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "mtls_missing",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-011",
+    "service_name": "mariner-audit-log",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "chain_invalid",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-012",
+    "service_name": "mariner-notifications",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "cert_near_expiry",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-013",
+    "service_name": "mariner-staging-portal",
+    "environment": "staging",
+    "disposition": "rotate",
+    "reason_code": "cert_near_expiry",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-014",
+    "service_name": "mariner-reporting",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "cert_near_expiry",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-015",
+    "service_name": "mariner-legacy-soap",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "weak_key",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-016",
+    "service_name": "mariner-iot-bridge",
+    "environment": "dev",
+    "disposition": "rotate",
+    "reason_code": "weak_key",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-017",
+    "service_name": "mariner-cdn-origin",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "untrusted_issuer",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-018",
+    "service_name": "mariner-docs-site",
+    "environment": "staging",
+    "disposition": "rotate",
+    "reason_code": "untrusted_issuer",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-019",
+    "service_name": "mariner-grpc-mesh",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-020",
+    "service_name": "mariner-webhook-relay",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-021",
+    "service_name": "mariner-ml-gateway",
+    "environment": "prod",
+    "disposition": "allow",
+    "reason_code": "active_waiver_ok",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-022",
+    "service_name": "mariner-vault-proxy",
+    "environment": "prod",
+    "disposition": "allow",
+    "reason_code": "active_waiver_ok",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-023",
+    "service_name": "mariner-status-page",
+    "environment": "prod",
+    "disposition": "allow",
+    "reason_code": "compliant",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-024",
+    "service_name": "mariner-feature-flags",
+    "environment": "staging",
+    "disposition": "allow",
+    "reason_code": "compliant",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-025",
+    "service_name": "mariner-batch-scheduler",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-026",
+    "service_name": "mariner-export-gateway",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-027",
+    "service_name": "mariner-archive-store",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-028",
+    "service_name": "mariner-quota-service",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "tls_version_blocked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-029",
+    "service_name": "mariner-rate-limiter",
+    "environment": "prod",
+    "disposition": "deny",
+    "reason_code": "tls_version_blocked",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-030",
+    "service_name": "mariner-session-store",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "weak_key",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-031",
+    "service_name": "mariner-pref-service",
+    "environment": "prod",
+    "disposition": "allow",
+    "reason_code": "compliant",
+    "waiver_applied": false
+  },
+  {
+    "service_id": "svc-032",
+    "service_name": "mariner-trace-collector",
+    "environment": "prod",
+    "disposition": "rotate",
+    "reason_code": "waiver_expiring_soon",
+    "waiver_applied": true
+  },
+  {
+    "service_id": "svc-033",
+    "service_name": "mariner-preview-portal",
+    "environment": "staging",
+    "disposition": "allow",
+    "reason_code": "active_waiver_ok",
+    "waiver_applied": true
+  }
+]

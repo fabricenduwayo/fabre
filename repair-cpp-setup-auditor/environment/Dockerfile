@@ -2,34 +2,38 @@ FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a9
 
 WORKDIR /app
 
+# Common Debian build/runtime packages are left unpinned: bookworm serves a
+# single version of each, and the digest-pinned base image fixes the snapshot,
+# so this stays reproducible while avoiding build breaks when point releases
+# supersede a pinned security version (e.g. ca-certificates) in the mirror.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        g++=4:12.2.0-3 \
-        cmake=3.25.1-1 \
-        make=4.3-4.1 \
-        nlohmann-json3-dev=3.11.2-2 \
-        curl=7.88.1-10+deb12u14 \
-        ca-certificates=20230311+deb12u1 \
-        procps=2:4.0.2-3 \
-        tmux=3.3a-3 \
-        asciinema=2.2.0-1 \
+        g++ \
+        cmake \
+        make \
+        nlohmann-json3-dev \
+        ca-certificates \
+        procps \
+        tmux \
+        asciinema \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir \
-        pytest==8.2.2 \
-        pytest-json-ctrf==0.3.5
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.txt
 
 COPY cpp-auditor/ /app/cpp-auditor/
 COPY fixtures/ /app/fixtures/
 COPY docs/ /app/docs/
 
-# Header-only HTTP server, pinned and checksum-verified (no canonical apt package
-# exists in bookworm). Downloaded at build time only; the task runs offline.
-RUN mkdir -p /app/cpp-auditor/include \
-    && curl -fsSL -o /app/cpp-auditor/include/httplib.h \
-        https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.15.3/httplib.h \
-    && echo "a3347656c71c81c3fe510fdb1ff229d7db52eb7df04d3342d340eba0b6ad50ea  /app/cpp-auditor/include/httplib.h" \
-        | sha256sum -c -
+# Persistent audit ledger, left over from an older release in the legacy
+# schema-1 layout (records under "audits"). The service is expected to keep
+# appending audits here.
+RUN mkdir -p /app/cpp-auditor/state \
+    && printf '%s' '{"schema": 1, "audits": [{"action": "audit.bootstrap", "target": "legacy-seed"}]}' \
+        > /app/cpp-auditor/state/ledger.json
 
+# Header-only HTTP server (cpp-httplib v0.15.3), vendored under
+# cpp-auditor/include/ so the build has no external network dependency. The
+# header is copied in with the rest of cpp-auditor/ above.
 RUN cmake -S /app/cpp-auditor -B /app/cpp-auditor/build \
     && cmake --build /app/cpp-auditor/build -j 2

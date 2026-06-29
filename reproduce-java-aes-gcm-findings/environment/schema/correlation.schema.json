@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/correlation.schema.json",
+  "title": "Audit-database correlation",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "frame_id",
+      "label",
+      "gif_index",
+      "key_version",
+      "key_source",
+      "nonce_hex",
+      "nonce_source"
+    ],
+    "properties": {
+      "frame_id": {
+        "type": "string",
+        "pattern": "^frm-[0-9]{3}$"
+      },
+      "label": {
+        "type": "string"
+      },
+      "gif_index": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "key_version": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "key_source": {
+        "type": "string",
+        "enum": [
+          "rotation_replacement",
+          "latest_assigned"
+        ]
+      },
+      "nonce_hex": {
+        "type": "string",
+        "pattern": "^[0-9A-F]{24}$"
+      },
+      "nonce_source": {
+        "type": "string",
+        "enum": [
+          "derived",
+          "override"
+        ]
+      }
+    }
+  }
+}

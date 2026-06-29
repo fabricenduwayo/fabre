@@ -1,18 +1,40 @@
 <?php
 // HTTP helpers: CORS, JSON responses, and error replies.
 
-function apply_cors($config)
+function cors_origin_allowed($config, $origin)
 {
-    // Only the allowlisted internal origin is granted access, and because we
-    // support credentialed requests we must echo the exact origin (never '*')
-    // and vary on it. Every other origin gets no CORS grant at all.
-    $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
-    if ($origin !== null && hash_equals($config['allowed_origin'], $origin)) {
+    // CO-ORIGIN-ALLOW (as amended by G-2026-01): exact, byte-for-byte match
+    // against the allowlist. No normalization, no suffix/port matching.
+    if ($origin === null) {
+        return false;
+    }
+    foreach ($config['allowed_origins'] as $allowed) {
+        if (hash_equals($allowed, $origin)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function apply_cors($config, $origin)
+{
+    // Only an allowlisted origin receives a credentialed grant, echoed exactly
+    // (never '*'), with Vary: Origin. Every other origin gets no grant at all.
+    if (cors_origin_allowed($config, $origin)) {
         header('Access-Control-Allow-Origin: ' . $origin);
         header('Access-Control-Allow-Credentials: true');
         header('Vary: Origin');
+    }
+}
+
+function apply_preflight($config, $origin)
+{
+    // CO-PREFLIGHT: method/header/max-age hints are emitted only for an allowed
+    // origin. Max-Age is 300 per G-2026-02.
+    if (cors_origin_allowed($config, $origin)) {
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Bootstrap-Secret');
+        header('Access-Control-Max-Age: ' . $config['preflight_max_age']);
     }
 }
 
@@ -28,6 +50,7 @@ function send_json($config, $status, $payload, $extra = [])
 
 function fail($config, $status, $message, $detail = null)
 {
+    // EH-NO-DISCLOSE: generic error body, no trace, no debug header.
     $body = ['error' => $message];
     $extra = [];
     if (!empty($config['debug'])) {

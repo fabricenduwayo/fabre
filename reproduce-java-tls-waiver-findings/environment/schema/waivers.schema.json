@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/waivers.schema.json",
+  "title": "Decoded waiver register",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "service_id",
+      "service_name",
+      "waiver_id",
+      "waiver_type",
+      "status",
+      "scope",
+      "granted_on",
+      "expires_on",
+      "revoked_on"
+    ],
+    "properties": {
+      "service_id": {
+        "type": "string",
+        "pattern": "^svc-[0-9]{3}$"
+      },
+      "service_name": {
+        "type": "string"
+      },
+      "waiver_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "waiver_type": {
+        "type": "string",
+        "enum": [
+          "tls",
+          "mtls",
+          "chain",
+          "none"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "granted",
+          "revoked",
+          "none"
+        ]
+      },
+      "scope": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "all",
+          "prod",
+          "staging",
+          "dev",
+          null
+        ]
+      },
+      "granted_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      },
+      "expires_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      },
+      "revoked_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date"
+      }
+    }
+  }
+}

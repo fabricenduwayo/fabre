@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/rules.schema.json",
+  "title": "Extracted cryptographic exception rules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_date",
+    "key_selection_precedence",
+    "nonce_selection_precedence",
+    "derived_nonce_rule",
+    "nonce_overrides"
+  ],
+  "properties": {
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "key_selection_precedence": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string",
+        "enum": [
+          "rotation_replacement",
+          "latest_key_assigned"
+        ]
+      }
+    },
+    "nonce_selection_precedence": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string",
+        "enum": [
+          "report_override",
+          "derived_sha256_prefix"
+        ]
+      }
+    },
+    "derived_nonce_rule": {
+      "type": "string"
+    },
+    "nonce_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9A-F]{24}$"
+      }
+    }
+  }
+}

@@ -1,8 +1,4 @@
 <?php
-// HarborDesk front controller. Routes:
-//   GET  /health           -> authenticated health check
-//   POST /admin/bootstrap  -> one-time admin token bootstrap
-// Both are recorded in the SQLite audit ledger.
 
 $config = require __DIR__ . '/config.php';
 require __DIR__ . '/lib/audit.php';
@@ -22,6 +18,7 @@ $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : null;
 
 if ($method === 'OPTIONS') {
+    apply_preflight($config);
     http_response_code(204);
     exit;
 }
@@ -32,11 +29,13 @@ if ($path === '/health' && $method === 'GET') {
     if (preg_match('/^Bearer\s+(.+)$/', $auth, $m)) {
         $token = $m[1];
     }
-    $stored = is_file($config['token_file']) ? trim(file_get_contents($config['token_file'])) : null;
-    // Staging default: the token is kept verbatim and compared verbatim.
+    $stored = read_admin_token($config);
     if ($token !== null && $stored !== null && hash_equals($stored, $token)) {
         audit_log($config, 'health', $path, $origin, 'accepted', null);
         send_json($config, 200, ['status' => 'ok']);
+    } elseif ($token === null) {
+        audit_log($config, 'health', $path, $origin, 'denied', 'missing_token');
+        fail($config, 401, 'unauthorized');
     } else {
         audit_log($config, 'health', $path, $origin, 'denied', 'invalid_token');
         fail($config, 401, 'unauthorized');
@@ -48,6 +47,7 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     if ($raw !== '' && $data === null) {
+        audit_log($config, 'bootstrap', $path, $origin, 'denied', 'malformed_request');
         fail($config, 400, 'bad request', 'json error: ' . json_last_error_msg());
         exit;
     }
@@ -57,8 +57,6 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
         ? trim(file_get_contents($config['bootstrap_secret_file']))
         : null;
 
-    // Staging default: plaintext bootstrap is allowed, so anyone can mint a
-    // token and re-bootstrapping just overwrites the previous one.
     $allowed = false;
     if (!empty($config['allow_plaintext_bootstrap'])) {
         $allowed = true;
@@ -67,7 +65,13 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     }
 
     if (!$allowed) {
-        audit_log($config, 'bootstrap', $path, $origin, 'denied', 'not_allowed');
+        audit_log($config, 'bootstrap', $path, $origin, 'denied', 'invalid_secret');
+        fail($config, 403, 'forbidden');
+        exit;
+    }
+
+    if (admin_token_exists($config)) {
+        audit_log($config, 'bootstrap', $path, $origin, 'denied', 'already_bootstrapped');
         fail($config, 403, 'forbidden');
         exit;
     }

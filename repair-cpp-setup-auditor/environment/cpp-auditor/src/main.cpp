@@ -1,7 +1,9 @@
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "httplib.h"
 #include <nlohmann/json.hpp>
@@ -11,6 +13,37 @@
 #include "parse.hpp"
 
 using nlohmann::json;
+
+namespace {
+
+std::string ledger_path() {
+    const char* p = std::getenv("AUDITOR_LEDGER");
+    return p ? std::string(p) : std::string("/app/cpp-auditor/state/ledger.json");
+}
+
+// Append each emitted patch to the persistent audit ledger so re-runs have a
+// durable record of what was proposed for every host.
+void record_audit(const std::vector<json>& patches) {
+    const std::string path = ledger_path();
+    try {
+        json ledger = json::object();
+        std::ifstream in(path);
+        if (in) {
+            in >> ledger;
+        }
+        json& entries = ledger.at("entries");
+        for (const auto& patch : patches) {
+            entries.push_back(patch);
+        }
+        ledger["schema"] = 2;
+        std::ofstream out(path);
+        out << ledger.dump();
+    } catch (const std::exception&) {
+        // Logging is best-effort; never let a ledger problem fail an audit.
+    }
+}
+
+}  // namespace
 
 int main() {
     const char* port_env = std::getenv("AUDITOR_PORT");
@@ -37,7 +70,9 @@ int main() {
                 g_registry.insert(kv);
             }
             inv.accounts = g_registry;
-            out["patches"] = run_audit(inv);
+            std::vector<json> patches = run_audit(inv);
+            record_audit(patches);
+            out["patches"] = patches;
         } catch (const std::exception& e) {
             res.status = 400;
             out["error"] = e.what();

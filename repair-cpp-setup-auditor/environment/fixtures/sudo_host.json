@@ -1,0 +1,12 @@
+{
+  "files": {
+    "passwd": "root:x:0:0::/root:/bin/bash\nalice:x:1000:100::/home/alice:/bin/bash\nbob:x:1001:100::/home/bob:/bin/bash\ncarol:x:1002:100::/home/carol:/bin/bash\n",
+    "shadow": "root:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\nalice:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\nbob:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\ncarol:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\n",
+    "group": "root:x:0:\nusers:x:100:\n",
+    "sudoers": "Defaults env_reset\nHost_Alias LABHOSTS = gw-lab-01, bastion-1\nalice gw-lab-01=(ALL) NOPASSWD: ALL\nbob db-prod-07=(ALL) NOPASSWD: ALL\ncarol LABHOSTS=(ALL) NOPASSWD: ALL\nalice edge-09=(ALL) ALL\n",
+    "authorized_keys": {},
+    "sshd_config.d": {
+      "10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"
+    }
+  }
+}

@@ -9,6 +9,12 @@ fi
 mkdir -p /logs/verifier
 
 cmake -S /app/cpp-auditor -B /app/cpp-auditor/build >/tmp/cmake_configure.log 2>&1
+if [ $? -ne 0 ]; then
+    echo "CMake configure failed" >&2
+    tail -n 40 /tmp/cmake_configure.log >&2
+    echo 0 > /logs/verifier/reward.txt
+    exit 0
+fi
 cmake --build /app/cpp-auditor/build -j 2 >/tmp/cmake_build.log 2>&1
 if [ $? -ne 0 ]; then
     echo "C++ build failed" >&2
@@ -16,6 +22,12 @@ if [ $? -ne 0 ]; then
     echo 0 > /logs/verifier/reward.txt
     exit 0
 fi
+
+# Reset the audit ledger to its legacy schema-1 state so the auditor must
+# reconcile it at runtime; removing the file in a solution is not sufficient.
+mkdir -p /app/cpp-auditor/state
+printf '%s' '{"schema": 1, "audits": [{"action": "audit.bootstrap", "target": "legacy-seed"}]}' \
+    > /app/cpp-auditor/state/ledger.json
 
 AUDITOR_PORT=8080 /app/cpp-auditor/build/setup_auditor &
 CPP_PID=$!

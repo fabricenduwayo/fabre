@@ -1,16 +1,23 @@
 #!/bin/bash
 set -uo pipefail
 
+if [ "$PWD" = "/" ]; then
+    echo "Error: No working directory set." >&2
+    exit 1
+fi
+
 mkdir -p /logs/verifier
 
 APP=/app/harbordesk
 
-# Start from a clean token and re-seed the production (legacy) audit ledger so
-# the run is deterministic and the schema defect must be fixed in code, not by
-# deleting the database file.
-rm -f "$APP/data/admin_token" "$APP/data/audit.db"
+# Start from a clean token and re-seed the production (legacy) audit ledger with
+# its historical rows, so the run is deterministic and the schema defect must be
+# fixed in code (preserving history), not by deleting the database file. The
+# randomized tests re-seed per case via the same legacy layout.
+rm -f "$APP/data/admin_token"
+rm -f "$APP/data/audit.db"
 sqlite3 "$APP/data/audit.db" \
-    "CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, actor TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT);"
+    "CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, actor TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:00:00+00:00', 'health', '/health', 'svc-legacy', 'accepted', 'legacy_history'); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:05:00+00:00', 'bootstrap', '/admin/bootstrap', 'svc-legacy', 'denied', 'legacy_history');"
 
 bash "$APP/start.sh" >/tmp/harbordesk.log 2>&1 &
 SERVER_PID=$!

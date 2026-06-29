@@ -1,6 +1,4 @@
 <?php
-// Audit logging into the SQLite ledger. Every bootstrap attempt and health
-// check is recorded with its decision so operators can review access later.
 
 function audit_db($config)
 {
@@ -36,7 +34,6 @@ function audit_log($config, $event, $route, $origin, $decision, $reason)
         $stmt->execute();
         $db->close();
     } catch (Throwable $e) {
-        // Best effort: a logging hiccup must never break a request.
         if (!empty($config['debug'])) {
             error_log('audit: ' . $e->getMessage());
         }

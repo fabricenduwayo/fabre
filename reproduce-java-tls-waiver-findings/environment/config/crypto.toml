@@ -1,0 +1,11 @@
+# Mariner key-strength and certificate-authority trust policy.
+# The trusted_issuers list is the authoritative trust anchor set.
+trusted_issuers = [
+    "Mariner Internal CA G2",
+    "Mariner Public CA R3",
+    "DigiCert Global G3",
+]
+
+[keys]
+min_rsa_bits = 2048
+min_ec_bits = 256

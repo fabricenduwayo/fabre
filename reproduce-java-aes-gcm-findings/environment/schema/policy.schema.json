@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/policy.schema.json",
+  "title": "Mariner AES-GCM forensic policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_date",
+    "gif_fixture",
+    "jdbc_url",
+    "aad_binding",
+    "algorithm"
+  ],
+  "properties": {
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "gif_fixture": {
+      "type": "string"
+    },
+    "jdbc_url": {
+      "type": "string"
+    },
+    "aad_binding": {
+      "type": "string",
+      "enum": [
+        "frame_id"
+      ]
+    },
+    "algorithm": {
+      "type": "string",
+      "enum": [
+        "AES-256-GCM"
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/crypto.schema.json",
+  "title": "Mariner GCM parameters",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active_versions",
+    "gcm"
+  ],
+  "properties": {
+    "active_versions": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "gcm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nonce_length_bytes",
+        "tag_length_bytes"
+      ],
+      "properties": {
+        "nonce_length_bytes": {
+          "type": "integer",
+          "enum": [
+            12
+          ]
+        },
+        "tag_length_bytes": {
+          "type": "integer",
+          "enum": [
+            16
+          ]
+        }
+      }
+    }
+  }
+}

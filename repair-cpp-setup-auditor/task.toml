@@ -7,11 +7,11 @@ difficulty = "medium"
 category = "security"
 subcategories = ["long_context"]
 number_of_milestones = 0
-codebase_size = "minimal"
+codebase_size = "small"
 languages = ["cpp", "bash"]
-tags = ["security", "cmake", "sudoers", "sshd", "long-context", "parsing"]
-expert_time_estimate_min = 90
-junior_time_estimate_min = 180
+tags = ["security", "sudoers", "sshd", "cpp", "debugging"]
+expert_time_estimate_min = 120
+junior_time_estimate_min = 240
 
 [verifier]
 timeout_sec = 450.0

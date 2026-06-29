@@ -1,0 +1,15 @@
+{
+  "files": {
+    "passwd": "alice:x:1001:100::/home/alice:/bin/bash\nbob:x:1002:100::/home/bob:/bin/bash\ncarol:x:1003:100::/home/carol:/bin/false\ndan:x:1004:100::/home/dan:/bin/false\n",
+    "shadow": "alice:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nbob:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\ncarol:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\ndan:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\nalice ALL=(ALL) NOPASSWD: /usr/bin/id, ALL\nbob ALL=(ALL) NOPASSWD: /usr/bin/id, PASSWD: ALL\n",
+    "authorized_keys": {
+      "carol": "# key rotated out by access team\n@revoked ssh-ed25519 AAAAcarol carol@lab\n",
+      "dan": "from=\"198.51.100.0/24\",no-pty ssh-ed25519 AAAAdan dan@lab\n"
+    },
+    "sshd_config.d": {
+      "10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"
+    }
+  }
+}

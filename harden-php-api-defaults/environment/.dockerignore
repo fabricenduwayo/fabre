@@ -1,6 +1,8 @@
 .git
 .gitignore
+**/build/
 **/__pycache__/
+**/*.o
 **/*.pyc
 **/.pytest_cache/
 **/.mypy_cache/

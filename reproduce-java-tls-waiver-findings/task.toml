@@ -1,0 +1,67 @@
+# Task configuration schema version
+version = "2.0"
+
+# Task metadata (author, difficulty, categorization)
+[metadata]
+author_name = "Fabrice Nduwayo"
+author_email = "fabrice.nduwayo12@gmail.com"
+difficulty = "medium"
+category = "security"
+# Options for subcategories are: "long_context", "tool_specific", "api_integration", "db_interaction", "ui_building"
+subcategories = ["long_context", "db_interaction"]
+# Total milestone count — must match the number of [[steps]] blocks below
+number_of_milestones = 3
+# Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
+codebase_size = "small"
+# Coding languages used in the oracle solution or required by the agent
+languages = ["java", "bash", "sql"]
+# For tool_specific, api_integration, and db_interaction subcategories, please include specific tool, api framework, or database software
+tags = ["security", "tls", "java", "h2", "jdbc"]
+# Estimated time to complete (minutes)
+expert_time_estimate_min = 150
+junior_time_estimate_min = 300
+
+# Sandbox environment limits — applied across all milestones (the same container is shared)
+[environment]
+allow_internet = false
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+workdir = "/app"
+
+[verifier]
+timeout_sec = 450.0
+
+[agent]
+timeout_sec = 1800.0
+
+# Milestone 1 — Decode Waiver Narrative
+[[steps]]
+name = "milestone_1"
+
+[steps.agent]
+timeout_sec = 1800.0
+
+[steps.verifier]
+timeout_sec = 450.0
+
+# Milestone 2 — Join Probe Evidence
+[[steps]]
+name = "milestone_2"
+
+[steps.agent]
+timeout_sec = 1800.0
+
+[steps.verifier]
+timeout_sec = 450.0
+
+# Milestone 3 — Validate Config Schemas
+[[steps]]
+name = "milestone_3"
+
+[steps.agent]
+timeout_sec = 1800.0
+
+[steps.verifier]
+timeout_sec = 450.0

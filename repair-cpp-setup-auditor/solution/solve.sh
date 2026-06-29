@@ -13,9 +13,10 @@ cp "$HERE/parse.cpp" "$SRC/parse.cpp"
 # - rules: lowered service-account uid ceiling, extended exempt roster, and the
 #   prohibit-password/without-password allowance for PermitRootLogin.
 cp "$HERE/audit.cpp" "$SRC/audit.cpp"
-# - handler: the auditor must be stateless. The shipped service caches account
-#   facts in a process-wide registry, so audits drift once several hosts that
-#   share usernames have been processed; restore per-request isolation.
+# - handler: restore per-request isolation (the shipped service caches account
+#   facts in a process-wide registry, so audits drift across hosts) and fix the
+#   audit ledger, which silently stopped writing because the on-disk file is in
+#   the legacy schema-1 layout; migrate it to schema 2 and keep appending.
 cp "$HERE/main.cpp" "$SRC/main.cpp"
 
 cmake -S /app/cpp-auditor -B /app/cpp-auditor/build

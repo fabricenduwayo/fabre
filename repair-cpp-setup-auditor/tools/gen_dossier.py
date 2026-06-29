@@ -273,7 +273,9 @@ NORMATIVE["HD-SSHD-DROPIN"] = """### HD-SSHD-DROPIN — Effective sshd drop-in s
 
 The auditor evaluates `PermitRootLogin` and `PasswordAuthentication`. For each, when the effective value is absent or is not an accepted value, the auditor shall propose `systemd.set_dropin` with unit `sshd`, the keyword, and value `no`. In the body of this Standard the only accepted value for either keyword is `no`. *(Appendix G broadens the accepted values for one keyword.)*
 
-**Implementation guidance.** Do not let a later fragment or a value inside a `Match` block override an earlier global value; first global occurrence wins.
+*(Appendix G replaces the conditional-block handling of this control with context-based evaluation; see the amendment referencing HD-SSHD-DROPIN.)*
+
+**Implementation guidance.** Do not let a later fragment or a value inside a `Match` block override an earlier global value; first global occurrence wins, subject to the conditional-block evaluation defined in Appendix G.
 
 **Verification.** A compliant host has accepted effective values for both keywords and yields no `systemd.set_dropin` patch.
 
@@ -300,6 +302,27 @@ NORMATIVE["HD-SSHD-KBDINT"] = """### HD-SSHD-KBDINT — Effective keyboard-inter
 
 **Revision history.**
 - 2025-03: initial publication.
+"""
+
+NORMATIVE["AU-LEDGER"] = """### AU-LEDGER — Audit ledger schema and durability
+
+**Domain:** Audit and Accountability  **Severity:** High  **Applies to:** all managed hosts
+
+**Rationale.** The auditor keeps a persistent ledger of the patches it proposes so that operators have a durable record of remediation across runs. A ledger that silently stops recording is itself a reportable failure.
+
+**Requirement.** The auditor shall maintain a persistent JSON ledger. The **current ledger schema is version 2**: the ledger is a JSON object carrying a `schema` field whose value is the integer `2`, and an `entries` field whose value is a JSON array. Each element of `entries` is one proposed patch object, in the same shape the auditor returns from an audit. For every audited request, the auditor shall append each patch it emits to the `entries` array and persist the result.
+
+The on-disk ledger that ships with the host predates the current schema: it is in the **legacy schema 1** layout, a JSON object whose `schema` is `1` (or absent) and whose records are stored under an `audits` array rather than `entries`. The auditor shall **migrate the legacy ledger forward** to schema 2 — moving every existing record from `audits` into `entries` unchanged and setting `schema` to `2` — and then append new patches. Migration shall **preserve every pre-existing record**; a reconciliation that discards history, or that downgrades the in-code schema to keep writing under `audits`, is non-compliant.
+
+**Implementation guidance.** Ledger writes shall be durable: a write that fails is a defect to be fixed, not silently swallowed. The legacy file on disk is authoritative only as to the *records it already holds*, not as to the schema the auditor must write.
+
+**Verification.** After an audit, the ledger is a schema-2 object whose `entries` array contains the pre-existing legacy records plus every patch emitted by the audit.
+
+**References.** Governing Security Policy GSP-2024 §3.4; Prior assessment finding AF-22
+
+**Revision history.**
+- 2023-06: initial publication (schema 1).
+- 2025-10: schema 2 introduced; records moved from `audits` to `entries`.
 """
 
 # ---------------------------------------------------------------------------
@@ -355,14 +378,30 @@ AMENDMENTS_REAL = [
      "earlier line, and a later `NOPASSWD: ALL` line reinstates it. Group and "
      "alias principals are resolved as in the body, and the resulting state is "
      "applied to each resolved member."),
-    ("G-2026-08", "HD-SSHD-DROPIN",
-     "A conditional block opened by `Match` is excluded only while its criteria "
-     "are active. A line whose criteria are exactly `all` (`Match all`, compared "
-     "case-insensitively) returns parsing to global scope, so global keyword "
-     "lines appearing after it are evaluated normally under the first-occurrence "
-     "rule (this applies to HD-SSHD-KBDINT as well). Only `Match` lines with "
-     "non-`all` criteria suspend evaluation, up to the next `Match all` or the "
-     "end of input."),
+    ("G-2026-17", "HD-SSHD-DROPIN / HD-SSHD-KBDINT",
+     "The instruction in HD-SSHD-DROPIN to ignore conditional blocks is "
+     "superseded. The auditor evaluates the effective value of each sshd keyword "
+     "for a fixed **audit connection context**: the connecting user is `root` and "
+     "the source address is `198.51.100.10`. Drop-in fragments are still "
+     "concatenated in ascending filename order and scanned top to bottom. Lines "
+     "in global scope (before any `Match`) always apply. A `Match` line opens a "
+     "conditional block that applies only when ALL of its criteria match the "
+     "audit context; the supported criteria are: `User <list>` — a "
+     "comma-separated list of patterns where `*` matches any user and an exact "
+     "name matches that user, a pattern may be negated with a leading `!`, and a "
+     "negated pattern that matches causes the criterion to fail, so the criterion "
+     "matches when the connecting user `root` matches at least one non-negated "
+     "pattern and no negated pattern; `Group <list>` — matches when `root` is an "
+     "effective member (per AC-GROUP-EFFECTIVE) of at least one of the "
+     "comma-separated groups; and `Address <list>` — a comma-separated list of "
+     "exact IPv4 addresses or IPv4 CIDR ranges (`a.b.c.d/prefix`), matching when "
+     "the source address `198.51.100.10` equals a listed address or falls within "
+     "a listed range. `Match all` always applies. A block whose `Match` line "
+     "contains any other criterion keyword does not apply. The effective value of "
+     "a keyword is the FIRST occurrence, in concatenated order, that appears in "
+     "global scope or within an applicable block; occurrences inside "
+     "non-applicable blocks are skipped. This context evaluation governs "
+     "HD-SSHD-KBDINT as well."),
     ("G-2026-09", "AC-SUDO-NOPASSWD",
      "Sudoers include directives shall be resolved. A line beginning with "
      "`@includedir` or `#includedir` (the leading `#` here is a directive, not a "
@@ -378,6 +417,42 @@ AMENDMENTS_REAL = [
      "`prohibit-password` and denotes the same effective setting; it is "
      "therefore accepted wherever `prohibit-password` is accepted. The accepted "
      "value set for the other keywords is unchanged."),
+    ("G-2026-15", "AC-SUDO-NOPASSWD",
+     "AC-SUDO-NOPASSWD is further narrowed so that a user specification grants "
+     "reportable passwordless sudo only when the rule permits execution as the "
+     "superuser. The optional Runas specification is the parenthesized list "
+     "immediately following the `=` in the rule (for example `(ALL)`, `(root)`, "
+     "`(www-data)`, or `(ALL:ALL)`); the runas *user* list is the portion before "
+     "any `:` inside the parentheses. When no Runas specification is present the "
+     "rule defaults to running as `root`. A `NOPASSWD: ALL` rule whose runas user "
+     "list contains `root` or `ALL` qualifies; a `NOPASSWD: ALL` rule whose runas "
+     "user list names only non-root principals does not qualify. Under the "
+     "last-match-wins ordering of G-2026-07, such a non-qualifying line still "
+     "names its principal and therefore sets that principal's effective state to "
+     "not-passwordless, just as an ordinary non-NOPASSWD grant would."),
+    ("G-2026-18", "AC-SUDO-NOPASSWD",
+     "AC-SUDO-NOPASSWD is host-scoped. Each user specification carries a host "
+     "field — the token(s) between the principal and the first `=` — which is a "
+     "comma-separated list of `ALL`, hostnames, or `Host_Alias` names, each "
+     "optionally negated with a leading `!`. The auditor evaluates rules for the "
+     "audit host whose hostname is `gw-lab-01`. A specification applies to this "
+     "host only when its host field resolves to include `gw-lab-01`: `ALL` "
+     "matches, an exact hostname equal to `gw-lab-01` matches, and a `Host_Alias "
+     "NAME = ...` (whose members may be hostnames, `ALL`, other host aliases, or "
+     "negated entries) is resolved recursively. A specification that does not "
+     "apply to the audit host is ignored entirely and therefore does not "
+     "participate in the last-match-wins ordering of G-2026-07 for its principal. "
+     "`Defaults:<binder> !authenticate` overrides are not host-scoped and apply on "
+     "every host."),
+    ("G-2026-16", "AC-ACCT-LOCK",
+     "AC-ACCT-LOCK is extended with an account-expiration criterion. An account "
+     "is additionally disabled when the account-expiry field of its `shadow` "
+     "entry — the eighth colon-separated field — is present, non-empty, and a "
+     "base-ten integer strictly less than the assessment reference day `20620` "
+     "(counted in days since 1970-01-01). An empty expiry field, or an integer "
+     "value greater than or equal to `20620`, does not by itself disable the "
+     "account. This criterion combines with the password-token and login-shell "
+     "criteria: an account disabled by any one criterion is disabled."),
 ]
 
 AMENDMENTS_FILLER = [
@@ -443,6 +518,7 @@ def build():
             "AC-ACCT-LOCK", "AC-ACCT-SHELL", "AC-GROUP-EFFECTIVE",
             "AC-SUDO-NOPASSWD", "AC-KEY-REVOKE", "AC-EXEMPT",
         ],
+        "Audit and Accountability": ["AU-LEDGER"],
         "System Hardening": ["HD-SSHD-DROPIN", "HD-SSHD-KBDINT"],
     }
 

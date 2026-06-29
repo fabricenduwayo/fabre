@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mariner.internal/schema/findings.schema.json",
+  "title": "Final TLS waiver findings",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "service_id",
+      "service_name",
+      "environment",
+      "disposition",
+      "reason_code",
+      "waiver_applied"
+    ],
+    "properties": {
+      "service_id": {
+        "type": "string",
+        "pattern": "^svc-[0-9]{3}$"
+      },
+      "service_name": {
+        "type": "string"
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "prod",
+          "staging",
+          "dev"
+        ]
+      },
+      "disposition": {
+        "type": "string",
+        "enum": [
+          "allow",
+          "deny",
+          "rotate"
+        ]
+      },
+      "reason_code": {
+        "type": "string",
+        "enum": [
+          "compliant",
+          "active_waiver_ok",
+          "cert_near_expiry",
+          "weak_key",
+          "untrusted_issuer",
+          "fingerprint_mismatch",
+          "mtls_missing",
+          "tls_version_blocked",
+          "chain_invalid",
+          "waiver_expired",
+          "waiver_revoked",
+          "waiver_expiring_soon"
+        ]
+      },
+      "waiver_applied": {
+        "type": "boolean"
+      }
+    }
+  }
+}

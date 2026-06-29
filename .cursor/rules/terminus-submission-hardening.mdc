@@ -1,0 +1,175 @@
+---
+description: Hard-won fixes from revising the Java/C++/PHP Terminus tasks - submission, difficulty gate, verifier, and rubric gotchas to repeat going forward.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Terminus submission hardening
+
+These are the specific things we missed on `reproduce-java-tls-waiver-findings`
+(first pass and reviewer return), `repair-cpp-setup-auditor`, and
+`harden-php-api-defaults`. They complement `terminus.mdc` and `final-check.mdc`
+(general format) - this file is the "don't make these mistakes again" list. Full
+write-up: `docs/terminus-lessons-learned.md`.
+
+## Submission and review flow
+
+SHOULD DO:
+- Default every `stb submissions update` / submit to `--no-send-to-reviewer`.
+  Sending to a reviewer is a separate, final step the user explicitly approves.
+- Run the oracle to green (`harbor run -a oracle -p <task>`) before *every*
+  (re)submission - no edit is too small to re-verify.
+- Check assignment state is `NEEDS_REVISION` before any revision work.
+- Make all content, explanation, and rubric edits in **one** pass while in
+  `NEEDS_REVISION` (any `create_submission` flips to `EVALUATION_PENDING` and
+  locks further ZIP uploads).
+- On revision, upload the ZIP **and** set platform fields in the **same**
+  submission action. Draft text locally first (e.g. `.submission-explanations.txt`),
+  then include explanations + rubrics in the single payload that also carries
+  `upload_a_zip_file`. The `stb` CLI update only merges the ZIP — inject
+  `difficulty_explanation`, `solution_explanation`, `verification_explanation`,
+  `test_rubrics`, and `checkbox_evaluate_rubrics` via API in that same call, or
+  fill them in the UI before submit.
+- Fill all three explanation fields before every submit/resubmit — reviewers
+  reject blank ones. Short paragraphs in your own words: why it is hard for an
+  agent, the high-level pipeline approach, how per-milestone (or final) tests
+  confirm correctness. Applies to milestone tasks too.
+- Populate rubrics in the platform `test_rubrics` field (not in the ZIP):
+  - **Non-milestone:** flat list, at least 3 negative criteria.
+  - **Milestone (`number_of_milestones` > 0):** one `# Rubric N` block per
+    milestone; each block needs at least one negative line and a positive-point
+    total between 10 and 40. Set `checkbox_evaluate_rubrics = true`.
+
+SHOULD NOT DO:
+- Do not send to reviewer to "just see what happens" - there is no self-service
+  recall from `REVIEW_PENDING`; only an admin can return it to `NEEDS_REVISION`.
+- Do not try to edit a task in `REVIEW_PENDING` / `EVALUATION_PENDING`.
+- Do not expect a `rubric.txt` in the ZIP to satisfy the rubric check.
+- Do not push explanations/rubrics via API **before** the ZIP upload on a
+  revision — a payload-only `create_submission` locks the assignment and the
+  platform returns 403 on a follow-up ZIP upload until an admin returns it to
+  `NEEDS_REVISION`.
+
+## task.toml
+
+SHOULD DO:
+- Set `difficulty` to a real measured value (`easy`/`medium`/`hard`) and meet the
+  gate: minimum MEDIUM, and HARD is required when `languages` includes `python`.
+- List in `languages` only what the agent writes or the oracle uses. The pytest
+  verifier is always Python and does not count.
+- Set `codebase_size` from the actual `environment/` file count (~<20 files =
+  `minimal`, more = `small`).
+
+SHOULD NOT DO:
+- Do not leave skeleton placeholders like `difficulty = "unknown"`.
+- Do not add verifier-only `python` to `languages` (it falsely triggers the
+  "python => HARD" gate).
+- Do not relabel difficulty to pass the gate - genuinely harden the task instead.
+
+## Environment / Dockerfile
+
+SHOULD DO:
+- Pin the platform's canonical base image, even for non-Python tasks (install
+  php/g++/cmake/jdk on top):
+
+```dockerfile
+FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
+```
+
+SHOULD NOT DO:
+- Do not bump the base digest to a "newer" public one - it fails with
+  `manifest verification failed`.
+
+## tests/test.sh
+
+SHOULD DO:
+- End the file with the canonical reward block, `rc=$?` immediately before the
+  `if`, nothing after `fi`:
+
+```bash
+PYTHONPATH=/tests python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA /tests/test_outputs.py -q
+rc=$?
+if [ "$rc" -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
+else
+    echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+- Write `/logs/verifier/reward.txt` on every exit path (early `echo 0; exit 0` is
+  fine for build/startup failures *before* pytest).
+
+SHOULD NOT DO:
+- Do not add a trailing `exit "$RC"` after the reward block (`check_test_sh`
+  fails).
+- Do not put logic between `rc=$?` and the `if`.
+- Do not install packages or download anything in `test.sh`.
+
+## codebase_applicability gate (build-from-scratch tasks)
+
+The AutoEval `codebase_applicability` check fails the build when `environment/`
+contains no source code. It crashes with `is_real_code_base=False` ("only config
+files, schemas, JARs, SQL, fixtures, a report - no .py/.java/.js representing a
+software project") -> BUILD FAILED -> the check shows `passed=False` on every eval.
+Every other gate (difficulty, instruction sufficiency, tests, tb_check,
+test_quality_judge, claude_code_reviewer) can be green while this one alone holds
+the task in `NEEDS_REVISION`.
+
+SHOULD DO:
+- For any task where the agent writes the whole program from scratch, ship a
+  minimal **non-solution scaffold** in `environment/` (e.g. `environment/pipeline/`
+  with a `Main` dispatcher, stubbed stage classes that throw
+  `UnsupportedOperationException`, and a `build.sh`) and `COPY` it into the image.
+  It makes the env a "real codebase" without leaking answer logic, and it removes
+  the "agent hallucinated a pipeline" robustness failures AutoEval otherwise sees.
+- Keep the scaffold compilable (verify with `javac` in the task image) and confirm
+  the oracle still passes - oracles that `rm -rf /app/pipeline` then copy their own
+  tree are unaffected.
+- Point `instruction.md` at the scaffold ("extend the provided scaffold at
+  /app/pipeline") instead of "build from scratch".
+
+SHOULD NOT DO:
+- Do not put real stage logic, thresholds, or expected values in the scaffold - it
+  ships in the image and would leak the solution / lower difficulty.
+
+## Verifier robustness
+
+SHOULD DO:
+- Accept any reasonable location the agent could pick for build outputs (e.g.
+  search `/app/classes`, `/app/pipeline/classes` for compiled Java), OR state the
+  exact required path/command/filename in `instruction.md`.
+- Assert on behavior and final correctness, not on incidental file layout.
+
+SHOULD NOT DO:
+- Do not hardcode an undocumented path/convention the agent cannot infer - it can
+  fail every agent run while the oracle still passes.
+
+## Instruction sufficiency
+
+SHOULD DO:
+- Name every control/requirement the tests verify (e.g. `AC-TOKEN-STORE`, CORS,
+  bootstrap order, audit logging) without giving the solution; or keep it
+  uniformly "reconcile the whole standard at <path>".
+- Keep requirements and tests in lockstep: everything tested is stated or clearly
+  implied, and everything stated has a test.
+- Write instructions in **agent-facing** terms. Say that pipeline stages must be
+  reproducible from compiled classes (name the `Main` subcommands) and that JSON
+  outputs must not be hand-written. The agent never sees the verifier — do not
+  phrase requirements as "the verifier reruns …" or "the verifier checks …".
+
+SHOULD NOT DO:
+- Do not half-enumerate controls (naming some implies the list is complete and
+  leaves a silent gap for the ones you tested but didn't mention).
+- Do not describe verifier behavior in milestone `instruction.md` files.
+
+## Making it harder the right way
+
+SHOULD DO:
+- Add real interacting logic/state: e.g. sudo sticky command-tag semantics,
+  active authorized-key parsing, or a grant/rescind/replacement waiver lifecycle
+  that needs ID pairing and timeline reasoning.
+
+SHOULD NOT DO:
+- Do not raise difficulty with a long list of trivial edge cases - it is a
+  reviewer red flag and does not raise real difficulty.

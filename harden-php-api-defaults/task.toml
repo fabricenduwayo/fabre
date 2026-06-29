@@ -5,13 +5,13 @@ author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
 category = "security"
-subcategories = ["debugging"]
+subcategories = ["long_context", "db_interaction"]
 number_of_milestones = 0
 codebase_size = "minimal"
 languages = ["php", "bash", "sql"]
-tags = ["security", "php", "sqlite", "cors", "debugging", "rest-api"]
-expert_time_estimate_min = 60
-junior_time_estimate_min = 150
+tags = ["security", "php", "sqlite", "cors", "debugging"]
+expert_time_estimate_min = 120
+junior_time_estimate_min = 240
 
 [verifier]
 timeout_sec = 300.0

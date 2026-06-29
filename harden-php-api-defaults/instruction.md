@@ -1,28 +1,28 @@
-Our HarborDesk API lives in /app/harbordesk and still ships with the loose staging
-defaults. It runs under PHP's built-in server (the launcher is
-/app/harbordesk/start.sh) and writes an audit ledger to
-/app/harbordesk/data/audit.db. Right now the launcher doesn't even route
-requests properly, and the config is wide open. I need it locked down.
+Our HarborDesk Edge API in `/app/harbordesk` still reflects an older edition of
+the HarborDesk Edge API Hardening Standard in `/app/docs/standard.md`. Operators
+report it disagrees with policy on several fronts, and the SQLite audit ledger at
+`/app/harbordesk/data/audit.db` has stopped taking new rows even though requests
+still get answers. The Standard is a body of numbered controls plus an
+authoritative amendments appendix (Appendix G); where the body and an amendment
+conflict, the amendment governs (section 1.4).
 
-Get it into a state where the server actually serves /health and
-/admin/bootstrap, and where the security holes are closed: no debug traces or
-internal details leaking back in responses, and the admin bootstrap must require
-the bootstrap secret in /app/harbordesk/data/bootstrap_secret and only succeed
-once (a second bootstrap, or one without the right secret, has to be refused).
+Bring the running service into conformance so that, for every request, the API
+returns exactly the status, headers, and body the Standard as amended requires
+and records exactly the audit row it implies. Reconcile every control in
+`/app/docs/standard.md` — credentialed exact-origin grants must also emit
+`Vary: Origin` per CO-ORIGIN-ALLOW — including appendix G amendments where they
+override body text.
 
-CORS needs to be limited to the internal origin (https://harbordesk.internal)
-instead of a wildcard, and it has to work for credentialed requests from that
-origin and only that origin (other origins should get no CORS grant at all).
+Keep the existing routes (`GET /health`, `POST /admin/bootstrap`) and their JSON
+shapes. The ledger already holds historical rows that reconciliation must
+preserve; note that the on-disk ledger is restored to its older layout before
+every run, so the migration has to be idempotent runtime code that reconciles
+the schema whenever the database is opened (effectively on each request) — a
+one-off migration done once at deploy time will be wiped and won't survive.
+Verification replays many request lifecycles against one long-lived PHP process,
+so behavior must be correct per request — cross-origin grants, bootstrap
+eligibility, and credential checks must follow the current request and on-disk
+state, not stale in-process bookkeeping left over from earlier requests in the
+same run.
 
-The admin token that bootstrap writes must not be world-readable, and it must not
-be stored in a directly reusable form: if someone reads the token file it
-shouldn't hand them a working credential. /health should still return ok for a
-request carrying the bootstrapped token as a bearer credential, and otherwise be
-refused.
-
-There's also something wrong with the audit ledger at
-/app/harbordesk/data/audit.db: the API answers requests fine, but the attempts
-aren't actually showing up in the ledger. Figure out why nothing is being
-recorded and fix it so every bootstrap attempt and health check, accepted or
-denied, lands in the ledger with the right decision. Keep the existing routes and
-the request/response shape.
+PHP, SQLite, and `curl` are already installed and everything runs offline.

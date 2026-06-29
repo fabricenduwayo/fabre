@@ -1,0 +1,98 @@
+[
+  {
+    "frame_id": "frm-001",
+    "label": "alpha-channel",
+    "gif_index": 0,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "89099EF96B8D2C894091EEDF",
+    "nonce_source": "derived",
+    "auth_ok": true,
+    "plaintext_sha256": "579fec66d3d61cdb196db5026a437df67ea337ff5100b21c5ace558b012e2fe5",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-002",
+    "label": "bravo-channel",
+    "gif_index": 1,
+    "key_version": 3,
+    "key_source": "rotation_replacement",
+    "nonce_hex": "267A3B911F8B35439968F9DF",
+    "nonce_source": "derived",
+    "auth_ok": true,
+    "plaintext_sha256": "f9e276e3f7ec7ad8ba551b42a1d547a13d9abf408a7341cc930dc28e0aff3072",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-003",
+    "label": "charlie-channel",
+    "gif_index": 2,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "A7C3E91B4D2F8065E1B9C0A3",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "31247b0578f3a923d6058bc1b06dde8cebd00c1e9544e0562a16ef579a955cfa",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-004",
+    "label": "delta-channel",
+    "gif_index": 4,
+    "key_version": 4,
+    "key_source": "rotation_replacement",
+    "nonce_hex": "806586F8E145538DC6340B64",
+    "nonce_source": "derived",
+    "auth_ok": true,
+    "plaintext_sha256": "8a3e30cd883ea0cdf5cc857b5740bc59ec605a5339f02cff07b777e4a69939ba",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-005",
+    "label": "echo-channel",
+    "gif_index": 5,
+    "key_version": 2,
+    "key_source": "rotation_replacement",
+    "nonce_hex": "51CF31D43093FBEB42AB08B3",
+    "nonce_source": "derived",
+    "auth_ok": true,
+    "plaintext_sha256": "493de23f28729cf997cfd98102621fc292cdad2fa63c8a3e8cfa3de5aef779e2",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-006",
+    "label": "foxtrot-channel",
+    "gif_index": 6,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "3F08D5621CA4790BEE17F2D8",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "99f1a0bd29bd0a13c23cb502685953c84ebdfc756e9e7b278857a3347ed9f2d9",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-007",
+    "label": "golf-channel",
+    "gif_index": 7,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "B4E19A7305C2D8F61E0A4B9C",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "f63ac17b8ec39d3584c2773cf854d3832b35e0f206efb05bddbb6fef56218969",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-008",
+    "label": "hotel-channel",
+    "gif_index": 8,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "C1D2E3F4029384758690A1B2C0",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "a61fecb2d01de4b3df85949adbcb8b9c37c3bfff66a3084362c428ffa5f05962",
+    "reason_code": "authenticated"
+  }
+]
