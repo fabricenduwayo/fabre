@@ -13,6 +13,49 @@ These are the specific things we missed on `reproduce-java-tls-waiver-findings`
 (general format) - this file is the "don't make these mistakes again" list. Full
 write-up: `docs/terminus-lessons-learned.md`.
 
+## Reading eval feedback (the real blockers)
+
+The `revision_notes` line **"AutoEval execution failed"** is usually **boilerplate**
+for submissions that never reached a human reviewer. **Ignore it.** Read the
+**right side of the Web UI** (or `stb submissions feedback` → Summary / LLMaJ).
+Almost every bounce is one of these three:
+
+### 1. Oracle solution failed
+
+- Local `harbor run -a oracle` green is necessary but **not sufficient** — platform
+  Docker/env differences, unpinned deps, or slow apt mirrors can still fail the oracle.
+- Download the **difficulty-check artifact** from the summary window; the job log
+  names the exact failing command, file, or test.
+- Fix, re-run oracle locally, then resubmit.
+- **Always bump the ZIP** before re-upload: change something in the task (e.g.
+  `# platform-revision: YYYY-MM-DD-rN` comment in `environment/Dockerfile`) or
+  the platform may serve a cached build.
+
+### 2. Difficulty is TRIVIAL or EASY
+
+- Diversity gate accepts **MEDIUM or HARD only**.
+- If **worst-model pass rate > 60%**, the task is bounced as EASY/TRIVIAL.
+- If `languages` includes **`python`**, the bar is **HARD** (best or worst ≤ 20%
+  under the OR rule).
+- Fix with **real interacting logic**, not relabeling `task.toml` and not a long
+  list of trivial edge cases.
+
+### 3. Solvability — "some tests not passed by any agent run"
+
+Two distinct causes:
+
+- **Killer test:** one or more tests passed by **0/10** agent runs. Find the test
+  in the per-test breakdown; fix the **spec gap** in `instruction.md` or fix an
+  over-strict test. Instruction sufficiency FAIL often shows up here.
+- **Verifier timeout:** tests are passable but the verifier ran out of budget on
+  **5+ of 10** attempts (≥ 6/10 must finish within budget). Trim bloat: heavy
+  image builds before agent work, one milestone soaking the agent budget, installs
+  in `test.sh` (forbidden anyway), cold pip/cargo/uv chains.
+
+SHOULD NOT DO:
+- Do not treat "AutoEval Failure" as the diagnosis or ask Terminus Bot to explain
+  it — the bot is literal and will chase the wrapper, not the LLMaJ summary.
+
 ## Submission and review flow
 
 SHOULD DO:
@@ -75,11 +118,14 @@ SHOULD DO:
 
 ```dockerfile
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
+# platform-revision: YYYY-MM-DD-rN   # bump on every resubmit to bust platform cache
 ```
 
 SHOULD NOT DO:
 - Do not bump the base digest to a "newer" public one - it fails with
   `manifest verification failed`.
+- Do not re-upload the same ZIP bytes without a small task change — platform
+  caching can mask fixes.
 
 ## tests/test.sh
 

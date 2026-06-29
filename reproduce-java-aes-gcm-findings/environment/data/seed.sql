@@ -42,7 +42,7 @@ INSERT INTO key_material (key_version, key_hex) VALUES (2, '6FA99B5FC8E7410562BB
 INSERT INTO key_material (key_version, key_hex) VALUES (3, '99B142A5C05D78B67EAC363D4282B87EE17F18BD96905A64A2CA0D20B7BBDDA7');
 INSERT INTO key_material (key_version, key_hex) VALUES (4, 'A50910B673AEAD384BC3B016996AD899490D6854EA406A68194E42ADBCBD4E39');
 
-INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, recorded_at) VALUES ('frm-008', 'nonce_override_registered', 2, NULL, 'C1D2E3F4029384758690A1B2C0', '2026-05-24 16:00:00');
+INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, recorded_at) VALUES ('frm-008', 'nonce_override_registered', 2, NULL, 'C1D2E3F4029384758690A1B2', '2026-05-24 16:00:00');
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, recorded_at) VALUES ('frm-008', 'nonce_override_registered', 2, NULL, 'FFFFFFFFFFFFFFFFFFFFFFFF', '2026-05-21 10:00:00');
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, recorded_at) VALUES ('frm-008', 'key_assigned', 2, NULL, NULL, '2026-05-13 09:00:00');
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, recorded_at) VALUES ('frm-007', 'nonce_override_registered', 2, NULL, 'B4E19A7305C2D8F61E0A4B9C', '2026-05-23 15:30:00');

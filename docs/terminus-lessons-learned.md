@@ -16,6 +16,56 @@ Each item is written as: **Symptom -> Root cause -> Fix -> How to avoid it.**
 
 ---
 
+## 0. The three cliffs (read the UI, not "AutoEval Failure")
+
+Expert platform note — treat this as the default triage order after every eval.
+
+### 0.1 "AutoEval execution failed" is usually noise
+
+- **Symptom:** `revision_notes` says `AutoEval execution failed` / build FAILED.
+- **Root cause:** Default wrapper when the submission did not reach a human
+  reviewer. The **real reason** is in the Web UI summary (difficulty, solvability,
+  instruction sufficiency, per-test breakdown) or in `stb submissions feedback`.
+- **Fix:** Ignore the wrapper line; triage using section 0.2 below.
+- **How to avoid it:** Do not ask Terminus Bot to explain "AutoEval Failure" — it
+  chases the boilerplate and misses the LLMaJ summary.
+
+### 0.2 Oracle solution failed (cliff #1)
+
+- **Symptom:** Reference oracle not 100% on platform; difficulty-check build FAILED.
+- **Root cause:** Local oracle passed but platform env differs (Docker, deps, apt
+  mirrors, image cache).
+- **Fix:** Download the difficulty-check artifact from the summary window; read the
+  job log for the failing command/test. Fix, `harbor run -a oracle` locally, bump
+  ZIP (`# platform-revision: …` in `environment/Dockerfile`), resubmit.
+- **How to avoid it:** Oracle green before every upload; never skip re-verify after
+  "small" edits.
+
+### 0.3 Difficulty TRIVIAL / EASY (cliff #2)
+
+- **Symptom:** `Difficulty: ❌ EASY` or `TRIVIAL — Requires at least MEDIUM`.
+- **Root cause:** Worst-model pass rate **> 60%** on frontier agents. If
+  `languages` includes `python`, need **HARD** (best or worst ≤ **20%**).
+- **Fix:** Harden with interacting logic/state — not relabeling `task.toml`, not
+  edge-case spam. Re-run agent eval after hardening.
+- **How to avoid it:** Measure on platform; do not guess difficulty from local runs.
+
+### 0.4 Solvability — tests not passed by any agent (cliff #3)
+
+- **Symptom:** `Status: ❌ Unsolvable` / some tests **0/10**.
+- **Root cause (killer test):** Spec gap or broken test — one test never passes.
+  Check per-test breakdown; common pattern is instruction sufficiency FAIL (requirement
+  tested but not stated in `instruction.md`).
+- **Root cause (verifier timeout):** Tests are passable but verifier times out on
+  **5+ of 10** attempts (need **≥ 6/10** within budget). Agent cap ~30 min;
+  verifier budget is separate.
+- **Fix (killer):** Name the requirement in `instruction.md` or relax the test.
+- **Fix (timeout):** Trim image bloat, costly milestones, installs in `test.sh`,
+  cold dependency chains in the agent path.
+- **How to avoid it:** Everything tested is stated or clearly implied; keep env lean.
+
+---
+
 ## 1. Submission and review workflow (the most expensive mistakes)
 
 ### 1.1 We accidentally sent everything to a human reviewer

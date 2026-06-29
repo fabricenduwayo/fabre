@@ -1959,7 +1959,7 @@ Chronological facts are authoritative in SQLite; this appendix indexes types onl
 - 2026-05-23 15:30:00: frm-007 `nonce_override_registered` (key_version=2, replacement=None, nonce_override=B4E19A7305C2D8F61E0A4B9C)
 - 2026-05-13 09:00:00: frm-008 `key_assigned` (key_version=2, replacement=None, nonce_override=None)
 - 2026-05-21 10:00:00: frm-008 `nonce_override_registered` (key_version=2, replacement=None, nonce_override=FFFFFFFFFFFFFFFFFFFFFFFF)
-- 2026-05-24 16:00:00: frm-008 `nonce_override_registered` (key_version=2, replacement=None, nonce_override=C1D2E3F4029384758690A1B2C0)
+- 2026-05-24 16:00:00: frm-008 `nonce_override_registered` (key_version=2, replacement=None, nonce_override=C1D2E3F4029384758690A1B2)
 
 ## Appendix C — Normative cryptographic exception precedence
 

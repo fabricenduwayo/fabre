@@ -100,7 +100,7 @@ class TestMilestone2Correlate:
         """frm-008 has two DB nonce registrations; the latest recorded_at wins."""
         got = {r["frame_id"]: r for r in produced}
         assert got["frm-008"]["nonce_source"] == "override"
-        assert got["frm-008"]["nonce_hex"] == "C1D2E3F4029384758690A1B2C0"
+        assert got["frm-008"]["nonce_hex"] == "C1D2E3F4029384758690A1B2"
 
     def test_matches_expected_correlation(self, produced, expected) -> None:
         """Full correlation must match ground truth."""
