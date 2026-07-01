@@ -1,0 +1,19 @@
+[shift]
+start_station = "A"
+goal_station = "F"
+train = "orient-7"
+
+[hints]
+B = "direct approach to the arrival platform"
+C = "dead-end storage spur"
+D = "junction before the final approach"
+F = "arrival terminal on the south leg"
+G = "far platform on the north fork"
+
+[scoring]
+min_moves = 2
+
+[validation]
+sw1 = "south"
+sw2 = "north"
+sw3 = "north"

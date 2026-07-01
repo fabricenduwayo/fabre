@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "ccd779c803645c4d",
+  "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened repair-flask-signalbox-configs for the Python HARD gate by adding lock_corrections (hold/release), unless_absent and expires_after cascade semantics, stamp-based revoke, and extended route_lock_log rows in seed_evidence.py; updated instruction.md, tests/helpers.py, tests/test_outputs.py, and solution/repair_cartridge.py to match; fixed parse_detail so shorthand when+requires detail parses correctly; bumped Dockerfile to platform-revision 2026-06-30-r12; refreshed submission explanations and rubrics.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T12:35:57.221508+00:00"
+}

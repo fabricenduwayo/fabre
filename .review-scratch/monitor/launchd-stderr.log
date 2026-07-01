@@ -1,0 +1,14 @@
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+/bin/bash: /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor/run-hourly.sh: Operation not permitted

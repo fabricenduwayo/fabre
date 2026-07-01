@@ -1,0 +1,18 @@
+{
+  "folder_name": "reproduce-java-aes-gcm-findings",
+  "submission_id": "fbb351b7-0c45-4402-9b19-08d2cd8fddf8",
+  "feedback_hash": "e361a90892f71bb7",
+  "issue": "Difficulty: \u2705 MEDIUM",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Aligned milestone instructions with verified behavior: removed unenforced M3 config schema validation from instruction.md and matching rubric line; stripped M1 solution hints (Findings overview, superseded drafts, appendix-vs-table cues, exact label string) while keeping tested requirements; fixed rubric formatting (Agent-first lines, clearer negative criterion); deleted .submission-explanations.txt; bumped Dockerfile platform-revision to r10.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |   29 +\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 1583 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 1387 +++++++++++---------\n .../steps/milestone_1/instruction.md               |    4 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |   15 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   34 +-\n .../steps/milestone_1/tests/expected_rules.json    |    3 +-\n .../steps/milestone_1/tests/test_m1.py             |   24 +\n .../steps/milestone_2/instruction.md               |    4 +-\n .../milestone_2/tests/exp",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T10:37:51.838770+00:00"
+}

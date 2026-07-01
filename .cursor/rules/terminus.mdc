@@ -89,3 +89,14 @@ For milestone tasks the layout is different (per-milestone `steps/milestone_N/` 
 * Do not make the task hard only by adding too many edge cases.
 * Keep the task multi-step and terminal/environment based.
 * If something may violate Terminus rules, warn me before editing.
+
+## Git after changes and submissions
+
+After any task edit, rule change, tool/script update, or platform submit/resubmit, commit and push in the same session — do not leave work uncommitted.
+
+* Stage everything in this repo (`git add -A`): task folders, `.cursor/rules/`, `tools/`, `.review-scratch/`, docs, root scripts — the whole project.
+* Respect `.gitignore` only (e.g. `.env`, `.venv/`, `jobs/`). Never force-add secrets.
+* One commit per submission or coherent change batch; message: `terminus: <short summary>` (e.g. `terminus: add signalbox task and submit`).
+* Push to the current branch immediately after a successful commit (`git push` or `git push -u origin HEAD` if needed).
+* If commit or push fails, fix and retry before moving on.
+* Do not amend or force-push unless I explicitly ask.

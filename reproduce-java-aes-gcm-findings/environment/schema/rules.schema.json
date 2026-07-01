@@ -29,11 +29,12 @@
     },
     "nonce_selection_precedence": {
       "type": "array",
-      "minItems": 2,
+      "minItems": 3,
       "items": {
         "type": "string",
         "enum": [
           "report_override",
+          "db_override",
           "derived_sha256_prefix"
         ]
       }
@@ -43,6 +44,9 @@
     },
     "nonce_overrides": {
       "type": "object",
+      "propertyNames": {
+        "pattern": "^frm-[0-9]{3}$"
+      },
       "additionalProperties": {
         "type": "string",
         "pattern": "^[0-9A-F]{24}$"

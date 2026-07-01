@@ -8,21 +8,25 @@ conflict, the amendment governs (section 1.4).
 
 Bring the running service into conformance so that, for every request, the API
 returns exactly the status, headers, and body the Standard as amended requires
-and records exactly the audit row it implies. Reconcile every control in
-`/app/docs/standard.md` — credentialed exact-origin grants must also emit
-`Vary: Origin` per CO-ORIGIN-ALLOW — including appendix G amendments where they
-override body text.
+and records exactly the audit row it implies. Keep the existing routes (`GET
+/health`, `POST /admin/bootstrap`) and their JSON shapes. The ledger already
+holds historical rows that reconciliation must preserve; note that the on-disk
+ledger is restored to its older layout before every run, so the migration has to
+be idempotent runtime code that reconciles the schema whenever the database is
+opened (effectively on each request) — a one-off migration done once at deploy
+time will be wiped and won't survive.
 
-Keep the existing routes (`GET /health`, `POST /admin/bootstrap`) and their JSON
-shapes. The ledger already holds historical rows that reconciliation must
-preserve; note that the on-disk ledger is restored to its older layout before
-every run, so the migration has to be idempotent runtime code that reconciles
-the schema whenever the database is opened (effectively on each request) — a
-one-off migration done once at deploy time will be wiped and won't survive.
-Verification replays many request lifecycles against one long-lived PHP process,
-so behavior must be correct per request — cross-origin grants, bootstrap
+Reconcile at least these controls as amended in Appendix G: CO-ORIGIN-ALLOW
+(G-2026-01 exact two-origin allowlist, credentialed grant with Vary: Origin);
+CO-PREFLIGHT (G-2026-02 Max-Age 300 on allowed preflight; G-2026-11 preflight
+hint headers only on OPTIONS); AC-BOOTSTRAP (G-2026-03 repeat → 409 /
+already_bootstrapped; G-2026-05 already-bootstrapped before secret check);
+AC-HEALTH (G-2026-04 denial reason missing_credentials); AC-TOKEN-STORE
+(non-recoverable token, mode 0600); AU-LEDGER-SCOPE (preserve existing ledger
+history, record origin on new rows per G-2026-06); EH-NO-DISCLOSE (no internal
+debug headers or traces in error bodies). Cross-origin grants, bootstrap
 eligibility, and credential checks must follow the current request and on-disk
 state, not stale in-process bookkeeping left over from earlier requests in the
-same run.
+same long-lived process.
 
 PHP, SQLite, and `curl` are already installed and everything runs offline.

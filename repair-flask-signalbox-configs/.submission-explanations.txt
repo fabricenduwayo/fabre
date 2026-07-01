@@ -1,0 +1,30 @@
+The hard part is reconstructing route locks from an ordered bulletin log where
+evidence.duckdb is authoritative and the cartridge files are deliberately wrong.
+Agents must query route_lock_log, lock_corrections (including effective_detail
+overrides such as corrected release hold_id values), arrival_candidates,
+hint_clues, shift_meta, failed_attempt_notes, and route_lock_glossary instead of
+trusting corrupted YAML/TOML. The tail now adds inherit_when_from composition:
+yard-link rows can carry base_when plus source tracks whose when maps merge
+during every fixpoint, then BUL-BA collapses back to a static export. That
+interacts with requires_when positional gates, witness recovery on BUL-AV, and
+the existing hold/release, unless_present, coupling, defer_until, witness, and
+requires_stable machinery — only then can reachability identify the operative
+goal and play_shift.py can drive the already-running referee.
+
+Query evidence.duckdb for the bulletin tables and apply lock_corrections to
+each row's effective op and detail before folding the log. Resolve semantics
+from route_lock_glossary and failed_attempt_notes, write resolved route_locks to
+network.yaml, derive the unique operative goal by reachability, rebuild
+dispatch.toml goal/hints/validation from the evidence tables, then implement
+play_shift.py so python3 /app/tools/play_shift.py calls the referee on
+http://127.0.0.1:5000 and writes GET /v1/transcript to
+/app/output/transcript.json.
+
+Pytest recomputes every expectation from evidence.duckdb at verify time: resolved
+locks match network.yaml, lock_corrections detail overrides, inherit_when_from
+composition and BUL-BA static collapse, hold_id matching, nested holds,
+unless_present reapply with witness/match gates, unless_requires_changed and
+requires_stable drops after gate release, requires_when yard-link positional
+gates, coupling cascade, defer_until flush, supersede voiding, witness/unless_matches
+traps on the bulletin tail, BUL-AV recovery, and a winning legal transcript under
+reported switches while play_shift uses the referee already on port 5000.

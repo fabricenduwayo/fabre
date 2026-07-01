@@ -1,0 +1,12 @@
+{
+  "folder_name": "reproduce-java-aes-gcm-findings",
+  "submission_id": "fbb351b7-0c45-4402-9b19-08d2cd8fddf8",
+  "feedback_hash": "6e5fc491af105810",
+  "issue": "Difficulty: \u274c EASY - Requires at least MEDIUM",
+  "agent_status": "dry_run",
+  "agent_report": {},
+  "git_diff_stat": "(dry run)",
+  "platform_state_after": "",
+  "dry_run": true,
+  "finished_at": "2026-06-30T07:18:44.638935+00:00"
+}

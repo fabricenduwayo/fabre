@@ -1,0 +1,1394 @@
+{
+  "project": "Terminus-2nd-Edition",
+  "project_id": {
+    "id": "bfe79c33-8ab0-4061-9849-08d3207c9927"
+  },
+  "assignment_id": {
+    "id": "07c45d62-5548-4f93-b3bf-8116a7320376"
+  },
+  "task_category": "SUBMISSION",
+  "task_config": {
+    "task_timeout_min": null,
+    "max_total_completed": null,
+    "is_serialized": false,
+    "evaluation_task_config": {
+      "ec_metadata_visible_evaluator_names": [],
+      "evaluation_result_hidden_evaluator_names": [],
+      "entire_form_level_in_app_deployment_names": [],
+      "in_app_deployment_names_by_section_id": {},
+      "manual_success_criteria": []
+    },
+    "task_tag_eligibility_opt_out": false,
+    "task_tag_eligibility_opt_out_allowlist": [],
+    "tool_box_config": null,
+    "automated_feedback_config": {
+      "default_open": true,
+      "accent_color": "yellow"
+    },
+    "reviewer_feedback_config": {
+      "default_open": true,
+      "accent_color": "yellow"
+    }
+  },
+  "task_id": {
+    "id": "cffe5127-8ab7-4219-8455-d80e8216af6d"
+  },
+  "submission_id": {
+    "id": "cffe5127-8ab7-4219-8455-d80e8216af6d"
+  },
+  "is_skippable": false,
+  "static_document": {
+    "task_type": "auto-dataset-9ac3b943-ffee-4b58-adbb-f3e8c595c99f",
+    "static_document": {}
+  },
+  "task_documents": null,
+  "review_documents": null,
+  "revision_notes": null,
+  "further_revision_requests_allowed": true,
+  "rebuttal_notes": null,
+  "accept_notes": null,
+  "ec_override_feedback": null,
+  "project_tasks": {
+    "auto-dataset-9ac3b943-ffee-4b58-adbb-f3e8c595c99f": {
+      "task_category": "STATIC_ASSET",
+      "task_config": {
+        "task_timeout_min": null,
+        "max_total_completed": 1,
+        "is_serialized": false,
+        "evaluation_task_config": {
+          "ec_metadata_visible_evaluator_names": [],
+          "evaluation_result_hidden_evaluator_names": [],
+          "entire_form_level_in_app_deployment_names": [],
+          "in_app_deployment_names_by_section_id": {},
+          "manual_success_criteria": []
+        },
+        "task_tag_eligibility_opt_out": false,
+        "task_tag_eligibility_opt_out_allowlist": [],
+        "tool_box_config": null,
+        "automated_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        },
+        "reviewer_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        }
+      }
+    },
+    "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+      "task_category": "SUBMISSION",
+      "task_config": {
+        "task_timeout_min": null,
+        "max_total_completed": null,
+        "is_serialized": false,
+        "evaluation_task_config": {
+          "ec_metadata_visible_evaluator_names": [],
+          "evaluation_result_hidden_evaluator_names": [],
+          "entire_form_level_in_app_deployment_names": [],
+          "in_app_deployment_names_by_section_id": {},
+          "manual_success_criteria": []
+        },
+        "task_tag_eligibility_opt_out": false,
+        "task_tag_eligibility_opt_out_allowlist": [],
+        "tool_box_config": null,
+        "automated_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        },
+        "reviewer_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        }
+      }
+    },
+    "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+      "task_category": "REVIEW",
+      "task_config": {
+        "task_timeout_min": 300,
+        "max_total_completed": 1,
+        "is_serialized": false,
+        "evaluation_task_config": {
+          "ec_metadata_visible_evaluator_names": [],
+          "evaluation_result_hidden_evaluator_names": [],
+          "entire_form_level_in_app_deployment_names": [],
+          "in_app_deployment_names_by_section_id": {},
+          "manual_success_criteria": []
+        },
+        "task_tag_eligibility_opt_out": false,
+        "task_tag_eligibility_opt_out_allowlist": [],
+        "tool_box_config": null,
+        "automated_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        },
+        "reviewer_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        }
+      }
+    },
+    "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+      "task_category": "ADJUDICATION",
+      "task_config": {
+        "task_timeout_min": 120,
+        "max_total_completed": 1,
+        "is_serialized": false,
+        "evaluation_task_config": {
+          "ec_metadata_visible_evaluator_names": [],
+          "evaluation_result_hidden_evaluator_names": [],
+          "entire_form_level_in_app_deployment_names": [],
+          "in_app_deployment_names_by_section_id": {},
+          "manual_success_criteria": []
+        },
+        "task_tag_eligibility_opt_out": true,
+        "task_tag_eligibility_opt_out_allowlist": [],
+        "tool_box_config": null,
+        "automated_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        },
+        "reviewer_feedback_config": {
+          "default_open": true,
+          "accent_color": "yellow"
+        }
+      }
+    }
+  },
+  "evaluations": [],
+  "evaluation_display_results": [],
+  "evaluation_labels": [],
+  "available_segments": [],
+  "non_blocking_check_enums": [
+    "PASS",
+    "PENDING"
+  ],
+  "blocking_check_enums": [
+    "NEEDS_REVISION",
+    "FAIL"
+  ],
+  "submission_task_type": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+  "form_schema": {
+    "sections": [
+      {
+        "title": "Terminal bench 2.0 task submission",
+        "fields": [
+          {
+            "type": "s3FileUploader",
+            "field": "upload_a_zip_file",
+            "label": "Upload terminal bench 2.0 submission here (zip file)",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Zip file should have all files in the root, not under any folder.</p>",
+            "enableExtraction": true,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            },
+            "nodeDependentConfiguration": {
+              "review": {
+                "enableDelete": false,
+                "enableReupload": false
+              },
+              "adjudication": {
+                "enableDelete": false,
+                "enableReupload": false
+              }
+            }
+          },
+          {
+            "rows": 3,
+            "type": "textarea",
+            "field": "difficulty_explanation",
+            "label": "Difficulty Explanation",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Describe in your own words why your task is challenging for humans and agents to solve.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "rows": 3,
+            "type": "textarea",
+            "field": "solution_explanation",
+            "label": "Solution Explanation",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Describe your high-level approach to this task and key insights in forming the solution.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "rows": 3,
+            "type": "textarea",
+            "field": "verification_explanation",
+            "label": "Verification Explanation",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Explain how your tests are verifying correctness.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "prompt_checkbox",
+            "label": "Prompt Check",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "condition": {
+              "checks": [
+                {
+                  "field": "$revision_mode",
+                  "value": "submission",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p><span style=\"color: rgb(29, 28, 29);\">I reviewed my prompt (instruction.md) and:</span></p><ul><li><span style=\"color: rgb(29, 28, 29);\">Ensured it does not list an excessive number of requirements (20+)</span></li><li><span style=\"color: rgb(29, 28, 29);\">Made it sound natural and human</span></li><li><span style=\"color: rgb(29, 28, 29);\">Removed any unnecessary hints and verified it does not reveal the solution</span></li></ul><p></p>",
+            "checkboxLabel": "I confirm that the above is true and understand that if not, the submission is subject to rejection.",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "feedbackButton",
+            "field": "feedbackbutton-fast_static_checks",
+            "label": "Fast static checks",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "buttonText": "Check feedback",
+            "feedbackId": "Terminus-2nd-Editon:IN_APP",
+            "description": "<p>Run quick static checks to verify submission structure and files. Submit runs slower checks and agent runs and may take a couple of minutes before returning results.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "difficulty_check_full_logs",
+            "label": "Difficulty check results",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Please disregard this field if it is blank, during initial submission. This field will be populated by the system when your code is run by the system.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "text_summary",
+            "label": "Summary",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Summary of difficulty check - contains results of agent simulation and stats for each test as well as instruction sufficiency check.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "genericS3Downloader",
+            "field": "difficulty_check_artifact_s3_key",
+            "label": "Download difficulty check results",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>This field will be populated by the system when your code is run by the system.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "quality_check_summary",
+            "label": "Quality check summary",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Please disregard this field if it is blank, during initial submission. This field will be populated by the system when your code is run by the system.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "code_quality_check_results",
+            "label": "Quality check logs",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Please disregard this field if it is blank, during initial submission. This field will be populated by the system when your code is run by the system.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "test_review",
+            "label": "Agent review",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Please disregard this field if it is blank, during initial submission. This field will be populated by the system when your code is run by the system.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "test_quality_judge_report",
+            "label": "Test Quality Report",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": true,
+            "description": "<p>Please disregard this field if it is blank, during initial submission. This field will be populated by the system when your code is run by the system.</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-beca8",
+            "label": "Comments for Reviewer",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Use this field to provide any context or justification for your task that you would like the reviewer to see</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "checkbox_send_to_reviewer",
+            "label": "",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Check to send to reviewer if difficulty and quality checks are passing. Otherwise, it will always result in revision.</p>",
+            "checkboxLabel": "Send to reviewer?",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "checkbox_evaluate_rubrics",
+            "label": "Generate your Rubric(s)",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Select this checkbox for rubric(s) to be generated for your submission. The rubric will be created after you submit the task to CI checks.</p><p>Once the evaluation completes, the generated rubric(s) will appear in the revision feedback if the submission is returned for revisions.</p><p>If you make significant changes to your submission after receiving revisions, make sure to select the checkbox again when resubmitting so the rubric can be regenerated for the updated task.</p>",
+            "checkboxLabel": "Click here to generate rubric(s)",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "test_rubrics",
+            "label": "",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "isReadOnly": false,
+            "description": "<p>Agent-generated rubric(s):</p>",
+            "showExecuteButton": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "genericS3Downloader",
+            "field": "boosted_task_s3_uri",
+            "label": "Boosted Task",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Only consider the boosted task if the original task is insufficient.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "boost_report_json",
+            "label": "Boosted Task Summary",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "code",
+            "field": "boosted_task_diff_txt",
+            "label": "Boosted Task Diff",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "language": "python",
+            "showExecuteButton": true,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "boolean",
+            "field": "boolean-7b32a",
+            "label": "Does this task use an approved canonical base image?",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Select No if you are using a custom image that does not come from the canonical set.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-05d58",
+            "label": "Justification for Non-Canonical Base Image",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "condition": {
+              "checks": [
+                {
+                  "field": "boolean-7b32a",
+                  "value": false,
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>Please provide justification for why you are not using one of the canonical base images for this task.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-3dd6b",
+            "label": "Task Inspiration ID",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>If you used a task inspiration from our Gallery, please record its ID below.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-23b7f",
+            "label": "Pre-generated Task Skeleton Feedback",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>If you claimed a task inspiration that came bundled with a partially completed task, leave any feedback on that process/workflow below. Did this pre-generated skeleton help? Thoughts on the task idea itself?</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "min": 1,
+            "type": "numeric",
+            "field": "submission_aht",
+            "label": "How long did it take you to complete this submission?",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>Fill in minutes, if the task is sent back for revision adjust this number to take into account the additonal time.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "feedbackButton",
+            "field": "feedbackButton-60c16",
+            "label": "Rubric Feedback Button",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "buttonText": "Check feedback",
+            "feedbackId": "terminus-project-v2-rubrics:IN_APP",
+            "fieldEvaluatorConfig": null,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "radio",
+            "field": "radio-9552f",
+            "label": "Submission Review Decision",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "options": [
+              {
+                "label": "<p>Accept</p>",
+                "value": "yes"
+              },
+              {
+                "label": "<p>Needs Revision</p>",
+                "value": "needs_revision"
+              }
+            ],
+            "description": "<p>Select your review decision for this submission below.</p>",
+            "useAsReviewResult": true,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "checkbox_use_boosted_version",
+            "label": "Accept Boosted Task?",
+            "origin": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72",
+            "description": "<p>If the task is insufficient, but the Boosted version mitigates those issues and makes it acceptable, then check the checkbox below in addition to selecting &quot;Accept&quot; above to Accept the Boosted version.</p>",
+            "checkboxLabel": "Accept Boosted version of submission",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "radio",
+            "field": "radio-10532",
+            "label": "On a scale form 1 to 5, how good is the last review?",
+            "origin": "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b",
+            "options": [
+              {
+                "label": "<p>Spam</p>",
+                "value": "1"
+              },
+              {
+                "label": "<p>Bad</p>",
+                "value": "2"
+              },
+              {
+                "label": "<p>Okay</p>",
+                "value": "3"
+              },
+              {
+                "label": "<p>Good</p>",
+                "value": "4"
+              },
+              {
+                "label": "<p>Excellent</p>",
+                "value": "5"
+              }
+            ],
+            "description": "<p>1- spam</p><p>2- bad review (small mistakes that make the review bad)</p><p>3- Okay- A good review but maybe it there were some things that were not identified in the first reviews</p><p>4- Really good review - Nice feedback, all comments are accurate and provided a clear way to fix the task. The reviewer also identified some issues that were not spotted by our evals</p><p>5- Stellar review - The submitter should&#39;ve been able to fix the task based on the comments</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "qualitative_feedback",
+            "label": "Qualitative Feedback",
+            "origin": "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b",
+            "minLength": 30,
+            "description": "<p>Write a short concise feedback about the review.</p><p>Are the comments valuable and meaningful? </p><p>If the reviewer made a mistake, where was it?</p><p></p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              }
+            }
+          },
+          {
+            "min": 1,
+            "type": "numeric",
+            "field": "review_aht",
+            "label": "How long did it take you to complete this review?",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "description": "<p>Fill in minutes.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "boolean",
+            "field": "boolean-ef518",
+            "label": "Does this task has an issue with the rubrics?",
+            "origin": "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "yes",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>If the only with with the task are the rubrics, mark YES, if everything is good including the rubrics, mark No</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-revision_notes",
+            "label": "Revision Notes",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "needs_revision",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "useAsReviewComment": true,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "multiSelect",
+            "field": "multiselect-error-categories",
+            "label": "Error Categories",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "options": [
+              {
+                "label": "<p>Instruction Styling</p>",
+                "value": "instruction_styling"
+              },
+              {
+                "label": "<p>Test Alignment/Coverage Issues</p>",
+                "value": "test_alignment"
+              },
+              {
+                "label": "<p>Exposing Hints/Answers</p>",
+                "value": "expose_answers"
+              },
+              {
+                "label": "<p>Oracle Solution Issues</p>",
+                "value": "oracle"
+              },
+              {
+                "label": "<p>Test Build Issues</p>",
+                "value": "test_build"
+              },
+              {
+                "label": "<p>Time Based Tests</p>",
+                "value": "time_tests"
+              },
+              {
+                "label": "<p>Task Difficulty</p>",
+                "value": "task_difficulty"
+              },
+              {
+                "label": "<p>Metadata Issues</p>",
+                "value": "metadata"
+              },
+              {
+                "label": "<p>Milestones</p>",
+                "value": "milestone"
+              },
+              {
+                "label": "<p>Uses Internet</p>",
+                "value": "internet"
+              },
+              {
+                "label": "<p>Agent Timeout</p>",
+                "value": "timeout"
+              },
+              {
+                "label": "<p>Wrong Coding Language</p>",
+                "value": "language"
+              },
+              {
+                "label": "<p>Canary Strings</p>",
+                "value": "canary"
+              },
+              {
+                "label": "<p>Rubric</p>",
+                "value": "rubric"
+              },
+              {
+                "label": "<p>Test Dependency Location</p>",
+                "value": "test_dependency"
+              },
+              {
+                "label": "<p>Pinning Issues</p>",
+                "value": "pinning"
+              },
+              {
+                "label": "<p>Environment</p>",
+                "value": "environment"
+              },
+              {
+                "label": "<p>Other</p>",
+                "value": "other"
+              }
+            ],
+            "variant": "checkbox",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "needs_revision",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>Select all error categories that apply. These labels are for internal tracking only \u2014 they do not replace thorough revision notes. </p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "checkbox-18148",
+            "label": "Low Quality Submission?",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "needs_revision",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>Check this checkbox if this submission is extremely low quality or spam</p>",
+            "checkboxLabel": "This submission is low quality and/or spam",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "checkbox",
+            "field": "checkbox-high-quality-submission",
+            "label": "High Quality Submission",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "yes",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>Check this checkbox if this submission is exceptionally quality.</p>",
+            "checkboxLabel": "This submission is exceptionally high quality",
+            "adminEditDisabled": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-524cc",
+            "label": "Why do you believe this submission is extremely low quality?",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "checkbox-18148",
+                  "value": true,
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p><em>This information is only visible and monitored by Snorkel staff and will not be shared with the submitter.</em></p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-high-quality-submission",
+            "label": "Why do you believe this submission is exceptionally high quality?",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "checkbox-high-quality-submission",
+                  "value": true,
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>This information is only visible and monitored by Snorkel staff and will not be shared with the submitter.</p>",
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": false
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": false
+              }
+            }
+          },
+          {
+            "type": "textarea",
+            "field": "textarea-a1f81",
+            "label": "Acceptance Notes",
+            "origin": "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c",
+            "condition": {
+              "checks": [
+                {
+                  "field": "radio-9552f",
+                  "value": "yes",
+                  "operator": "equals"
+                }
+              ],
+              "renderType": "hide",
+              "logicalOperator": "and"
+            },
+            "description": "<p>Leave a short description of why you accepted the task.</p>",
+            "useAsReviewComment": false,
+            "configurationSettings": {
+              "review-e58bbf4f-47c4-420c-9b05-0f574cadc64c": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              },
+              "submission-941bede0-d9c6-42f0-874d-cd3d25582c72": {
+                "enabled": true,
+                "visible": false,
+                "required": true
+              },
+              "adjudication-3ed6d6b5-c5f4-43e2-8ef5-0ec287c2597b": {
+                "enabled": true,
+                "visible": true,
+                "required": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "_configurationSettings": true
+  },
+  "static_asset_schema": {
+    "fields": []
+  },
+  "form_schema_revision_id": "e362e8f4-b360-4dce-99ef-8639692e7742",
+  "user_reviews": null,
+  "expiry_time": null,
+  "schema_ui": null,
+  "task_document": null,
+  "review_document": null,
+  "task_type": "submission-941bede0-d9c6-42f0-874d-cd3d25582c72"
+}

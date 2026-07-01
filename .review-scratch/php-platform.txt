@@ -1,0 +1,15 @@
+DIFFICULTY=Agents have to reconcile a broken PHP API against a long hardening standard with an amendments appendix that overrides the body. They need to fix CORS, Bootstrap ordering, token storage, health authentication, debug disclosure, and get SQLite audit logging working again—including an idempotent schema migration that survives the database being restored between verifier requests in one long-lived PHP process.
+SOLUTION=Read /app/docs/standard.md (Appendix G wins on conflict), then fix the HarborDesk PHP front controller and libs under /app/harbordesk. The oracle patches http.php for exact-origin CORS, config/bootstrap for AC-TOKEN-STORE, index.php for routing and auth checks, and audit.php for idempotent ledger migration plus per-request row inserts matching the standard.
+VERIFICATION=Pytest replays scripted request sequences and 45 randomized lifecycles against a live PHP server, comparing status/headers/body and audit. db rows to a hidden reference simulator. Deterministic tests pin each control (CORS, bootstrap, token file permissions, non-recoverable storage, audit history). The randomized test catches stale in-process state across requests in the same process.
+RUBRIC=Agent reads /app/docs/standard.md including Appendix G amendments before changing code, +3
+Agent fixes the broken audit ledger so new rows are written to /app/harbordesk/data/audit.db on each request, +4
+Agent implements exact-origin CORS with Access-Control-Allow-Credentials and Vary: Origin (no wildcard), +4
+Agent implements AC-TOKEN-STORE: bearer token returned once, stored non-recoverably, token file owner-only, +4
+Agent implements bootstrap ordering (409 already-bootstrapped before secret check on repeat) and authenticated /health, +3
+Agent reconciles audit schema idempotently on each database open without wiping historical rows, +3
+Agent preserves existing routes and JSON response shapes for GET /health and POST /admin/bootstrap, +2
+Agent suppresses debug disclosure (no X-Debug-Mode, no trace in error bodies), +2
+Agent hardcodes API responses without reconciling against the Standard document, -5
+Agent persists the raw bearer token in recoverable plaintext on disk, -5
+Agent uses wildcard CORS or omits Vary: Origin on credentialed cross-origin responses, -4
+Agent runs a one-off migration at deploy time instead of idempotent per-open schema reconciliation, -3

@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-express-trivia-worker",
+  "submission_id": "e7d1cac7-538c-4f65-ba21-eb38d47c5242",
+  "feedback_hash": "119ec23267031af5",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened repair-express-trivia-worker for the HARD python gate by fully implementing Appendix H interacting logic (correct_delta, requires_incident, applies_after_floor) in scoring_standard.md, rulings.json, helpers.py, and solution/replay.py; rewrote the broken worker to be subtly wrong (correct ingest/standings fetch but incomplete reconciliation); added/updated tests for tie-break via correct_delta, correct floor clamp, post-floor bob +5, and void dependency rulings; aligned instruction.md and submission explanations; bumped Dockerfile platform-revision to r9.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-express-trivia-worker/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T10:29:53.655745+00:00"
+}

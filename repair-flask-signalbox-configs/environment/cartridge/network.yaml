@@ -1,0 +1,33 @@
+stations:
+  A: {name: Depot}
+  B: {name: North Yard}
+  C: {name: Junction}
+  D: {name: Staging}
+  E: {name: Spur End}
+  F: {name: Far Platform}
+  G: {name: Arrival}
+
+switches:
+  sw1:
+    default: north
+    positions: [north, south]
+  sw2:
+    default: north
+    positions: [north, south]
+  sw3:
+    default: north
+    positions: [north, south]
+
+tracks:
+  - {id: t_a_sw1, from: A, to: sw1}
+  - {id: t_sw1_b, from: sw1, to: B, when: {sw1: north}}
+  - {id: t_sw1_c, from: sw1, to: C, when: {sw1: south}}
+  - {id: t_b_sw2, from: B, to: sw2}
+  - {id: t_sw2_d, from: sw2, to: D, when: {sw2: north}}
+  - {id: t_c_sw3, from: C, to: sw3}
+  - {id: t_sw3_f, from: sw3, to: F, when: {sw3: north}}
+  - {id: t_sw3_g, from: sw3, to: G, when: {sw3: south}}
+
+route_locks:
+  - {track: t_sw3_g, when: {sw3: south}}
+  - {track: t_sw2_d, when: {sw2: north}}

@@ -1,0 +1,10 @@
+{
+  "files": {
+    "passwd": "alice:x:1001:100::/home/alice:/bin/bash\n",
+    "shadow": "alice:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\nalice ALL=(ALL) ALL\n",
+    "authorized_keys": {"alice": "ssh-ed25519 AAAAalice alice@lab\n"},
+    "sshd_config.d": {"10-base.conf": "PermitRootLogin prohibit-password\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"}
+  }
+}

@@ -316,6 +316,18 @@ AMENDMENTS_REAL = [
      "ledger to a layout that records the request `origin` for every audited row "
      "(including denials) and no longer requires `actor`, while carrying every "
      "pre-existing historical row forward unchanged."),
+    ("G-2026-11", "CO-PREFLIGHT",
+     "The method, header, and max-age hint headers in CO-PREFLIGHT "
+     "(`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and "
+     "`Access-Control-Max-Age`) shall be emitted **only** on an `OPTIONS` "
+     "preflight for an allowed origin. Non-preflight responses (including "
+     "credentialed `GET` or `POST`) shall carry at most the grant headers of "
+     "CO-ORIGIN-ALLOW and shall not include those preflight hints."),
+    ("G-2026-12", "AC-TOKEN-STORE",
+     "The on-disk administrative token representation shall be the lowercase "
+     "hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). "
+     "AC-HEALTH shall verify a presented bearer by applying the same digest "
+     "before comparison."),
 ]
 
 AMENDMENTS_FILLER = [

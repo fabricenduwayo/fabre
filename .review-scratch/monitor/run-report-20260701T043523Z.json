@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "51894bf362e3d38c",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened repair-flask-signalbox-configs for the python=>HARD gate by adding inherit_when_from/base_when bulletin tail logic (BUL-AV/AZ/BA) with glossary entries and failed-attempt notes; fixed parse_detail base_when handling in helpers.py and solution/repair_cartridge.py; aligned instruction.md with play_shift invocation, dispatch.duckdb logging, lock_corrections overrides, and inherit cascade semantics; added three inherit tests and updated a prefix assertion; bumped platform-revision to r32; refreshed submission explanations and rubrics.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-07-01T04:35:23.987512+00:00"
+}

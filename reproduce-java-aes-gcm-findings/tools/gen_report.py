@@ -114,19 +114,28 @@ def _superseded_draft_precedence() -> list[str]:
         '["latest_key_assigned", "rotation_replacement"]',
         "```",
         "",
+        "The same draft omitted `db_override` from nonce precedence and listed only "
+        "report overrides before derived nonces — that ordering is also withdrawn.",
+        "",
+        "```json",
+        '["report_override", "derived_sha256_prefix"]',
+        "```",
+        "",
     ]
 
 
 def _superseded_draft_nonce_overrides() -> list[str]:
-    """Non-normative decoy — wrong frm-007 override, buried before Appendix D."""
-    wrong = ref.NONCE_OVERRIDE_FRM007_SUPERSEDED.hex().upper()
+    """Non-normative decoy — wrong frm-007 and frm-010 overrides, buried before Appendix D."""
+    wrong_7 = ref.NONCE_OVERRIDE_FRM007_SUPERSEDED.hex().upper()
+    wrong_10 = ref.NONCE_OVERRIDE_FRM010_DB.hex().upper()
     return [
         "## Appendix D (draft — superseded April 2026 circulation)",
         "",
-        "A withdrawn draft listed a nonce override for frm-007 that was never",
-        "registered in the audit ledger. It must not be used for reproduction.",
+        "A withdrawn draft listed nonce overrides that were never operative.",
+        "They must not be used for reproduction.",
         "",
-        f"Withdrawn draft value for frm-007: `{wrong}`.",
+        f"Withdrawn draft value for frm-007: `{wrong_7}`.",
+        f"Withdrawn draft value for frm-010: `{wrong_10}`.",
         "",
     ]
 
@@ -150,6 +159,18 @@ def _appendix_exception_rules() -> list[str]:
         "2. **latest_key_assigned** — otherwise, take the `key_assigned` event with the",
         "   greatest `recorded_at` timestamp for the frame.",
         "",
+        "A `key_rotation_rescinded` event voids every prior `key_rotated` row for the",
+        "same frame whose `key_version` and `replacement_key_version` match the",
+        "rescission's pair. When choosing the operative rotation, exclude voided rows",
+        "first, then take the greatest `recorded_at` among the survivors. When **every**",
+        "`key_rotated` row for a frame has been voided, treat the frame as having no",
+        "operative rotation and apply **latest_key_assigned** instead.",
+        "",
+        "A `key_assignment_rescinded` event voids every prior `key_assigned` row for",
+        "the same frame whose `key_version` equals the rescission's `key_version`.",
+        "When falling back to **latest_key_assigned**, exclude voided assignments",
+        "before choosing the greatest `recorded_at`.",
+        "",
         "```json",
         '["rotation_replacement", "latest_key_assigned"]',
         "```",
@@ -157,14 +178,35 @@ def _appendix_exception_rules() -> list[str]:
         "### C.2 Nonce selection",
         "",
         "1. **report_override** — when Appendix D names an explicit nonce override,",
-        "   that 12-byte value must be used.",
-        "2. **derived_sha256_prefix** — otherwise derive the nonce as the first 12 bytes",
-        "   of SHA-256(frame_id + ':' + key_version), unless one or more",
-        "   `nonce_override_registered` audit events exist for the frame; then the",
-        "   event with the greatest `recorded_at` is operative.",
+        "   that 12-byte value must be used even if key rotation later changes the",
+        "   operative key version for the frame.",
+        "2. **db_override** — when no Appendix D entry exists for the frame, a",
+        "   `nonce_override_registered` audit row is operative only if its `key_version`",
+        "   equals the operative key version after key-selection precedence (including",
+        "   any non-rescinded `key_rotated` replacement). A registration tied to a",
+        "   superseded key version must be ignored once rotation changes the operative",
+        "   version — do not reuse the override bytes after rotation. When rotation",
+        "   changes the operative key version, a later registration for the new version",
+        "   may become operative; a later registration that still names a superseded key",
+        "   version must not win over that match even if its `recorded_at` is greater.",
+        "",
+        "   A `nonce_override_revoked` event voids every prior `nonce_override_registered`",
+        "   row for the same frame whose `nonce_override_hex` equals the revocation's",
+        "   `nonce_override_hex`. After excluding revoked registrations, the latest",
+        "   remaining `nonce_override_registered` row by `recorded_at` is eligible —",
+        "   but still subject to the operative key-version match above.",
+        "",
+        "   A `nonce_override_amended` event voids every prior registration whose",
+        "   `nonce_override_hex` equals the amendment's `supersedes_nonce_hex`, then",
+        "   introduces the amendment's own `nonce_override_hex` as a new eligible row",
+        "   at that timestamp. A later `nonce_override_registered` row may register",
+        "   the same bytes again — re-registration after amendment is operative and",
+        "   must not be treated as permanently void.",
+        "3. **derived_sha256_prefix** — otherwise derive the nonce as the first 12 bytes",
+        "   of SHA-256(frame_id + ':' + key_version).",
         "",
         "```json",
-        '["report_override", "derived_sha256_prefix"]',
+        '["report_override", "db_override", "derived_sha256_prefix"]',
         "```",
         "",
         f"The derived-nonce rule in prose: {ref.rules_expected()['derived_nonce_rule']}.",
@@ -175,12 +217,18 @@ def _appendix_exception_rules() -> list[str]:
 def _appendix_nonce_overrides() -> list[str]:
     override_3 = ref.NONCE_OVERRIDE_FRM003.hex().upper()
     override_6 = ref.NONCE_OVERRIDE_FRM006.hex().upper()
+    override_6_old = ref.NONCE_OVERRIDE_FRM006_SUPERSEDED.hex().upper()
+    override_10 = ref.NONCE_OVERRIDE_FRM010.hex().upper()
+    override_15 = ref.NONCE_OVERRIDE_FRM015.hex().upper()
+    override_22 = ref.NONCE_OVERRIDE_FRM022.hex().upper()
     return [
         "## Appendix D — Registered nonce overrides",
         "",
-        "Two frames carry an explicit nonce override. Every override listed here must be",
-        "transcribed; a reader that captures only the first will derive a wrong nonce for",
-        "the second and fail authentication.",
+        "Five frames carry an explicit nonce override in this appendix. Every override",
+        "listed here must be transcribed; a reader that captures only the first few will",
+        "derive a wrong nonce for the others and fail authentication. When a frame",
+        "section lists more than one operative override line, the last operative",
+        "registration in that section wins.",
         "",
         "### D.1 frm-003 (charlie-channel)",
         "",
@@ -191,10 +239,55 @@ def _appendix_nonce_overrides() -> list[str]:
         "",
         "### D.2 frm-006 (foxtrot-channel)",
         "",
+        f"The operative nonce override for frm-006 is `{override_6_old}`.",
+        "",
+        "Superseded registration — withdrawn before sign-off.",
+        "",
         f"The operative nonce override for frm-006 is `{override_6}`.",
         "",
         "Like D.1, this 12-byte value supersedes the derived nonce for the foxtrot-channel",
         "frame and must be used verbatim when authenticating its GIF payload.",
+        "",
+        "### D.3 frm-010 (juliet-channel)",
+        "",
+        f"The operative nonce override for frm-010 is `{override_10}`.",
+        "",
+        "This 12-byte value supersedes the derived nonce for the juliet-channel frame.",
+        "",
+        "### D.4 frm-015 (oscar-channel)",
+        "",
+        f"The operative nonce override for frm-015 is `{override_15}`.",
+        "",
+        "This override remains operative after key rotation for oscar-channel — use the",
+        "report value verbatim, not a nonce re-derived for the post-rotation key version.",
+        "",
+        "### D.5 frm-022 (whiskey-channel)",
+        "",
+        f"The operative nonce override for frm-022 is `{override_22}`.",
+        "",
+        "This override remains operative after key rotation for whiskey-channel and",
+        "must not be replaced by a later SQLite registration with different bytes.",
+        "",
+    ]
+
+
+def _appendix_decoy_post_d() -> list[str]:
+    """Withdrawn errata after normative D — same override phrasing, wrong hex values."""
+    wrong_3 = "DEADBEEFDEADBEEFDEADBEEF"
+    wrong_6 = "CAFEBABECAFEBABECAFEBABE"
+    wrong_10 = "FEEDFACEFEEDFACEFEEDFACE"
+    wrong_15 = "BADC0FFEBADC0FFEBADC0FFE"
+    wrong_22 = "DEADBEEF1234567890ABCDEF"
+    return [
+        "## Appendix D — Post-review errata (withdrawn 2026-06-15)",
+        "",
+        "Circulated errata after sign-off; withdrawn before reproduction use.",
+        "",
+        f"The operative nonce override for frm-003 is `{wrong_3}`.",
+        f"The operative nonce override for frm-006 is `{wrong_6}`.",
+        f"The operative nonce override for frm-010 is `{wrong_10}`.",
+        f"The operative nonce override for frm-015 is `{wrong_15}`.",
+        f"The operative nonce override for frm-022 is `{wrong_22}`.",
         "",
     ]
 
@@ -216,18 +309,22 @@ def _appendix_frame_dossiers() -> list[str]:
 
 
 def _appendix_audit_timeline_prose() -> list[str]:
+    from collections import defaultdict
+
     lines = [
         "## Appendix B — Audit timeline (narrative index)",
         "",
-        "Chronological facts are authoritative in SQLite; this appendix indexes types only.",
+        "Chronological facts and field values are authoritative only in SQLite.",
+        "This appendix indexes which event types appear per frame — not operative",
+        "key versions, rotation replacements, or nonce override bytes.",
         "",
     ]
+    by_frame: dict[str, list[str]] = defaultdict(list)
     for e in ref.build_audit_events():
-        lines.append(
-            f"- {e['recorded_at']}: {e['frame_id']} `{e['event_type']}` "
-            f"(key_version={e['key_version']}, replacement={e['replacement_key_version']}, "
-            f"nonce_override={e['nonce_override_hex']})"
-        )
+        by_frame[e["frame_id"]].append(e["event_type"])
+    for frame_id in sorted(by_frame.keys()):
+        types = ", ".join(f"`{t}`" for t in by_frame[frame_id])
+        lines.append(f"- **{frame_id}**: {types}")
     lines.append("")
     return lines
 
@@ -266,6 +363,10 @@ def _background_padding(target_chars: int) -> list[str]:
         # sprinkle a short unique hash so repeated-line detection cannot fire
         tag = hashlib.sha256(f"{seq}:{frame['frame_id']}".encode()).hexdigest()[:8]
         lines.append(f"{para} Ref: FORE-{tag}.")
+        if seq % 37 == 0:
+            lines.append(
+                "Review date: 2026-07-15. (Superseded draft circulation — not operative.)"
+            )
         lines.append("")
         total += len(lines[-2]) + len(lines[-1]) + 2
         seq += 1
@@ -282,6 +383,7 @@ def gen_report(path: pathlib.Path) -> None:
     parts.extend(_appendix_exception_rules())
     parts.extend(_superseded_draft_nonce_overrides())
     parts.extend(_appendix_nonce_overrides())
+    parts.extend(_appendix_decoy_post_d())
     text = "\n".join(parts) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")

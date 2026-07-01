@@ -1,0 +1,27 @@
+#!/bin/bash
+cd /tmp 2>/dev/null || cd /
+
+MONITOR_DIR="/Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor"
+REPO_ROOT="/Users/fabrice-mac-mini/Documents/snorkel-ai"
+SUPPORT_ENV="/Users/fabrice-mac-mini/Library/Application Support/SnorkelTerminus/monitor.env"
+PYTHON_REAL="/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/bin/python3.13"
+
+export REPO_ROOT MONITOR_DIR MONITOR_ENV_FILE="$SUPPORT_ENV"
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+export SNORKEL_MSG_SOURCE=chatdb
+
+if [[ -f "$SUPPORT_ENV" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$SUPPORT_ENV" || true
+  set +a
+fi
+
+POLL_SEC="${IMESSAGE_POLL_SEC:-20}"
+while true; do
+  if cp "$HOME/Library/Messages/chat.db" "/tmp/snorkel-messages-chat.db" 2>/dev/null; then
+    export SNORKEL_CHAT_DB="/tmp/snorkel-messages-chat.db"
+  fi
+  "$PYTHON_REAL" "$MONITOR_DIR/imessage_command_listener.py" --once || true
+  sleep "$POLL_SEC"
+done

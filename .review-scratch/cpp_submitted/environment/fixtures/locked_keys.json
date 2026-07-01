@@ -1,0 +1,15 @@
+{
+  "files": {
+    "passwd": "alice:x:1001:100::/home/alice:/bin/bash\ncarol:x:1002:100::/home/carol:/bin/bash\ndan:x:1003:100::/home/dan:/usr/bin/git-shell\nerin:x:1004:100::/home/erin:/bin/bash\n",
+    "shadow": "alice:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\ncarol:*LK*:19000:0:99999:7:::\ndan:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nerin:!:19000:0:99999:7:::\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\n",
+    "authorized_keys": {
+      "alice": "ssh-ed25519 AAAAalice alice@lab\n",
+      "carol": "ssh-ed25519 AAAAcarol carol@lab\n",
+      "dan": "ssh-ed25519 AAAAdan dan@lab\n",
+      "erin": "ssh-ed25519 AAAAerin erin@lab\n"
+    },
+    "sshd_config.d": {"10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"}
+  }
+}

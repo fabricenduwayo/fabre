@@ -2751,9 +2751,9 @@ Inconsistent application of this requirement across nodes complicates evidence c
 The following amendments are in force and **supersede** the body of the referenced controls per section 1.4. They are listed in effective-date order.
 
 
-### G-2026-03 — amends AC-BOOTSTRAP
+### G-2026-12 — amends AC-TOKEN-STORE
 
-The refusal status for an already-bootstrapped node is changed from `403` to `409` (Conflict). The decision remains `denied` and the reason remains `already_bootstrapped`; only the HTTP status changes.
+The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
 
 
 ### G-2026-01 — amends CO-ORIGIN-ALLOW
@@ -2761,9 +2761,9 @@ The refusal status for an already-bootstrapped node is changed from `403` to `40
 The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
 
 
-### G-2026-07 — amends NW-TLS-CIPHERS
+### G-2026-04 — amends AC-HEALTH
 
-The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
 
 
 ### G-2026-08 — amends MA-PATCH-WINDOW
@@ -2771,9 +2771,9 @@ The approved TLS cipher suite list is updated; see Appendix C. This amendment do
 The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
 
 
-### G-2026-04 — amends AC-HEALTH
+### G-2026-10 — amends SV-BANNER
 
-The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
+The approved service banner wording is updated. This amendment does not affect API behavior.
 
 
 ### G-2026-02 — amends CO-PREFLIGHT
@@ -2786,9 +2786,19 @@ The preflight cache lifetime in CO-PREFLIGHT is lowered from `600` to `300` seco
 The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong**. Secret validation is reached only when no token yet exists.
 
 
-### G-2026-10 — amends SV-BANNER
+### G-2026-11 — amends CO-PREFLIGHT
 
-The approved service banner wording is updated. This amendment does not affect API behavior.
+The method, header, and max-age hint headers in CO-PREFLIGHT (`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and `Access-Control-Max-Age`) shall be emitted **only** on an `OPTIONS` preflight for an allowed origin. Non-preflight responses (including credentialed `GET` or `POST`) shall carry at most the grant headers of CO-ORIGIN-ALLOW and shall not include those preflight hints.
+
+
+### G-2026-03 — amends AC-BOOTSTRAP
+
+The refusal status for an already-bootstrapped node is changed from `403` to `409` (Conflict). The decision remains `denied` and the reason remains `already_bootstrapped`; only the HTTP status changes.
+
+
+### G-2026-09 — amends IR-CONTACT
+
+The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
 
 
 ### G-2026-06 — amends AU-LEDGER-SCOPE
@@ -2796,9 +2806,9 @@ The approved service banner wording is updated. This amendment does not affect A
 Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged.
 
 
-### G-2026-09 — amends IR-CONTACT
+### G-2026-07 — amends NW-TLS-CIPHERS
 
-The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
+The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
 
 
 ## Appendix H. Implementation checklist

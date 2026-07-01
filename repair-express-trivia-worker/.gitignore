@@ -1,0 +1,7 @@
+jobs/
+.ruff_cache/
+.submission-explanations.txt
+**/__pycache__/
+**/.pytest_cache/
+environment/referee/node_modules/
+environment/referee/.pnpm-store/

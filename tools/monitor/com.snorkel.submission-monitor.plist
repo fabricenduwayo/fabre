@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.snorkel.submission-monitor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-imsu</string>
+        <string>__PYTHON_REAL__</string>
+        <string>__MONITOR_DIR__/hourly_submission_check.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/tmp</string>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>StandardOutPath</key>
+    <string>__REPO_ROOT__/.review-scratch/monitor/launchd-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO_ROOT__/.review-scratch/monitor/launchd-stderr.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>REPO_ROOT</key>
+        <string>__REPO_ROOT__</string>
+        <key>MONITOR_DIR</key>
+        <string>__MONITOR_DIR__</string>
+        <key>MONITOR_ENV_FILE</key>
+        <string>__SUPPORT_ENV__</string>
+        <key>HOME</key>
+        <string>__HOME__</string>
+        <key>PYTHONPATH</key>
+        <string>__VENV_SITE__</string>
+        <key>VIRTUAL_ENV</key>
+        <string>__VENV__</string>
+    </dict>
+</dict>
+</plist>

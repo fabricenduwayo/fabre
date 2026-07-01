@@ -34,6 +34,7 @@ def gen_seed_sql() -> None:
     lines.append("PRAGMA foreign_keys = ON;")
     lines.append("")
     lines.append("DROP TABLE IF EXISTS audit_events;")
+    lines.append("DROP TABLE IF EXISTS ingestion_metadata;")
     lines.append("DROP TABLE IF EXISTS key_material;")
     lines.append("DROP TABLE IF EXISTS frames;")
     lines.append("")
@@ -55,8 +56,14 @@ def gen_seed_sql() -> None:
     lines.append("    key_version             INTEGER,")
     lines.append("    replacement_key_version INTEGER,")
     lines.append("    nonce_override_hex      TEXT,")
+    lines.append("    supersedes_nonce_hex    TEXT,")
     lines.append("    recorded_at             TEXT NOT NULL,")
     lines.append("    FOREIGN KEY (frame_id) REFERENCES frames(frame_id)")
+    lines.append(");")
+    lines.append("")
+    lines.append("CREATE TABLE ingestion_metadata (")
+    lines.append("    report_id   TEXT PRIMARY KEY,")
+    lines.append("    review_date TEXT NOT NULL")
     lines.append(");")
     lines.append("")
 
@@ -81,6 +88,10 @@ def gen_seed_sql() -> None:
             f"INSERT INTO key_material (key_version, key_hex) VALUES ({version}, '{key_hex}');"
         )
     lines.append("")
+    lines.append("INSERT INTO ingestion_metadata (report_id, review_date) VALUES")
+    lines.append("    ('MR-2026-007', '2026-07-15'),")
+    lines.append("    ('MR-2026-019', '2026-07-15');")
+    lines.append("")
 
     # Scramble insert order so event_id is not correlated with recorded_at.
     events = ref.build_audit_events()
@@ -88,12 +99,13 @@ def gen_seed_sql() -> None:
     for e in ordered:
         repl = "NULL" if e["replacement_key_version"] is None else str(e["replacement_key_version"])
         nov = "NULL" if e["nonce_override_hex"] is None else f"'{e['nonce_override_hex']}'"
+        sup = "NULL" if e.get("supersedes_nonce_hex") is None else f"'{e['supersedes_nonce_hex']}'"
         kv = "NULL" if e["key_version"] is None else str(e["key_version"])
         lines.append(
             "INSERT INTO audit_events "
             "(frame_id, event_type, key_version, replacement_key_version, "
-            "nonce_override_hex, recorded_at) VALUES ("
-            f"'{e['frame_id']}', '{e['event_type']}', {kv}, {repl}, {nov}, "
+            "nonce_override_hex, supersedes_nonce_hex, recorded_at) VALUES ("
+            f"'{e['frame_id']}', '{e['event_type']}', {kv}, {repl}, {nov}, {sup}, "
             f"'{e['recorded_at']}');"
         )
     lines.append("")
@@ -203,15 +215,20 @@ def gen_schemas() -> None:
             },
             "nonce_selection_precedence": {
                 "type": "array",
-                "minItems": 2,
+                "minItems": 3,
                 "items": {
                     "type": "string",
-                    "enum": ["report_override", "derived_sha256_prefix"],
+                    "enum": [
+                        "report_override",
+                        "db_override",
+                        "derived_sha256_prefix",
+                    ],
                 },
             },
             "derived_nonce_rule": {"type": "string"},
             "nonce_overrides": {
                 "type": "object",
+                "propertyNames": {"pattern": "^frm-[0-9]{3}$"},
                 "additionalProperties": {"type": "string", "pattern": "^[0-9A-F]{24}$"},
             },
         },

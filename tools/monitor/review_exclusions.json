@@ -1,0 +1,17 @@
+{
+  "_comment": "Submissions the monitor must never auto-fix. REVIEW_PENDING tasks are added automatically each run; remove an id here to allow auto-fix after you have reviewed manually.",
+  "submission_ids": {
+    "71323da7-976c-405b-9dcd-c24d83fa6102": {
+      "folder_name": "reproduce-java-tls-waiver-findings",
+      "reason": "manual_review_queue"
+    },
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": {
+      "folder_name": "harden-php-api-defaults",
+      "reason": "manual_review_queue"
+    },
+    "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": {
+      "folder_name": "repair-cpp-setup-auditor",
+      "reason": "manual_review_queue"
+    }
+  }
+}

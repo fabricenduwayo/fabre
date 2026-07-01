@@ -1,0 +1,18 @@
+{
+  "folder_name": "reproduce-java-aes-gcm-findings",
+  "submission_id": "fbb351b7-0c45-4402-9b19-08d2cd8fddf8",
+  "feedback_hash": "30a05a500095c6ab",
+  "issue": "Difficulty: \u274c EASY - Requires at least MEDIUM",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened reproduce-java-aes-gcm-findings against the EASY difficulty gate by adding three new in-scope frames (frm-018/019/020) with real interacting audit logic: key_assignment_rescinded voiding stale assignments, chained rotation rescission fallback, and sequential nonce_override_amended chains. Updated tools/reference.py, gen_report.py, regenerated environment/data/seed.sql, fixtures/evidence.gif, reports/mariner-aes-gcm-forensic-review.md, expected JSON under steps/*/tests/, oracle AuditCorrelator.java, milestone_2 instruction and test_m2.py, Dockerfile platform-revision r18, rubrics, and submission explanations. Oracle passes 1.0; ZIP resubmitted with static checks PASS.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |  115 +-\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 2561 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 1806 ++++++++++++--------\n .../environment/schema/rules.schema.json           |    6 +-\n .../steps/milestone_1/instruction.md               |    8 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |  139 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   38 +-\n .../steps/milestone_1/tests/expected_rules.json    |    5 +-\n .../steps/milestone_1/tests/test_m1.py             |   57 +-\n .../steps/milestone_2/i",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T18:59:17.082338+00:00"
+}

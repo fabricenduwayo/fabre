@@ -1,0 +1,315 @@
+[2026-06-30T09:01:46Z] === hourly submission check start ===
+[2026-06-30T09:02:14Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T09:02:18Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T09:02:21Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T09:02:21Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T09:02:21Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T09:02:21Z] fix queue (2): repair-express-trivia-worker, repair-flask-signalbox-configs
+[2026-06-30T09:02:21Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ MEDIUM - Requires at least HARD for python
+[2026-06-30T09:02:21Z] triggering Composer fix for repair-express-trivia-worker
+[2026-06-30T09:02:21Z] ERROR on repair-express-trivia-worker: No module named 'cursor_sdk'
+[2026-06-30T09:02:21Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ EASY - Requires at least HARD for python
+[2026-06-30T09:02:22Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-06-30T09:02:22Z] ERROR on repair-flask-signalbox-configs: No module named 'cursor_sdk'
+[2026-06-30T09:02:22Z] next queued task after cooldown: repair-express-trivia-worker
+[2026-06-30T09:02:22Z] === done — triggered 0 fix(es) ===
+[2026-06-30T09:03:16Z] === hourly submission check start ===
+[2026-06-30T09:03:45Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T09:03:48Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T09:03:52Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T09:03:52Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T09:03:52Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T09:03:52Z] fix queue (2): repair-express-trivia-worker, repair-flask-signalbox-configs
+[2026-06-30T09:03:52Z] cooldown active (3510s left) — next up: repair-express-trivia-worker
+[2026-06-30T09:10:21Z] === hourly submission check start ===
+[2026-06-30T09:10:45Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T09:10:48Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T09:10:51Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T09:10:51Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T09:10:51Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T09:10:51Z] fix queue (2): repair-express-trivia-worker, repair-flask-signalbox-configs
+[2026-06-30T09:10:51Z] cooldown active (3090s left) — next up: repair-express-trivia-worker
+[2026-06-30T09:24:48Z] === hourly submission check start ===
+[2026-06-30T09:25:13Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T09:25:13Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T09:25:13Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T09:25:13Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T09:25:13Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T09:25:13Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T09:25:13Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T09:25:13Z] no auto-fix candidates after exclusions and feedback gates
+[2026-06-30T10:25:14Z] === hourly submission check start ===
+[2026-06-30T10:25:48Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T10:25:52Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T10:25:52Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T10:25:52Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T10:25:52Z] fix queue (3): repair-express-trivia-worker, repair-flask-signalbox-configs, reproduce-java-aes-gcm-findings
+[2026-06-30T10:25:52Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-06-30T10:25:52Z] triggering Composer fix for repair-express-trivia-worker
+[2026-06-30T10:29:53Z] done repair-express-trivia-worker agent_status=finished state_after=EVALUATION_PENDING
+[2026-06-30T10:29:53Z] reached max fixes per run (1) — remainder waits for next hour
+[2026-06-30T10:29:53Z] next queued task after cooldown: repair-flask-signalbox-configs
+[2026-06-30T10:29:53Z] === done — triggered 1 fix(es) ===
+[2026-06-30T11:29:54Z] === hourly submission check start ===
+[2026-06-30T11:30:24Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T11:30:24Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T11:30:24Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T11:30:28Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T11:30:28Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T11:30:28Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T11:30:28Z] fix queue (1): repair-flask-signalbox-configs
+[2026-06-30T11:30:28Z] cooldown active (3428s left) — next up: repair-flask-signalbox-configs
+[2026-06-30T12:30:29Z] === hourly submission check start ===
+[2026-06-30T12:30:56Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T12:30:56Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T12:30:56Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T12:31:00Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T12:31:00Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T12:31:00Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T12:31:00Z] fix queue (1): repair-flask-signalbox-configs
+[2026-06-30T12:31:00Z] cooldown active (3383s left) — next up: repair-flask-signalbox-configs
+[2026-06-30T13:31:01Z] === hourly submission check start ===
+[2026-06-30T13:31:29Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T13:31:29Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T13:31:29Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T13:31:34Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T13:31:34Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T13:31:34Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T13:31:34Z] fix queue (1): repair-flask-signalbox-configs
+[2026-06-30T13:31:34Z] cooldown active (262s left) — next up: repair-flask-signalbox-configs
+[2026-06-30T14:31:35Z] === hourly submission check start ===
+[2026-06-30T14:32:04Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T14:32:04Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T14:32:04Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T14:32:08Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T14:32:08Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T14:32:08Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T14:32:08Z] fix queue (1): repair-flask-signalbox-configs
+[2026-06-30T14:32:08Z] cooldown active (819s left) — next up: repair-flask-signalbox-configs
+[2026-06-30T15:32:08Z] === hourly submission check start ===
+[2026-06-30T15:32:36Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T15:32:36Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T15:32:36Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T15:32:36Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T15:32:36Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T15:32:36Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T15:32:36Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T15:32:36Z] no auto-fix candidates after exclusions and feedback gates
+[2026-06-30T16:32:39Z] === hourly submission check start ===
+[2026-06-30T16:33:06Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T16:33:06Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T16:33:06Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T16:33:25Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T16:33:25Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T16:33:25Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T16:33:25Z] fix queue (1): repair-flask-signalbox-configs
+[2026-06-30T16:33:25Z] cooldown active (1181s left) — next up: repair-flask-signalbox-configs
+[2026-06-30T17:33:26Z] === hourly submission check start ===
+[2026-06-30T17:33:56Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T17:34:00Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T17:34:00Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T17:34:00Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T17:34:00Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T17:34:00Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T17:34:00Z] fix queue (1): repair-express-trivia-worker
+[2026-06-30T17:34:00Z] cooldown active (1341s left) — next up: repair-express-trivia-worker
+[2026-06-30T18:34:03Z] === hourly submission check start ===
+[2026-06-30T18:34:34Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T18:34:41Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T18:34:41Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T18:34:41Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T18:34:41Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T18:34:41Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T18:34:41Z] fix queue (1): repair-express-trivia-worker
+[2026-06-30T18:34:41Z] cooldown active (1233s left) — next up: repair-express-trivia-worker
+[2026-06-30T19:34:43Z] === hourly submission check start ===
+[2026-06-30T19:35:12Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T19:35:12Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T19:35:12Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T19:35:12Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T19:35:12Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T19:35:12Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T19:35:12Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T19:35:12Z] no auto-fix candidates after exclusions and feedback gates
+[2026-06-30T20:35:13Z] === hourly submission check start ===
+[2026-06-30T20:35:43Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-06-30T20:35:43Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T20:35:43Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T20:35:43Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T20:35:43Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T20:35:43Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T20:35:43Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T20:35:43Z] no auto-fix candidates after exclusions and feedback gates
+[2026-06-30T21:35:44Z] === hourly submission check start ===
+[2026-06-30T21:36:29Z] skip reproduce-java-aes-gcm-findings — green eval (AutoEval noise only)
+[2026-06-30T21:36:29Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-06-30T21:36:29Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T21:36:29Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T21:36:29Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T21:36:29Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T21:36:29Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T21:36:29Z] no auto-fix candidates after exclusions and feedback gates
+[2026-06-30T21:36:29Z] skipped 1 item(s) — see state.last_queue
+[2026-06-30T22:36:30Z] === hourly submission check start ===
+[2026-06-30T22:37:09Z] skip reproduce-java-aes-gcm-findings — green eval (AutoEval noise only)
+[2026-06-30T22:37:14Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-06-30T22:37:14Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-06-30T22:37:14Z] skip 6b30193a… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-06-30T22:37:14Z] skip f0e91036… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] skip cffe5127… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-06-30T22:37:14Z] skip 586f2352… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] skip c1f49663… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] skip 8e261009… state=OFFERED folder=?
+[2026-06-30T22:37:14Z] fix queue (1): repair-express-trivia-worker
+[2026-06-30T22:37:14Z] skipped 1 — exclusions / green bounce / already fixed
+[2026-06-30T22:37:14Z] cooldown active (1194s left) — next up: repair-express-trivia-worker
+[2026-06-30T23:37:15Z] === hourly submission check start ===
+[2026-06-30T23:37:46Z] ERROR listing submissions: The read operation timed out
+[2026-07-01T00:37:47Z] === hourly submission check start ===
+[2026-07-01T00:38:22Z] skip reproduce-java-aes-gcm-findings — green eval (AutoEval noise only)
+[2026-07-01T00:38:22Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-01T00:38:22Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-07-01T00:38:22Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-07-01T00:38:22Z] skip 6b30193a… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-01T00:38:22Z] skip f0e91036… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-01T00:38:22Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-01T00:38:22Z] no auto-fix candidates after exclusions and feedback gates
+[2026-07-01T00:38:22Z] skipped 1 item(s) — see state.last_queue
+[2026-07-01T01:38:23Z] === hourly submission check start ===
+[2026-07-01T01:38:52Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-07-01T01:38:52Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-01T01:38:52Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-07-01T01:38:52Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-07-01T01:38:52Z] skip 6b30193a… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-01T01:38:52Z] skip f0e91036… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-01T01:38:52Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-01T01:38:52Z] no auto-fix candidates after exclusions and feedback gates
+[2026-07-01T02:38:54Z] === hourly submission check start ===
+[2026-07-01T02:39:32Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-07-01T02:39:35Z] skip 6b30193a… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-01T02:39:35Z] skip f0e91036… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-01T02:39:35Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-01T02:39:35Z] fix queue (3): repair-express-trivia-worker, repair-flask-signalbox-configs, reproduce-java-aes-gcm-findings
+[2026-07-01T02:39:35Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-01T02:39:35Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-01T03:01:42Z] done repair-express-trivia-worker agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-01T03:01:42Z] reached max fixes per run (1) — remainder waits for next hour
+[2026-07-01T03:01:42Z] next queued task after cooldown: repair-flask-signalbox-configs
+[2026-07-01T03:01:42Z] === done — triggered 1 fix(es) ===
+[2026-07-01T04:01:43Z] === hourly submission check start ===
+[2026-07-01T04:02:23Z] skip 71323da7… state=REVIEW_PENDING folder=reproduce-java-tls-waiver-findings
+[2026-07-01T04:02:25Z] skip 6b30193a… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-01T04:02:25Z] skip f0e91036… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-01T04:02:25Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-01T04:02:25Z] fix queue (3): repair-express-trivia-worker, repair-flask-signalbox-configs, reproduce-java-aes-gcm-findings
+[2026-07-01T04:02:25Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ✅ HARD
+[2026-07-01T04:02:25Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-01T04:13:53Z] ERROR on repair-express-trivia-worker: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-01T04:13:53Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-01T04:13:53Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-07-01T04:35:24Z] done repair-flask-signalbox-configs agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-01T04:35:24Z] reached max fixes per run (1) — remainder waits for next hour
+[2026-07-01T04:35:24Z] next queued task after cooldown: repair-flask-signalbox-configs
+[2026-07-01T04:35:24Z] === done — triggered 1 fix(es) ===

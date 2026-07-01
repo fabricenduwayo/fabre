@@ -1,0 +1,59 @@
+{
+  "runs": {
+    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
+      "folder_name": "reproduce-java-aes-gcm-findings",
+      "feedback_hash": "24307f8b051c7842",
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "The platform flagged this as **TRIVIAL** (both agents at 100%) despite the existing edge-case coverage \u2014 the instructions were effectively a cheat sheet. I hardened the task with real interacting logic and trimmed those hints.\n\n## Root cause\nDifficulty failed because frontier agents solved every test at 100%. The milestone instructions named exact frame IDs, section headers, and precedence rules, so agents could follow the prompt without digging through the long report.\n\n## Fixes applied\n\n**New interacting logic (2 frames, 22 total in-scope):**\n- **frm-021 (victor-channel):** Every `key_rotated` row is voided by `key_rotation_rescinded`; must fall back to `latest_key_assigned` (v2) after filtering a rescinded v6 assignment \u2014 not treat voided rotations as operative.\n- **frm-022 (whiskey-channel):** Fifth Appendix D override; report nonce must survive key rotation over a later DB registration.\n\n**Report & data:** Appendix C now states the all-rotations-rescinded assignment fallback; Appendix D lists five overrides. Regenerated `seed.sql`, `evidence.gif`, forensic report, and expected JSON via `tools/gen_dataset.py`.\n\n**Instructions de-hinted:** Removed explicit frame IDs (frm-003/006/010/015), exact section header strings, and step-by-step parsing walkthroughs. Requirements stay aligned with tests but must be discovered from the report.\n\n**Tests:** Added M1/M2 coverage for frm-022 and frm-021; updated errata exclusion checks.\n\n**Platform:** Bumped `# platform-revision: 2026-06-30-r19`; oracle reward **1.0**; static checks **PASS**; resubmitted (not sent to reviewer). Assignment state: **EVALUATION_PENDING**.\n\n```json\n{\n  \"changes_summary\": \"Hardened reproduce-java-aes-gcm-findings against the TRIVIAL difficulty gate by adding frm-021 (all rotations rescinded \u2192 assignment fallback) and frm-022 (fifth Appendix D override surviving rotation over DB registration), updating reference.py/gen_report.py and regenerating seed.sql, evidence.gif, report, and expected JSON; trimmed milestone 1/2 instructions to remove explicit frame-ID and section-header hints; added matching M1/M2 tests; bumped Dockerfile platform-revision to r19; updated rubrics and submission explanations; oracle passes 1.0 locally.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Hardened reproduce-java-aes-gcm-findings against the TRIVIAL difficulty gate by adding frm-021 (all rotations rescinded \u2192 assignment fallback) and frm-022 (fifth Appendix D override surviving rotation over DB registration), updating reference.py/gen_report.py and regenerating seed.sql, evidence.gif, report, and expected JSON; trimmed milestone 1/2 instructions to remove explicit frame-ID and section-header hints; added matching M1/M2 tests; bumped Dockerfile platform-revision to r19; updated rubrics and submission explanations; oracle passes 1.0 locally.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |  127 +-\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 2809 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 2042 ++++++++++++--------\n .../environment/schema/rules.schema.json           |    6 +-\n .../steps/milestone_1/instruction.md               |   13 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |  139 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   38 +-\n .../steps/milestone_1/tests/expected_rules.json    |    6 +-\n .../steps/milestone_1/tests/test_m1.py             |   68 +-\n .../steps/milestone_2/i",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260630T194905Z.json",
+      "last_run": "2026-06-30T19:49:05.224015+00:00"
+    },
+    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
+      "folder_name": "repair-express-trivia-worker",
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-01T04:13:53.730597+00:00"
+    },
+    "3a48c644-09b8-4357-9466-403cb2674a1c": {
+      "folder_name": "repair-flask-signalbox-configs",
+      "feedback_hash": "51894bf362e3d38c",
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "Revised `repair-flask-signalbox-configs` for the TRIVIAL difficulty gate and instruction sufficiency gaps, then resubmitted.\n\n## Root cause\nBoth frontier models passed 100% because the bulletin-folding spec was already fully enumerated in `instruction.md` and `failed_attempt_notes`, so agents could implement the resolver without missing interacting semantics.\n\n## Hardening: `inherit_when_from`\nAdded real interacting logic at the bulletin tail:\n\n- **BUL-AV** \u2014 yard-link add uses `base_when` + `inherit_when_from: [\"t_sw1_c\", \"t_sw3_f\"]` instead of a static `sw2: north` when map\n- **BUL-AZ / BUL-BA** \u2014 amend then static replace: composed when maps must be recomputed during fixpoints, then collapsed back to `{sw2: north}` for `route_locks` export\n- Glossary entries for `inherit_when_from` and `base_when`\n- Three new failed-attempt notes for common inherit mistakes\n\nAlso fixed `parse_detail` in `tests/helpers.py` and `solution/repair_cartridge.py` so `base_when` is parsed correctly (without it, BUL-AV would fail).\n\n## Instruction sufficiency fixes\nUpdated `instruction.md` to state:\n\n- `python3 /app/tools/play_shift.py` is the required entrypoint\n- Referee logs successful dispatches to `/app/data/dispatch.duckdb` (`dispatch_log` table)\n- `lock_corrections` effective_detail overrides (e.g. corrected release `hold_id`)\n- `inherit_when_from` / `base_when` cascade semantics\n\n## Tests & metadata\n- Three new inherit tests + updated prefix assertion in `test_requires_when_drops_yard_link_without_merged_f_seal_when`\n- `# platform-revision: 2026-06-30-r32` in Dockerfile\n- Updated `.submission-explanations.txt` and rubrics\n\n## Verification\n- Oracle: **1.0** (`harbor run -a oracle -p repair-flask-signalbox-configs`)\n- Static checks: **PASS**\n- Resubmit sent (not to reviewer)\n- Platform state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Hardened repair-flask-signalbox-configs for the python=>HARD gate by adding inherit_when_from/base_when bulletin tail logic (BUL-AV/AZ/BA) with glossary entries and failed-attempt notes; fixed parse_detail base_when handling in helpers.py and solution/repair_cartridge.py; aligned instruction.md with play_shift invocation, dispatch.duckdb logging, lock_corrections overrides, and inherit cascade semantics; added three inherit tests and updated a prefix assertion; bumped platform-revision to r32; refreshed submission explanations and rubrics.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Hardened repair-flask-signalbox-configs for the python=>HARD gate by adding inherit_when_from/base_when bulletin tail logic (BUL-AV/AZ/BA) with glossary entries and failed-attempt notes; fixed parse_detail base_when handling in helpers.py and solution/repair_cartridge.py; aligned instruction.md with play_shift invocation, dispatch.duckdb logging, lock_corrections overrides, and inherit cascade semantics; added three inherit tests and updated a prefix assertion; bumped platform-revision to r32; refreshed submission explanations and rubrics.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": "?? repair-flask-signalbox-configs/",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260701T043523Z.json",
+      "last_run": "2026-07-01T04:35:24.330880+00:00"
+    }
+  },
+  "last_check": "2026-07-01T04:01:43.689352+00:00",
+  "last_queue": {
+    "fix_queue": [
+      "repair-express-trivia-worker",
+      "repair-flask-signalbox-configs",
+      "reproduce-java-aes-gcm-findings"
+    ],
+    "skipped": [],
+    "checked_at": "2026-07-01T04:02:25.376688+00:00"
+  },
+  "next_fix_allowed_after": "2026-07-01T05:35:24.345022+00:00"
+}

@@ -1,0 +1,14 @@
+Agent reads /app/docs/scoring_standard.md including the Appendix G and Appendix H amendments before editing the replay worker, +3
+Agent replays ledger rows in ascending seq order rather than sorting by timestamp, +3
+Agent sends X-Idempotency-Key match-night-{seq} with the full ledger row body on every ingest POST, +3
+Agent retries HTTP 503 ingest responses with exponential backoff until success or a non-retryable error, +3
+Agent does not award buzzer or answer credit while a question is locked per G-2026-03 and ignores duplicate buzzers per G-2026-04, +3
+Agent takes per-player score, correct, and first_buzz_seq from GET /v1/standings rather than a local shadow scoreboard, +3
+Agent fetches GET /v1/rulings and reconciles incidents by ruling_seq so amend supersedes earlier issues (including player retarget) and rescind voids the incident, +5
+Agent applies surviving primary rulings in ascending ruling_seq with per-participant zero floor checkpoints, drops primaries whose requires_incident chain or ever-rescinded paired parent fails at replay end, defers applies_after_floor rulings with record-time dependency and paired-parent snapshots, syncs frozen deferred snapshots on amend, clears incidents via supersedes_incident without adding them to ever-rescinded, and drops paired frozen snapshots when a deferred parent is demoted to primary, +5
+Agent writes the section 4 official standings transcript to the requested --output path with a trailing newline after the last player row, +2
+Agent echoes the provisional GET /v1/standings as the transcript and ignores the stewards' rulings, -5
+Agent hardcodes final scores or transcript lines without replaying the ledger and rulings through the API, -5
+Agent sorts replay by ts column instead of seq, -3
+Agent omits idempotency keys or gives up on the first 503 without retrying, -4
+Agent treats supersedes_incident like rescind and taints the superseded id in ever-rescinded, leaves paired frozen snapshots in place after a deferred parent is demoted to primary, re-checks requires_incident or paired_incident at post-floor apply time and drops snapshotted deferred rulings when the parent was later rescinded, leaves frozen deferred snapshots stale after a later amend retargets player or delta, inherits correct_delta or delta on amend omit, inherits applies_after_floor or requires_incident on amend omit, applies primary rulings whose dependency was later rescinded, treats a re-issued incident as restoring void primaries that depended on it before rescind, applies primary rulings in batch without per-ruling floor checkpoints, serializes ingest bodies with sort_keys or compact separators, or omits the trailing newline on the scoreboard file, -4

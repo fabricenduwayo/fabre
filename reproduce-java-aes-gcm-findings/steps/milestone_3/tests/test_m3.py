@@ -17,12 +17,18 @@ MAIN_CLASS_REL = pathlib.Path("com/mariner/forensic/Main.class")
 
 
 def _class_dir() -> pathlib.Path | None:
+    """Pick the newest compiled Main.class when multiple output trees exist."""
+    found: list[tuple[float, pathlib.Path]] = []
     candidates = [pathlib.Path("/app/classes"), pathlib.Path("/app/pipeline/classes")]
     candidates.extend(sorted(pathlib.Path("/app").glob("*/classes")))
     for candidate in candidates:
-        if (candidate / MAIN_CLASS_REL).exists():
-            return candidate
-    return None
+        main_class = candidate / MAIN_CLASS_REL
+        if main_class.exists():
+            found.append((main_class.stat().st_mtime, candidate))
+    if not found:
+        return None
+    found.sort(key=lambda item: item[0], reverse=True)
+    return found[0][1]
 
 
 def _run_stage(stage: str) -> None:

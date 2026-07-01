@@ -1,0 +1,58 @@
+# Rubric 1
+Agent reads the forensic report appendices to understand the exception rules before writing code, +2
+Agent identifies and uses the JSON schema at /app/schema/rules.schema.json to determine required field names and allowed values, +2
+Agent copies the derived-nonce rule verbatim rather than paraphrasing it, +3
+Agent extracts every report-level nonce override from the operative report sections, +3
+Agent transcribes all five Appendix D operative overrides rather than stopping after the first few, +3
+Agent keeps the last operative Appendix D override line when a frame section lists more than one, +3
+Agent extends the existing scaffold (pipeline stubs) rather than starting from scratch, +2
+Agent compiles the Java code successfully using build.sh or equivalent javac with vendored libraries, +3
+Agent produces /app/out/rules.json that validates against the schema (correct field names, types, and precedence ordering), +5
+Agent transcribes the three-tier nonce_selection_precedence including db_override between report and derived, +3
+Agent hand-writes or hard-codes the JSON output file instead of generating it programmatically from the report, -5
+
+# Rubric 2
+Agent reads rules.json from milestone 1 to understand key-selection and nonce-selection precedence before implementing the correlator, +2
+Agent queries the SQLite database to inspect the frames table and audit_events table structure, +2
+Agent orders audit events by recorded_at timestamp rather than relying on row insertion order or Appendix B prose, +3
+Agent correctly applies key-selection precedence: uses rotation_replacement over latest_key_assigned when rotations exist, +3
+Agent takes the most recent key_rotated event when a frame has multiple rotations and ignores later stale key_assigned rows, +3
+Agent excludes key_rotated rows voided by a matching key_rotation_rescinded pair before choosing the operative rotation, +3
+Agent excludes key_assigned rows voided by a matching key_assignment_rescinded before falling back to latest assignment, +3
+Agent falls back to an earlier surviving rotation replacement when a later chained rotation hop is rescinded, +3
+Agent falls back to latest_key_assigned when every key_rotated row for a frame is voided by key_rotation_rescinded, +3
+Agent resolves triple-rotation frames using the latest rotation replacement, not the numerically largest replacement_key_version, +3
+Agent uses replacement_key_version as-is even when it is numerically lower than the superseded version, +3
+Agent resolves report-level nonce overrides before consulting later nonce_override_registered audit rows, +3
+Agent picks the latest nonce_override_registered row only when no report override applies for that frame, +3
+Agent excludes nonce_override_registered rows voided by a matching nonce_override_revoked event, +3
+Agent ignores nonce_override_registered rows whose key_version differs from the operative key version after rotation, +3
+Agent selects a post-rotation DB nonce registration only when its key_version matches the operative key version, +3
+Agent keeps an Appendix D report override fixed across key rotation instead of re-deriving for the new key version, +3
+Agent applies report-level nonce overrides for every Appendix D frame including those listed after D.4, +3
+Agent processes nonce_override_amended events by voiding rows whose nonce_override_hex matches supersedes_nonce_hex, +3
+Agent applies sequential nonce_override_amended events so only the final amendment result remains operative, +3
+Agent treats a later nonce_override_registered row as operative when it re-registers bytes voided by an earlier amendment, +3
+Agent derives nonces using SHA-256 of frame_id:key_version and takes the first 12 bytes for frames without overrides, +2
+Agent produces /app/out/correlation.json validated against /app/schema/correlation.schema.json with every in-scope frame, +2
+Agent parses withdrawn post-review errata into nonce_overrides, -3
+Agent ignores nonce_override_registered rows after key rotation when the registration key_version no longer matches, -3
+Agent treats a revoked nonce_override_registered row as still operative because it has the latest recorded_at, -3
+Agent parses Appendix B narrative lines for operative key versions or nonce bytes instead of JDBC, -3
+Agent ignores the recorded_at ordering requirement and uses row insertion order for event precedence, -3
+Agent picks a later nonce_override_registered row that still names a superseded key_version over a matching post-rotation registration, -3
+Agent re-derives a nonce for a frame with an Appendix D override after key rotation changes the operative key version, -3
+Agent treats a key_rotated row as operative even when a later key_rotation_rescinded voids that same version pair, -3
+Agent treats voided key_rotated rows as still operative instead of falling back to latest_key_assigned, -3
+Agent uses a later key_assigned row that was voided by key_assignment_rescinded when no rotation applies, -3
+Agent keeps a nonce registration voided by nonce_override_amended as permanently ineligible even after a later re-registration, -3
+Agent stops at the first nonce_override_amended result when a later amendment supersedes it, -3
+
+# Rubric 3
+Agent parses the GIF file to extract ciphertext from MRNR/CRYPTO1 application extension blocks for each in-scope frame, +3
+Agent loads the correct key material from the SQLite key_material table using the key_version from correlation.json, +3
+Agent uses AES-256-GCM with 128-bit authentication tag, the correlated nonce, and frame_id as additional authenticated data (AAD), +5
+Agent produces /app/out/findings.json with all fields required by /app/schema/findings.schema.json validated against the findings schema, +3
+Agent ensures the decrypt stage is callable as 'com.mariner.forensic.Main decrypt' from the compiled classes, +3
+Agent achieves successful authentication (auth_ok=true) for every in-scope GIF payload, +5
+Agent compiles Java classes to a directory other than /app/classes or /app/pipeline/classes, -3

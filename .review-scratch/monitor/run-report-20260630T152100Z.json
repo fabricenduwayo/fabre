@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "1aa1afe41c3efb5b",
+  "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Fixed instruction sufficiency by stating play_shift.py must use the verifier-started referee on http://127.0.0.1:5000 without spawning port 5000 itself. Hardened difficulty with unless_present cascades and post-release re-application in seq order, adding seed rows BUL-AA through BUL-AD, a matching failed_attempt_note, test_unless_present_reapplies_after_hold_release, and mirrored resolver updates in tests/helpers.py and solution/repair_cartridge.py. Bumped Dockerfile platform-revision to r16 and updated submission explanations and rubrics.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T15:21:00.635226+00:00"
+}

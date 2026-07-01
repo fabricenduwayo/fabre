@@ -29,7 +29,7 @@ from helpers import (
     simulate,
 )
 
-RANDOM_CASES = 45
+RANDOM_CASES = 60
 SEED = 91237  # fixed seed for reproducibility
 
 ALLOWED = ALLOWED_ORIGINS[0]
@@ -56,6 +56,11 @@ def _assert_response(exp, status, headers, raw, parsed):
             assert header_ci(headers, "Access-Control-Max-Age") == exp["cors"]["Access-Control-Max-Age"]
             assert header_ci(headers, "Access-Control-Allow-Methods") == exp["cors"]["Access-Control-Allow-Methods"]
             assert header_ci(headers, "Access-Control-Allow-Headers") == exp["cors"]["Access-Control-Allow-Headers"]
+        else:
+            # G-2026-11: preflight hints must not leak onto non-preflight responses.
+            assert header_ci(headers, "Access-Control-Allow-Methods") is None
+            assert header_ci(headers, "Access-Control-Allow-Headers") is None
+            assert header_ci(headers, "Access-Control-Max-Age") is None
     else:
         assert acao is None, f"unexpected ACAO {acao!r}"
         assert cred is None, f"unexpected Allow-Credentials {cred!r}"
@@ -158,6 +163,42 @@ def test_token_stored_non_recoverable(scripted):
     assert stored and token not in stored
 
 
+def test_cors_grant_follows_current_request(scripted):
+    """CO-ORIGIN-ALLOW: each request's Origin header governs the credentialed grant."""
+    token = scripted["token"]
+    assert token is not None
+    auth = {"Authorization": f"Bearer {token}"}
+
+    _, headers_a, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED})
+    assert header_ci(headers_a, "Access-Control-Allow-Origin") == ALLOWED
+
+    _, headers_b, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED2})
+    assert header_ci(headers_b, "Access-Control-Allow-Origin") == ALLOWED2
+
+    _, headers_none, _, _ = request(
+        "GET", "/health", {**auth, "Origin": "https://evil.example"}
+    )
+    assert header_ci(headers_none, "Access-Control-Allow-Origin") is None
+
+
+def test_bootstrap_eligibility_follows_token_file(scripted):
+    """AC-BOOTSTRAP: bootstrap eligibility follows the on-disk token file, not caches."""
+    import os
+
+    secret = read_secret()
+    assert scripted["token"] is not None
+    os.remove(TOKEN_FILE)
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201, f"expected fresh bootstrap after token removal, got {status}"
+    assert body and body.get("token")
+
+
 def test_health_requires_valid_token(scripted):
     """AC-HEALTH: ok only for the bootstrapped token; others refused."""
     assert scripted["health_noauth"][0] == 401
@@ -174,6 +215,8 @@ def test_cors_exact_allowlist(scripted):
         assert header_ci(headers, "Access-Control-Allow-Credentials") == "true"
         vary = header_ci(headers, "Vary")
         assert vary is not None and "origin" in vary.lower()
+        assert header_ci(headers, "Access-Control-Allow-Methods") is None
+        assert header_ci(headers, "Access-Control-Allow-Headers") is None
 
 
 def test_cors_rejects_untrusted_and_inexact(scripted):

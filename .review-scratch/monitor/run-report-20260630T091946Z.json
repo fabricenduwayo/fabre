@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-express-trivia-worker",
+  "submission_id": "e7d1cac7-538c-4f65-ba21-eb38d47c5242",
+  "feedback_hash": "19f6915cc6a11ee4",
+  "issue": "Difficulty: \u274c MEDIUM - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Fixed instruction sufficiency by documenting idempotency key format, ingest 200/409 response shapes, full POST body rules, Appendix H reconciliation, and the exact transcript format directly in instruction.md. Hardened difficulty with real interacting logic: amend can retarget the player (not just delta) via new INC-4 rulings, and a zero score floor (H-2026-04) via INC-5 that clamps bob's post-adjustment score. Updated scoring_standard.md, rulings.json, helpers.py, solution/replay.py, test_outputs.py, rubrics, submission explanations, and bumped Dockerfile platform-revision to r6.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-express-trivia-worker/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T09:19:46.884932+00:00"
+}

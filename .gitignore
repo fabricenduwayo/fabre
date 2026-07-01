@@ -1,5 +1,7 @@
 .DS_Store
 .venv/
+tools/monitor/.env
+tools/monitor/.venv/
 jobs/
 **/__pycache__/
 *.pyc

@@ -6,11 +6,15 @@
   ],
   "nonce_selection_precedence": [
     "report_override",
+    "db_override",
     "derived_sha256_prefix"
   ],
   "derived_nonce_rule": "SHA-256(frame_id + ':' + key_version), first 12 bytes",
   "nonce_overrides": {
     "frm-003": "A7C3E91B4D2F8065E1B9C0A3",
-    "frm-006": "3F08D5621CA4790BEE17F2D8"
+    "frm-006": "3F08D5621CA4790BEE17F2D8",
+    "frm-010": "0A1B2C3D4E5F60718293A4B5",
+    "frm-015": "13579BDF2468ACE024681ACE",
+    "frm-022": "E1F2A3B4C5D67890ABCDEF01"
   }
 }

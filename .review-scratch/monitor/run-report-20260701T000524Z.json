@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "00c38871e63758ba",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened repair-flask-signalbox-configs against TRIVIAL difficulty by condensing instruction.md to glossary-driven semantics, adding requires_stable cascade snapshots (requires + when-map drift) on BUL-AO, adding lock_corrections effective_detail override for BUL-W nested hold release, new tests for those behaviors, synced solution/helpers lock resolver, updated submission explanations/rubrics, and bumped platform-revision to 2026-06-30-r30.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-07-01T00:05:24.774841+00:00"
+}

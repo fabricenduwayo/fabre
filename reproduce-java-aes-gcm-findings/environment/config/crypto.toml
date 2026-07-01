@@ -1,5 +1,5 @@
 # Vault key-version catalogue cross-reference.
-active_versions = [1, 2, 3, 4]
+active_versions = [1, 2, 3, 4, 5, 6]
 
 [gcm]
 nonce_length_bytes = 12

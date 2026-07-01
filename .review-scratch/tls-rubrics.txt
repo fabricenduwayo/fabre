@@ -1,0 +1,44 @@
+# Rubric 1
+/app/out/waivers.json exists and is valid JSON (parseable array), +1
+/app/out/waivers.json validates against /app/schema/waivers.schema.json with no validation errors, +3
+Every in-scope service from the report appears as a row in waivers.json (no services missing), +2
+Services with no waiver have waiver_type='none', status='none', and null for waiver_id/scope/granted_on/expires_on/revoked_on, +2
+Waiver grants correctly capture waiver_id, waiver_type (tls/mtls/chain), scope (all/prod/staging/dev), granted_on, and expires_on dates, +2
+Rescinded waivers are correctly resolved: status='revoked' with revoked_on date set, matching waiver ID to handle replacement waivers, +3
+When a service has an older waiver rescinded and a replacement granted, the final state reflects the replacement waiver (not the rescinded one), +3
+Java code compiles and 'com.mariner.audit.Main decode' runs without errors from compiled classes under /app/pipeline/classes or /app/classes, +2
+The pipeline is structured for reuse: Main.java dispatches subcommands (decode/join/validate) so later milestones can extend it, +1
+waivers.json has incorrect waiver_type values (not matching schema enum tls/mtls/chain/none), -3
+waivers.json contains hardcoded/hand-written data rather than being programmatically extracted from the report, -5
+
+# Rubric 2
+/app/out/evidence.json exists and is valid JSON (parseable array), +1
+/app/out/evidence.json validates against /app/schema/evidence.schema.json with no validation errors, +3
+The join stage connects to the H2 database via JDBC at jdbc:h2:/app/data/mariner with user 'sa' and no password, +2
+Each service record includes correct certificate-of-record fields: cert_fingerprint, cert_not_after, cert_key_algo, cert_key_bits, cert_issuer, +2
+Each service record includes correct probe fields: probe_tls_version, probe_verify_ok, probe_mtls_required, probe_mtls_presented, probe_chain_valid, probe_http_status, probe_observed_fingerprint, +2
+Only the most recent probe per service is used (selected by MAX captured_at timestamp, not by probe ID), +3
+Waiver data from milestone 1 (/app/out/waivers.json) is correctly merged into evidence records with waiver_type, waiver_status, waiver_scope, waiver_expires_on, +2
+The join stage runs as 'com.mariner.audit.Main join' with no additional arguments from the compiled classes, +1
+Environment field is correctly populated from the database for each service (prod/staging/dev), +1
+Evidence records use an older/non-latest probe instead of the most recent capture per service, -3
+evidence.json is missing waiver fields or has null waiver_type/waiver_status for services that have waivers, -2
+
+# Rubric 3
+/app/out/findings.json exists and is valid JSON (parseable array), +1
+/app/out/findings.json validates against /app/schema/findings.schema.json with no validation errors, +3
+The validate stage loads and validates /app/config/policy.yaml against /app/schema/policy.schema.json, +2
+The validate stage loads and validates /app/config/crypto.toml against /app/schema/crypto.schema.json, +2
+Fingerprint mismatch (probe_observed_fingerprint != cert_fingerprint) correctly produces disposition='deny' with reason_code='fingerprint_mismatch', +3
+Violations (tls_version_blocked, mtls_missing, chain_invalid) without an active covering waiver produce disposition='deny' with the correct reason_code, +3
+An active waiver covers its matching violation type only when status is 'granted' AND waiver_expires_on is on or after review_date (expired status string not treated as authoritative), +3
+An in-force waiver of the wrong type for the violation, or whose scope does not reach the service's environment, is treated as no cover and the service is denied with the violation reason (waiver_applied=false), +3
+A lapsing in-force waiver that excuses no actual violation does not pull a rotation: with no protocol violation the service is 'allow'/'compliant' and waiver_applied=false, +2
+Amended precedence is applied: a covered violation with waiver expiring within rotation_window_days produces 'rotate'/'waiver_expiring_soon' BEFORE hygiene checks (cert_near_expiry, weak_key, untrusted_issuer), +3
+Hygiene triggers (cert_near_expiry, weak_key, untrusted_issuer) each produce disposition='rotate' with matching reason_code when no higher-precedence rule fires, +2
+A covered violation whose waiver is comfortably in date (not lapsing) falls through to the hygiene reason while still recording waiver_applied=true, rather than reporting waiver_expiring_soon, +2
+Services fully compliant with no waiver get disposition='allow'/reason_code='compliant'/waiver_applied=false; covered services passing all checks get 'allow'/'active_waiver_ok'/waiver_applied=true, +2
+waiver_applied flag is true only when an active, scope-matching waiver actually excuses a violation for that service, +2
+The validate stage runs as 'com.mariner.audit.Main validate' with no additional arguments (reads configs and evidence itself), +1
+Adjudication precedence is incorrect: hygiene triggers override fingerprint_mismatch or waiver_expiring_soon is ranked below cert_near_expiry, -5
+Waiver expiry check uses a separate expired status string field instead of comparing waiver_expires_on against review_date, -3

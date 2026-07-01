@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-express-trivia-worker",
+  "submission_id": "e7d1cac7-538c-4f65-ba21-eb38d47c5242",
+  "feedback_hash": "5b694df9f8b0c10f",
+  "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Fixed the instruction/spec gap for ingest bodies (empty payload cells must serialize as {} not null) in instruction.md and scoring_standard.md. Hardened difficulty with new Appendix H-2026-14 transitive requires_incident chain voiding at replay end, added INC-29/INC-30 rulings, updated helpers.py and solution/replay.py, added test_transitive_requires_incident_void_at_replay_end, bumped Dockerfile to platform-revision 2026-06-30-r18, and refreshed submission explanations and rubric.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-express-trivia-worker/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T18:36:50.516358+00:00"
+}

@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "d3903c49b553f4a3",
+  "issue": "Difficulty: \u274c MEDIUM - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Fixed binds_requires dynamic dependency resolution in tests/helpers.py and solution/repair_cartridge.py so effective_requires unions bound track ids plus their current requires when present; clarified the same semantics in instruction.md and the seed glossary; bumped Dockerfile platform-revision to 2026-06-30-r25; updated submission explanations and rubrics. Attempted unless_requires_changed hardening but reverted after it conflicted with unless_present reapply clearing junction requires.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T21:05:07.349785+00:00"
+}

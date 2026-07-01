@@ -1,0 +1,32 @@
+DIFFICULTY=This task is hard because the rules you need are buried in a long forensic report, not in a summary table. The agent has to extend a Java pipeline that reads those appendices, walks SQLite audit history in recorded_at order with rotation-replacement precedence, pulls ciphertext out of a GIF, and runs AES-256-GCM with frame_id as AAD. Get the key version or nonce wrong on one frame and authentication fails even if the rest of the code is fine.
+SOLUTION=I extended the provided three-stage Java CLI under com.mariner.forensic.Main. The rules stage regex-parses Appendix C and D for precedence lists and the frm-003 nonce override. correlate applies that logic to SQLite audit events - rotation replacement for frm-002, override or derived nonce per frame. decrypt extracts ciphertext from the GIF and verifies AES-256-GCM using keys from the key_material table. The oracle compiles to /app/pipeline/classes and runs each stage in order. The main gotcha is frm-002 needs replacement key version 3 after rotation, and frm-003 needs the explicit nonce from the report, not the derived default.
+VERIFICATION=Each milestone runs the compiled Main subcommand for that stage and checks JSON against the published schema plus hidden expected files under tests/. M1 checks precedence order, frm-003 override, and rules ground truth - derived_nonce_rule must match the verbatim Appendix C labeled line (trailing period optional). The pipeline must compile Main under /app/classes or /app/pipeline/classes. M2 checks JDBC correlation in recorded_at order, including frm-002 rotation_replacement and frm-003 nonce override. M3 checks schema-valid findings, all three frames with auth_ok and reason_code authenticated, and match to hidden expected_findings.json.
+RUBRIC=# Rubric 1
+Agent reads the forensic report appendices (specifically Appendix C and D) to understand the exception rules before writing code, +2
+Agent identifies and uses the JSON schema at /app/schema/rules.schema.json to determine required field names and allowed values, +2
+Agent copies the derived-nonce rule verbatim from the line labeled 'The derived-nonce rule in prose' rather than paraphrasing it, +3
+Agent correctly extracts the nonce override for frm-003 from Appendix D with its 24-character hex value, +3
+Agent extends the existing scaffold (pipeline stubs) rather than starting from scratch, +2
+Agent compiles the Java code successfully using build.sh or equivalent javac with vendored libraries, +3
+Agent produces /app/out/rules.json that validates against the schema (correct field names, types, and precedence ordering), +5
+Agent hand-writes or hard-codes the JSON output file instead of generating it programmatically from the report, -5
+
+# Rubric 2
+Agent reads rules.json from milestone 1 to understand key-selection and nonce-selection precedence before implementing the correlator, +2
+Agent queries the SQLite database to inspect the frames table and audit_events table structure, +2
+Agent orders audit events by recorded_at timestamp rather than relying on row insertion order, +3
+Agent correctly applies key-selection precedence: uses rotation_replacement (key_rotated event) over latest_key_assigned for frm-002, +5
+Agent correctly resolves the frm-003 nonce as an override (from report-level nonce_overrides in rules.json) rather than using a derived nonce, +5
+Agent derives nonces using SHA-256 of frame_id:key_version and takes the first 12 bytes for frames without overrides, +3
+Agent produces /app/out/correlation.json validated against /app/schema/correlation.schema.json with all three in-scope frames, +3
+Agent ignores the recorded_at ordering requirement and uses row insertion order for event precedence, -3
+
+# Rubric 3
+Agent reads /app/config/policy.yaml and /app/config/crypto.toml and validates them against their respective schemas, +2
+Agent parses the GIF file to extract ciphertext from MRNR/CRYPTO1 application extension blocks for each in-scope frame, +3
+Agent loads the correct key material from the SQLite key_material table using the key_version from correlation.json, +3
+Agent uses AES-256-GCM with 128-bit authentication tag, the correlated nonce, and frame_id as additional authenticated data (AAD), +5
+Agent produces /app/out/findings.json with auth_ok, plaintext_sha256, and reason_code fields validated against the findings schema, +3
+Agent ensures the decrypt stage is callable as 'com.mariner.forensic.Main decrypt' from the compiled classes, +3
+Agent achieves successful authentication (auth_ok=true) for all three in-scope GIF payloads, +5
+Agent places compiled classes under /app/classes or /app/pipeline/classes so the classpath is correct for the java -cp invocation, -3

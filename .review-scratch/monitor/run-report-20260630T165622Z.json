@@ -1,0 +1,18 @@
+{
+  "folder_name": "reproduce-java-aes-gcm-findings",
+  "submission_id": "fbb351b7-0c45-4402-9b19-08d2cd8fddf8",
+  "feedback_hash": "99feb33427f54e6d",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened reproduce-java-aes-gcm-findings against TRIVIAL difficulty by adding key_rotation_rescinded voiding (frm-009 trap: v5 wins over rescinded v2->v4) and explicit db_override as the middle tier in nonce_selection_precedence. Updated reference.py, gen_report.py, gen_dataset.py, rules.schema.json, seed.sql, forensic report, expected outputs, GIF, oracle Java (RuleExtractor + AuditCorrelator), M1/M2 instructions and tests, rubrics, resubmit explanations, and Dockerfile platform-revision r16.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |   48 +\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 1950 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 1949 +++++++++++---------\n .../environment/schema/rules.schema.json           |    6 +-\n .../steps/milestone_1/instruction.md               |    8 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |   76 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   38 +-\n .../steps/milestone_1/tests/expected_rules.json    |    5 +-\n .../steps/milestone_1/tests/test_m1.py             |   57 +-\n .../steps/milestone_2/in",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T16:56:22.086380+00:00"
+}

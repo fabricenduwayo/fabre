@@ -1,0 +1,10 @@
+{
+  "files": {
+    "passwd": "alice:x:1001:100::/home/alice:/bin/bash\nsvc_monitor:x:2500:100::/home/svc_monitor:/bin/bash\nsvc_backup:x:2600:100::/home/svc_backup:/bin/bash\nsvc_low:x:450:100::/home/svc_low:/bin/bash\nmidrange:x:700:100::/home/midrange:/bin/bash\n",
+    "shadow": "alice:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nsvc_monitor:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nsvc_backup:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nsvc_low:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nmidrange:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\n",
+    "group": "wheel:x:10:alice,svc_monitor,svc_backup,svc_low,midrange\nusers:x:100:\n",
+    "sudoers": "Defaults env_reset\n%wheel ALL=(ALL) NOPASSWD: ALL\n",
+    "authorized_keys": {},
+    "sshd_config.d": {"10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"}
+  }
+}

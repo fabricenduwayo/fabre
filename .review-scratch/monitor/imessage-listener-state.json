@@ -1,0 +1,9 @@
+{
+  "initialized": true,
+  "last_rowid": 176209,
+  "last_command": {
+    "command": "run",
+    "at": "2026-07-01T00:51:33.806467+00:00",
+    "reply": "OK: one-shot run \u2014 [2026-07-01T00:51:32Z] === done \u2014 triggered 1 fix(es) ==="
+  }
+}

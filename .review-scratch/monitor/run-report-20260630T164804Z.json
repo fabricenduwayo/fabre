@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-express-trivia-worker",
+  "submission_id": "e7d1cac7-538c-4f65-ba21-eb38d47c5242",
+  "feedback_hash": "2f56fcb5c16f45a8",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened difficulty with H-2026-12 paired_incident rescind cascade (new rulings INC-25/26, two tests, updates to scoring_standard.md, instruction.md, helpers.py, solution/replay.py, rubrics). Fixed pinned_dependencies by adding pnpm-lock.yaml and frozen-lockfile Docker install (platform-revision r16). Removed accidental node_modules/jobs from the task tree and added .gitignore.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-express-trivia-worker/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T16:48:04.108991+00:00"
+}

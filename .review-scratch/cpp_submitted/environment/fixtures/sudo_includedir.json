@@ -1,0 +1,14 @@
+{
+  "files": {
+    "passwd": "alice:x:1001:100::/home/alice:/bin/bash\nbob:x:1002:100::/home/bob:/bin/bash\ncarol:x:1003:100::/home/carol:/bin/bash\n",
+    "shadow": "alice:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\nbob:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\ncarol:$6$rounds=5000$abcdefgh$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:19000:0:99999:7:::\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\nbob ALL=(ALL) ALL\n#includedir /etc/sudoers.d\nalice ALL=(ALL) ALL\n",
+    "sudoers.d": {
+      "10-team": "alice ALL=(ALL) NOPASSWD: ALL\ncarol ALL=(ALL) NOPASSWD: ALL\n",
+      "20-ops": "bob ALL=(ALL) NOPASSWD: ALL\n"
+    },
+    "authorized_keys": {},
+    "sshd_config.d": {"10-base.conf": "PermitRootLogin without-password\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"}
+  }
+}

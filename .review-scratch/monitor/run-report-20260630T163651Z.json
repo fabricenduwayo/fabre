@@ -1,0 +1,18 @@
+{
+  "folder_name": "repair-flask-signalbox-configs",
+  "submission_id": "3a48c644-09b8-4357-9466-403cb2674a1c",
+  "feedback_hash": "7e6bedfe6acf4af7",
+  "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened repair-flask-signalbox-configs for the Python/HARD gate by adding three interacting bulletin-log semantics\u2014coupling cascade on full revokes (with decouple opt-out), defer_until rows that flush after their trigger bulletin finishes (including post-release restore), and supersedes voiding of lower-seq rows before the superseding row applies. Updated seed_evidence.py with six new log rows and yard-link coupling on BUL-F/M/P, extended the resolution engine in tests/helpers.py and solution/repair_cartridge.py, added five matching pytest cases, documented the new rules in instruction.md, bumped Dockerfile platform-revision to r17, and refreshed submission explanations and rubrics.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": "?? repair-flask-signalbox-configs/",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T16:36:51.059318+00:00"
+}

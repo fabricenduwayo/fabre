@@ -1,0 +1,18 @@
+{
+  "folder_name": "reproduce-java-aes-gcm-findings",
+  "submission_id": "fbb351b7-0c45-4402-9b19-08d2cd8fddf8",
+  "feedback_hash": "58aae158bee7d186",
+  "issue": "Difficulty: \u274c EASY - Requires at least MEDIUM",
+  "agent_status": "finished",
+  "agent_report": {
+    "changes_summary": "Hardened reproduce-java-aes-gcm-findings against the EASY difficulty gate by adding frm-014 (post-rotation DB nonce re-registration where a later stale v2 row must not beat a matching v4 registration) and frm-015 (Appendix D override fixed across key rotation), plus an amended frm-006 Appendix D section requiring last-operative-line parsing. Regenerated seed.sql, evidence.gif, the long forensic report, and expected JSON via tools/gen_dataset.py; updated milestone 1/2 instructions and tests; bumped Dockerfile to platform-revision 2026-06-30-r14; fixed a test_m2.py NameError that broke oracle M2; oracle now passes 1.0 and the revised ZIP was resubmitted with updated explanations and milestone rubrics.",
+    "oracle_reward": "1.0",
+    "resubmit_static_checks": "PASS",
+    "resubmit_sent": true,
+    "platform_state_after": "EVALUATION_PENDING"
+  },
+  "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |   46 +\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 1950 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 1935 +++++++++++---------\n .../environment/schema/rules.schema.json           |    3 +\n .../steps/milestone_1/instruction.md               |    8 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |   36 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   34 +-\n .../steps/milestone_1/tests/expected_rules.json    |    4 +-\n .../steps/milestone_1/tests/test_m1.py             |   48 +-\n .../steps/milestone_2/ins",
+  "platform_state_after": "EVALUATION_PENDING",
+  "dry_run": false,
+  "finished_at": "2026-06-30T15:00:53.972730+00:00"
+}

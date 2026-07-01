@@ -1,0 +1,22 @@
+{
+  "repair-flask-signalbox-configs": {
+    "resubmit_script": ".review-scratch/resubmit_signalbox.py"
+  },
+  "repair-express-trivia-worker": {
+    "resubmit_script": ".review-scratch/resubmit_trivia.py"
+  },
+  "reproduce-java-aes-gcm-findings": {
+    "resubmit_script": ".review-scratch/resubmit_aes.py"
+  },
+  "reproduce-java-tls-waiver-findings": {
+    "resubmit_script": ".review-scratch/resubmit_tls.py"
+  },
+  "harden-php-api-defaults": {
+    "resubmit_script": ".review-scratch/resubmit_one.py",
+    "resubmit_arg": "php"
+  },
+  "repair-cpp-setup-auditor": {
+    "resubmit_script": null,
+    "note": "No dedicated resubmit script yet — agent must zip + submit via stb API"
+  }
+}
