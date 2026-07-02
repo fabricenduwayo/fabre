@@ -9,6 +9,7 @@ rebuilds dispatch metadata.
 
 from __future__ import annotations
 
+import copy
 import json
 from itertools import product
 from pathlib import Path
@@ -30,6 +31,18 @@ def parse_hold_id(detail: str, bulletin: str) -> str:
     if isinstance(obj, dict) and isinstance(obj.get("hold_id"), str):
         return obj["hold_id"]
     return bulletin
+
+
+def parse_snapshot_id(detail: str) -> str | None:
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(obj, dict) and isinstance(obj.get("snapshot_id"), str):
+        return obj["snapshot_id"]
+    return None
 
 
 def parse_release_hold_id(detail: str) -> str | None:
@@ -1113,6 +1126,7 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
     hold_stacks = {}
     pending = defaultdict(list)
     applied_bulletins = set()
+    snapshots = {}
 
     def row_is_voided(seq, bulletin, track_id, detail):
         _when, _req, anchor, _ua, _up, _uh, expires_after, row_stamp, _pre, _ex = parse_detail(detail)
@@ -1158,6 +1172,19 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
                     voided_seqs,
                     applied_bulletins,
                 )
+        elif op == "snapshot":
+            snapshot_id = parse_snapshot_id(detail)
+            if snapshot_id:
+                apply_fixpoints(state)
+                snapshots[snapshot_id] = copy.deepcopy(state)
+        elif op == "rollback":
+            snapshot_id = parse_snapshot_id(detail)
+            if snapshot_id and snapshot_id in snapshots:
+                captured = snapshots[snapshot_id]
+                for captured_track in captured:
+                    hold_stacks.pop(captured_track, None)
+                state.clear()
+                state.update(copy.deepcopy(captured))
         elif track_is_held(hold_stacks, track_id):
             return
         elif op in ("add", "amend", "replace", "withdraw"):

@@ -10,9 +10,13 @@ Agent recomposes inherit_when_from through BUL-AZ and collapses to static export
 Agent derives the operative goal by reachability under resolved locks and rebuilds dispatch.toml validation switches, +4
 Agent implements play_shift.py as a client of the referee on http://127.0.0.1:5000 without binding port 5000 again, +4
 Agent treats witness_active as requiring the witness bulletin to still hold a track lock, not merely appear in applied_bulletins, +5
+Agent captures snapshot rows after fixpoints and restores rollback rows with hold stacks cleared on snapshotted tracks, +5
+Agent treats the release after a rollback-cleared hold as a no-op instead of restoring a stale saved entry, +4
 Agent modifies referee routes or spawns a second listener on port 5000, -5
 Agent treats hold like withdraw or clears nested holds with the wrong hold_id, -5
 Agent ignores unless_present reapply after release or witness gates on the bulletin tail, -5
 Agent treats witness as log presence and applies BUL-BB g-seal after BUL-AL retired from state, -5
 Agent keeps inherited composite when on t_sw2_d after BUL-BA static replace, -4
 Agent trusts corrupted cartridge YAML/TOML instead of recomputing locks from evidence.duckdb, -4
+Agent keeps the maint-window hold after the pre-maintenance rollback or applies the BUL-BH release against it, -5
+Agent applies the BUL-BL g-seal because BUL-BJ appeared in applied history despite the handover rollback stripping its lock ownership, -5

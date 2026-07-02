@@ -484,6 +484,75 @@ def test_witness_active_skips_retired_bulletin():
     assert "t_sw3_g" not in locks
 
 
+def test_rollback_discards_south_d_seal_amend():
+    """BUL-BD south d-seal amend must apply, then vanish once pre-maintenance rolls back."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 55]
+    locks = lock_map(effective_locks(rows=prefix))
+    assert locks.get("t_sw2_d") == {"sw2": "south"}
+    full = lock_map(effective_locks(rows=[row for row in rows if row[0] <= 58]))
+    assert full.get("t_sw2_d") == {"sw2": "north"}
+
+
+def test_maintenance_hold_and_junction_replace_before_rollback():
+    """Before the rollback the maint-window hold hides t_sw2_d and BUL-BF flips the junction south."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 57]
+    locks = lock_map(effective_locks(rows=prefix))
+    assert "t_sw2_d" not in locks
+    assert locks.get("t_sw1_c") == {"sw1": "south"}
+
+
+def test_rollback_restores_snapshot_and_clears_hold():
+    """Pre-maintenance rollback must restore the captured lock map and clear the maint-window hold."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 58]
+    state = effective_lock_state(rows=prefix)
+    assert state["t_sw2_d"]["when"] == {"sw2": "north"}
+    assert state["t_sw1_c"]["when"] == {"sw1": "north"}
+    assert state["t_sw1_c"]["requires"] == ["t_sw3_f"]
+    assert effective_requires(state["t_sw2_d"], state) == ["t_sw3_f", "t_sw1_c"]
+
+
+def test_release_after_rollback_is_ignored():
+    """BUL-BH release must be a no-op because the rollback already cleared the maint-window hold."""
+    rows = lock_log_rows()
+    after_rollback = normalized_locks(
+        effective_locks(rows=[row for row in rows if row[0] <= 58])
+    )
+    after_release = normalized_locks(
+        effective_locks(rows=[row for row in rows if row[0] <= 59])
+    )
+    assert after_release == after_rollback
+    assert ("t_sw2_d", (("sw2", "north"),)) in after_release
+
+
+def test_f_seal_replace_wipes_dependents_before_handover_rollback():
+    """BUL-BJ north replace must cascade-drop the junction and yard link via requires_when."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 61]
+    locks = lock_map(effective_locks(rows=prefix))
+    assert locks == {"t_sw3_f": {"sw3": "north"}}
+
+
+def test_handover_rollback_restores_composed_state():
+    """Handover rollback must restore the merged f-seal, junction, and yard link entries."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 62]
+    locks = lock_map(effective_locks(rows=prefix))
+    assert locks.get("t_sw3_f") == {"sw3": "north", "sw1": "south"}
+    assert locks.get("t_sw1_c") == {"sw1": "north"}
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+
+
+def test_witness_active_ignores_rolled_back_bulletin():
+    """BUL-BL g-seal must skip because the rollback stripped BUL-BJ's lock ownership."""
+    rows = lock_log_rows()
+    prefix = [row for row in rows if row[0] <= 63]
+    locks = lock_map(effective_locks(rows=prefix))
+    assert "t_sw3_g" not in locks
+
+
 def test_transcript_has_required_fields():
     """Transcript JSON must expose the documented GET /v1/transcript fields."""
     proc = run_shift()

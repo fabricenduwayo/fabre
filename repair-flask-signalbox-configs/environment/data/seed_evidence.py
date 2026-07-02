@@ -11,7 +11,9 @@ hold_id pops that hold; rows targeting a held track are skipped until the hold
 clears. unless_absent drops a lock while listed tracks remain present. unless_present drops a
 lock while any listed track is absent. precondition gates apply-time skips.
 exclusive_with clears competing tracks after a row lands. Requires, unless_absent, and unless_present
-cascades run after every surviving row.
+cascades run after every surviving row. snapshot rows capture the surviving lock
+map under a snapshot_id; rollback rows restore the named capture and clear hold
+stacks on snapshotted tracks.
 """
 
 from __future__ import annotations
@@ -343,6 +345,28 @@ ROUTE_LOCK_LOG = [
             }
         ),
     ),
+    (54, "BUL-BC", "snapshot", "_state", json.dumps({"snapshot_id": "pre-maintenance"})),
+    (55, "BUL-BD", "amend", "t_sw2_d", json.dumps({"when": {"sw2": "south"}})),
+    (56, "BUL-BE", "hold", "t_sw2_d", json.dumps({"hold_id": "maint-window"})),
+    (57, "BUL-BF", "replace", "t_sw1_c", json.dumps({"when": {"sw1": "south"}})),
+    (58, "BUL-BG", "rollback", "_state", json.dumps({"snapshot_id": "pre-maintenance"})),
+    (59, "BUL-BH", "release", "t_sw2_d", json.dumps({"hold_id": "maint-window"})),
+    (60, "BUL-BI", "snapshot", "_state", json.dumps({"snapshot_id": "handover"})),
+    (61, "BUL-BJ", "replace", "t_sw3_f", json.dumps({"when": {"sw3": "north"}})),
+    (62, "BUL-BK", "rollback", "_state", json.dumps({"snapshot_id": "handover"})),
+    (
+        63,
+        "BUL-BL",
+        "add",
+        "t_sw3_g",
+        json.dumps(
+            {
+                "when": {"sw3": "south"},
+                "witness": "BUL-BJ",
+                "witness_active": True,
+            }
+        ),
+    ),
 ]
 
 LOCK_CORRECTIONS = [
@@ -488,6 +512,26 @@ NOTES = [
         24,
         "witness_active treated prior apply as enough; BUL-BB g-seal landed after BUL-AL retired from state",
     ),
+    (
+        34,
+        "pre-maintenance rollback was skipped; south d-seal amend and south junction replace stuck to shift end",
+    ),
+    (
+        35,
+        "rollback restored the lock map but kept the maint-window hold; d-seal stayed off the board",
+    ),
+    (
+        36,
+        "BUL-BH release fired against the already-cleared maint-window stack instead of being ignored",
+    ),
+    (
+        37,
+        "handover rollback missed; the f-seal north replace wiped the junction and yard link through cascades",
+    ),
+    (
+        38,
+        "witness_active treated the rolled-back BUL-BJ replace as still owning a lock; final g-seal add landed",
+    ),
 ]
 
 ROUTE_LOCK_GLOSSARY = [
@@ -632,6 +676,22 @@ ROUTE_LOCK_GLOSSARY = [
         "base_when",
         "Static switch positions merged before inherit_when_from sources during when "
         "composition.",
+    ),
+    (
+        "snapshot",
+        "Capture the surviving lock map under snapshot_id after cascade fixpoints "
+        "settle, including when maps, dependency metadata, and bulletin ownership. "
+        "A later snapshot with the same id overwrites the capture.",
+    ),
+    (
+        "rollback",
+        "Replace the surviving lock map with the named snapshot capture and clear "
+        "hold stacks on snapshotted tracks. Tracks absent from the snapshot drop "
+        "from state; holds on tracks absent from the snapshot stay in place. "
+        "Rollback with an unknown snapshot_id is ignored. Cascade fixpoints rerun "
+        "after the restore. Rows applied between the snapshot and the rollback keep "
+        "their applied history for witness gates, but witness_active ownership "
+        "follows the restored lock map.",
     ),
 ]
 

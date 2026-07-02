@@ -1,28 +1,34 @@
-Agents were passing at 100% because the brief enumerated folding steps and the
-shipped repair_cartridge.py looked close enough to patch incrementally. This
-revision shortens instruction.md to three paragraphs pointing at
-route_lock_glossary and failed_attempt_notes only, adds witness_active on
-BUL-BB (witness must still own a track lock, not merely appear in
-applied_bulletins), and keeps the 53-row bulletin tail with inherit_when_from,
-requires_when, and the existing hold/cascade machinery interacting — agents must
-rebuild locks from DuckDB before reachability yields goal G and play_shift can
-win on the already-running referee.
+The last round still measured EASY (gpt5-5 5/5, opus 4/5), so this revision adds
+a genuinely new interacting mechanism instead of more edge cases: snapshot and
+rollback bulletin ops on a 63-row log. A rollback restores a captured lock map,
+clears hold stacks on snapshotted tracks (so the later matching release must be
+treated as a no-op), and rolls back witness_active bulletin ownership while
+applied-row history stays intact. The maintenance-window tail interleaves these
+with an amend, a hold, a junction replace, and a requires_when cascade wipe that
+the handover rollback has to undo — agents that model rollback as a plain state
+reset, keep the hold alive, or treat the rolled-back BUL-BJ replace as a live
+witness land on the wrong lock set or a wrong goal. Everything is specified only
+in route_lock_glossary and failed_attempt_notes inside evidence.duckdb, so the
+folding engine has to be rebuilt from the evidence, not patched from the naive
+shipped tool.
 
-Query evidence.duckdb for the bulletin tables and apply lock_corrections to
-each row's effective op and detail before folding the log. Resolve semantics
-from route_lock_glossary and failed_attempt_notes, write resolved route_locks to
-network.yaml, derive the unique operative goal by reachability, rebuild
-dispatch.toml goal/hints/validation from the evidence tables, then implement
-play_shift.py so python3 /app/tools/play_shift.py calls the referee on
-http://127.0.0.1:5000 and writes GET /v1/transcript to
-/app/output/transcript.json.
+Query evidence.duckdb for the bulletin tables and apply lock_corrections to each
+row's effective op and detail before folding the log. Resolve semantics from
+route_lock_glossary and failed_attempt_notes, including the snapshot/rollback
+lifecycle on top of holds, witness gates, and cascade fixpoints; write the
+resolved {track, when} route_locks to network.yaml, derive the unique operative
+goal by reachability, rebuild dispatch.toml goal/hints/validation from the
+evidence tables, then implement play_shift.py so python3
+/app/tools/play_shift.py calls the referee on http://127.0.0.1:5000 and writes
+GET /v1/transcript to /app/output/transcript.json.
 
-Pytest recomputes every expectation from evidence.duckdb at verify time: resolved
-locks match network.yaml, lock_corrections detail overrides, inherit_when_from
-composition and BUL-BA static collapse, hold_id matching, nested holds,
-unless_present reapply with witness/match gates, unless_requires_changed and
-requires_stable drops after gate release, requires_when yard-link positional
-gates, coupling cascade, defer_until flush, supersede voiding, witness_active
-on BUL-BB after BUL-AL retires, witness/unless_matches traps on the bulletin
-tail, BUL-AV recovery, and a winning legal transcript under reported switches
-while play_shift uses the referee already on port 5000.
+Pytest recomputes every expectation from evidence.duckdb at verify time: the
+resolved locks must match network.yaml, prefix tests pin the south d-seal amend
+before rollback, the maint-window hold plus junction flip, the pre-maintenance
+restore with the hold cleared, the ignored post-rollback release, the
+requires_when cascade wipe after the f-seal north replace, the handover restore,
+and the skipped witness_active g-seal add after rollback strips BUL-BJ's
+ownership — on top of the existing hold/coupling/defer/supersede/witness/
+inherit_when_from suite, dispatch.toml goal and validation checks, decoy
+unreachability under all lineups, and a winning legal transcript produced
+through the referee already on port 5000.
