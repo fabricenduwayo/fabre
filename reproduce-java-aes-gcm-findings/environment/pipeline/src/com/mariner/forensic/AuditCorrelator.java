@@ -15,8 +15,8 @@ import java.util.Map;
 /**
  * Milestone 2 — correlate SQLite audit events with extracted rules.
  *
- * Shipped implementation is a naive latest-row correlator without rescission or
- * amendment semantics; repair before relying on it.
+ * Shipped implementation ignores replacement/rescission pairs and key_version
+ * scoping on DB overrides; repair before relying on it.
  */
 final class AuditCorrelator {
     private static final Path RULES = Path.of("/app/out/rules.json");

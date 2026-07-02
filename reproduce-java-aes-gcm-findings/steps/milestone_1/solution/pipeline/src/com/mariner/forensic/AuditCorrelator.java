@@ -140,6 +140,26 @@ final class AuditCorrelator {
                     candidates.add(new NonceCandidate(
                             event.recordedAt(), hex, event.keyVersion()));
                 }
+            } else if ("nonce_override_replaced".equals(eventType)) {
+                String supersedes = event.supersedesNonceHex();
+                if (supersedes != null) {
+                    candidates.removeIf(c -> supersedes.equals(c.nonceHex()));
+                }
+                String hex = event.nonceOverrideHex();
+                if (hex != null && !revoked.contains(hex)) {
+                    candidates.add(new NonceCandidate(
+                            event.recordedAt(), hex, event.keyVersion()));
+                }
+            } else if ("nonce_override_replacement_rescinded".equals(eventType)) {
+                String voided = event.supersedesNonceHex();
+                if (voided != null) {
+                    candidates.removeIf(c -> voided.equals(c.nonceHex()));
+                }
+                String restored = event.nonceOverrideHex();
+                if (restored != null && !revoked.contains(restored)) {
+                    candidates.add(new NonceCandidate(
+                            event.recordedAt(), restored, event.keyVersion()));
+                }
             }
         }
 

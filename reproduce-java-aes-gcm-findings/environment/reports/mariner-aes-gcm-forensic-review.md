@@ -4,10 +4,10 @@
 
 Review date: 2026-06-01.
 
-All 22 in-scope GIF frame payloads authenticate under AES-256-GCM when the
+All 24 in-scope GIF frame payloads authenticate under AES-256-GCM when the
 exception rules in Appendix C and the nonce overrides in Appendix D are applied.
 
-- authenticated: 22
+- authenticated: 24
 - auth_failed: 0
 
 GIF fixture: `/app/fixtures/evidence.gif`. Audit DB:
@@ -60,496 +60,496 @@ Nonce-uniqueness memo 20: default nonces for frm-021 derive from SHA-256(frame_i
 
 Key-rotation briefing 21: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-58806f54.
 
-Forensic background 22: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-05407915.
+Forensic background 22: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-78c04fc8.
 
-Reviewer checklist item 23: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-83a0b0cc.
+Reviewer checklist item 23: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-498d018d.
 
-Stakeholder summary 24: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d0226189.
+Stakeholder summary 24: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-0c1a4ba3.
 
-Telemetry cross-check 25: monitoring ticket MON-00025 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-8c655f20.
+Telemetry cross-check 25: monitoring ticket MON-00025 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fee4e6bb.
 
-Cipher review 26: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-02535b24.
+Cipher review 26: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-09f36d0f.
 
-Appendix cross-ref 27: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-544d22ce.
+Appendix cross-ref 27: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9e6e0ebf.
 
-Vault ceremony 28: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-254f8cc7.
+Vault ceremony 28: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-823b4ada.
 
-Chain-of-custody note 29 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0029 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a110f40d.
+Chain-of-custody note 29 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0029 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-8e8fc716.
 
-Governance review 30: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-757266ff.
+Governance review 30: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-ea272d04.
 
-Incident cross-reference 31: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-4b216d8d.
+Incident cross-reference 31: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-419d19c9.
 
-Media-ingest log 32: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-cd2046b6.
+Media-ingest log 32: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-37301bd3.
 
-Audit-ledger commentary 33: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-68077bc1.
+Audit-ledger commentary 33: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-d5200c68.
 
-Nonce-uniqueness memo 34: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-087397e5.
+Nonce-uniqueness memo 34: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-d19c8512.
 
-Key-rotation briefing 35: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c67c953e.
+Key-rotation briefing 35: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-038a7226.
 
-Forensic background 36: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d4a9687e.
+Forensic background 36: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-cb152f68.
 
-Reviewer checklist item 37: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-249ec191.
+Reviewer checklist item 37: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-56ec6092.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Stakeholder summary 38: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-8d210f8d.
+Stakeholder summary 38: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-8d41bb07.
 
-Telemetry cross-check 39: monitoring ticket MON-00039 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-998a920a.
+Telemetry cross-check 39: monitoring ticket MON-00039 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-f619c1bd.
 
-Cipher review 40: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-db3d1581.
+Cipher review 40: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-3ddaf0c5.
 
-Appendix cross-ref 41: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-b728301d.
+Appendix cross-ref 41: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-c6994cba.
 
-Vault ceremony 42: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-359e28a0.
+Vault ceremony 42: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-6c14806f.
 
-Chain-of-custody note 43 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0043 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-2a953a68.
+Chain-of-custody note 43 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0043 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-47285306.
 
-Governance review 44: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9c74644a.
+Governance review 44: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-ac30db5f.
 
-Incident cross-reference 45: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-552a1eb2.
+Incident cross-reference 45: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c9693c37.
 
-Media-ingest log 46: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f0e694b9.
+Media-ingest log 46: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-4cbdc317.
 
-Audit-ledger commentary 47: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-0def2e95.
+Audit-ledger commentary 47: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-1c067efe.
 
-Nonce-uniqueness memo 48: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-11aa3dd6.
+Nonce-uniqueness memo 48: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4b10a4c5.
 
-Key-rotation briefing 49: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-1fe0d266.
+Key-rotation briefing 49: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-01333f50.
 
-Forensic background 50: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f2f4bded.
+Forensic background 50: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-7cc651d0.
 
-Reviewer checklist item 51: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-337a3dd3.
+Reviewer checklist item 51: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-e7532c4f.
 
-Stakeholder summary 52: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f572c1c3.
+Stakeholder summary 52: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ac82c079.
 
-Telemetry cross-check 53: monitoring ticket MON-00053 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-1eefbad2.
+Telemetry cross-check 53: monitoring ticket MON-00053 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-d684770f.
 
-Cipher review 54: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b8bae923.
+Cipher review 54: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-70e9cacb.
 
-Appendix cross-ref 55: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-82210c54.
+Appendix cross-ref 55: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-32ce19f3.
 
-Vault ceremony 56: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-0d3b94e1.
+Vault ceremony 56: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-0b4f74a0.
 
-Chain-of-custody note 57 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0057 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-2f01a142.
+Chain-of-custody note 57 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0057 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c5028dca.
 
-Governance review 58: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-7d39149e.
+Governance review 58: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-471e1570.
 
-Incident cross-reference 59: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c13bd9da.
+Incident cross-reference 59: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-0238ff1b.
 
-Media-ingest log 60: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-d24a0d9a.
+Media-ingest log 60: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-4d82230b.
 
-Audit-ledger commentary 61: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-53a8ed37.
+Audit-ledger commentary 61: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-35ccaec4.
 
-Nonce-uniqueness memo 62: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-85db8645.
+Nonce-uniqueness memo 62: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-cc937d03.
 
-Key-rotation briefing 63: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-07863d85.
+Key-rotation briefing 63: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-a319de4e.
 
-Forensic background 64: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-9b0544ae.
+Forensic background 64: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f6fa2852.
 
-Reviewer checklist item 65: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-b9019764.
+Reviewer checklist item 65: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-4d8c49e4.
 
-Stakeholder summary 66: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-6264c8e3.
+Stakeholder summary 66: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-1d0931e0.
 
-Telemetry cross-check 67: monitoring ticket MON-00067 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fc12973a.
+Telemetry cross-check 67: monitoring ticket MON-00067 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-31c85b83.
 
-Cipher review 68: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-cc6a597c.
+Cipher review 68: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-fa3967ec.
 
-Appendix cross-ref 69: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-b3ce5072.
+Appendix cross-ref 69: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-e2d2bca7.
 
-Vault ceremony 70: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-cd7c15c6.
+Vault ceremony 70: channel frm-023 (xray-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3a1b35cb.
 
-Chain-of-custody note 71 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0071 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-d85e6e04.
+Chain-of-custody note 71 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0071 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-06b2f3aa.
 
-Governance review 72: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-64804ca1.
+Governance review 72: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-39c1fd6f.
 
-Incident cross-reference 73: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-336a707f.
+Incident cross-reference 73: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-93ec021f.
 
-Media-ingest log 74: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b69fc734.
+Media-ingest log 74: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-0b21c5ed.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Audit-ledger commentary 75: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-e124566c.
+Audit-ledger commentary 75: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-cec65572.
 
-Nonce-uniqueness memo 76: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-dec15eb8.
+Nonce-uniqueness memo 76: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-271f4060.
 
-Key-rotation briefing 77: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-371dc215.
+Key-rotation briefing 77: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-4765a325.
 
-Forensic background 78: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-ea03a515.
+Forensic background 78: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-21358ec3.
 
-Reviewer checklist item 79: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-b3268fc3.
+Reviewer checklist item 79: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-d6a140c7.
 
-Stakeholder summary 80: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-bb230f57.
+Stakeholder summary 80: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-40177cfc.
 
-Telemetry cross-check 81: monitoring ticket MON-00081 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-834eab96.
+Telemetry cross-check 81: monitoring ticket MON-00081 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-4849e63a.
 
-Cipher review 82: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b6789b64.
+Cipher review 82: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-1ccee05e.
 
-Appendix cross-ref 83: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-34711571.
+Appendix cross-ref 83: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-1cbd852e.
 
-Vault ceremony 84: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-9b757399.
+Vault ceremony 84: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-7013614b.
 
-Chain-of-custody note 85 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0085 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-cf23b93b.
+Chain-of-custody note 85 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0085 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-84a1de3b.
 
-Governance review 86: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-0221dcd6.
+Governance review 86: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-fd9981f1.
 
-Incident cross-reference 87: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-0f45ce48.
+Incident cross-reference 87: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-101b16cb.
 
-Media-ingest log 88: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-94c38590.
+Media-ingest log 88: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f06ee187.
 
-Audit-ledger commentary 89: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-d0887721.
+Audit-ledger commentary 89: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7d40d70c.
 
-Nonce-uniqueness memo 90: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4478d9d4.
+Nonce-uniqueness memo 90: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-63014ae5.
 
-Key-rotation briefing 91: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-5adf0c56.
+Key-rotation briefing 91: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-9f30bbbe.
 
-Forensic background 92: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-93d38b06.
+Forensic background 92: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-afa7bd93.
 
-Reviewer checklist item 93: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-cf2d7b56.
+Reviewer checklist item 93: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-328fdd7e.
 
-Stakeholder summary 94: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-66893743.
+Stakeholder summary 94: team-vault owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-6e5e5c12.
 
-Telemetry cross-check 95: monitoring ticket MON-00095 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-557da4e0.
+Telemetry cross-check 95: monitoring ticket MON-00095 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-62832891.
 
-Cipher review 96: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ed55dc86.
+Cipher review 96: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-13e7027a.
 
-Appendix cross-ref 97: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-dc23c36f.
+Appendix cross-ref 97: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-4b6867ff.
 
-Vault ceremony 98: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-bed66fe8.
+Vault ceremony 98: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-1b465fc2.
 
-Chain-of-custody note 99 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0099 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-997b64ad.
+Chain-of-custody note 99 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0099 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-7ee1868e.
 
-Governance review 100: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-d7449535.
+Governance review 100: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-84d8391f.
 
-Incident cross-reference 101: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-300154f6.
+Incident cross-reference 101: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-a4fcfc38.
 
-Media-ingest log 102: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1f7c9f76.
+Media-ingest log 102: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-cd2e8239.
 
-Audit-ledger commentary 103: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-fa4ca46f.
+Audit-ledger commentary 103: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-568d84b4.
 
-Nonce-uniqueness memo 104: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8c2f9d11.
+Nonce-uniqueness memo 104: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-37c7db8f.
 
-Key-rotation briefing 105: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-9ef7cb53.
+Key-rotation briefing 105: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-ff3890f9.
 
-Forensic background 106: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-11bd7b14.
+Forensic background 106: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-0021dd79.
 
-Reviewer checklist item 107: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-19f32616.
+Reviewer checklist item 107: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-07e8fd46.
 
-Stakeholder summary 108: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2d662449.
+Stakeholder summary 108: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-21578735.
 
-Telemetry cross-check 109: monitoring ticket MON-00109 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-edbe54ed.
+Telemetry cross-check 109: monitoring ticket MON-00109 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-32faf51b.
 
-Cipher review 110: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-1427cd95.
+Cipher review 110: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b7111055.
 
-Appendix cross-ref 111: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0465803d.
+Appendix cross-ref 111: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9930e62f.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Vault ceremony 112: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-075cf4f4.
+Vault ceremony 112: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-1912a90e.
 
-Chain-of-custody note 113 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0113 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-2e40becd.
+Chain-of-custody note 113 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0113 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-08f392b9.
 
-Governance review 114: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-0389b64a.
+Governance review 114: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-29da3bc1.
 
-Incident cross-reference 115: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8b1f389c.
+Incident cross-reference 115: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-89a0e88c.
 
-Media-ingest log 116: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-4c069b16.
+Media-ingest log 116: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-01ed54c8.
 
-Audit-ledger commentary 117: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-3580bd97.
+Audit-ledger commentary 117: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-53cf3186.
 
-Nonce-uniqueness memo 118: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e5629b26.
+Nonce-uniqueness memo 118: default nonces for frm-023 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-37ba87a8.
 
-Key-rotation briefing 119: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d47a6f7c.
+Key-rotation briefing 119: when frm-024 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-3a5e8d8e.
 
-Forensic background 120: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-76eedb7c.
+Forensic background 120: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-74a2fcc5.
 
-Reviewer checklist item 121: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-12e76ab9.
+Reviewer checklist item 121: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-61c2ca8f.
 
-Stakeholder summary 122: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-abb39b5b.
+Stakeholder summary 122: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-1f10056c.
 
-Telemetry cross-check 123: monitoring ticket MON-00123 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-0ad0b8c2.
+Telemetry cross-check 123: monitoring ticket MON-00123 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-05656b5f.
 
-Cipher review 124: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-2cbfa9e9.
+Cipher review 124: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-1290bd92.
 
-Appendix cross-ref 125: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-83d3cd76.
+Appendix cross-ref 125: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-581ef755.
 
-Vault ceremony 126: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-a9b33f90.
+Vault ceremony 126: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-e412cf1e.
 
-Chain-of-custody note 127 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0127 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9e8af13e.
+Chain-of-custody note 127 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0127 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-1a3fe82b.
 
-Governance review 128: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9f72aee6.
+Governance review 128: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-35b26e51.
 
-Incident cross-reference 129: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-df510661.
+Incident cross-reference 129: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-eff43a31.
 
-Media-ingest log 130: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-49160f8b.
+Media-ingest log 130: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-44d47299.
 
-Audit-ledger commentary 131: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-3b28f9b7.
+Audit-ledger commentary 131: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-3cc60e7c.
 
-Nonce-uniqueness memo 132: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-6adbfdf8.
+Nonce-uniqueness memo 132: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-85fda787.
 
-Key-rotation briefing 133: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-60cebcba.
+Key-rotation briefing 133: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c6304f85.
 
-Forensic background 134: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-35417405.
+Forensic background 134: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-41e6bc09.
 
-Reviewer checklist item 135: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-0d8ee2fb.
+Reviewer checklist item 135: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-01c99a52.
 
-Stakeholder summary 136: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f7361f56.
+Stakeholder summary 136: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f49abff6.
 
-Telemetry cross-check 137: monitoring ticket MON-00137 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3c7d454d.
+Telemetry cross-check 137: monitoring ticket MON-00137 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-25957f10.
 
-Cipher review 138: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-9a4514a5.
+Cipher review 138: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-7de272ce.
 
-Appendix cross-ref 139: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-584e77b9.
+Appendix cross-ref 139: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-1a4c8b63.
 
-Vault ceremony 140: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-302e425b.
+Vault ceremony 140: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-d387f595.
 
-Chain-of-custody note 141 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0141 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f039553f.
+Chain-of-custody note 141 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0141 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a8507d75.
 
-Governance review 142: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b1bc86d8.
+Governance review 142: GIF steganography review policy for frm-023 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-7733c5b0.
 
-Incident cross-reference 143: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-2d948191.
+Incident cross-reference 143: during AES-GCM authentication tag handling triage on frm-024, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8b0e4c9f.
 
-Media-ingest log 144: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e0c4fd92.
+Media-ingest log 144: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3c7fc927.
 
-Audit-ledger commentary 145: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-acdbf2c3.
+Audit-ledger commentary 145: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-51091b18.
 
-Nonce-uniqueness memo 146: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8bdc3b55.
+Nonce-uniqueness memo 146: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-9794ea7b.
 
-Key-rotation briefing 147: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-fd3c8d4e.
+Key-rotation briefing 147: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-363b3f89.
 
-Forensic background 148: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-ea9c58b5.
+Forensic background 148: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-c9b15c56.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Reviewer checklist item 149: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-10b97ab8.
+Reviewer checklist item 149: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-288ef2ea.
 
-Stakeholder summary 150: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-c0b4b1ac.
+Stakeholder summary 150: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3baf57ef.
 
-Telemetry cross-check 151: monitoring ticket MON-00151 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fc965d65.
+Telemetry cross-check 151: monitoring ticket MON-00151 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-5b93c1a8.
 
-Cipher review 152: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-f96646cf.
+Cipher review 152: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-47439692.
 
-Appendix cross-ref 153: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9f7bcb7c.
+Appendix cross-ref 153: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9bd9a4e6.
 
-Vault ceremony 154: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-200bb7de.
+Vault ceremony 154: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-520f5a22.
 
-Chain-of-custody note 155 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0155 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-84766f9a.
+Chain-of-custody note 155 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0155 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-e4e2c8a0.
 
-Governance review 156: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-837d3563.
+Governance review 156: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9283b3b3.
 
-Incident cross-reference 157: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-58fb4bc4.
+Incident cross-reference 157: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-4e84c0ec.
 
-Media-ingest log 158: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-ec0de97b.
+Media-ingest log 158: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f83786d2.
 
-Audit-ledger commentary 159: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-2a9aa316.
+Audit-ledger commentary 159: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-2052f087.
 
-Nonce-uniqueness memo 160: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-b357966c.
+Nonce-uniqueness memo 160: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e95bddfe.
 
-Key-rotation briefing 161: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-058e6360.
+Key-rotation briefing 161: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-290a6a3b.
 
-Forensic background 162: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-674c26fd.
+Forensic background 162: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-520acff6.
 
-Reviewer checklist item 163: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-8084cc34.
+Reviewer checklist item 163: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-3268a044.
 
-Stakeholder summary 164: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ec014895.
+Stakeholder summary 164: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-e8f3033b.
 
-Telemetry cross-check 165: monitoring ticket MON-00165 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-34d652f0.
+Telemetry cross-check 165: monitoring ticket MON-00165 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-c072c688.
 
-Cipher review 166: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-17c449dc.
+Cipher review 166: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-931ca131.
 
-Appendix cross-ref 167: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-966de700.
+Appendix cross-ref 167: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-026e75dc.
 
-Vault ceremony 168: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-537c0a37.
+Vault ceremony 168: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3653130a.
 
-Chain-of-custody note 169 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0169 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-8a9c29e2.
+Chain-of-custody note 169 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0169 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-b91cf8c3.
 
-Governance review 170: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-4776a924.
+Governance review 170: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-0bed176b.
 
-Incident cross-reference 171: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-7b834ead.
+Incident cross-reference 171: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-95de9a46.
 
-Media-ingest log 172: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-54174385.
+Media-ingest log 172: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-15abb7be.
 
-Audit-ledger commentary 173: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-f15d714c.
+Audit-ledger commentary 173: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-95cc2ac3.
 
-Nonce-uniqueness memo 174: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-9122086d.
+Nonce-uniqueness memo 174: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8cf82049.
 
-Key-rotation briefing 175: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-ae425497.
+Key-rotation briefing 175: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-db9aeb3d.
 
-Forensic background 176: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f8ffca1e.
+Forensic background 176: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-9ce03e66.
 
-Reviewer checklist item 177: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-bfec4834.
+Reviewer checklist item 177: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-4d7b7a70.
 
-Stakeholder summary 178: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-9774d582.
+Stakeholder summary 178: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-0ada7d6b.
 
-Telemetry cross-check 179: monitoring ticket MON-00179 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-37c85de2.
+Telemetry cross-check 179: monitoring ticket MON-00179 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-921ca038.
 
-Cipher review 180: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-f644a131.
+Cipher review 180: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-2320390c.
 
-Appendix cross-ref 181: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-a2625c96.
+Appendix cross-ref 181: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-dc68fd49.
 
-Vault ceremony 182: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-21fac9c8.
+Vault ceremony 182: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-caca682e.
 
-Chain-of-custody note 183 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0183 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9b3b6d4d.
+Chain-of-custody note 183 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0183 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-cde00ee3.
 
-Governance review 184: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-eb4e380b.
+Governance review 184: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-eb908fa8.
 
-Incident cross-reference 185: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8f2e9ba9.
+Incident cross-reference 185: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-455deea8.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Media-ingest log 186: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-45dc78c2.
+Media-ingest log 186: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-7058a8ac.
 
-Audit-ledger commentary 187: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-ec0200bb.
+Audit-ledger commentary 187: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-6c2a79c5.
 
-Nonce-uniqueness memo 188: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-3ae9aa9b.
+Nonce-uniqueness memo 188: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c76a320c.
 
-Key-rotation briefing 189: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-caec9af2.
+Key-rotation briefing 189: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-e5348ad4.
 
-Forensic background 190: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-2d3fc5cc.
+Forensic background 190: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-91ac1b89.
 
-Reviewer checklist item 191: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-4da4b662.
+Reviewer checklist item 191: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-c11ad77b.
 
-Stakeholder summary 192: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-87495b3b.
+Stakeholder summary 192: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-5210a60f.
 
-Telemetry cross-check 193: monitoring ticket MON-00193 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-111366b9.
+Telemetry cross-check 193: monitoring ticket MON-00193 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-79cdb060.
 
-Cipher review 194: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-dc074c57.
+Cipher review 194: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-88ec4a44.
 
-Appendix cross-ref 195: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-b4a8ad48.
+Appendix cross-ref 195: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-f3a4cdae.
 
-Vault ceremony 196: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-ced982c1.
+Vault ceremony 196: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-86235bd9.
 
-Chain-of-custody note 197 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0197 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-293b9a92.
+Chain-of-custody note 197 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0197 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-36b7d7fa.
 
-Governance review 198: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-5a936412.
+Governance review 198: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-c9f95d47.
 
-Incident cross-reference 199: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e687895c.
+Incident cross-reference 199: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c0b09b92.
 
-Media-ingest log 200: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-44450dee.
+Media-ingest log 200: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-4d5c5d40.
 
-Audit-ledger commentary 201: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-68ec5282.
+Audit-ledger commentary 201: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-77558276.
 
-Nonce-uniqueness memo 202: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-3339c0d0.
+Nonce-uniqueness memo 202: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-ac2619a0.
 
-Key-rotation briefing 203: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-86ac38ac.
+Key-rotation briefing 203: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c12dc34e.
 
-Forensic background 204: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-8a5d0cbc.
+Forensic background 204: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-31d11cc4.
 
-Reviewer checklist item 205: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-a0bd5113.
+Reviewer checklist item 205: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-8c084fd9.
 
-Stakeholder summary 206: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-c86b765d.
+Stakeholder summary 206: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d796c9b1.
 
-Telemetry cross-check 207: monitoring ticket MON-00207 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-5f4815b4.
+Telemetry cross-check 207: monitoring ticket MON-00207 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-5e30588b.
 
-Cipher review 208: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-103d718e.
+Cipher review 208: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d34f41e3.
 
-Appendix cross-ref 209: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-4be6a77f.
+Appendix cross-ref 209: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-1831f156.
 
-Vault ceremony 210: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-c608147b.
+Vault ceremony 210: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-05614a35.
 
-Chain-of-custody note 211 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0211 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9c177718.
+Chain-of-custody note 211 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0211 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c63b6d5c.
 
-Governance review 212: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-121db85e.
+Governance review 212: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-af564ad0.
 
-Incident cross-reference 213: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-da394a7e.
+Incident cross-reference 213: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-169204f9.
 
-Media-ingest log 214: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-dd3a62b0.
+Media-ingest log 214: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-920f5e68.
 
-Audit-ledger commentary 215: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-902a9003.
+Audit-ledger commentary 215: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-b04b5c5f.
 
-Nonce-uniqueness memo 216: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4cd5083f.
+Nonce-uniqueness memo 216: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-9388847c.
 
-Key-rotation briefing 217: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-ce78a244.
+Key-rotation briefing 217: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-4bd31213.
 
-Forensic background 218: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-489ac185.
+Forensic background 218: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d11f08c7.
 
-Reviewer checklist item 219: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-d925f6c5.
+Reviewer checklist item 219: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-f8cdaa21.
 
-Stakeholder summary 220: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2b31afec.
+Stakeholder summary 220: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3f7e78b1.
 
-Telemetry cross-check 221: monitoring ticket MON-00221 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-c2e69a98.
+Telemetry cross-check 221: monitoring ticket MON-00221 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-1ba8815f.
 
-Cipher review 222: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-6c1eefa4.
+Cipher review 222: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-e92c63e9.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Appendix cross-ref 223: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-49788247.
+Appendix cross-ref 223: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-e79f1f0f.
 
-Vault ceremony 224: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-fd6f26d9.
+Vault ceremony 224: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-2599bf37.
 
-Chain-of-custody note 225 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0225 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-13fb8038.
+Chain-of-custody note 225 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0225 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-38c65fd9.
 
-Governance review 226: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9b4d680e.
+Governance review 226: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-315dc4cd.
 
-Incident cross-reference 227: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-62e5b2e0.
+Incident cross-reference 227: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-def0cc30.
 
-Media-ingest log 228: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3c6a7324.
+Media-ingest log 228: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e507f82d.
 
-Audit-ledger commentary 229: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9c59ae67.
+Audit-ledger commentary 229: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7e9f4022.
 
-Nonce-uniqueness memo 230: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-6034da2c.
+Nonce-uniqueness memo 230: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-069d95c9.
 
-Key-rotation briefing 231: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-6c135687.
+Key-rotation briefing 231: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-849a913e.
 
-Forensic background 232: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-5fe47dad.
+Forensic background 232: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-207bc57f.
 
-Reviewer checklist item 233: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-0be88355.
+Reviewer checklist item 233: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-53dcbd29.
 
-Stakeholder summary 234: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-cf3e67ef.
+Stakeholder summary 234: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-9eb53870.
 
-Telemetry cross-check 235: monitoring ticket MON-00235 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-eab86cb1.
+Telemetry cross-check 235: monitoring ticket MON-00235 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-dcdcec63.
 
-Cipher review 236: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-bbcfbf54.
+Cipher review 236: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-3a71162a.
 
-Appendix cross-ref 237: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-e41bd423.
+Appendix cross-ref 237: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-b2165117.
 
-Vault ceremony 238: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-cc11964e.
+Vault ceremony 238: channel frm-023 (xray-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3c62c242.
 
-Chain-of-custody note 239 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0239 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-93702ce0.
+Chain-of-custody note 239 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0239 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c2057ff4.
 
-Governance review 240: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9fbaede5.
+Governance review 240: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-7653b19f.
 
-Incident cross-reference 241: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-6be135b3.
+Incident cross-reference 241: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-a99ce4f1.
 
-Media-ingest log 242: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-6aba3af6.
+Media-ingest log 242: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3e127cb2.
 
-Audit-ledger commentary 243: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-740a97fe.
+Audit-ledger commentary 243: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-18709f7a.
 
-Nonce-uniqueness memo 244: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-15040893.
+Nonce-uniqueness memo 244: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-6985bbcc.
 
-Key-rotation briefing 245: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-86b38d08.
+Key-rotation briefing 245: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c9233084.
 
-Forensic background 246: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-8ca2863b.
+Forensic background 246: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-5b1a6a14.
 
-Reviewer checklist item 247: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-76116f44.
+Reviewer checklist item 247: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-e6571d87.
 
-Stakeholder summary 248: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-47e817b1.
+Stakeholder summary 248: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ef19a91b.
 
-Telemetry cross-check 249: monitoring ticket MON-00249 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-85e34722.
+Telemetry cross-check 249: monitoring ticket MON-00249 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-551d6f11.
 
-Cipher review 250: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-253ce133.
+Cipher review 250: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-a6d992ca.
 
-Appendix cross-ref 251: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-3d886a52.
+Appendix cross-ref 251: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9a60d420.
 
-Vault ceremony 252: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-5964add9.
+Vault ceremony 252: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-73906dcf.
 
-Chain-of-custody note 253 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0253 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-e36bcb54.
+Chain-of-custody note 253 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0253 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-e0aee521.
 
-Governance review 254: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-6ed4328d.
+Governance review 254: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-541d481e.
 
-Incident cross-reference 255: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8d7c9fc5.
+Incident cross-reference 255: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-088798a9.
 
-Media-ingest log 256: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e5389ec3.
+Media-ingest log 256: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b84c89f0.
 
-Audit-ledger commentary 257: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-b5416168.
+Audit-ledger commentary 257: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-f7337b9d.
 
-Nonce-uniqueness memo 258: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2409b64e.
+Nonce-uniqueness memo 258: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e1d0cf89.
 
-Key-rotation briefing 259: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-b1e9fb2c.
+Key-rotation briefing 259: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-6f916e65.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Forensic background 260: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-13c71db6.
+Forensic background 260: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-290b7dea.
 
-Reviewer checklist item 261: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-8f9e3c81.
+Reviewer checklist item 261: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-23a0004e.
 
-Stakeholder summary 262: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-fda0adcc.
+Stakeholder summary 262: team-vault owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-8d0e0eb9.
 
-Telemetry cross-check 263: monitoring ticket MON-00263 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-6bb08440.
+Telemetry cross-check 263: monitoring ticket MON-00263 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-82493d6a.
 
 Cipher review 264: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ced28635.
 
@@ -595,496 +595,496 @@ Media-ingest log 284: frame frm-021 at GIF index 21 passed structural validation
 
 Audit-ledger commentary 285: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-605c56cd.
 
-Nonce-uniqueness memo 286: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-f678319b.
+Nonce-uniqueness memo 286: default nonces for frm-023 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-5723bc20.
 
-Key-rotation briefing 287: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d9ab64df.
+Key-rotation briefing 287: when frm-024 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-72fcbbec.
 
-Forensic background 288: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-2a588ad4.
+Forensic background 288: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-9ceb973c.
 
-Reviewer checklist item 289: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-3dbb28b3.
+Reviewer checklist item 289: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-9f1890f0.
 
-Stakeholder summary 290: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-76477e93.
+Stakeholder summary 290: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-0c30c9a0.
 
-Telemetry cross-check 291: monitoring ticket MON-00291 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-0f10f549.
+Telemetry cross-check 291: monitoring ticket MON-00291 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-9f55a001.
 
-Cipher review 292: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-cdaba704.
+Cipher review 292: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-eb6f6c06.
 
-Appendix cross-ref 293: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-94e89aa0.
+Appendix cross-ref 293: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-72e039e8.
 
-Vault ceremony 294: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-ddf68c36.
+Vault ceremony 294: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-12670c45.
 
-Chain-of-custody note 295 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0295 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-16421cc3.
+Chain-of-custody note 295 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0295 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-ffe3c6c7.
 
-Governance review 296: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-2cfd7821.
+Governance review 296: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-874e59ac.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Incident cross-reference 297: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-d577c571.
+Incident cross-reference 297: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-22384a58.
 
-Media-ingest log 298: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-30de0971.
+Media-ingest log 298: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b33b511c.
 
-Audit-ledger commentary 299: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-fba903e3.
+Audit-ledger commentary 299: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-db058f07.
 
-Nonce-uniqueness memo 300: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-d3ce1f24.
+Nonce-uniqueness memo 300: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c9153f63.
 
-Key-rotation briefing 301: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-b6ba7f9f.
+Key-rotation briefing 301: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-2bb08700.
 
-Forensic background 302: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-50109947.
+Forensic background 302: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-61d9257e.
 
-Reviewer checklist item 303: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-f9224ca5.
+Reviewer checklist item 303: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-70351c75.
 
-Stakeholder summary 304: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-e0d3f612.
+Stakeholder summary 304: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a18eda32.
 
-Telemetry cross-check 305: monitoring ticket MON-00305 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3568cca8.
+Telemetry cross-check 305: monitoring ticket MON-00305 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-2bf0c3b5.
 
-Cipher review 306: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-2cb939aa.
+Cipher review 306: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-45f52b04.
 
-Appendix cross-ref 307: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-07e7f541.
+Appendix cross-ref 307: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-8f74ecef.
 
-Vault ceremony 308: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-4c56ac6e.
+Vault ceremony 308: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-d2595724.
 
-Chain-of-custody note 309 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0309 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-1e78d0ec.
+Chain-of-custody note 309 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0309 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-d7fff1a3.
 
-Governance review 310: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-6fb0fcae.
+Governance review 310: GIF steganography review policy for frm-023 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-fe2f99da.
 
-Incident cross-reference 311: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-9ecb13b9.
+Incident cross-reference 311: during AES-GCM authentication tag handling triage on frm-024, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-68206cb9.
 
-Media-ingest log 312: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3622b1b2.
+Media-ingest log 312: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e8775fac.
 
-Audit-ledger commentary 313: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-e897d33f.
+Audit-ledger commentary 313: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-a3c971e3.
 
-Nonce-uniqueness memo 314: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-ba50cd60.
+Nonce-uniqueness memo 314: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-a09717eb.
 
-Key-rotation briefing 315: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-6ec476e7.
+Key-rotation briefing 315: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-7681fe1e.
 
-Forensic background 316: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-2b2d291f.
+Forensic background 316: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-91017f5f.
 
-Reviewer checklist item 317: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-87ff49a0.
+Reviewer checklist item 317: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-a25470a9.
 
-Stakeholder summary 318: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2ab223cc.
+Stakeholder summary 318: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-974f93fd.
 
-Telemetry cross-check 319: monitoring ticket MON-00319 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-aeaedf5c.
+Telemetry cross-check 319: monitoring ticket MON-00319 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-40a16256.
 
-Cipher review 320: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-cf24a86e.
+Cipher review 320: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-0128c5bb.
 
-Appendix cross-ref 321: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-938eb305.
+Appendix cross-ref 321: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-82ebab08.
 
-Vault ceremony 322: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-48c629a5.
+Vault ceremony 322: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-f4db5b17.
 
-Chain-of-custody note 323 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0323 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9e43c7ad.
+Chain-of-custody note 323 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0323 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-b7914d8f.
 
-Governance review 324: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-8c438e37.
+Governance review 324: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-60a1b57b.
 
-Incident cross-reference 325: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-724b66a4.
+Incident cross-reference 325: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-758d8e80.
 
-Media-ingest log 326: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c36a8444.
+Media-ingest log 326: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f8f0612a.
 
-Audit-ledger commentary 327: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-5d80f5a8.
+Audit-ledger commentary 327: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-6d2bb147.
 
-Nonce-uniqueness memo 328: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e492813f.
+Nonce-uniqueness memo 328: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2ff3c275.
 
-Key-rotation briefing 329: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-f291c793.
+Key-rotation briefing 329: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-2343be9e.
 
-Forensic background 330: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-fabef2c2.
+Forensic background 330: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-07b4d99b.
 
-Reviewer checklist item 331: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-a92b743d.
+Reviewer checklist item 331: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-f427b8ac.
 
-Stakeholder summary 332: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-64998ad0.
+Stakeholder summary 332: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a3a77d71.
 
-Telemetry cross-check 333: monitoring ticket MON-00333 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-89457321.
+Telemetry cross-check 333: monitoring ticket MON-00333 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-4d3d456c.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Cipher review 334: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-f38b69bd.
+Cipher review 334: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-60597dff.
 
-Appendix cross-ref 335: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-42236610.
+Appendix cross-ref 335: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-eff0e559.
 
-Vault ceremony 336: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3fb30fa4.
+Vault ceremony 336: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-063b8de7.
 
-Chain-of-custody note 337 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0337 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-2c7afb53.
+Chain-of-custody note 337 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0337 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a471f398.
 
-Governance review 338: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-ac20f739.
+Governance review 338: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-5652c8f3.
 
-Incident cross-reference 339: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-86ae4568.
+Incident cross-reference 339: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-df332402.
 
-Media-ingest log 340: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-82ade0bb.
+Media-ingest log 340: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-fc27725e.
 
-Audit-ledger commentary 341: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-3fb4957a.
+Audit-ledger commentary 341: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-48a88936.
 
-Nonce-uniqueness memo 342: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-643bb56b.
+Nonce-uniqueness memo 342: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-206363ab.
 
-Key-rotation briefing 343: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-1f5f21f7.
+Key-rotation briefing 343: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-370bffb4.
 
-Forensic background 344: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-003a7e79.
+Forensic background 344: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-6d1f14c9.
 
-Reviewer checklist item 345: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-7cefcedb.
+Reviewer checklist item 345: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-7e40c443.
 
-Stakeholder summary 346: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a8b2ff82.
+Stakeholder summary 346: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2addba36.
 
-Telemetry cross-check 347: monitoring ticket MON-00347 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-45fac684.
+Telemetry cross-check 347: monitoring ticket MON-00347 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-11278c57.
 
-Cipher review 348: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-83a6c187.
+Cipher review 348: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-7c4118da.
 
-Appendix cross-ref 349: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-03e9f77a.
+Appendix cross-ref 349: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-ba2f7d9b.
 
-Vault ceremony 350: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-b8d25448.
+Vault ceremony 350: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-b86cc960.
 
-Chain-of-custody note 351 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0351 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a78efe9f.
+Chain-of-custody note 351 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0351 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-2b44a149.
 
-Governance review 352: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-911efc46.
+Governance review 352: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-cbb82f07.
 
-Incident cross-reference 353: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e89d24de.
+Incident cross-reference 353: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-5d7b838b.
 
-Media-ingest log 354: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-172e54f3.
+Media-ingest log 354: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-47ef0df7.
 
-Audit-ledger commentary 355: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-8284d0e0.
+Audit-ledger commentary 355: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-fe63aa38.
 
-Nonce-uniqueness memo 356: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c444267c.
+Nonce-uniqueness memo 356: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-50c3234f.
 
-Key-rotation briefing 357: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0b07fede.
+Key-rotation briefing 357: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-86f03669.
 
-Forensic background 358: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-b93676b5.
+Forensic background 358: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-23722fbc.
 
-Reviewer checklist item 359: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-f8f2233c.
+Reviewer checklist item 359: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-a3188130.
 
-Stakeholder summary 360: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d339d984.
+Stakeholder summary 360: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f75bdaaa.
 
-Telemetry cross-check 361: monitoring ticket MON-00361 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-062f74b4.
+Telemetry cross-check 361: monitoring ticket MON-00361 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fc4b04c7.
 
-Cipher review 362: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b48aea82.
+Cipher review 362: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ee632db9.
 
-Appendix cross-ref 363: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-cbadefad.
+Appendix cross-ref 363: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-84f04fae.
 
-Vault ceremony 364: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-828b7f77.
+Vault ceremony 364: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-eda64e8c.
 
-Chain-of-custody note 365 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0365 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-28dab034.
+Chain-of-custody note 365 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0365 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-720b37b5.
 
-Governance review 366: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-202ed88e.
+Governance review 366: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-c864ee5d.
 
-Incident cross-reference 367: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-ca064bb0.
+Incident cross-reference 367: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-b333d870.
 
-Media-ingest log 368: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1a721700.
+Media-ingest log 368: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-cf64bed6.
 
-Audit-ledger commentary 369: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-e07e941c.
+Audit-ledger commentary 369: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-a9ba288b.
 
-Nonce-uniqueness memo 370: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-0f47ba0c.
+Nonce-uniqueness memo 370: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-161fa18f.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Key-rotation briefing 371: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-91db0b15.
+Key-rotation briefing 371: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-a3981c27.
 
-Forensic background 372: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-b996cb98.
+Forensic background 372: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d1730e58.
 
-Reviewer checklist item 373: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-69bc459f.
+Reviewer checklist item 373: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-593ec4f6.
 
-Stakeholder summary 374: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-6e7e6a15.
+Stakeholder summary 374: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-637bd9fa.
 
-Telemetry cross-check 375: monitoring ticket MON-00375 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fc19829e.
+Telemetry cross-check 375: monitoring ticket MON-00375 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-991290a0.
 
-Cipher review 376: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-9ce99627.
+Cipher review 376: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ba93b2c6.
 
-Appendix cross-ref 377: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0624b78b.
+Appendix cross-ref 377: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-2f0babf6.
 
-Vault ceremony 378: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-b66e7022.
+Vault ceremony 378: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-da2e4ec9.
 
-Chain-of-custody note 379 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0379 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-3ced4d96.
+Chain-of-custody note 379 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0379 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-608c449e.
 
-Governance review 380: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b44214ae.
+Governance review 380: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-e3e1e25e.
 
-Incident cross-reference 381: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-bbb8e548.
+Incident cross-reference 381: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8f88d3cb.
 
-Media-ingest log 382: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-0488b110.
+Media-ingest log 382: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1219404e.
 
-Audit-ledger commentary 383: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-bb2186eb.
+Audit-ledger commentary 383: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-c7bcefcc.
 
-Nonce-uniqueness memo 384: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-13903ccb.
+Nonce-uniqueness memo 384: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c35a2a3b.
 
-Key-rotation briefing 385: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-7b89822d.
+Key-rotation briefing 385: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-a71a0ad0.
 
-Forensic background 386: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-fe2ef5ab.
+Forensic background 386: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-362dac7a.
 
-Reviewer checklist item 387: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-372465df.
+Reviewer checklist item 387: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-50c2e734.
 
-Stakeholder summary 388: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-15d5ff8f.
+Stakeholder summary 388: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-7f97c7e8.
 
-Telemetry cross-check 389: monitoring ticket MON-00389 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-6d444bac.
+Telemetry cross-check 389: monitoring ticket MON-00389 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-56342309.
 
-Cipher review 390: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-a9c04c2c.
+Cipher review 390: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-68c29de2.
 
-Appendix cross-ref 391: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-99900e49.
+Appendix cross-ref 391: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-ee48322e.
 
-Vault ceremony 392: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-46d365fb.
+Vault ceremony 392: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-1a5aeaaa.
 
-Chain-of-custody note 393 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0393 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-10e6736e.
+Chain-of-custody note 393 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0393 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-dbbd50ce.
 
-Governance review 394: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-36a7e78f.
+Governance review 394: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-5ec27526.
 
-Incident cross-reference 395: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-8470f76c.
+Incident cross-reference 395: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-131dc358.
 
-Media-ingest log 396: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e23b3dc3.
+Media-ingest log 396: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-ea9fec9f.
 
-Audit-ledger commentary 397: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-31e6f644.
+Audit-ledger commentary 397: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-fd95dd41.
 
-Nonce-uniqueness memo 398: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-355d4d70.
+Nonce-uniqueness memo 398: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-3ed69f0a.
 
-Key-rotation briefing 399: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-7fa49b42.
+Key-rotation briefing 399: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c306937f.
 
-Forensic background 400: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-3bf99fd1.
+Forensic background 400: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-26d18232.
 
-Reviewer checklist item 401: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-7bfc6453.
+Reviewer checklist item 401: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-8f459faa.
 
-Stakeholder summary 402: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-878d2b90.
+Stakeholder summary 402: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-faea02b8.
 
-Telemetry cross-check 403: monitoring ticket MON-00403 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-c263bd45.
+Telemetry cross-check 403: monitoring ticket MON-00403 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-8e2772e9.
 
-Cipher review 404: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-550ba733.
+Cipher review 404: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d53f1916.
 
-Appendix cross-ref 405: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-55fa47d2.
+Appendix cross-ref 405: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-f83a47d8.
 
-Vault ceremony 406: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3d50d97e.
+Vault ceremony 406: channel frm-023 (xray-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-de406725.
 
-Chain-of-custody note 407 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0407 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-1f7ccaa2.
+Chain-of-custody note 407 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0407 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-ff1f21c1.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Governance review 408: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-628f77ad.
+Governance review 408: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-1bf3e2f8.
 
-Incident cross-reference 409: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-d1b527ad.
+Incident cross-reference 409: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-99052217.
 
-Media-ingest log 410: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-4524690f.
+Media-ingest log 410: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-853056b9.
 
-Audit-ledger commentary 411: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-b6ec1643.
+Audit-ledger commentary 411: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-a39c30e5.
 
-Nonce-uniqueness memo 412: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-31ead5c7.
+Nonce-uniqueness memo 412: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-b4c3e841.
 
-Key-rotation briefing 413: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0e147a63.
+Key-rotation briefing 413: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-42eb8864.
 
-Forensic background 414: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-45b6053d.
+Forensic background 414: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-2486475d.
 
-Reviewer checklist item 415: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-08ba1f35.
+Reviewer checklist item 415: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-2c6c5a68.
 
-Stakeholder summary 416: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-aa7f46cc.
+Stakeholder summary 416: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-523567ed.
 
-Telemetry cross-check 417: monitoring ticket MON-00417 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-48b75747.
+Telemetry cross-check 417: monitoring ticket MON-00417 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-b99dc1b8.
 
-Cipher review 418: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-4e1d9591.
+Cipher review 418: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-556a2f94.
 
-Appendix cross-ref 419: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-f51c7db6.
+Appendix cross-ref 419: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-a0c2a667.
 
-Vault ceremony 420: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-5ee1a420.
+Vault ceremony 420: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-ea9386bd.
 
-Chain-of-custody note 421 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0421 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c5d3600e.
+Chain-of-custody note 421 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0421 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-35afe96c.
 
-Governance review 422: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-cc5fae1b.
+Governance review 422: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-2e2f9335.
 
-Incident cross-reference 423: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-503d50ea.
+Incident cross-reference 423: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-cb52463b.
 
-Media-ingest log 424: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-ca29d14c.
+Media-ingest log 424: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b5bc383a.
 
-Audit-ledger commentary 425: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-5cf1a047.
+Audit-ledger commentary 425: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-be0ca3a4.
 
-Nonce-uniqueness memo 426: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2d303fd7.
+Nonce-uniqueness memo 426: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-407e4f20.
 
-Key-rotation briefing 427: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0187c65e.
+Key-rotation briefing 427: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-5f7dafdf.
 
-Forensic background 428: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-92c40d44.
+Forensic background 428: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-1246b17b.
 
-Reviewer checklist item 429: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-6c330085.
+Reviewer checklist item 429: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-c731d994.
 
-Stakeholder summary 430: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-0dd1cd7f.
+Stakeholder summary 430: team-vault owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-4a5b318f.
 
-Telemetry cross-check 431: monitoring ticket MON-00431 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-30059427.
+Telemetry cross-check 431: monitoring ticket MON-00431 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-0d9b0a4b.
 
-Cipher review 432: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-bfef2082.
+Cipher review 432: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-0ffade54.
 
-Appendix cross-ref 433: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-848a07eb.
+Appendix cross-ref 433: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-5934ec6c.
 
-Vault ceremony 434: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-171cec47.
+Vault ceremony 434: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-e7764362.
 
-Chain-of-custody note 435 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0435 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-3799113e.
+Chain-of-custody note 435 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0435 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-3485bd22.
 
-Governance review 436: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-8cca332a.
+Governance review 436: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-7b86e76e.
 
-Incident cross-reference 437: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-0200423f.
+Incident cross-reference 437: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-7818b6de.
 
-Media-ingest log 438: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-8e05a88a.
+Media-ingest log 438: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3b51e9f3.
 
-Audit-ledger commentary 439: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-93c8fe15.
+Audit-ledger commentary 439: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-28e56bd3.
 
-Nonce-uniqueness memo 440: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-1fc6edfb.
+Nonce-uniqueness memo 440: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-3fdf2264.
 
-Key-rotation briefing 441: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-ea1c51c0.
+Key-rotation briefing 441: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-67a05f53.
 
-Forensic background 442: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-39a51687.
+Forensic background 442: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-c55bd3d8.
 
-Reviewer checklist item 443: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-9ac39923.
+Reviewer checklist item 443: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-f3e05855.
 
-Stakeholder summary 444: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-02a6a0ef.
+Stakeholder summary 444: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ad3e9b2f.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Telemetry cross-check 445: monitoring ticket MON-00445 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-81ab55d2.
+Telemetry cross-check 445: monitoring ticket MON-00445 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-92dbda30.
 
-Cipher review 446: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-29f707a8.
+Cipher review 446: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-a7662861.
 
-Appendix cross-ref 447: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9fd5dd59.
+Appendix cross-ref 447: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-80cdcfea.
 
-Vault ceremony 448: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-cc85e5ed.
+Vault ceremony 448: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-307d057a.
 
-Chain-of-custody note 449 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0449 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-47316909.
+Chain-of-custody note 449 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0449 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-4c839fba.
 
-Governance review 450: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b0bae382.
+Governance review 450: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-3b1dd9db.
 
-Incident cross-reference 451: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-9bd26467.
+Incident cross-reference 451: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-0b3ec09d.
 
-Media-ingest log 452: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-78f06a95.
+Media-ingest log 452: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f49470b7.
 
-Audit-ledger commentary 453: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9d1319d5.
+Audit-ledger commentary 453: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-74f3ba0d.
 
-Nonce-uniqueness memo 454: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-6ec3e3a8.
+Nonce-uniqueness memo 454: default nonces for frm-023 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4e020be0.
 
-Key-rotation briefing 455: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-accc8acd.
+Key-rotation briefing 455: when frm-024 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d5133fcb.
 
-Forensic background 456: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-506d261a.
+Forensic background 456: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-3058e278.
 
-Reviewer checklist item 457: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-4b5028c6.
+Reviewer checklist item 457: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-1ed026dd.
 
-Stakeholder summary 458: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-76079305.
+Stakeholder summary 458: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2c0cf94f.
 
-Telemetry cross-check 459: monitoring ticket MON-00459 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e8c82b84.
+Telemetry cross-check 459: monitoring ticket MON-00459 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-fcb85688.
 
-Cipher review 460: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d1904595.
+Cipher review 460: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-93087610.
 
-Appendix cross-ref 461: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-6e5ddd95.
+Appendix cross-ref 461: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-6d6226c2.
 
-Vault ceremony 462: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-bdd1c96f.
+Vault ceremony 462: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3f09dc69.
 
-Chain-of-custody note 463 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0463 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-6d76ccb8.
+Chain-of-custody note 463 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0463 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9f76eb9c.
 
-Governance review 464: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b52b8c26.
+Governance review 464: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-dec9258e.
 
-Incident cross-reference 465: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-376922ef.
+Incident cross-reference 465: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-f8e63fb7.
 
-Media-ingest log 466: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3b8ca1f4.
+Media-ingest log 466: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c666ae06.
 
-Audit-ledger commentary 467: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-c79eb279.
+Audit-ledger commentary 467: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-d0d370c8.
 
-Nonce-uniqueness memo 468: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-a075c8a2.
+Nonce-uniqueness memo 468: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-86dd7a1c.
 
-Key-rotation briefing 469: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-a6d074ef.
+Key-rotation briefing 469: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c3ecdfaa.
 
-Forensic background 470: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-bd39daa0.
+Forensic background 470: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-dd2f1bb1.
 
-Reviewer checklist item 471: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-4c6ee728.
+Reviewer checklist item 471: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-87d31ddb.
 
-Stakeholder summary 472: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-94cb0d64.
+Stakeholder summary 472: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-395c1f85.
 
-Telemetry cross-check 473: monitoring ticket MON-00473 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3e9d1f07.
+Telemetry cross-check 473: monitoring ticket MON-00473 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-637f3f8b.
 
-Cipher review 474: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-eb3269b3.
+Cipher review 474: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b8e5faf0.
 
-Appendix cross-ref 475: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0ab239fd.
+Appendix cross-ref 475: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-5eaf6cc7.
 
-Vault ceremony 476: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-25923fb0.
+Vault ceremony 476: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-6bb28050.
 
-Chain-of-custody note 477 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0477 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9bbb3262.
+Chain-of-custody note 477 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0477 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-96ad6a9b.
 
-Governance review 478: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-bed20dce.
+Governance review 478: GIF steganography review policy for frm-023 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-e53bdcdd.
 
-Incident cross-reference 479: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-7d8b5714.
+Incident cross-reference 479: during AES-GCM authentication tag handling triage on frm-024, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-7a8a6ae0.
 
-Media-ingest log 480: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-9ea9eac6.
+Media-ingest log 480: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-9647e556.
 
-Audit-ledger commentary 481: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-eacf1bfe.
+Audit-ledger commentary 481: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-43be9e14.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Nonce-uniqueness memo 482: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-a44562b8.
+Nonce-uniqueness memo 482: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-d7d4f4ec.
 
-Key-rotation briefing 483: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d6903441.
+Key-rotation briefing 483: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-8f29139a.
 
-Forensic background 484: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-e6e7d7fd.
+Forensic background 484: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-82a3b857.
 
-Reviewer checklist item 485: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-84716821.
+Reviewer checklist item 485: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-edcbf815.
 
-Stakeholder summary 486: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-1a38229e.
+Stakeholder summary 486: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-76eeefc4.
 
-Telemetry cross-check 487: monitoring ticket MON-00487 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-1b4ff065.
+Telemetry cross-check 487: monitoring ticket MON-00487 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-88ee15c1.
 
-Cipher review 488: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d3df2aff.
+Cipher review 488: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ae91c44c.
 
-Appendix cross-ref 489: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-ed692296.
+Appendix cross-ref 489: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-950d69af.
 
-Vault ceremony 490: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3a49677e.
+Vault ceremony 490: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-7ddaaf15.
 
-Chain-of-custody note 491 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0491 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-88cce05f.
+Chain-of-custody note 491 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0491 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-db93f16d.
 
-Governance review 492: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-831359bd.
+Governance review 492: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-cf83c5c6.
 
-Incident cross-reference 493: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-7a7bf3ae.
+Incident cross-reference 493: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-67910de0.
 
-Media-ingest log 494: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-cd85a968.
+Media-ingest log 494: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-208a4015.
 
-Audit-ledger commentary 495: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-c9a80c09.
+Audit-ledger commentary 495: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-661b8f6b.
 
-Nonce-uniqueness memo 496: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4a6aebc6.
+Nonce-uniqueness memo 496: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-352277e1.
 
-Key-rotation briefing 497: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-220462b8.
+Key-rotation briefing 497: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-9ddf1a05.
 
-Forensic background 498: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-74d55164.
+Forensic background 498: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4fc44911.
 
-Reviewer checklist item 499: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-45eaf6fe.
+Reviewer checklist item 499: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-22e6ad1a.
 
-Stakeholder summary 500: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f3714bc1.
+Stakeholder summary 500: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-daa1736a.
 
-Telemetry cross-check 501: monitoring ticket MON-00501 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-8369d839.
+Telemetry cross-check 501: monitoring ticket MON-00501 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-caa25a99.
 
-Cipher review 502: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-0e5ebf60.
+Cipher review 502: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-c9d1867f.
 
-Appendix cross-ref 503: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-c7b17516.
+Appendix cross-ref 503: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-8ecd8618.
 
-Vault ceremony 504: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-87ffa0a8.
+Vault ceremony 504: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-f9f73d20.
 
-Chain-of-custody note 505 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0505 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-8f74856e.
+Chain-of-custody note 505 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0505 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-4b3584cb.
 
-Governance review 506: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-64cfb8e7.
+Governance review 506: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-16f4961f.
 
-Incident cross-reference 507: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-1927957a.
+Incident cross-reference 507: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-d7c73ce1.
 
-Media-ingest log 508: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-9869fc27.
+Media-ingest log 508: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-07c5f8e2.
 
-Audit-ledger commentary 509: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-8b0ea964.
+Audit-ledger commentary 509: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-cbd2a807.
 
-Nonce-uniqueness memo 510: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8d5ed265.
+Nonce-uniqueness memo 510: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-32d94d22.
 
-Key-rotation briefing 511: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-e0918776.
+Key-rotation briefing 511: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-fd602a87.
 
-Forensic background 512: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-b8ff9cf6.
+Forensic background 512: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-831610ec.
 
-Reviewer checklist item 513: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-4bbffa9d.
+Reviewer checklist item 513: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-0bc0864e.
 
-Stakeholder summary 514: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3acb1849.
+Stakeholder summary 514: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d81d0b67.
 
-Telemetry cross-check 515: monitoring ticket MON-00515 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-81c9614f.
+Telemetry cross-check 515: monitoring ticket MON-00515 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-a614d143.
 
-Cipher review 516: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-4df2fbf5.
+Cipher review 516: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d3765886.
 
-Appendix cross-ref 517: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-41f175a5.
+Appendix cross-ref 517: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-80a896b8.
 
-Vault ceremony 518: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3235fc4e.
+Vault ceremony 518: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-5e69f618.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Chain-of-custody note 519 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0519 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-573ff546.
+Chain-of-custody note 519 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0519 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-91bfba3a.
 
-Governance review 520: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-688c15ba.
+Governance review 520: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-98fba140.
 
-Incident cross-reference 521: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-6db9e8f2.
+Incident cross-reference 521: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-97fd80a8.
 
-Media-ingest log 522: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c3e01a7d.
+Media-ingest log 522: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-a1acd9e4.
 
-Audit-ledger commentary 523: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-202667a3.
+Audit-ledger commentary 523: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-678cb606.
 
-Nonce-uniqueness memo 524: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2c2576c5.
+Nonce-uniqueness memo 524: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-3c5221ce.
 
-Key-rotation briefing 525: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-da3b9753.
+Key-rotation briefing 525: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-24f8adc2.
 
-Forensic background 526: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4a39c5b7.
+Forensic background 526: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-3bbe4f45.
 
-Reviewer checklist item 527: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-38211d30.
+Reviewer checklist item 527: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-509fa81e.
 
 Stakeholder summary 528: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-8873e5b9.
 
@@ -1130,496 +1130,496 @@ Governance review 548: GIF steganography review policy for frm-021 requires that
 
 Incident cross-reference 549: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-271d9bec.
 
-Media-ingest log 550: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-60ee6dd3.
+Media-ingest log 550: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-2a2f328d.
 
-Audit-ledger commentary 551: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7f6e5163.
+Audit-ledger commentary 551: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-63ee2192.
 
-Nonce-uniqueness memo 552: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-988f8794.
+Nonce-uniqueness memo 552: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4283baa0.
 
-Key-rotation briefing 553: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-b7c66dc4.
+Key-rotation briefing 553: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-101fb2fb.
 
-Forensic background 554: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f4ffd07c.
+Forensic background 554: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-867b9f98.
 
-Reviewer checklist item 555: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-ef864de9.
+Reviewer checklist item 555: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-ba4e301b.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Stakeholder summary 556: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-9ed0dcda.
+Stakeholder summary 556: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-15455569.
 
-Telemetry cross-check 557: monitoring ticket MON-00557 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-267f00cd.
+Telemetry cross-check 557: monitoring ticket MON-00557 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-876fd018.
 
-Cipher review 558: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-5347691d.
+Cipher review 558: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-8ecb94ea.
 
-Appendix cross-ref 559: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-ed9f92b8.
+Appendix cross-ref 559: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-04dfa2e2.
 
-Vault ceremony 560: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-9e1d9080.
+Vault ceremony 560: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-0f43b1cf.
 
-Chain-of-custody note 561 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0561 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-95d6f253.
+Chain-of-custody note 561 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0561 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-d6f6feb4.
 
-Governance review 562: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-32a94c0e.
+Governance review 562: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-c68cfc34.
 
-Incident cross-reference 563: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-239416b1.
+Incident cross-reference 563: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-6949ab7a.
 
-Media-ingest log 564: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-8ce4bc26.
+Media-ingest log 564: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-26a4c278.
 
-Audit-ledger commentary 565: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-81a3d93e.
+Audit-ledger commentary 565: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-5b0730ce.
 
-Nonce-uniqueness memo 566: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-239ba053.
+Nonce-uniqueness memo 566: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-aad8dc54.
 
-Key-rotation briefing 567: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-e80fe7fc.
+Key-rotation briefing 567: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-75ebb982.
 
-Forensic background 568: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-9031841f.
+Forensic background 568: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-0ac99c68.
 
-Reviewer checklist item 569: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-8ec840cb.
+Reviewer checklist item 569: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-4f01f142.
 
-Stakeholder summary 570: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-e11e02b8.
+Stakeholder summary 570: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f6ce31f5.
 
-Telemetry cross-check 571: monitoring ticket MON-00571 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-000314cc.
+Telemetry cross-check 571: monitoring ticket MON-00571 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-23d6c6d7.
 
-Cipher review 572: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-3e8d7114.
+Cipher review 572: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-34fa6620.
 
-Appendix cross-ref 573: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-4d41b02d.
+Appendix cross-ref 573: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-fefb69af.
 
-Vault ceremony 574: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-37a0cf9c.
+Vault ceremony 574: channel frm-023 (xray-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-2e2c9570.
 
-Chain-of-custody note 575 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0575 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f8cc3ccc.
+Chain-of-custody note 575 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0575 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f7ed9e3a.
 
-Governance review 576: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-a0c450ee.
+Governance review 576: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-bce95518.
 
-Incident cross-reference 577: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-418c049f.
+Incident cross-reference 577: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-4fada6a0.
 
-Media-ingest log 578: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-f13113bf.
+Media-ingest log 578: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-dcd7178c.
 
-Audit-ledger commentary 579: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-75dd368d.
+Audit-ledger commentary 579: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9384aab2.
 
-Nonce-uniqueness memo 580: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-f9bfd090.
+Nonce-uniqueness memo 580: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-37305101.
 
-Key-rotation briefing 581: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d479e786.
+Key-rotation briefing 581: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c72a82bb.
 
-Forensic background 582: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-2af93e6e.
+Forensic background 582: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d599129f.
 
-Reviewer checklist item 583: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-1c124cf3.
+Reviewer checklist item 583: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-f0d297bb.
 
-Stakeholder summary 584: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-aca68843.
+Stakeholder summary 584: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3a409547.
 
-Telemetry cross-check 585: monitoring ticket MON-00585 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-2ecf26fb.
+Telemetry cross-check 585: monitoring ticket MON-00585 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e1d7eec9.
 
-Cipher review 586: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ee9394af.
+Cipher review 586: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-3492c634.
 
-Appendix cross-ref 587: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-f5dfd86d.
+Appendix cross-ref 587: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-25d8b436.
 
-Vault ceremony 588: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3f00c62f.
+Vault ceremony 588: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-cadd397e.
 
-Chain-of-custody note 589 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0589 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-044c364d.
+Chain-of-custody note 589 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0589 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-031e6ba1.
 
-Governance review 590: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-2670a005.
+Governance review 590: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-a8da1bba.
 
-Incident cross-reference 591: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-b1eb929d.
+Incident cross-reference 591: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c152ce9b.
 
-Media-ingest log 592: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3fa6f31f.
+Media-ingest log 592: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-479b7b54.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Audit-ledger commentary 593: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-ff1c907e.
+Audit-ledger commentary 593: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-4d009109.
 
-Nonce-uniqueness memo 594: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c1c5a06d.
+Nonce-uniqueness memo 594: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-94a96e86.
 
-Key-rotation briefing 595: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-5136e891.
+Key-rotation briefing 595: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-97dfea7d.
 
-Forensic background 596: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-387a6e34.
+Forensic background 596: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d3e65cab.
 
-Reviewer checklist item 597: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-4823f0f0.
+Reviewer checklist item 597: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-c7889842.
 
-Stakeholder summary 598: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-f8c9f9fd.
+Stakeholder summary 598: team-vault owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-c89668ab.
 
-Telemetry cross-check 599: monitoring ticket MON-00599 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-d33c0b54.
+Telemetry cross-check 599: monitoring ticket MON-00599 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-b728af5f.
 
-Cipher review 600: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-25aed01d.
+Cipher review 600: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-1ddc8ac6.
 
-Appendix cross-ref 601: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-5becb6af.
+Appendix cross-ref 601: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-a917c404.
 
-Vault ceremony 602: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-7a967d42.
+Vault ceremony 602: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-606850e4.
 
-Chain-of-custody note 603 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0603 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-8e4c2424.
+Chain-of-custody note 603 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0603 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f65cd11e.
 
-Governance review 604: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-21251f0c.
+Governance review 604: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-7954f4ce.
 
-Incident cross-reference 605: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e0078724.
+Incident cross-reference 605: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-57dd4bc1.
 
-Media-ingest log 606: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-05c29872.
+Media-ingest log 606: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-75a49922.
 
-Audit-ledger commentary 607: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-efc54905.
+Audit-ledger commentary 607: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-4ab60536.
 
-Nonce-uniqueness memo 608: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e32d14f7.
+Nonce-uniqueness memo 608: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-f4391d52.
 
-Key-rotation briefing 609: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-4ae5e78c.
+Key-rotation briefing 609: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0e1664f3.
 
-Forensic background 610: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-901cc623.
+Forensic background 610: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-b40391a1.
 
-Reviewer checklist item 611: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-486ecb6e.
+Reviewer checklist item 611: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-85ff53eb.
 
-Stakeholder summary 612: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-6256faf3.
+Stakeholder summary 612: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a0011239.
 
-Telemetry cross-check 613: monitoring ticket MON-00613 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-120e1087.
+Telemetry cross-check 613: monitoring ticket MON-00613 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3038a92e.
 
-Cipher review 614: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-a7cbee41.
+Cipher review 614: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-4b0b8ad9.
 
-Appendix cross-ref 615: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-333afa09.
+Appendix cross-ref 615: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-93b8c1f7.
 
-Vault ceremony 616: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-d5bc7b46.
+Vault ceremony 616: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-fffa6153.
 
-Chain-of-custody note 617 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0617 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-3751783e.
+Chain-of-custody note 617 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0617 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-92f4ffa2.
 
-Governance review 618: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-fa83cccd.
+Governance review 618: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-2a6b9463.
 
-Incident cross-reference 619: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-111b36b3.
+Incident cross-reference 619: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e9f7198a.
 
-Media-ingest log 620: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-969ac943.
+Media-ingest log 620: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e43842e3.
 
-Audit-ledger commentary 621: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-3e34519c.
+Audit-ledger commentary 621: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-55faa006.
 
-Nonce-uniqueness memo 622: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8c13d9b8.
+Nonce-uniqueness memo 622: default nonces for frm-023 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4e7e34cc.
 
-Key-rotation briefing 623: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-2fb063dd.
+Key-rotation briefing 623: when frm-024 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-a1b32ddc.
 
-Forensic background 624: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-e00873f7.
+Forensic background 624: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4b72c257.
 
-Reviewer checklist item 625: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-d631f948.
+Reviewer checklist item 625: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-fbb3e791.
 
-Stakeholder summary 626: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-8d1d3541.
+Stakeholder summary 626: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d6c7b8a9.
 
-Telemetry cross-check 627: monitoring ticket MON-00627 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-6e8b740d.
+Telemetry cross-check 627: monitoring ticket MON-00627 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-1afb9657.
 
-Cipher review 628: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-07906654.
+Cipher review 628: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-33e99299.
 
-Appendix cross-ref 629: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-be4a3637.
+Appendix cross-ref 629: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-11b46498.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Vault ceremony 630: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-7705395a.
+Vault ceremony 630: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-f3e2d67b.
 
-Chain-of-custody note 631 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0631 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-68a5870b.
+Chain-of-custody note 631 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0631 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-43dd7d63.
 
-Governance review 632: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-55a8d9b2.
+Governance review 632: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9ad0bd19.
 
-Incident cross-reference 633: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e8ec3e19.
+Incident cross-reference 633: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-f02c1e33.
 
-Media-ingest log 634: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-a51bf17b.
+Media-ingest log 634: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-32ac8300.
 
-Audit-ledger commentary 635: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-5e4a52e1.
+Audit-ledger commentary 635: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-6afd37a7.
 
-Nonce-uniqueness memo 636: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-80dc07ae.
+Nonce-uniqueness memo 636: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-b645c3d7.
 
-Key-rotation briefing 637: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-e5b18d4b.
+Key-rotation briefing 637: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-dca18576.
 
-Forensic background 638: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4a6d043f.
+Forensic background 638: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-68ac767f.
 
-Reviewer checklist item 639: confirm frm-002 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the bravo-channel payload embedded at GIF index 1. Ref: FORE-e274a79d.
+Reviewer checklist item 639: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-381986c7.
 
-Stakeholder summary 640: team-vault owns remediation for frm-003. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-391d08a6.
+Stakeholder summary 640: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-9595a4ba.
 
-Telemetry cross-check 641: monitoring ticket MON-00641 for frm-004 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-f2228ee5.
+Telemetry cross-check 641: monitoring ticket MON-00641 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-159e137b.
 
-Cipher review 642: AES-256-GCM on frm-005 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-64444dcf.
+Cipher review 642: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-e7556ae9.
 
-Appendix cross-ref 643: readers reconciling frm-006 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-61242c06.
+Appendix cross-ref 643: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-6818ee41.
 
-Vault ceremony 644: channel frm-007 (golf-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-f74ffe39.
+Vault ceremony 644: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-cc28fd1e.
 
-Chain-of-custody note 645 for frm-008: the GIF extension block labelled MRNR/CRYPTO1 on index 8 is the authoritative ciphertext carrier for hotel-channel. Earlier draft captures in ticket FORE-0645 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-831ee342.
+Chain-of-custody note 645 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0645 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-1a2a9ed0.
 
-Governance review 646: GIF steganography review policy for frm-009 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-ef3fd1d7.
+Governance review 646: GIF steganography review policy for frm-023 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-58d29aa9.
 
-Incident cross-reference 647: during AES-GCM authentication tag handling triage on frm-010, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-dbd2a26f.
+Incident cross-reference 647: during AES-GCM authentication tag handling triage on frm-024, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-11265e69.
 
-Media-ingest log 648: frame frm-011 at GIF index 11 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-35ae2577.
+Media-ingest log 648: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-414d54c0.
 
-Audit-ledger commentary 649: SQLite rows for frm-012 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-5327cd7f.
+Audit-ledger commentary 649: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-b97e0273.
 
-Nonce-uniqueness memo 650: default nonces for frm-013 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8ed67ae2.
+Nonce-uniqueness memo 650: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-1d3bc1da.
 
-Key-rotation briefing 651: when frm-014 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-43438cfd.
+Key-rotation briefing 651: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d2657146.
 
-Forensic background 652: incident response playbook work on oscar-channel (frm-015) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-e671530d.
+Forensic background 652: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4c913a41.
 
-Reviewer checklist item 653: confirm frm-016 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the papa-channel payload embedded at GIF index 16. Ref: FORE-e6f2ce19.
+Reviewer checklist item 653: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-e8f439ad.
 
-Stakeholder summary 654: team-vault owns remediation for frm-017. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-d997cb0c.
+Stakeholder summary 654: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a5c8cc30.
 
-Telemetry cross-check 655: monitoring ticket MON-00655 for frm-018 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-124f26bc.
+Telemetry cross-check 655: monitoring ticket MON-00655 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-f3338338.
 
-Cipher review 656: AES-256-GCM on frm-019 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-5cadc78d.
+Cipher review 656: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-897a6c77.
 
-Appendix cross-ref 657: readers reconciling frm-020 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-28dfaf22.
+Appendix cross-ref 657: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-934c52ee.
 
-Vault ceremony 658: channel frm-021 (victor-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-be7d45fe.
+Vault ceremony 658: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-555ce7f8.
 
-Chain-of-custody note 659 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0659 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-acdae1a9.
+Chain-of-custody note 659 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0659 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c224584d.
 
-Governance review 660: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-f66a528f.
+Governance review 660: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-a07e5fdf.
 
-Incident cross-reference 661: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-6a780afa.
+Incident cross-reference 661: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-415ba0b4.
 
-Media-ingest log 662: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1f4f6992.
+Media-ingest log 662: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-07804b43.
 
-Audit-ledger commentary 663: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-4483a1c1.
+Audit-ledger commentary 663: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-60bf3621.
 
-Nonce-uniqueness memo 664: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-45772ec0.
+Nonce-uniqueness memo 664: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-fb0f0b1c.
 
-Key-rotation briefing 665: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-6b8c0628.
+Key-rotation briefing 665: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-191ffb57.
 
-Forensic background 666: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-c54f1060.
+Forensic background 666: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-9d705ff8.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Reviewer checklist item 667: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-22ae004c.
+Reviewer checklist item 667: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-57d384ce.
 
-Stakeholder summary 668: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3a041f1c.
+Stakeholder summary 668: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-a28a2346.
 
-Telemetry cross-check 669: monitoring ticket MON-00669 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-7da8f21c.
+Telemetry cross-check 669: monitoring ticket MON-00669 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-80b7125e.
 
-Cipher review 670: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-dfe6ba72.
+Cipher review 670: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-4c1bab8a.
 
-Appendix cross-ref 671: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-83234c07.
+Appendix cross-ref 671: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-66b47730.
 
-Vault ceremony 672: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-97a50cb5.
+Vault ceremony 672: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-d73a6555.
 
-Chain-of-custody note 673 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0673 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-8e349f68.
+Chain-of-custody note 673 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0673 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-0ca22a68.
 
-Governance review 674: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-90c23ed2.
+Governance review 674: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-cfc25618.
 
-Incident cross-reference 675: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-bc4ab587.
+Incident cross-reference 675: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-6690adf8.
 
-Media-ingest log 676: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1ada0a41.
+Media-ingest log 676: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-84e400c5.
 
-Audit-ledger commentary 677: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-97048018.
+Audit-ledger commentary 677: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7bd580ca.
 
-Nonce-uniqueness memo 678: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-927a2d39.
+Nonce-uniqueness memo 678: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-6a73a395.
 
-Key-rotation briefing 679: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c764937a.
+Key-rotation briefing 679: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-829fec2d.
 
-Forensic background 680: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-342d2d55.
+Forensic background 680: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-40a44f40.
 
-Reviewer checklist item 681: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-b288e71a.
+Reviewer checklist item 681: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-dec35ba8.
 
-Stakeholder summary 682: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-5a17395f.
+Stakeholder summary 682: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2ed66465.
 
-Telemetry cross-check 683: monitoring ticket MON-00683 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-a479226f.
+Telemetry cross-check 683: monitoring ticket MON-00683 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e90f8761.
 
-Cipher review 684: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d6cce6f0.
+Cipher review 684: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-aed2092d.
 
-Appendix cross-ref 685: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-4dd42020.
+Appendix cross-ref 685: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-99805f9f.
 
-Vault ceremony 686: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3f8cdbde.
+Vault ceremony 686: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-6fb5c8ca.
 
-Chain-of-custody note 687 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0687 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-ef2c8f4a.
+Chain-of-custody note 687 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0687 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a34f892e.
 
-Governance review 688: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b183c463.
+Governance review 688: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-34375c30.
 
-Incident cross-reference 689: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-9547a3c2.
+Incident cross-reference 689: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-3240a3d5.
 
-Media-ingest log 690: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c7455062.
+Media-ingest log 690: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-a3fc3744.
 
-Audit-ledger commentary 691: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-a949e70e.
+Audit-ledger commentary 691: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-02806c9c.
 
-Nonce-uniqueness memo 692: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-9f1323cc.
+Nonce-uniqueness memo 692: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-f84ee9ec.
 
-Key-rotation briefing 693: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d5f7813c.
+Key-rotation briefing 693: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-aa07410e.
 
-Forensic background 694: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-09fb430b.
+Forensic background 694: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-1925fc2c.
 
-Reviewer checklist item 695: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-9666ed4b.
+Reviewer checklist item 695: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-48ea4c7b.
 
-Stakeholder summary 696: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ad45e94b.
+Stakeholder summary 696: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-66efadb7.
 
-Telemetry cross-check 697: monitoring ticket MON-00697 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-f4458e25.
+Telemetry cross-check 697: monitoring ticket MON-00697 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e3ca73d1.
 
-Cipher review 698: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-27356fbd.
+Cipher review 698: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-778e6953.
 
-Appendix cross-ref 699: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9901bb3d.
+Appendix cross-ref 699: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0ee2db74.
 
-Vault ceremony 700: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-c94ac05b.
+Vault ceremony 700: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-969362a2.
 
-Chain-of-custody note 701 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0701 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-67849407.
+Chain-of-custody note 701 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0701 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-3208b16e.
 
-Governance review 702: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-42b6495d.
+Governance review 702: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b3b07f20.
 
-Incident cross-reference 703: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-48512f3b.
+Incident cross-reference 703: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-76ddadde.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Media-ingest log 704: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-d6f423a8.
+Media-ingest log 704: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-72559ce7.
 
-Audit-ledger commentary 705: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-fed0ca79.
+Audit-ledger commentary 705: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-59246014.
 
-Nonce-uniqueness memo 706: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-26b1d4ef.
+Nonce-uniqueness memo 706: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-0074aa1e.
 
-Key-rotation briefing 707: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-7aecd16f.
+Key-rotation briefing 707: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-6203eee8.
 
-Forensic background 708: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d08bc826.
+Forensic background 708: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-21238f61.
 
-Reviewer checklist item 709: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-9cf4771c.
+Reviewer checklist item 709: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-aca4a940.
 
-Stakeholder summary 710: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-0c0c6fe1.
+Stakeholder summary 710: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-1c222723.
 
-Telemetry cross-check 711: monitoring ticket MON-00711 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3f24d393.
+Telemetry cross-check 711: monitoring ticket MON-00711 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-8c4a8dbd.
 
-Cipher review 712: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-5565a56f.
+Cipher review 712: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-bd851a6e.
 
-Appendix cross-ref 713: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-3ce201f9.
+Appendix cross-ref 713: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-56c1a47d.
 
-Vault ceremony 714: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3cc02cce.
+Vault ceremony 714: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-5d803bc1.
 
-Chain-of-custody note 715 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0715 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-945491a1.
+Chain-of-custody note 715 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0715 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-6efdaf45.
 
-Governance review 716: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-b1e0dd40.
+Governance review 716: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-6276463a.
 
-Incident cross-reference 717: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-3a7075d9.
+Incident cross-reference 717: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-9f450da5.
 
-Media-ingest log 718: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-fe122ce8.
+Media-ingest log 718: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-fda38c2e.
 
-Audit-ledger commentary 719: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-75818edb.
+Audit-ledger commentary 719: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7092a9b1.
 
-Nonce-uniqueness memo 720: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-8652819f.
+Nonce-uniqueness memo 720: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-524c0591.
 
-Key-rotation briefing 721: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-104a3515.
+Key-rotation briefing 721: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-cff742e1.
 
-Forensic background 722: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-7d55723a.
+Forensic background 722: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-999360bb.
 
-Reviewer checklist item 723: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-6a1194b6.
+Reviewer checklist item 723: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-55ddf263.
 
-Stakeholder summary 724: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-807876e5.
+Stakeholder summary 724: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-e0cbadb6.
 
-Telemetry cross-check 725: monitoring ticket MON-00725 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-c51fd860.
+Telemetry cross-check 725: monitoring ticket MON-00725 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-cb2b40f5.
 
-Cipher review 726: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-af64b9dd.
+Cipher review 726: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-aaa93e2c.
 
-Appendix cross-ref 727: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-bc166995.
+Appendix cross-ref 727: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-6f388ba6.
 
-Vault ceremony 728: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-4ee8916e.
+Vault ceremony 728: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-fece7205.
 
-Chain-of-custody note 729 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0729 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-22da08a8.
+Chain-of-custody note 729 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0729 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-98cb29cd.
 
-Governance review 730: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-8eef33e0.
+Governance review 730: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-0868443a.
 
-Incident cross-reference 731: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c295ea26.
+Incident cross-reference 731: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-1bee997a.
 
-Media-ingest log 732: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-aa50698e.
+Media-ingest log 732: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-897bb42f.
 
-Audit-ledger commentary 733: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9555b377.
+Audit-ledger commentary 733: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-820e48d3.
 
-Nonce-uniqueness memo 734: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2f1c5a16.
+Nonce-uniqueness memo 734: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-411d121f.
 
-Key-rotation briefing 735: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-bfc201f5.
+Key-rotation briefing 735: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-d4fad750.
 
-Forensic background 736: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-d9681728.
+Forensic background 736: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-fe76f4c9.
 
-Reviewer checklist item 737: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-a1ef1f8b.
+Reviewer checklist item 737: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-080d3531.
 
-Stakeholder summary 738: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-56b6781b.
+Stakeholder summary 738: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-b033ef94.
 
-Telemetry cross-check 739: monitoring ticket MON-00739 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-176c9d6f.
+Telemetry cross-check 739: monitoring ticket MON-00739 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-687ebd44.
 
-Cipher review 740: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-e0a8db7c.
+Cipher review 740: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-e3d3b84a.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Appendix cross-ref 741: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-a4726698.
+Appendix cross-ref 741: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-f39683ff.
 
-Vault ceremony 742: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-7448023f.
+Vault ceremony 742: channel frm-023 (xray-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-db600820.
 
-Chain-of-custody note 743 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0743 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-9fb2d65b.
+Chain-of-custody note 743 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0743 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-e1a767da.
 
-Governance review 744: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-bae1e58d.
+Governance review 744: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-11bc4c39.
 
-Incident cross-reference 745: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-9c23dc00.
+Incident cross-reference 745: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-b40869b4.
 
-Media-ingest log 746: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c9aa47e7.
+Media-ingest log 746: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3c20188b.
 
-Audit-ledger commentary 747: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-655a8e7e.
+Audit-ledger commentary 747: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-74b93d0e.
 
-Nonce-uniqueness memo 748: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-08009024.
+Nonce-uniqueness memo 748: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c4caa742.
 
-Key-rotation briefing 749: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-1a1de9a6.
+Key-rotation briefing 749: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-eca0ccdf.
 
-Forensic background 750: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-a6d4254a.
+Forensic background 750: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-7fc0f767.
 
-Reviewer checklist item 751: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-0791b5be.
+Reviewer checklist item 751: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-43ba2804.
 
-Stakeholder summary 752: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-1d24c69b.
+Stakeholder summary 752: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-c112d9ab.
 
-Telemetry cross-check 753: monitoring ticket MON-00753 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-b52fdb1f.
+Telemetry cross-check 753: monitoring ticket MON-00753 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e7c4e55c.
 
-Cipher review 754: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-7cac4bca.
+Cipher review 754: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-92f380ca.
 
-Appendix cross-ref 755: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-2e16dc3d.
+Appendix cross-ref 755: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-fb6b780f.
 
-Vault ceremony 756: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-8e3546fe.
+Vault ceremony 756: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3c73cf41.
 
-Chain-of-custody note 757 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0757 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-6d7d4868.
+Chain-of-custody note 757 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0757 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-baf05e3f.
 
-Governance review 758: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-e328a8d3.
+Governance review 758: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-6d87f0f5.
 
-Incident cross-reference 759: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-978c3cca.
+Incident cross-reference 759: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-49bf4709.
 
-Media-ingest log 760: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-45a78ed5.
+Media-ingest log 760: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-540cd9ef.
 
-Audit-ledger commentary 761: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-514d4ca3.
+Audit-ledger commentary 761: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-660897bf.
 
-Nonce-uniqueness memo 762: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2ea5f329.
+Nonce-uniqueness memo 762: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-1db0341b.
 
-Key-rotation briefing 763: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-73225913.
+Key-rotation briefing 763: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0caacb1a.
 
-Forensic background 764: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-ef6a9f9f.
+Forensic background 764: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-edaf2bf4.
 
-Reviewer checklist item 765: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-a979a627.
+Reviewer checklist item 765: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-2eb32877.
 
-Stakeholder summary 766: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-c0a21fc0.
+Stakeholder summary 766: team-vault owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-3a0894f8.
 
-Telemetry cross-check 767: monitoring ticket MON-00767 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-063d295f.
+Telemetry cross-check 767: monitoring ticket MON-00767 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e1ea6907.
 
-Cipher review 768: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-9b75e6fc.
+Cipher review 768: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-eeee008d.
 
-Appendix cross-ref 769: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-fc93be71.
+Appendix cross-ref 769: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-ee49a098.
 
-Vault ceremony 770: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-b099fa86.
+Vault ceremony 770: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-952db0b9.
 
-Chain-of-custody note 771 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0771 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-305ebc7e.
+Chain-of-custody note 771 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0771 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-7de157a6.
 
-Governance review 772: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-f151dce8.
+Governance review 772: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-c249a299.
 
-Incident cross-reference 773: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-92236397.
+Incident cross-reference 773: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-140cc064.
 
-Media-ingest log 774: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b4913a8b.
+Media-ingest log 774: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-755fac67.
 
-Audit-ledger commentary 775: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9641e58f.
+Audit-ledger commentary 775: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9dbc18de.
 
-Nonce-uniqueness memo 776: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-9fa11e17.
+Nonce-uniqueness memo 776: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-24ad9130.
 
-Key-rotation briefing 777: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c5e94651.
+Key-rotation briefing 777: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-3f2dd8ba.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Forensic background 778: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-c1ddfea1.
+Forensic background 778: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-5e5c9159.
 
-Reviewer checklist item 779: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-5323c6a9.
+Reviewer checklist item 779: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-e3c4115e.
 
-Stakeholder summary 780: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-fe435a8d.
+Stakeholder summary 780: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-69b0cf01.
 
-Telemetry cross-check 781: monitoring ticket MON-00781 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-5a3a0664.
+Telemetry cross-check 781: monitoring ticket MON-00781 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-960696f9.
 
-Cipher review 782: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b3173881.
+Cipher review 782: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-228d3635.
 
-Appendix cross-ref 783: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-425c691e.
+Appendix cross-ref 783: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-8332d8a0.
 
-Vault ceremony 784: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-375f03a1.
+Vault ceremony 784: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-313e7760.
 
-Chain-of-custody note 785 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0785 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-af730753.
+Chain-of-custody note 785 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0785 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-e43f4d54.
 
-Governance review 786: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-6a12e6a1.
+Governance review 786: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-74d8e84c.
 
-Incident cross-reference 787: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-ed827153.
+Incident cross-reference 787: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-203faf2f.
 
-Media-ingest log 788: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-3f8b5345.
+Media-ingest log 788: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-1889699b.
 
-Audit-ledger commentary 789: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-e4df0575.
+Audit-ledger commentary 789: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-05d9f746.
 
-Nonce-uniqueness memo 790: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-b417e070.
+Nonce-uniqueness memo 790: default nonces for frm-023 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-0acdc39e.
 
-Key-rotation briefing 791: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-8c0dce4a.
+Key-rotation briefing 791: when frm-024 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-74d96bc2.
 
 Forensic background 792: incident response playbook work on alpha-channel (frm-001) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-1f28c73e.
 
@@ -1665,200 +1665,200 @@ Vault ceremony 812: channel frm-021 (victor-channel) was enrolled under the vaul
 
 Chain-of-custody note 813 for frm-022: the GIF extension block labelled MRNR/CRYPTO1 on index 22 is the authoritative ciphertext carrier for whiskey-channel. Earlier draft captures in ticket FORE-0813 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f72320bc.
 
-Governance review 814: GIF steganography review policy for frm-001 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-1d4197b0.
+Governance review 814: GIF steganography review policy for frm-023 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-5d967bf9.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Incident cross-reference 815: during AES-GCM authentication tag handling triage on frm-002, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c0392310.
+Incident cross-reference 815: during AES-GCM authentication tag handling triage on frm-024, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-49787bb9.
 
-Media-ingest log 816: frame frm-003 at GIF index 2 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-cc7650bd.
+Media-ingest log 816: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-75d660c1.
 
-Audit-ledger commentary 817: SQLite rows for frm-004 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-ad257139.
+Audit-ledger commentary 817: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7d61fca2.
 
-Nonce-uniqueness memo 818: default nonces for frm-005 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-b9968da9.
+Nonce-uniqueness memo 818: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-96ab7804.
 
-Key-rotation briefing 819: when frm-006 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-2cae725c.
+Key-rotation briefing 819: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-0b2c870f.
 
-Forensic background 820: incident response playbook work on golf-channel (frm-007) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f2f16ffe.
+Forensic background 820: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-ece70c65.
 
-Reviewer checklist item 821: confirm frm-008 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the hotel-channel payload embedded at GIF index 8. Ref: FORE-c927c2bf.
+Reviewer checklist item 821: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-c375a335.
 
-Stakeholder summary 822: team-vault owns remediation for frm-009. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-bed7eae0.
+Stakeholder summary 822: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-050dd39a.
 
-Telemetry cross-check 823: monitoring ticket MON-00823 for frm-010 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-2b989b33.
+Telemetry cross-check 823: monitoring ticket MON-00823 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-af894d31.
 
-Cipher review 824: AES-256-GCM on frm-011 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-0bb35f3e.
+Cipher review 824: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b9f03bf0.
 
-Appendix cross-ref 825: readers reconciling frm-012 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0f5417e9.
+Appendix cross-ref 825: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-aaabffb1.
 
-Vault ceremony 826: channel frm-013 (mike-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-928776ac.
+Vault ceremony 826: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-e973781f.
 
-Chain-of-custody note 827 for frm-014: the GIF extension block labelled MRNR/CRYPTO1 on index 14 is the authoritative ciphertext carrier for november-channel. Earlier draft captures in ticket FORE-0827 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-75cff2a8.
+Chain-of-custody note 827 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0827 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-65bbdd48.
 
-Governance review 828: GIF steganography review policy for frm-015 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-dc60ef88.
+Governance review 828: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-9c5922a7.
 
-Incident cross-reference 829: during AES-GCM authentication tag handling triage on frm-016, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-b9d16859.
+Incident cross-reference 829: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-c5d7d401.
 
-Media-ingest log 830: frame frm-017 at GIF index 17 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-5d1ef78b.
+Media-ingest log 830: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e72702a1.
 
-Audit-ledger commentary 831: SQLite rows for frm-018 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-d69295e4.
+Audit-ledger commentary 831: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7ffe16ba.
 
-Nonce-uniqueness memo 832: default nonces for frm-019 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-c1ce5294.
+Nonce-uniqueness memo 832: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-0c3b83e4.
 
-Key-rotation briefing 833: when frm-020 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-171ae3e7.
+Key-rotation briefing 833: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-9f6bf508.
 
-Forensic background 834: incident response playbook work on victor-channel (frm-021) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-57afa8c1.
+Forensic background 834: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-73cb3dd7.
 
-Reviewer checklist item 835: confirm frm-022 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the whiskey-channel payload embedded at GIF index 22. Ref: FORE-bfb1d280.
+Reviewer checklist item 835: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-5c40a4ac.
 
-Stakeholder summary 836: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-133c086d.
+Stakeholder summary 836: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-b47e614c.
 
-Telemetry cross-check 837: monitoring ticket MON-00837 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-610f482b.
+Telemetry cross-check 837: monitoring ticket MON-00837 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-75511851.
 
-Cipher review 838: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-3b86d157.
+Cipher review 838: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-8075281e.
 
-Appendix cross-ref 839: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-0e6b6769.
+Appendix cross-ref 839: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-68b61c81.
 
-Vault ceremony 840: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-52e8fda2.
+Vault ceremony 840: channel frm-001 (alpha-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-3b584c41.
 
-Chain-of-custody note 841 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0841 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-0e4ec2e1.
+Chain-of-custody note 841 for frm-002: the GIF extension block labelled MRNR/CRYPTO1 on index 1 is the authoritative ciphertext carrier for bravo-channel. Earlier draft captures in ticket FORE-0841 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-cc7dc766.
 
-Governance review 842: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-90c97b68.
+Governance review 842: GIF steganography review policy for frm-003 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-03caee96.
 
-Incident cross-reference 843: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-ea01b654.
+Incident cross-reference 843: during AES-GCM authentication tag handling triage on frm-004, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-64af0978.
 
-Media-ingest log 844: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c5b28800.
+Media-ingest log 844: frame frm-005 at GIF index 5 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-372338ae.
 
-Audit-ledger commentary 845: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-01a57cd4.
+Audit-ledger commentary 845: SQLite rows for frm-006 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-ca03f142.
 
-Nonce-uniqueness memo 846: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-35a13508.
+Nonce-uniqueness memo 846: default nonces for frm-007 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-2f879c86.
 
-Key-rotation briefing 847: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-943cbed0.
+Key-rotation briefing 847: when frm-008 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-4b591bc3.
 
-Forensic background 848: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-330c3813.
+Forensic background 848: incident response playbook work on india-channel (frm-009) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-73828940.
 
-Reviewer checklist item 849: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-ef6754ad.
+Reviewer checklist item 849: confirm frm-010 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the juliet-channel payload embedded at GIF index 10. Ref: FORE-517bc372.
 
-Stakeholder summary 850: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-6f640661.
+Stakeholder summary 850: team-vault owns remediation for frm-011. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2447a968.
 
-Telemetry cross-check 851: monitoring ticket MON-00851 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-ad68528b.
+Telemetry cross-check 851: monitoring ticket MON-00851 for frm-012 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-a1ec1011.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Cipher review 852: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-310c23e6.
+Cipher review 852: AES-256-GCM on frm-013 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-ba1a25be.
 
-Appendix cross-ref 853: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-89089bde.
+Appendix cross-ref 853: readers reconciling frm-014 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-28371a10.
 
-Vault ceremony 854: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-1ec5fb3e.
+Vault ceremony 854: channel frm-015 (oscar-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-72b2ec5b.
 
-Chain-of-custody note 855 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0855 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-c911dd13.
+Chain-of-custody note 855 for frm-016: the GIF extension block labelled MRNR/CRYPTO1 on index 16 is the authoritative ciphertext carrier for papa-channel. Earlier draft captures in ticket FORE-0855 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-83ff512c.
 
-Governance review 856: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-d5f31f61.
+Governance review 856: GIF steganography review policy for frm-017 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-361a7b10.
 
-Incident cross-reference 857: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-e9820bd1.
+Incident cross-reference 857: during AES-GCM authentication tag handling triage on frm-018, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-4448b76d.
 
-Media-ingest log 858: frame frm-001 at GIF index 0 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-11ed2d73.
+Media-ingest log 858: frame frm-019 at GIF index 19 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-7395b665.
 
-Audit-ledger commentary 859: SQLite rows for frm-002 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-9200230c.
+Audit-ledger commentary 859: SQLite rows for frm-020 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-bf790242.
 
-Nonce-uniqueness memo 860: default nonces for frm-003 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4c4ab72c.
+Nonce-uniqueness memo 860: default nonces for frm-021 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-4a582e59.
 
-Key-rotation briefing 861: when frm-004 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-e01dd8ae.
+Key-rotation briefing 861: when frm-022 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-98ed70ce.
 
-Forensic background 862: incident response playbook work on echo-channel (frm-005) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-4622b7ae.
+Forensic background 862: incident response playbook work on xray-channel (frm-023) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-18a3e06a.
 
-Reviewer checklist item 863: confirm frm-006 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the foxtrot-channel payload embedded at GIF index 6. Ref: FORE-c214778f.
+Reviewer checklist item 863: confirm frm-024 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the yankee-channel payload embedded at GIF index 24. Ref: FORE-9ac4a4e6.
 
-Stakeholder summary 864: team-vault owns remediation for frm-007. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-daf79181.
+Stakeholder summary 864: team-vault owns remediation for frm-001. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-2fcd2467.
 
-Telemetry cross-check 865: monitoring ticket MON-00865 for frm-008 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-08e5f1a3.
+Telemetry cross-check 865: monitoring ticket MON-00865 for frm-002 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-e37ed1bc.
 
-Cipher review 866: AES-256-GCM on frm-009 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-a8d5746b.
+Cipher review 866: AES-256-GCM on frm-003 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-d183bccc.
 
-Appendix cross-ref 867: readers reconciling frm-010 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-8579dc27.
+Appendix cross-ref 867: readers reconciling frm-004 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-937908c3.
 
-Vault ceremony 868: channel frm-011 (kilo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-32ae4907.
+Vault ceremony 868: channel frm-005 (echo-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-aef71728.
 
-Chain-of-custody note 869 for frm-012: the GIF extension block labelled MRNR/CRYPTO1 on index 12 is the authoritative ciphertext carrier for lima-channel. Earlier draft captures in ticket FORE-0869 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-5f9272f3.
+Chain-of-custody note 869 for frm-006: the GIF extension block labelled MRNR/CRYPTO1 on index 6 is the authoritative ciphertext carrier for foxtrot-channel. Earlier draft captures in ticket FORE-0869 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-207335fd.
 
-Governance review 870: GIF steganography review policy for frm-013 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-8978c3a3.
+Governance review 870: GIF steganography review policy for frm-007 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-d111f7df.
 
-Incident cross-reference 871: during AES-GCM authentication tag handling triage on frm-014, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-df686513.
+Incident cross-reference 871: during AES-GCM authentication tag handling triage on frm-008, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-2dd0a233.
 
-Media-ingest log 872: frame frm-015 at GIF index 15 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-bec979e7.
+Media-ingest log 872: frame frm-009 at GIF index 9 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b0e584c9.
 
-Audit-ledger commentary 873: SQLite rows for frm-016 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-7694be24.
+Audit-ledger commentary 873: SQLite rows for frm-010 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-98123a41.
 
-Nonce-uniqueness memo 874: default nonces for frm-017 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-db288a23.
+Nonce-uniqueness memo 874: default nonces for frm-011 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-e17d89e1.
 
-Key-rotation briefing 875: when frm-018 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-53d53ba2.
+Key-rotation briefing 875: when frm-012 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-caa5098c.
 
-Forensic background 876: incident response playbook work on tango-channel (frm-019) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-ec5fea23.
+Forensic background 876: incident response playbook work on mike-channel (frm-013) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-26cd5ed0.
 
-Reviewer checklist item 877: confirm frm-020 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the uniform-channel payload embedded at GIF index 20. Ref: FORE-67a72516.
+Reviewer checklist item 877: confirm frm-014 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the november-channel payload embedded at GIF index 14. Ref: FORE-57a8dffe.
 
-Stakeholder summary 878: team-vault owns remediation for frm-021. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-4f069fb3.
+Stakeholder summary 878: team-vault owns remediation for frm-015. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-968e099d.
 
-Telemetry cross-check 879: monitoring ticket MON-00879 for frm-022 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-6e2b707d.
+Telemetry cross-check 879: monitoring ticket MON-00879 for frm-016 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3e79c325.
 
-Cipher review 880: AES-256-GCM on frm-001 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-cebcfce7.
+Cipher review 880: AES-256-GCM on frm-017 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-889d126f.
 
-Appendix cross-ref 881: readers reconciling frm-002 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-a63c5955.
+Appendix cross-ref 881: readers reconciling frm-018 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-d2e91360.
 
-Vault ceremony 882: channel frm-003 (charlie-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-e80423f6.
+Vault ceremony 882: channel frm-019 (tango-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-a79a9ad5.
 
-Chain-of-custody note 883 for frm-004: the GIF extension block labelled MRNR/CRYPTO1 on index 4 is the authoritative ciphertext carrier for delta-channel. Earlier draft captures in ticket FORE-0883 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-a6e72dfb.
+Chain-of-custody note 883 for frm-020: the GIF extension block labelled MRNR/CRYPTO1 on index 20 is the authoritative ciphertext carrier for uniform-channel. Earlier draft captures in ticket FORE-0883 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-24821416.
 
-Governance review 884: GIF steganography review policy for frm-005 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-c0633132.
+Governance review 884: GIF steganography review policy for frm-021 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-f4ce3a32.
 
-Incident cross-reference 885: during AES-GCM authentication tag handling triage on frm-006, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-2e439181.
+Incident cross-reference 885: during AES-GCM authentication tag handling triage on frm-022, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-5ffb7d65.
 
-Media-ingest log 886: frame frm-007 at GIF index 7 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-e3ef6fad.
+Media-ingest log 886: frame frm-023 at GIF index 23 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-c6372dae.
 
-Audit-ledger commentary 887: SQLite rows for frm-008 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-d1efbbf0.
+Audit-ledger commentary 887: SQLite rows for frm-024 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-ed12c19a.
 
-Nonce-uniqueness memo 888: default nonces for frm-009 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-778484bb.
+Nonce-uniqueness memo 888: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-0156de95.
 Review date: 2026-07-15. (Superseded draft circulation — not operative.)
 
-Key-rotation briefing 889: when frm-010 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-7e0c9808.
+Key-rotation briefing 889: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-8ea4bb5d.
 
-Forensic background 890: incident response playbook work on kilo-channel (frm-011) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-f08e8b99.
+Forensic background 890: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-92313a96.
 
-Reviewer checklist item 891: confirm frm-012 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the lima-channel payload embedded at GIF index 12. Ref: FORE-a382a5ae.
+Reviewer checklist item 891: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-ac56d874.
 
-Stakeholder summary 892: team-vault owns remediation for frm-013. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ff13bcee.
+Stakeholder summary 892: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-ed7fec18.
 
-Telemetry cross-check 893: monitoring ticket MON-00893 for frm-014 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-3c9b178a.
+Telemetry cross-check 893: monitoring ticket MON-00893 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-38ba699d.
 
-Cipher review 894: AES-256-GCM on frm-015 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-4866ff8c.
+Cipher review 894: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-b2334ca8.
 
-Appendix cross-ref 895: readers reconciling frm-016 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-942cbf91.
+Appendix cross-ref 895: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-604dff09.
 
-Vault ceremony 896: channel frm-017 (quebec-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-a872bf21.
+Vault ceremony 896: channel frm-009 (india-channel) was enrolled under the vault ceremony programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings. Ref: FORE-011cd7d7.
 
-Chain-of-custody note 897 for frm-018: the GIF extension block labelled MRNR/CRYPTO1 on index 18 is the authoritative ciphertext carrier for sierra-channel. Earlier draft captures in ticket FORE-0897 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-f1e8de99.
+Chain-of-custody note 897 for frm-010: the GIF extension block labelled MRNR/CRYPTO1 on index 10 is the authoritative ciphertext carrier for juliet-channel. Earlier draft captures in ticket FORE-0897 are explicitly superseded and must not be substituted during JDBC correlation. Ref: FORE-52ab234c.
 
-Governance review 898: GIF steganography review policy for frm-019 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-d40e5a40.
+Governance review 898: GIF steganography review policy for frm-011 requires that any key_rotated event's replacement_key_version take precedence over a later key_assigned row that merely restates an unrelated version number. Ref: FORE-3d255a23.
 
-Incident cross-reference 899: during AES-GCM authentication tag handling triage on frm-020, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-305ed5ae.
+Incident cross-reference 899: during AES-GCM authentication tag handling triage on frm-012, analysts confirmed the AES-256-GCM tag length is 16 bytes and the nonce length is 12 bytes per /app/config/crypto.toml — these parameters are not re-stated in the findings table and must be read from the validated config. Ref: FORE-2b70e51d.
 
-Media-ingest log 900: frame frm-021 at GIF index 21 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-b03d62e0.
+Media-ingest log 900: frame frm-013 at GIF index 13 passed structural validation before cryptographic review. The review grades authentication outcomes only after the correct key version and nonce are resolved; structural validity alone is insufficient for a signed finding. Ref: FORE-7dacf807.
 
-Audit-ledger commentary 901: SQLite rows for frm-022 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-4ca7795d.
+Audit-ledger commentary 901: SQLite rows for frm-014 must be ordered by recorded_at when applying precedence, never by auto-increment event_id. The seed load deliberately scrambles insert order to catch naive readers. Ref: FORE-968559fb.
 
-Nonce-uniqueness memo 902: default nonces for frm-001 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-83a29294.
+Nonce-uniqueness memo 902: default nonces for frm-015 derive from SHA-256(frame_id + ':' + key_version) truncated to 12 bytes unless Appendix D names an explicit override — derived values must not be guessed from prior frames. Ref: FORE-32740305.
 
-Key-rotation briefing 903: when frm-002 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-f9cb5af5.
+Key-rotation briefing 903: when frm-016 shows both assignment and rotation events, the rotation replacement is operative even if a subsequent assignment names a different version for an unrelated ceremony — see Appendix C.1. Ref: FORE-c2c9774b.
 
-Forensic background 904: incident response playbook work on charlie-channel (frm-003) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-76086b79.
+Forensic background 904: incident response playbook work on quebec-channel (frm-017) is informational only. Dispositive exception rules remain in Appendix C and Appendix D; this paragraph does not introduce new cryptographic requirements. Ref: FORE-28460745.
 
-Reviewer checklist item 905: confirm frm-004 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the delta-channel payload embedded at GIF index 4. Ref: FORE-e945a3b1.
+Reviewer checklist item 905: confirm frm-018 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the sierra-channel payload embedded at GIF index 18. Ref: FORE-06349b5c.
 
-Stakeholder summary 906: team-vault owns remediation for frm-005. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-702ecb9d.
+Stakeholder summary 906: team-vault owns remediation for frm-019. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced. Ref: FORE-5be3f20b.
 
-Telemetry cross-check 907: monitoring ticket MON-00907 for frm-006 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-a31ddc89.
+Telemetry cross-check 907: monitoring ticket MON-00907 for frm-020 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values. Ref: FORE-09411577.
 
-Cipher review 908: AES-256-GCM on frm-007 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-e05b6ebf.
+Cipher review 908: AES-256-GCM on frm-021 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory. Ref: FORE-5f97eff4.
 
-Appendix cross-ref 909: readers reconciling frm-008 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-dc0a1eb5.
+Appendix cross-ref 909: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone. Ref: FORE-9e833a55.
 
 ## Appendix C (draft — superseded April 2026 circulation)
 
@@ -2228,6 +2228,38 @@ Cipher review 224: AES-256-GCM on frm-022 uses vault key version material from t
 
 Appendix cross-ref 225: readers reconciling frm-022 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone.
 
+### frm-023 — xray-channel
+
+GIF index 23. Application extension MRNR/CRYPTO1.
+
+Reviewer checklist item 230: confirm frm-023 AAD binding uses frame_id as documented in /app/config/policy.yaml before attempting GCM decryption of the xray-channel payload embedded at GIF index 23.
+
+Stakeholder summary 231: team-forensics owns remediation for frm-023. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced.
+
+Telemetry cross-check 232: monitoring ticket MON-00232 for frm-023 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values.
+
+Cipher review 233: AES-256-GCM on frm-023 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory.
+
+Appendix cross-ref 234: readers reconciling frm-023 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone.
+
+Vault ceremony 235: channel frm-023 (xray-channel) was enrolled under the HSM provisioning audit programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings.
+
+### frm-024 — yankee-channel
+
+GIF index 24. Application extension MRNR/CRYPTO1.
+
+Stakeholder summary 240: team-media owns remediation for frm-024. Ownership does not relax nonce or key-version precedence; it only routes follow-up work after the signed findings are reproduced.
+
+Telemetry cross-check 241: monitoring ticket MON-00241 for frm-024 showed no decryption attempts using superseded material after the review date 2026-06-01. Reproduction must still use the historical operative values.
+
+Cipher review 242: AES-256-GCM on frm-024 uses vault key version material from the key_material table. Keys are never embedded in the GIF or the narrative; JDBC lookup is mandatory.
+
+Appendix cross-ref 243: readers reconciling frm-024 should start with Appendix A for scope, Appendix B for event-type index, Appendix C for precedence, and Appendix D for nonce overrides — no single section is sufficient alone.
+
+Vault ceremony 244: channel frm-024 (yankee-channel) was enrolled under the forensic media ingestion programme. Operators recorded multiple audit events across May 2026; only the operative key version and nonce pairing that survives Appendix C precedence may be used when reproducing the signed findings.
+
+Chain-of-custody note 245 for frm-024: the GIF extension block labelled MRNR/CRYPTO1 on index 24 is the authoritative ciphertext carrier for yankee-channel. Earlier draft captures in ticket FORE-0245 are explicitly superseded and must not be substituted during JDBC correlation.
+
 ## Appendix B — Audit timeline (narrative index)
 
 Chronological facts and field values are authoritative only in SQLite.
@@ -2256,6 +2288,8 @@ key versions, rotation replacements, or nonce override bytes.
 - **frm-020**: `key_assigned`, `nonce_override_registered`, `nonce_override_registered`, `nonce_override_amended`, `nonce_override_amended`
 - **frm-021**: `key_assigned`, `key_rotated`, `key_rotation_rescinded`, `key_assigned`, `key_assignment_rescinded`, `key_rotated`, `key_rotation_rescinded`
 - **frm-022**: `key_assigned`, `nonce_override_registered`, `key_rotated`
+- **frm-023**: `key_assigned`, `nonce_override_registered`, `nonce_override_replaced`, `nonce_override_replacement_rescinded`, `nonce_override_replaced`
+- **frm-024**: `key_assigned`, `nonce_override_registered`, `key_rotated`, `nonce_override_registered`, `nonce_override_replaced`, `key_rotated`, `nonce_override_registered`
 
 ## Appendix C — Normative cryptographic exception precedence
 
@@ -2317,6 +2351,19 @@ before choosing the greatest `recorded_at`.
    at that timestamp. A later `nonce_override_registered` row may register
    the same bytes again — re-registration after amendment is operative and
    must not be treated as permanently void.
+
+   A `nonce_override_replaced` event voids every prior registration whose
+   `nonce_override_hex` equals the replacement's `supersedes_nonce_hex`, then
+   introduces the replacement's own `nonce_override_hex` as a new eligible row
+   at that timestamp.
+
+   A `nonce_override_replacement_rescinded` event voids the replacement row
+   whose `nonce_override_hex` equals the rescission's `supersedes_nonce_hex`,
+   then re-introduces the rescission's `nonce_override_hex` as an eligible row
+   — restoring the pre-replacement bytes without treating them as revoked.
+   A later `nonce_override_replaced` event may supersede the restored bytes
+   again; only the final surviving replacement chain determines the operative
+   DB override.
 3. **derived_sha256_prefix** — otherwise derive the nonce as the first 12 bytes
    of SHA-256(frame_id + ':' + key_version).
 

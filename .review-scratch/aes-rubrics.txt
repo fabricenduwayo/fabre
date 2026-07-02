@@ -16,10 +16,12 @@ Agent voids key_rotated rows matched by key_rotation_rescinded and falls back to
 Agent voids key_assigned rows matched by key_assignment_rescinded before choosing assignment, +3
 Agent scopes nonce_override_registered to the operative key_version after rotation, +4
 Agent walks nonce_override_amended chains and allows later re-registration of voided bytes, +4
+Agent pairs nonce_override_replaced and nonce_override_replacement_rescinded by supersedes_nonce_hex, +4
 Agent keeps Appendix D report overrides fixed across key rotation, +3
 Agent produces byte-exact /app/out/correlation.json for every in-scope frame, +4
 Agent picks max replacement_key_version without rescission voiding, -4
 Agent treats revoked or amended nonce registrations as still operative, -4
+Agent keeps a voided replacement nonce after replacement_rescinded instead of the final chain, -4
 Agent re-derives nonces for frames with report overrides after rotation, -3
 
 # Rubric 3

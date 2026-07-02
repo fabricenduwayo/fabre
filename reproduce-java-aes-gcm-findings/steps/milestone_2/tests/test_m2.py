@@ -234,6 +234,24 @@ class TestMilestone2Correlate:
         assert got["frm-022"]["nonce_hex"] == "E1F2A3B4C5D67890ABCDEF01"
         assert got["frm-022"]["nonce_hex"] != "FACEFACEFACEFACEFACEFACE"
 
+    def test_frm023_replacement_rescission_chain(self, produced) -> None:
+        """frm-023 must survive replacement, rescission, and a second replacement."""
+        got = {r["frame_id"]: r for r in produced}
+        assert got["frm-023"]["key_version"] == 2
+        assert got["frm-023"]["nonce_source"] == "override"
+        assert got["frm-023"]["nonce_hex"] == "3C4D5E6F708192A3B4C5D6E7"
+        assert got["frm-023"]["nonce_hex"] != "2B3C4D5E6F708192A3B4C5D6"
+        assert got["frm-023"]["nonce_hex"] != "1A2B3C4D5E6F708192A3B4C5"
+
+    def test_frm024_rotation_voids_replacement_scoped_nonce(self, produced) -> None:
+        """frm-024 must use the v5 override after rotation, not the v4 replacement."""
+        got = {r["frame_id"]: r for r in produced}
+        assert got["frm-024"]["key_version"] == 5
+        assert got["frm-024"]["key_source"] == "rotation_replacement"
+        assert got["frm-024"]["nonce_source"] == "override"
+        assert got["frm-024"]["nonce_hex"] == "708192A3B4C5D6E7F8091A2B"
+        assert got["frm-024"]["nonce_hex"] != "6F708192A3B4C5D6E7F8091A"
+
     def test_matches_expected_correlation(self, produced, expected) -> None:
         """Full correlation must match ground truth."""
         got = {r["frame_id"]: r for r in produced}

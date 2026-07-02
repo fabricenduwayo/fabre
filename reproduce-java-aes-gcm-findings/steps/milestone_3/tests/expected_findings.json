@@ -262,5 +262,29 @@
     "auth_ok": true,
     "plaintext_sha256": "153b19596319ca0312b47851616c3adddda7555b19615967f23233497a5add19",
     "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-023",
+    "label": "xray-channel",
+    "gif_index": 23,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "3C4D5E6F708192A3B4C5D6E7",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "907774b76d73ef41c6995fb2fdaa2c4f41215594437341966631eef4dcd9e7e0",
+    "reason_code": "authenticated"
+  },
+  {
+    "frame_id": "frm-024",
+    "label": "yankee-channel",
+    "gif_index": 24,
+    "key_version": 5,
+    "key_source": "rotation_replacement",
+    "nonce_hex": "708192A3B4C5D6E7F8091A2B",
+    "nonce_source": "override",
+    "auth_ok": true,
+    "plaintext_sha256": "bc0bb2099ff8b1dc81f464a7bb42d43e61e4cadf1d3a4f99b585edbd0da2aaef",
+    "reason_code": "authenticated"
   }
 ]

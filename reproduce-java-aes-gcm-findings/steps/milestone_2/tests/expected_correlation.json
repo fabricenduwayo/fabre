@@ -196,5 +196,23 @@
     "key_source": "rotation_replacement",
     "nonce_hex": "E1F2A3B4C5D67890ABCDEF01",
     "nonce_source": "override"
+  },
+  {
+    "frame_id": "frm-023",
+    "label": "xray-channel",
+    "gif_index": 23,
+    "key_version": 2,
+    "key_source": "latest_assigned",
+    "nonce_hex": "3C4D5E6F708192A3B4C5D6E7",
+    "nonce_source": "override"
+  },
+  {
+    "frame_id": "frm-024",
+    "label": "yankee-channel",
+    "gif_index": 24,
+    "key_version": 5,
+    "key_source": "rotation_replacement",
+    "nonce_hex": "708192A3B4C5D6E7F8091A2B",
+    "nonce_source": "override"
   }
 ]

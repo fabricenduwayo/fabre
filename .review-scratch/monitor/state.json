@@ -36,22 +36,11 @@
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
-      "feedback_hash": "51894bf362e3d38c",
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "Revised `repair-flask-signalbox-configs` for the TRIVIAL difficulty gate and instruction sufficiency gaps, then resubmitted.\n\n## Root cause\nBoth frontier models passed 100% because the bulletin-folding spec was already fully enumerated in `instruction.md` and `failed_attempt_notes`, so agents could implement the resolver without missing interacting semantics.\n\n## Hardening: `inherit_when_from`\nAdded real interacting logic at the bulletin tail:\n\n- **BUL-AV** \u2014 yard-link add uses `base_when` + `inherit_when_from: [\"t_sw1_c\", \"t_sw3_f\"]` instead of a static `sw2: north` when map\n- **BUL-AZ / BUL-BA** \u2014 amend then static replace: composed when maps must be recomputed during fixpoints, then collapsed back to `{sw2: north}` for `route_locks` export\n- Glossary entries for `inherit_when_from` and `base_when`\n- Three new failed-attempt notes for common inherit mistakes\n\nAlso fixed `parse_detail` in `tests/helpers.py` and `solution/repair_cartridge.py` so `base_when` is parsed correctly (without it, BUL-AV would fail).\n\n## Instruction sufficiency fixes\nUpdated `instruction.md` to state:\n\n- `python3 /app/tools/play_shift.py` is the required entrypoint\n- Referee logs successful dispatches to `/app/data/dispatch.duckdb` (`dispatch_log` table)\n- `lock_corrections` effective_detail overrides (e.g. corrected release `hold_id`)\n- `inherit_when_from` / `base_when` cascade semantics\n\n## Tests & metadata\n- Three new inherit tests + updated prefix assertion in `test_requires_when_drops_yard_link_without_merged_f_seal_when`\n- `# platform-revision: 2026-06-30-r32` in Dockerfile\n- Updated `.submission-explanations.txt` and rubrics\n\n## Verification\n- Oracle: **1.0** (`harbor run -a oracle -p repair-flask-signalbox-configs`)\n- Static checks: **PASS**\n- Resubmit sent (not to reviewer)\n- Platform state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Hardened repair-flask-signalbox-configs for the python=>HARD gate by adding inherit_when_from/base_when bulletin tail logic (BUL-AV/AZ/BA) with glossary entries and failed-attempt notes; fixed parse_detail base_when handling in helpers.py and solution/repair_cartridge.py; aligned instruction.md with play_shift invocation, dispatch.duckdb logging, lock_corrections overrides, and inherit cascade semantics; added three inherit tests and updated a prefix assertion; bumped platform-revision to r32; refreshed submission explanations and rubrics.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Hardened repair-flask-signalbox-configs for the python=>HARD gate by adding inherit_when_from/base_when bulletin tail logic (BUL-AV/AZ/BA) with glossary entries and failed-attempt notes; fixed parse_detail base_when handling in helpers.py and solution/repair_cartridge.py; aligned instruction.md with play_shift invocation, dispatch.duckdb logging, lock_corrections overrides, and inherit cascade semantics; added three inherit tests and updated a prefix assertion; bumped platform-revision to r32; refreshed submission explanations and rubrics.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": "?? repair-flask-signalbox-configs/",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260701T043523Z.json",
-      "last_run": "2026-07-01T04:35:24.330880+00:00"
+      "feedback_hash": "3795a9b83ac1cc47",
+      "attempts": 1,
+      "status": "error",
+      "error": "Cursor agent run failed: ",
+      "last_run": "2026-07-02T02:47:15.135038+00:00"
     },
     "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": {
       "folder_name": "extend-maven-spring-awk-fixtures",

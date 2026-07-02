@@ -46,6 +46,13 @@ NONCE_FRM020_CCC = bytes.fromhex("C3D4E5F60718293A4B5C6D7E")
 NONCE_FRM020_DDD = bytes.fromhex("D4E5F60718293A4B5C6D7E8F")
 NONCE_OVERRIDE_FRM022 = bytes.fromhex("E1F2A3B4C5D67890ABCDEF01")
 NONCE_OVERRIDE_FRM022_DB = bytes.fromhex("FACEFACEFACEFACEFACEFACE")
+NONCE_FRM023_AAA = bytes.fromhex("1A2B3C4D5E6F708192A3B4C5")
+NONCE_FRM023_BBB = bytes.fromhex("2B3C4D5E6F708192A3B4C5D6")
+NONCE_FRM023_CCC = bytes.fromhex("3C4D5E6F708192A3B4C5D6E7")
+NONCE_FRM024_V2 = bytes.fromhex("4D5E6F708192A3B4C5D6E7F8")
+NONCE_FRM024_EEE = bytes.fromhex("5E6F708192A3B4C5D6E7F809")
+NONCE_FRM024_FFF = bytes.fromhex("6F708192A3B4C5D6E7F8091A")
+NONCE_FRM024_GGG = bytes.fromhex("708192A3B4C5D6E7F8091A2B")
 
 FRAMES: list[dict[str, Any]] = [
     {
@@ -312,6 +319,30 @@ FRAMES: list[dict[str, Any]] = [
         "key_source": "rotation_replacement",
         "nonce_source": "override",
         "nonce_override": NONCE_OVERRIDE_FRM022,
+    },
+    {
+        # DB-only: register A, replace A->B, rescind replacement (restore A),
+        # replace A->C — operative nonce is C, not B or the first registration.
+        "frame_id": "frm-023",
+        "label": "xray-channel",
+        "gif_index": 23,
+        "plaintext": b"EVIDENCE-XRAY-CONFIRMED",
+        "key_version": 2,
+        "key_source": "latest_assigned",
+        "nonce_source": "override",
+        "nonce_override": NONCE_FRM023_CCC,
+    },
+    {
+        # Rotation voids a replacement-scoped override; operative key v5 with a
+        # fresh v5 registration — keeping the v4 replacement bytes fails decrypt.
+        "frame_id": "frm-024",
+        "label": "yankee-channel",
+        "gif_index": 24,
+        "plaintext": b"EVIDENCE-YANKEE-CONFIRMED",
+        "key_version": 5,
+        "key_source": "rotation_replacement",
+        "nonce_source": "override",
+        "nonce_override": NONCE_FRM024_GGG,
     },
 ]
 
@@ -1093,6 +1124,118 @@ def build_audit_events() -> list[dict[str, Any]]:
         "recorded_at": "2026-05-20 12:00:00",
     })
 
+    # frm-023: replacement rescinded then replaced again — final bytes are C.
+    rows.append({
+        "frame_id": "frm-023",
+        "event_type": "key_assigned",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": None,
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-08 08:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-023",
+        "event_type": "nonce_override_registered",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM023_AAA.hex().upper(),
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-10 10:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-023",
+        "event_type": "nonce_override_replaced",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM023_BBB.hex().upper(),
+        "supersedes_nonce_hex": NONCE_FRM023_AAA.hex().upper(),
+        "recorded_at": "2026-05-14 12:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-023",
+        "event_type": "nonce_override_replacement_rescinded",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM023_AAA.hex().upper(),
+        "supersedes_nonce_hex": NONCE_FRM023_BBB.hex().upper(),
+        "recorded_at": "2026-05-18 14:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-023",
+        "event_type": "nonce_override_replaced",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM023_CCC.hex().upper(),
+        "supersedes_nonce_hex": NONCE_FRM023_AAA.hex().upper(),
+        "recorded_at": "2026-05-22 16:00:00",
+    })
+
+    # frm-024: v2 override, rotate to v4, replace v4 override, rotate to v5, v5 override.
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "key_assigned",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": None,
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-05 08:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "nonce_override_registered",
+        "key_version": 2,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM024_V2.hex().upper(),
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-08 09:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "key_rotated",
+        "key_version": 2,
+        "replacement_key_version": 4,
+        "nonce_override_hex": None,
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-12 10:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "nonce_override_registered",
+        "key_version": 4,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM024_EEE.hex().upper(),
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-15 11:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "nonce_override_replaced",
+        "key_version": 4,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM024_FFF.hex().upper(),
+        "supersedes_nonce_hex": NONCE_FRM024_EEE.hex().upper(),
+        "recorded_at": "2026-05-18 13:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "key_rotated",
+        "key_version": 4,
+        "replacement_key_version": 5,
+        "nonce_override_hex": None,
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-20 14:00:00",
+    })
+    rows.append({
+        "frame_id": "frm-024",
+        "event_type": "nonce_override_registered",
+        "key_version": 5,
+        "replacement_key_version": None,
+        "nonce_override_hex": NONCE_FRM024_GGG.hex().upper(),
+        "supersedes_nonce_hex": None,
+        "recorded_at": "2026-05-22 16:00:00",
+    })
+
     return rows
 
 
@@ -1207,6 +1350,20 @@ def db_override_candidates(
                 candidates = [c for c in candidates if c[1] != supersedes]
             if hx and hx not in revoked:
                 candidates.append((event["recorded_at"], hx, event["key_version"]))
+        elif event_type == "nonce_override_replaced":
+            supersedes = event.get("supersedes_nonce_hex")
+            hx = event["nonce_override_hex"]
+            if supersedes:
+                candidates = [c for c in candidates if c[1] != supersedes]
+            if hx and hx not in revoked:
+                candidates.append((event["recorded_at"], hx, event["key_version"]))
+        elif event_type == "nonce_override_replacement_rescinded":
+            voided = event.get("supersedes_nonce_hex")
+            restored = event.get("nonce_override_hex")
+            if voided:
+                candidates = [c for c in candidates if c[1] != voided]
+            if restored and restored not in revoked:
+                candidates.append((event["recorded_at"], restored, event["key_version"]))
 
     return [c for c in candidates if c[1] not in revoked]
 
