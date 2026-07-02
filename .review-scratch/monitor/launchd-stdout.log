@@ -333,3 +333,29 @@ Will auto-fix now: extend-maven-spring-awk-fixtures, repair-java-trailswitch-gra
 [2026-07-02T02:17:46Z] done extend-maven-spring-awk-fixtures agent_status=finished state_after=EVALUATION_PENDING
 [2026-07-02T02:17:46Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
 [2026-07-02T02:17:47Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T02:22:22Z] === 90-minute submission check start ===
+[2026-07-02T02:22:52Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T02:22:58Z] skip 6b30193a… state=EVALUATION_PENDING folder=extend-maven-spring-awk-fixtures
+[2026-07-02T02:22:58Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-02T02:22:58Z] skip f0e91036… state=EVALUATION_PENDING folder=repair-java-trailswitch-graph-rules
+[2026-07-02T02:22:58Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T02:22:58Z] skip 5ee796af… state=EVALUATION_PENDING folder=repair-cpp-setup-auditor
+[2026-07-02T02:22:58Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T02:22:58Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T02:22:58Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T02:22:58Z] state change: repair-express-trivia-worker: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T02:22:58Z] state change: repair-flask-signalbox-configs: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T02:22:58Z] state change: extend-maven-spring-awk-fixtures: NEEDS_REVISION -> EVALUATION_PENDING
+[2026-07-02T02:22:58Z] state change: repair-java-trailswitch-graph-rules: NEEDS_REVISION -> EVALUATION_PENDING
+[2026-07-02T02:22:58Z] status:
+States: EVALUATION_PENDING=3, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Changed since last run:
+  repair-express-trivia-worker: EVALUATION_PENDING -> NEEDS_REVISION
+  repair-flask-signalbox-configs: EVALUATION_PENDING -> NEEDS_REVISION
+  extend-maven-spring-awk-fixtures: NEEDS_REVISION -> EVALUATION_PENDING
+  repair-java-trailswitch-graph-rules: NEEDS_REVISION -> EVALUATION_PENDING
+Will auto-fix now: repair-express-trivia-worker, repair-flask-signalbox-configs, reproduce-java-aes-gcm-findings
+[2026-07-02T02:23:00Z] fix queue (3): repair-express-trivia-worker, repair-flask-signalbox-configs, reproduce-java-aes-gcm-findings
+[2026-07-02T02:23:00Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-02T02:23:00Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ EASY - Requires at least HARD for python
+[2026-07-02T02:23:00Z] triggering Composer fix for repair-express-trivia-worker

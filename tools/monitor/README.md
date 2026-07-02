@@ -1,8 +1,8 @@
 # Snorkel submission monitor (every 2 hours)
 
-Polls Terminus submissions **every 2 hours**. Each run sends a status text
+Polls Terminus submissions **every 90 minutes**. Each run sends a status text
 first (all states, changes since last run, what will be fixed, what needs
-manual UI edits), then auto-fixes up to `MAX_FIXES_PER_RUN` (default 3)
+manual UI edits), then auto-fixes up to `MAX_FIXES_PER_RUN` (default 8)
 `NEEDS_REVISION` tasks using Composer 2.5 via the Cursor SDK.
 
 Every agent run injects the current rules and docs:
@@ -31,7 +31,7 @@ Only `NEEDS_REVISION` tasks that pass all of:
 
 Skipped states: `EVALUATION_PENDING`, `REVIEW_PENDING`, `OFFERED`, `ACCEPTED`.
 
-## Run flow (every 2 hours)
+## Run flow (every 90 minutes)
 
 1. Status text to your phone before any work: state counts, state changes since
    the last run, the auto-fix queue, and the "finish in UI" list.
@@ -65,7 +65,7 @@ Verify `stb login` already works (Snorkel auth persists on disk).
 # Check submissions, write prompt preview, no agent call
 ./run-hourly.sh --dry-run
 
-# Live fix (max 3 tasks per run by default)
+# Live fix (max 8 tasks per run by default)
 ./run-hourly.sh
 ```
 

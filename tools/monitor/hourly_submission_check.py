@@ -631,13 +631,13 @@ def build_status_text(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Snorkel submission monitor (2-hourly)")
+    parser = argparse.ArgumentParser(description="Snorkel submission monitor (every 90 minutes)")
     parser.add_argument("--dry-run", action="store_true", help="Check only; do not call Cursor")
     parser.add_argument(
         "--max-fixes",
         type=int,
-        default=int(os.environ.get("MAX_FIXES_PER_RUN", "3")),
-        help="Max agent runs per invocation (remainder waits for the next 2-hour run)",
+        default=int(os.environ.get("MAX_FIXES_PER_RUN", "8")),
+        help="Max agent runs per invocation (remainder waits for the next 90-minute run)",
     )
     parser.add_argument(
         "--force",
@@ -652,7 +652,7 @@ def main() -> int:
     state["last_check"] = datetime.now(UTC).isoformat()
     save_state(state)
 
-    log("=== 2-hourly submission check start ===")
+    log("=== 90-minute submission check start ===")
     docker_ok = docker_ready()
     if not docker_ok:
         log("WARN: Docker not reachable — agent fixes deferred (oracle needs Docker)")
@@ -669,7 +669,7 @@ def main() -> int:
         notify_all(
             "Snorkel monitor: error",
             f"Could not list submissions: {exc}",
-            subtitle="2-hour check",
+            subtitle="90-min check",
         )
         return 1
 
@@ -691,7 +691,7 @@ def main() -> int:
     notify_all(
         "Snorkel monitor: status",
         status_text,
-        subtitle="2-hour check",
+        subtitle="90-min check",
     )
 
     if not fix_queue:
@@ -738,7 +738,7 @@ def main() -> int:
             notify_all(
                 "Snorkel monitor: error",
                 f"{item['folder_name']}: {exc}",
-                subtitle="2-hour check",
+                subtitle="90-min check",
             )
             sid = item["submission_id"]
             state.setdefault("runs", {})[sid] = {
@@ -762,8 +762,8 @@ def main() -> int:
     log(f"=== done — triggered {fixed} fix(es) ===")
     notify_all(
         "Snorkel monitor: run complete",
-        f"Fixed {fixed} of {len(fix_queue)} queued task(s). Next check in 2h.",
-        subtitle="2-hour check",
+        f"Fixed {fixed} of {len(fix_queue)} queued task(s). Next check in 90m.",
+        subtitle="90-min check",
     )
     return 0
 

@@ -67,7 +67,7 @@ launchctl enable "gui/$(id -u)/com.snorkel.submission-monitor"
 launchctl kickstart -k "gui/$(id -u)/com.snorkel.submission-monitor"
 
 echo ""
-echo "Installed. Schedule: every 2 hours + once at load."
+echo "Installed. Schedule: every 90 minutes + once at load."
 echo "Logs: $REPO_ROOT/.review-scratch/monitor/monitor.log"
 echo ""
 echo "Manual test (no agent call):  $MONITOR_DIR/run-hourly.sh --dry-run"

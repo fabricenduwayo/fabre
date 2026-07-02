@@ -74,11 +74,11 @@
       "last_run": "2026-07-02T02:10:10.236267+00:00"
     }
   },
-  "last_check": "2026-07-02T02:11:26.558918+00:00",
+  "last_check": "2026-07-02T02:22:22.441844+00:00",
   "last_queue": {
     "fix_queue": [
-      "extend-maven-spring-awk-fixtures",
-      "repair-java-trailswitch-graph-rules",
+      "repair-express-trivia-worker",
+      "repair-flask-signalbox-configs",
       "reproduce-java-aes-gcm-findings"
     ],
     "manual_ui": [],
@@ -89,17 +89,17 @@
         "reason": "manual_review_queue"
       }
     ],
-    "checked_at": "2026-07-02T02:11:55.974967+00:00"
+    "checked_at": "2026-07-02T02:22:58.325314+00:00"
   },
   "next_fix_allowed_after": "2026-07-01T05:35:24.345022+00:00",
   "last_states": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
-    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "EVALUATION_PENDING",
+    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "NEEDS_REVISION",
     "71323da7-976c-405b-9dcd-c24d83fa6102": "NEEDS_REVISION",
-    "3a48c644-09b8-4357-9466-403cb2674a1c": "EVALUATION_PENDING",
-    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": "NEEDS_REVISION",
+    "3a48c644-09b8-4357-9466-403cb2674a1c": "NEEDS_REVISION",
+    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": "EVALUATION_PENDING",
     "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "REVIEW_PENDING",
-    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "EVALUATION_PENDING",
     "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
     "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "EVALUATION_PENDING",
     "586f2352-d2c5-435f-a8dd-546725e95bc7": "OFFERED",

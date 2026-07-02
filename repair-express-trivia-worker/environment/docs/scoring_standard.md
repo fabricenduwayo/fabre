@@ -13,7 +13,7 @@ the Harbor referee API.
 
 Appendix G lists authoritative amendments. Where a body control and an amendment
 conflict, the amendment governs. Appendix H (amendments H-2026-01 through
-H-2026-26) governs the stewards' review reconciliation; every amendment in it
+H-2026-29) governs the stewards' review reconciliation; every amendment in it
 applies.
 
 ### 1.3 Ledger ordering
@@ -406,3 +406,38 @@ creates or restores a frozen paired snapshot (H-2026-19), even when the restored
 entry carries `paired_incident`. Reinstate does not re-evaluate
 `requires_incident`, `paired_incident`, or `mutex_incident` at reinstate time;
 primary eligibility is still decided at replay end per H-2026-10/14/16/17.
+
+### H-2026-27 — Primary max score after cap
+
+A surviving **primary** ruling may include optional integer `max_score_after`.
+During the primary pass, after adding `delta` to the named participant and before
+the per-step floor clamp from H-2026-09, cap that participant's `score` to
+`max_score_after` when it would exceed the limit — discard only the excess from
+this step. `correct_delta` is applied in full before the cap. An `amend` that
+omits `max_score_after` clears any cap on the incident. When H-2026-20 syncs a
+frozen deferred snapshot, copy `max_score_after` into the snapshot even though
+the cap itself applies only in the primary pass.
+
+### H-2026-28 — Offset player transfer
+
+A surviving **primary** ruling may include optional `offset_player` naming another
+participant in the provisional standings. During the primary pass, after applying
+`delta`, any `max_score_after` cap from H-2026-27 on the same ruling, and
+`correct_delta` to the incident's `player`, subtract from `offset_player`'s
+`score` the **applied score change** to `player` in that step (after the cap, not
+the nominal `delta`). Only `score` moves; `correct` is unchanged on the offset
+target. Apply the offset before the per-step floor checkpoint for both
+participants. An `amend` that omits `offset_player` clears any offset. At record
+time, the ruling is **void** when `offset_player` is absent from the provisional
+standings or equals the incident's `player`.
+
+### H-2026-29 — Deferred correct ceiling
+
+A deferred ruling (`applies_after_floor: true`) may include optional integer
+`correct_ceiling`. During the post-floor pass, before adding `correct_delta` to
+the named participant, cap the applied correct change so the participant's
+`correct` after the step does not exceed `correct_ceiling`. If the participant is
+already at or above the ceiling, apply **0** for that step's correct change.
+`delta` / `score_ceiling` handling is unchanged. An `amend` that omits
+`correct_ceiling` clears any ceiling on the incident. When H-2026-20 syncs a
+frozen deferred snapshot, copy `correct_ceiling` into the snapshot as well.

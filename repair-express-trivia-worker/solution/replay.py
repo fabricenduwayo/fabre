@@ -221,6 +221,28 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         else:
             score_ceiling = None
 
+        if op == "amend" and "max_score_after" not in ruling:
+            max_score_after = None
+        elif "max_score_after" in ruling:
+            max_score_after = int(ruling["max_score_after"])
+        else:
+            max_score_after = None
+
+        offset_player = ruling.get("offset_player")
+        if op == "amend" and "offset_player" not in ruling:
+            offset_player = None
+        if offset_player and (
+            offset_player not in by_player or offset_player == player
+        ):
+            continue
+
+        if op == "amend" and "correct_ceiling" not in ruling:
+            correct_ceiling = None
+        elif "correct_ceiling" in ruling:
+            correct_ceiling = int(ruling["correct_ceiling"])
+        else:
+            correct_ceiling = None
+
         entry = {
             "player": player,
             "delta": delta,
@@ -229,6 +251,9 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             "requires_incident": requires,
             "paired_incident": paired_incident,
             "score_ceiling": score_ceiling,
+            "max_score_after": max_score_after,
+            "offset_player": offset_player,
+            "correct_ceiling": correct_ceiling,
             "ruling_seq": ruling["ruling_seq"],
         }
         incidents[incident] = entry
@@ -261,12 +286,21 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             current = incidents[current].get("requires_incident")
         return True
 
-    def apply_adjustment(eff: dict) -> None:
+    def apply_primary(eff: dict) -> None:
         player = eff["player"]
         if player not in by_player:
             return
+        before = by_player[player]["score"]
         by_player[player]["score"] += eff["delta"]
         by_player[player]["correct"] += eff["correct_delta"]
+        applied = by_player[player]["score"] - before
+        cap = eff.get("max_score_after")
+        if cap is not None and by_player[player]["score"] > cap:
+            by_player[player]["score"] = cap
+            applied = cap - before
+        offset = eff.get("offset_player")
+        if offset and offset in by_player:
+            by_player[offset]["score"] -= applied
 
     def apply_deferred(eff: dict) -> None:
         player = eff["player"]
@@ -278,7 +312,12 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             headroom = ceiling - by_player[player]["score"]
             delta = 0 if headroom <= 0 else min(delta, headroom)
         by_player[player]["score"] += delta
-        by_player[player]["correct"] += eff["correct_delta"]
+        correct_delta = eff["correct_delta"]
+        correct_ceiling = eff.get("correct_ceiling")
+        if correct_ceiling is not None:
+            headroom = correct_ceiling - by_player[player]["correct"]
+            correct_delta = 0 if headroom <= 0 else min(correct_delta, headroom)
+        by_player[player]["correct"] += correct_delta
 
     def clamp_scores() -> None:
         for row in by_player.values():
@@ -304,8 +343,11 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         key=lambda eff: eff["ruling_seq"],
     )
     for eff in primaries:
-        apply_adjustment(eff)
+        apply_primary(eff)
         clamp_player(eff["player"])
+        offset = eff.get("offset_player")
+        if offset:
+            clamp_player(offset)
 
     clamp_scores()
 

@@ -251,12 +251,22 @@ def test_requires_incident_applies_when_dependency_active():
 
 
 def test_correct_delta_adjusts_tiebreak():
-    """Dave's +2 correct_delta must rank him above carol on the official transcript."""
-    proc = run_worker()
-    assert proc.returncode == 0, proc.stderr
-    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["dave"]["correct"] == 3
-    assert official["carol"]["correct"] == 2
+    """correct_delta must break TR-TIEBREAK ties when scores are equal."""
+    rows = simulate_standings(load_ledger_rows())
+    rulings = [
+        {"ruling_seq": 1, "incident": "INC-A", "op": "issue", "player": "carol", "delta": 7},
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "dave",
+            "delta": 0,
+            "correct_delta": 2,
+        },
+    ]
+    official = {r["player"]: r for r in reconcile_rulings(rows, rulings)}
+    assert official["carol"]["score"] == official["dave"]["score"]
+    assert official["dave"]["correct"] > official["carol"]["correct"]
     assert official["dave"]["rank"] < official["carol"]["rank"]
 
 
@@ -273,7 +283,7 @@ def test_amend_omit_resets_delta():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_primary_requires_active_at_replay_end():
@@ -406,7 +416,7 @@ def test_rescind_cascades_to_paired_incident():
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["alice"]["score"] == provisional["alice"]["score"] + 7
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_paired_incident_void_when_parent_missing():
@@ -519,7 +529,7 @@ def test_deferred_paired_snapshot_after_parent_rescind():
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["alice"]["score"] == provisional["alice"]["score"] + 7
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_amend_syncs_frozen_deferred_snapshot():
@@ -547,7 +557,7 @@ def test_supersede_blocks_dependency_at_record_time():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_demotion_clears_paired_frozen_snapshot():
@@ -557,7 +567,7 @@ def test_demotion_clears_paired_frozen_snapshot():
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["alice"]["score"] == provisional["alice"]["score"] + 7
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_deferred_score_ceiling_clamps_partial_delta():
@@ -593,7 +603,7 @@ def test_reinstate_does_not_clear_dependency_taint():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
     assert official["dave"]["score"] == provisional["dave"]["score"] + 4
 
 
@@ -618,7 +628,7 @@ def test_reinstated_deferred_rejoins_post_floor_pass():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
 
 
 def test_direct_rescind_drops_frozen_deferred_snapshot():
@@ -635,4 +645,77 @@ def test_reinstate_does_not_restore_cascade_removed_paired():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 18
+    assert official["carol"]["score"] == 21
+
+
+def test_primary_max_score_after_caps_applied_delta():
+    """max_score_after must discard primary score excess above the cap (H-2026-27)."""
+    rows = simulate_standings(load_ledger_rows())
+    provisional = {r["player"]: r for r in rows}
+    rulings = [
+        {"ruling_seq": 1, "incident": "INC-A", "op": "issue", "player": "carol", "delta": 9},
+        {
+            "ruling_seq": 2,
+            "incident": "INC-90",
+            "op": "issue",
+            "player": "carol",
+            "delta": 10,
+            "max_score_after": 20,
+        },
+    ]
+    official = {r["player"]: r for r in reconcile_rulings(rows, rulings)}
+    assert official["carol"]["score"] == provisional["carol"]["score"] + 12
+    assert official["carol"]["score"] == 20
+
+
+def test_offset_player_transfers_applied_score_change():
+    """offset_player must subtract the applied delta after max_score_after, not the nominal delta (H-2026-28)."""
+    rows = simulate_standings(load_ledger_rows())
+    provisional = {r["player"]: r for r in rows}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-X",
+            "op": "issue",
+            "player": "alice",
+            "delta": 20,
+            "max_score_after": 35,
+            "offset_player": "bob",
+        }
+    ]
+    official = {r["player"]: r for r in reconcile_rulings(rows, rulings)}
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["bob"]["score"] == 0
+
+
+def test_deferred_correct_ceiling_clamps_partial_correct_delta():
+    """INC-92 must add only +1 correct to dave because correct_ceiling 4 caps the +3 (H-2026-29)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    without_inc92 = [r for r in load_rulings() if r["incident"] != "INC-92"]
+    baseline = {
+        r["player"]: r
+        for r in reconcile_rulings(simulate_standings(load_ledger_rows()), without_inc92)
+    }
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["dave"]["correct"] == baseline["dave"]["correct"] + 1
+    assert official["dave"]["correct"] == 4
+
+
+def test_offset_player_void_when_target_not_in_standings():
+    """A ruling whose offset_player never appeared in provisional standings must stay void (H-2026-28)."""
+    rows = simulate_standings(load_ledger_rows())
+    provisional = {r["player"]: r for r in rows}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-X",
+            "op": "issue",
+            "player": "alice",
+            "delta": 5,
+            "offset_player": "zoe",
+        }
+    ]
+    official = {r["player"]: r for r in reconcile_rulings(rows, rulings)}
+    assert official["alice"]["score"] == provisional["alice"]["score"]
+    assert "zoe" not in official
