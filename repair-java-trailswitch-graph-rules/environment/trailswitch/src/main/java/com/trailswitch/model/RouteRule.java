@@ -5,4 +5,5 @@ public record RouteRule(
         String edgeId,
         int rulePriority,
         String lockSw1,
-        String lockSw2) {}
+        String lockSw2,
+        String ruleAction) {}

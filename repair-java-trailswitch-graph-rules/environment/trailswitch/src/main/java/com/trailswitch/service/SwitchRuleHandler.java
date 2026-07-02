@@ -26,14 +26,13 @@ public class SwitchRuleHandler {
             }
             if (ruleMatches(switches, rule)) {
                 locked.add(rule.edgeId());
-                edgeDecided.put(rule.edgeId(), true);
             }
+            edgeDecided.put(rule.edgeId(), true);
         }
         return locked;
     }
 
     private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {
-        // BUG: any single matching switch position triggers the lock (should require all).
         if (rule.lockSw1() != null
                 && switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
             return true;

@@ -9,9 +9,11 @@ it from source and SQL only — do not rely on manual playthroughs.
 - `stations` lists node ids (`A` depot through `E` arrival).
 - `edges` are directed rails. `requires_sw1` / `requires_sw2` list the switch
   positions that must be set for the edge to be traversable (`NULL` means any).
-- `route_rules` block edges when their `lock_sw1` / `lock_sw2` positions all match
-  the active switch lineup. Rules on the same edge are ordered by ascending
-  `rule_priority`; evaluate in that order and apply the first matching lock.
+- `route_rules` govern edge locks. Each row has `rule_action` of `lock` or `clear`.
+  Lock positions use conjunction: every non-null `lock_sw*` must match the active
+  lineup. Rules on the same edge are ordered by ascending `rule_priority`; evaluate
+  in that order and apply the first matching rule. A matching `lock` rule blocks the
+  edge; a matching `clear` rule leaves it open and stops further rules on that edge.
 
 ## API shape (keep intact)
 
@@ -25,13 +27,14 @@ the active locks and switch positions, return `"reachable": false` and an empty 
 ## Handler requirements
 
 `GraphPathRepository` must load outgoing edges with **parameterized** SQL only — no
-string concatenation of station ids into queries.
+string concatenation of station ids into queries. Route rules must load in ascending
+`rule_priority` order.
 
 `PathPlanner` must breadth-first search with a visited set and stop after depth 12.
 The seed graph contains a cycle (`E`→`C`); planning without a visited guard loops.
 
-`SwitchRuleHandler` must treat lock positions as a **conjunction** (all listed
-switches must match) and honor ascending `rule_priority` per edge.
+`SwitchRuleHandler` must honor ascending per-edge rule order, conjunction lock matching,
+and `clear` vs `lock` semantics from the graph model above.
 
 Rebuild with `bash /app/trailswitch/build.sh` and restart via
 `bash /app/trailswitch/start.sh` after edits. The service listens on

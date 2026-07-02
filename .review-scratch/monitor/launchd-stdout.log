@@ -330,3 +330,6 @@ Will auto-fix now: extend-maven-spring-awk-fixtures, repair-java-trailswitch-gra
 [2026-07-02T02:11:56Z] skipped 1 — exclusions / green gates / already fixed
 [2026-07-02T02:11:56Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
 [2026-07-02T02:11:56Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T02:17:46Z] done extend-maven-spring-awk-fixtures agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-02T02:17:46Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T02:17:47Z] triggering Composer fix for repair-java-trailswitch-graph-rules

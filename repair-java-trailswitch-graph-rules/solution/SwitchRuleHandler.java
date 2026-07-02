@@ -26,6 +26,10 @@ public class SwitchRuleHandler {
                 continue;
             }
             if (ruleMatches(switches, rule)) {
+                if ("clear".equalsIgnoreCase(rule.ruleAction())) {
+                    edgeDecided.put(rule.edgeId(), true);
+                    continue;
+                }
                 locked.add(rule.edgeId());
                 edgeDecided.put(rule.edgeId(), true);
             }

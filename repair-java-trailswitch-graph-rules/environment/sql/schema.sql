@@ -17,7 +17,8 @@ CREATE TABLE route_rules (
     edge_id TEXT NOT NULL REFERENCES edges(edge_id),
     rule_priority INTEGER NOT NULL,
     lock_sw1 TEXT,
-    lock_sw2 TEXT
+    lock_sw2 TEXT,
+    rule_action TEXT NOT NULL DEFAULT 'lock'
 );
 
 CREATE TABLE policy_expectations (

@@ -42,16 +42,22 @@
     "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": {
       "folder_name": "extend-maven-spring-awk-fixtures",
       "feedback_hash": "52baa11a4297cc49",
-      "attempts": 1,
-      "status": "dry_run",
-      "agent_status": "dry_run",
-      "agent_summary": "skipped",
-      "agent_report": {},
-      "git_diff_stat": "(dry run)",
-      "platform_state_after": "",
+      "attempts": 2,
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "Fixed the `extend-maven-spring-awk-fixtures` submission based on platform feedback.\n\n## Root cause\n\nThe oracle failed because Maven tried to download `exec-maven-plugin:3.1.0` at verifier time with no network (`allow_internet = false`). The image only ran `:help`, which wasn\u2019t enough for a reliable offline cache on the platform.\n\n## Changes\n\n1. **`environment/Dockerfile`** \u2014 Prefetch `exec-maven-plugin` pom and jar explicitly via `maven-dependency-plugin:get`, then run `:help`. Bumped `# platform-revision: 2026-07-02-r7` to bust platform cache.\n\n2. **`instruction.md`** \u2014 Added the requirements the quality checks flagged:\n   - Run `/app/dependency-audit/build.sh` to produce `/app/dependency-audit/app.jar`\n   - Packaged jar must contain seed SQL at `BOOT-INF/classes/data/seed-dependencies.sql`\n   - `GET /health` must return `{\"status\":\"ok\"}`\n   - Unknown build IDs should 404\n\n3. **`.submission-explanations.txt`** \u2014 Updated verification text to match.\n\n## Verification\n\n- `harbor run -a oracle -p extend-maven-spring-awk-fixtures --force-build` \u2192 **reward 1.0**\n- Static checks on resubmit \u2192 **PASS**\n- Platform state \u2192 **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Fixed the oracle failure by hardening offline Maven prefetch for exec-maven-plugin (pom + jar + help) in environment/Dockerfile and bumping platform-revision to 2026-07-02-r7. Updated instruction.md to state build.sh output at /app/dependency-audit/app.jar, BOOT-INF/classes/data/seed-dependencies.sql in the packaged jar, GET /health returning {\\\"status\\\":\\\"ok\\\"}, and 404 for unknown build ids. Refreshed .submission-explanations.txt verification paragraph. Committed, pushed, and resubmitted with static checks PASS.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Fixed the oracle failure by hardening offline Maven prefetch for exec-maven-plugin (pom + jar + help) in environment/Dockerfile and bumping platform-revision to 2026-07-02-r7. Updated instruction.md to state build.sh output at /app/dependency-audit/app.jar, BOOT-INF/classes/data/seed-dependencies.sql in the packaged jar, GET /health returning {\"status\":\"ok\"}, and 404 for unknown build ids. Refreshed .submission-explanations.txt verification paragraph. Committed, pushed, and resubmitted with static checks PASS.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": "(no git diff detected)",
+      "platform_state_after": "EVALUATION_PENDING",
       "issue": "see platform feedback in monitor log",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021009Z.json",
-      "last_run": "2026-07-02T02:10:09.600419+00:00"
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021745Z.json",
+      "last_run": "2026-07-02T02:17:46.413918+00:00"
     },
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
       "folder_name": "repair-java-trailswitch-graph-rules",

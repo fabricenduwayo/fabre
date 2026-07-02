@@ -29,6 +29,14 @@ def test_plan_reaches_arrival_terminal():
     assert result["cycle_guard"] is True
 
 
+def test_clearance_rule_opens_scenic_spur():
+    """A matching clear rule must unlock the spur before the direct junction leg is gated."""
+    result = plan("A", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["A", "C", "B", "D", "E"]
+    assert result["cycle_guard"] is True
+
+
 def test_route_lock_blocks_staging_spur():
     """Ascending-priority hold rule must lock the north spur when both switches are north."""
     result = plan("A", "E", {"sw1": "north", "sw2": "north"})
