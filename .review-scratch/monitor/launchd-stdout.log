@@ -313,3 +313,20 @@
 [2026-07-01T04:35:24Z] reached max fixes per run (1) — remainder waits for next hour
 [2026-07-01T04:35:24Z] next queued task after cooldown: repair-flask-signalbox-configs
 [2026-07-01T04:35:24Z] === done — triggered 1 fix(es) ===
+[2026-07-02T02:11:26Z] === 2-hourly submission check start ===
+[2026-07-02T02:11:50Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-02T02:11:50Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T02:11:50Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-07-02T02:11:52Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-02T02:11:55Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip 5ee796af… state=EVALUATION_PENDING folder=repair-cpp-setup-auditor
+[2026-07-02T02:11:55Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] status:
+States: EVALUATION_PENDING=3, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:11:56Z] fix queue (3): extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:11:56Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-02T02:11:56Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T02:11:56Z] triggering Composer fix for extend-maven-spring-awk-fixtures

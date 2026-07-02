@@ -2,22 +2,17 @@
   "runs": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
       "folder_name": "reproduce-java-aes-gcm-findings",
-      "feedback_hash": "24307f8b051c7842",
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "The platform flagged this as **TRIVIAL** (both agents at 100%) despite the existing edge-case coverage \u2014 the instructions were effectively a cheat sheet. I hardened the task with real interacting logic and trimmed those hints.\n\n## Root cause\nDifficulty failed because frontier agents solved every test at 100%. The milestone instructions named exact frame IDs, section headers, and precedence rules, so agents could follow the prompt without digging through the long report.\n\n## Fixes applied\n\n**New interacting logic (2 frames, 22 total in-scope):**\n- **frm-021 (victor-channel):** Every `key_rotated` row is voided by `key_rotation_rescinded`; must fall back to `latest_key_assigned` (v2) after filtering a rescinded v6 assignment \u2014 not treat voided rotations as operative.\n- **frm-022 (whiskey-channel):** Fifth Appendix D override; report nonce must survive key rotation over a later DB registration.\n\n**Report & data:** Appendix C now states the all-rotations-rescinded assignment fallback; Appendix D lists five overrides. Regenerated `seed.sql`, `evidence.gif`, forensic report, and expected JSON via `tools/gen_dataset.py`.\n\n**Instructions de-hinted:** Removed explicit frame IDs (frm-003/006/010/015), exact section header strings, and step-by-step parsing walkthroughs. Requirements stay aligned with tests but must be discovered from the report.\n\n**Tests:** Added M1/M2 coverage for frm-022 and frm-021; updated errata exclusion checks.\n\n**Platform:** Bumped `# platform-revision: 2026-06-30-r19`; oracle reward **1.0**; static checks **PASS**; resubmitted (not sent to reviewer). Assignment state: **EVALUATION_PENDING**.\n\n```json\n{\n  \"changes_summary\": \"Hardened reproduce-java-aes-gcm-findings against the TRIVIAL difficulty gate by adding frm-021 (all rotations rescinded \u2192 assignment fallback) and frm-022 (fifth Appendix D override surviving rotation over DB registration), updating reference.py/gen_report.py and regenerating seed.sql, evidence.gif, report, and expected JSON; trimmed milestone 1/2 instructions to remove explicit frame-ID and section-header hints; added matching M1/M2 tests; bumped Dockerfile platform-revision to r19; updated rubrics and submission explanations; oracle passes 1.0 locally.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Hardened reproduce-java-aes-gcm-findings against the TRIVIAL difficulty gate by adding frm-021 (all rotations rescinded \u2192 assignment fallback) and frm-022 (fifth Appendix D override surviving rotation over DB registration), updating reference.py/gen_report.py and regenerating seed.sql, evidence.gif, report, and expected JSON; trimmed milestone 1/2 instructions to remove explicit frame-ID and section-header hints; added matching M1/M2 tests; bumped Dockerfile platform-revision to r19; updated rubrics and submission explanations; oracle passes 1.0 locally.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": ".../.submission-explanations.txt                   |   11 -\n .../environment/Dockerfile                         |    2 +-\n .../environment/config/crypto.toml                 |    2 +-\n .../environment/data/seed.sql                      |  127 +-\n .../environment/fixtures/evidence.gif              |  Bin 1101 -> 2809 bytes\n .../reports/mariner-aes-gcm-forensic-review.md     | 2042 ++++++++++++--------\n .../environment/schema/rules.schema.json           |    6 +-\n .../steps/milestone_1/instruction.md               |   13 +-\n .../src/com/mariner/forensic/AuditCorrelator.java  |  139 +-\n .../src/com/mariner/forensic/RuleExtractor.java    |   38 +-\n .../steps/milestone_1/tests/expected_rules.json    |    6 +-\n .../steps/milestone_1/tests/test_m1.py             |   68 +-\n .../steps/milestone_2/i",
-      "platform_state_after": "EVALUATION_PENDING",
+      "feedback_hash": "041495a3fe8796fd",
+      "attempts": 1,
+      "status": "dry_run",
+      "agent_status": "dry_run",
+      "agent_summary": "skipped",
+      "agent_report": {},
+      "git_diff_stat": "(dry run)",
+      "platform_state_after": "",
       "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260630T194905Z.json",
-      "last_run": "2026-06-30T19:49:05.224015+00:00"
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021010Z.json",
+      "last_run": "2026-07-02T02:10:10.791573+00:00"
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
@@ -43,17 +38,66 @@
       "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
       "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260701T043523Z.json",
       "last_run": "2026-07-01T04:35:24.330880+00:00"
+    },
+    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": {
+      "folder_name": "extend-maven-spring-awk-fixtures",
+      "feedback_hash": "52baa11a4297cc49",
+      "attempts": 1,
+      "status": "dry_run",
+      "agent_status": "dry_run",
+      "agent_summary": "skipped",
+      "agent_report": {},
+      "git_diff_stat": "(dry run)",
+      "platform_state_after": "",
+      "issue": "see platform feedback in monitor log",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021009Z.json",
+      "last_run": "2026-07-02T02:10:09.600419+00:00"
+    },
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
+      "folder_name": "repair-java-trailswitch-graph-rules",
+      "feedback_hash": "7481db8b86d9125c",
+      "attempts": 1,
+      "status": "dry_run",
+      "agent_status": "dry_run",
+      "agent_summary": "skipped",
+      "agent_report": {},
+      "git_diff_stat": "(dry run)",
+      "platform_state_after": "",
+      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021009Z.json",
+      "last_run": "2026-07-02T02:10:10.236267+00:00"
     }
   },
-  "last_check": "2026-07-01T04:01:43.689352+00:00",
+  "last_check": "2026-07-02T02:11:26.558918+00:00",
   "last_queue": {
     "fix_queue": [
-      "repair-express-trivia-worker",
-      "repair-flask-signalbox-configs",
+      "extend-maven-spring-awk-fixtures",
+      "repair-java-trailswitch-graph-rules",
       "reproduce-java-aes-gcm-findings"
     ],
-    "skipped": [],
-    "checked_at": "2026-07-01T04:02:25.376688+00:00"
+    "manual_ui": [],
+    "skipped": [
+      {
+        "submission_id": "71323da7-976c-405b-9dcd-c24d83fa6102",
+        "folder_name": "reproduce-java-tls-waiver-findings",
+        "reason": "manual_review_queue"
+      }
+    ],
+    "checked_at": "2026-07-02T02:11:55.974967+00:00"
   },
-  "next_fix_allowed_after": "2026-07-01T05:35:24.345022+00:00"
+  "next_fix_allowed_after": "2026-07-01T05:35:24.345022+00:00",
+  "last_states": {
+    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
+    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "EVALUATION_PENDING",
+    "71323da7-976c-405b-9dcd-c24d83fa6102": "NEEDS_REVISION",
+    "3a48c644-09b8-4357-9466-403cb2674a1c": "EVALUATION_PENDING",
+    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": "NEEDS_REVISION",
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "REVIEW_PENDING",
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
+    "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
+    "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "EVALUATION_PENDING",
+    "586f2352-d2c5-435f-a8dd-546725e95bc7": "OFFERED",
+    "c1f49663-527b-4f9b-82e4-08c5b0c005bd": "OFFERED",
+    "8e261009-10eb-47db-bb7b-ddc5c3af83ba": "OFFERED"
+  }
 }

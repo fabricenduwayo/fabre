@@ -10306,3 +10306,51 @@
 [2026-07-01T04:35:24Z] reached max fixes per run (1) — remainder waits for next hour
 [2026-07-01T04:35:24Z] next queued task after cooldown: repair-flask-signalbox-configs
 [2026-07-01T04:35:24Z] === done — triggered 1 fix(es) ===
+[2026-07-02T02:09:38Z] === 2-hourly submission check start ===
+[2026-07-02T02:10:01Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-02T02:10:01Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T02:10:01Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-07-02T02:10:04Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-02T02:10:08Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T02:10:08Z] skip 5ee796af… state=EVALUATION_PENDING folder=repair-cpp-setup-auditor
+[2026-07-02T02:10:08Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T02:10:08Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T02:10:08Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T02:10:08Z] status:
+States: EVALUATION_PENDING=3, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:10:09Z] fix queue (3): extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:10:09Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-02T02:10:09Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T02:10:09Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T02:10:09Z] DRY RUN — would call Agent.prompt model=composer-2.5 cwd=/Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-02T02:10:09Z] prompt preview written to /Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/last-prompt-preview.txt
+[2026-07-02T02:10:09Z] done extend-maven-spring-awk-fixtures agent_status=dry_run state_after=
+[2026-07-02T02:10:09Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T02:10:09Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T02:10:09Z] DRY RUN — would call Agent.prompt model=composer-2.5 cwd=/Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-02T02:10:09Z] prompt preview written to /Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/last-prompt-preview.txt
+[2026-07-02T02:10:10Z] done repair-java-trailswitch-graph-rules agent_status=dry_run state_after=
+[2026-07-02T02:10:10Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T02:10:10Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-02T02:10:10Z] DRY RUN — would call Agent.prompt model=composer-2.5 cwd=/Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-02T02:10:10Z] prompt preview written to /Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/last-prompt-preview.txt
+[2026-07-02T02:10:10Z] done reproduce-java-aes-gcm-findings agent_status=dry_run state_after=
+[2026-07-02T02:10:10Z] === done — triggered 3 fix(es) ===
+[2026-07-02T02:11:26Z] === 2-hourly submission check start ===
+[2026-07-02T02:11:50Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-02T02:11:50Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T02:11:50Z] skip 3a48c644… state=EVALUATION_PENDING folder=repair-flask-signalbox-configs
+[2026-07-02T02:11:52Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-02T02:11:55Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip 5ee796af… state=EVALUATION_PENDING folder=repair-cpp-setup-auditor
+[2026-07-02T02:11:55Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T02:11:55Z] status:
+States: EVALUATION_PENDING=3, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:11:56Z] fix queue (3): extend-maven-spring-awk-fixtures, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T02:11:56Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-02T02:11:56Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T02:11:56Z] triggering Composer fix for extend-maven-spring-awk-fixtures

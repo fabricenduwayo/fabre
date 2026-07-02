@@ -92,6 +92,17 @@ For milestone tasks the layout is different (per-milestone `steps/milestone_N/` 
 * Tests must match what instruction.md asks for, and everything tested must be stated or clearly implied in instruction.md.
 * Do not test requirements that are not stated or clearly implied in instruction.md.
 
+## Git after changes and submissions
+
+After any task edit, rule change, tool/script update, or platform submit/resubmit, commit and push in the same session — do not leave work uncommitted.
+
+* Stage everything in this repo (`git add -A`): task folders, `.cursor/rules/`, `tools/`, `.review-scratch/`, docs, root scripts — the whole project.
+* Respect `.gitignore` only (e.g. `.env`, `.venv/`, `jobs/`). Never force-add secrets.
+* One commit per submission or coherent change batch; message: `terminus: <short summary>` (e.g. `terminus: add signalbox task and submit`).
+* Push to the current branch immediately after a successful commit (`git push` or `git push -u origin HEAD` if needed).
+* If commit or push fails, fix and retry before moving on.
+* Do not amend or force-push unless I explicitly ask.
+
 ## General behavior
 
 * Explain important changes before making them.
@@ -1294,14 +1305,14 @@ Verification Explanation — "Explain how your tests are verifying correctness."
 We ask that for each, you write roughly a 1 paragraph response (about 4-6 sentences).
 
         ## Task under repair
-        - Submission ID: e7d1cac7-538c-4f65-ba21-eb38d47c5242
-        - Task folder: /Users/fabrice-mac-mini/Documents/snorkel-ai/repair-express-trivia-worker
-        - Folder name: repair-express-trivia-worker
+        - Submission ID: fbb351b7-0c45-4402-9b19-08d2cd8fddf8
+        - Task folder: /Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings
+        - Folder name: reproduce-java-aes-gcm-findings
         - Assignment state: NEEDS_REVISION
 
         ## Platform feedback (triage using docs/terminus-lessons-learned.md §0)
-        Feedback for Submission: e7d1cac7-538c-4f65-ba21-eb38d47c5242
-Assignment ID: 594fe603-e1d6-4fdb-98f4-d963a2babc09
+        Feedback for Submission: fbb351b7-0c45-4402-9b19-08d2cd8fddf8
+Assignment ID: 92ca4bee-6a73-467d-80be-5dcb8e85bc56
 Project ID: bfe79c33-8ab0-4061-9849-08d3207c9927
 Project: Terminus-2nd-Edition
 
@@ -1309,16 +1320,16 @@ Project: Terminus-2nd-Edition
 
 Revision Notes
 --------------------------------------------------------------------------------
-AutoEval Execution Summary: AutoEval execution failed. Build status: FAILED. Build ID: CodeExecutionEnvironment:307f3c6a-4a23-4175-b580-6bd8c05171d9.
+AutoEval Execution Summary: AutoEval execution failed. Build status: FAILED. Build ID: CodeExecutionEnvironment:c34d5aba-cae1-4df6-8e15-3def7e86fa6a.
 
 Summary (difficulty check)
 --------------------------------------------------------------------------------
-Difficulty: ❌ MEDIUM - Requires at least HARD for python
+Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
 
 Status: ✅ Solvable (all tests passed by at least one agent run)
 
 Agent Performance:
-  • terminus-claude-opus-4-8: 60.0% (3/5 runs)
+  • terminus-claude-opus-4-8: 100.0% (5/5 runs)
   • terminus-gpt5-5: 100.0% (5/5 runs)
 
 Reference Agents:
@@ -1327,91 +1338,88 @@ Reference Agents:
 
 Failure Breakdown:
   • nop: 1 other
-  • terminus-claude-opus-4-8: 1 timeout(s), 1 other
-
-Agent Timeout Gate: ✅ 1/10 real-agent runs timed out (<5; not blocking by itself)
 
 Unit Tests Results:
-  • test_worker_replays_match_night_transcript: 9 passed / 10 runs
-  • test_worker_uses_seq_order_not_timestamp: 9 passed / 10 runs
-  • test_worker_retries_transient_503: 9 passed / 10 runs
-  • test_locked_question_rows_do_not_award_points: 9 passed / 10 runs
-  • test_duplicate_buzzer_is_ignored_not_penalized: 9 passed / 10 runs
-  • test_transcript_matches_official_reference: 9 passed / 10 runs
-  • test_transcript_is_official_not_provisional: 10 passed / 10 runs
-  • test_amend_ruling_supersedes_earlier_issue: 9 passed / 10 runs
-  • test_rescinded_rulings_have_no_effect: 9 passed / 10 runs
-  • test_nonparticipant_ruling_is_void: 10 passed / 10 runs
-  • test_tiebreak_applies_after_adjustment: 9 passed / 10 runs
-  • test_ingest_body_includes_all_ledger_fields: 8 passed / 10 runs
-  • test_worker_sends_idempotency_keys: 8 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_java_pipeline_entrypoint_exists: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_conforms_to_schema: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_key_precedence_order: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_nonce_precedence_order: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_nonce_precedence_includes_db_override: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm003_nonce_override_present: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm006_nonce_override_present: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm010_nonce_override_present: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm015_nonce_override_present: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm022_nonce_override_present: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_all_report_overrides_transcribed: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_frm006_amended_override_not_superseded: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_review_date_from_findings_overview: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_nonce_overrides_exclude_withdrawn_errata: 10 passed / 10 runs
+  • milestone_1 → TestMilestone1Rules → test_matches_expected_rules: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_java_pipeline_entrypoint_exists: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_milestone1_artifact_persists: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_output_is_a_list: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_conforms_to_schema: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_covers_every_frame: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_rotation_replacement_for_frm002: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm003_nonce_override: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm007_db_nonce_override: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm008_latest_db_nonce_override: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm008_revoked_registration_not_operative: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm009_rotation_not_stale_assign: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm009_rescinded_rotation_not_operative: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm010_report_beats_db_nonce: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm011_latest_rotation_not_max_or_stale: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm012_rotation_voids_stale_db_nonce: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm013_revocation_then_rotation: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm014_post_rotation_db_re_registration: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm015_report_override_survives_rotation: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm016_nonce_amendment_result: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm017_amendment_then_reregistration: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm017_stale_v2_registration_not_operative: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm018_rescinded_assignment_not_operative: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm019_chained_rotation_rescission_fallback: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm020_double_amendment_result: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm021_all_rotations_rescinded_assignment_fallback: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_frm022_report_override_survives_rotation: 10 passed / 10 runs
+  • milestone_2 → TestMilestone2Correlate → test_matches_expected_correlation: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_java_pipeline_entrypoint_exists: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_milestone2_artifact_persists: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_output_is_a_list: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_conforms_to_schema: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_covers_every_frame: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_all_payloads_authenticate: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_auth_totals_match: 10 passed / 10 runs
+  • milestone_3 → TestMilestone3Decrypt → test_matches_expected_findings: 10 passed / 10 runs
 
 Analysis on Agent Failures:
-  • Task Instruction Sufficiency: ❌ FAIL, ## Job Summary
-
-### 1. Overall Results
-- **2 trials total, 0 passed (0%)**
-- Both trials (`tbench-task__Mr3DCa6`, `tbench-task__PSHk2PW`) scored 0 due to test failures. The verifier uses an all-or-nothing scoring model — any failing test yields a full failure.
-
-### 2. Common Failure Patterns
-Both trials shared a root-cause cluster around the same bugs:
-- **Idempotency key format**: Both agents misformatted the key. `Mr3DCa6` produced `match-night-2026-03-15-1` instead of the specified `match-night-1`. This single bug caused 2 test failures in an otherwise strong submission.
-- **Rulings reconciliation**: Both trials had issues with Appendix H logic — rescinded rulings being incorrectly applied, and amend/supersession handling broken (`PSHk2PW` more severely so).
-- **Standings format**: `PSHk2PW` also failed on the exact scoreboard transcript format.
-
-### 3. Hack Check — Clean
-Both trials passed the `reward_hacking` check. Neither agent modified test files, accessed the `solution/` directory, or wrote to reward files. All work was legitimate (reading docs, rewriting the worker, running the referee). ✅
-
-### 4. Systematic Instruction Issues
-The `task_specification` checks diverged:
-- `Mr3DCa6`: **Pass** — the idempotency key format (`match-night-{seq}`) was unambiguous; the agent simply misread it. Instruction quality was not the problem.
-- `PSHk2PW`: **Fail** — the checker flagged genuine underspecification: the exact scoreboard transcript format, the referee's 409 response shape, and the precise ruling reconciliation semantics all required heavy inference from an external `scoring_standard.md` rather than being spelled out in `instruction.md`. This creates fragility across agents.
-
-**Action item**: The scoreboard transcript format and referee response schema should be explicitly documented in `instruction.md` rather than delegated to `scoring_standard.md`. This affected at least one trial and likely contributed to difficulty across both.
-
-### 5. Progress on Failed Trials
-Agents got surprisingly close:
-
-| Trial | Tests Passed | Key Remaining Bugs |
-|---|---|---|
-| `Mr3DCa6` | 11/13 (85%) | Single bug: idempotency key format string |
-| `PSHk2PW` | 2/13 (15%) | Multiple: idempotency, rulings reconciliation, standings format; compounded by time lost to a spurious "filesystem resetting" confusion |
-
-`Mr3DCa6` was one small string interpolation fix away from a full pass — a strong near-miss. `PSHk2PW` was significantly further back, with the agent exhausting its 1200s timeout on a debugging red herring.
-
-### 6. Key Differences Between Trials
-The two trials show a stark capability gap in debugging resilience:
-- **`Mr3DCa6`** maintained focus, diagnosed all major bugs correctly, and produced a coherent rewrite. Its only failure was a minor misreading of a format string.
-- **`PSHk2PW`** got derailed by a false premise (perceived filesystem resets) and never recovered, spending the majority of its time budget on non-existent infrastructure issues rather than the actual logic bugs. This suggests the agent lacked the metacognitive grounding to dismiss a confusing environmental observation and move on.
-
-**Bottom line**: The task is solvable (85% test pass demonstrated), the instructions have a moderate underspecification issue worth fixing, and the dominant differentiator between agents was debugging focus under confusion rather than raw coding ability.
+  • Task Instruction Sufficiency: ➖ NOT_APPLICABLE, debug output not available
 
 Quality check summary
 --------------------------------------------------------------------------------
 ## Quality Check Results
-✅ pass - behavior_in_task_description: The instruction.md explicitly describes all behaviors tested: seq-ordered ingest, idempotency key format (match-night-{seq}), 503 retry with backoff, locked-question handling (no credit), duplicate buzzer ignoring, full ledger row body in POST, provisional standings from GET /v1/standings, rulings reconciliation from GET /v1/rulings, Appendix H replay rules (issue/amend/rescind, incident keying, non-participant rulings are void), TR-TIEBREAK (score desc, correct desc, first_buzz_seq asc, player asc), and section 4 transcript format. The output path /app/output/scoreboard.txt, CLI flags (--ledger, --api, --output), and the broken file to fix (/app/worker/replay.py) are all stated.
-✅ pass - behavior_in_tests: Tests cover: seq-order vs timestamp-order (test_worker_uses_seq_order_not_timestamp), 503 retry (test_worker_retries_transient_503), locked-question no credit (test_locked_question_rows_do_not_award_points), duplicate buzzer ignored (test_duplicate_buzzer_is_ignored_not_penalized), rulings reconciliation not just provisional (test_transcript_is_official_not_provisional), amend supersedes issue (test_amend_ruling_supersedes_earlier_issue), rescind clears incident (test_rescinded_rulings_have_no_effect), non-participant ruling is void (test_nonparticipant_ruling_is_void), tiebreak after adjustment (test_tiebreak_applies_after_adjustment), full body including ts (test_ingest_body_includes_all_ledger_fields), idempotency key sent (test_worker_sends_idempotency_keys), and the canonical transcript (test_worker_replays_match_night_transcript). All described behavior is tested.
-✅ pass - informative_test_structure: Each test function has a descriptive name and a docstring explaining what is being checked (e.g., 'Locked q2 buzzer/answer rows must not change standings (G-2026-03)'). Tests are organized with clear autouse fixtures for setup/teardown and a session-scoped referee readiness fixture. The test file is readable and well-structured.
-✅ pass - anti_cheating_measures: The solution is not in the Docker image (Dockerfile copies only worker/, not solution/). The tests directory is also not included in the image — the test.sh and test_outputs.py run from /tests, which is a runtime mount or separate volume. The expected_transcript() function in helpers.py independently recomputes the answer from the CSV data and rulings.json rather than hard-coding it, so an agent can't trivially match output by reading a pre-computed reference file. The rulings data in the environment can be read at runtime, but the worker must call GET /v1/rulings, not read the file directly — and the tests validate actual API behavior (idempotency duplicate detection, etc.). Internet access is disabled.
-✅ pass - structured_data_schema: The exact output schema is given in section 4 of scoring_standard.md with a literal format block showing header lines and row fields. The CSV schema (seq, ts, kind, question, player, payload) is documented in section 2. The rulings feed schema (ruling_seq, incident, op, player, delta, issued_at) is documented in Appendix H. The ingest POST body schema (all ledger fields, null for empty cells) is specified in TR-INGEST-BODY. All schemas are normative, not just illustrative.
-✅ pass - pinned_dependencies: Python dependencies in requirements.txt are fully pinned with exact versions and SHA-256 hashes. The Node.js express dependency in package.json is pinned to exactly '4.21.2'. pnpm is installed at a pinned version (9.15.4) via npm. The Python base image uses a digest-pinned SHA (sha256:01f423...). All relevant dependencies are pinned.
-✅ pass - typos: No typos found in filenames, paths, commands, or variable names across the examined files. Key identifiers like 'match-night-2026-03-15', 'X-Idempotency-Key', 'first_buzz_seq', 'ruling_seq', route paths (/v1/ingest, /v1/standings, /v1/rulings), and field names are consistent throughout.
-✅ pass - tests_or_solution_in_image: The Dockerfile only copies referee/, worker/, data/, and docs/ into the image. Neither the tests/ directory nor the solution/ directory appears in any COPY instruction. The test.sh invokes /tests/test_outputs.py and sets PYTHONPATH=/tests, indicating tests are mounted or copied at runtime outside the image build.
-✅ pass - hardcoded_solution: solution/solve.sh simply copies solution/replay.py to /app/worker/replay.py. The solution replay.py itself performs genuine computation: it loads CSV rows, POSTs each to the API with retry logic, fetches provisional standings from GET /v1/standings, fetches rulings from GET /v1/rulings, applies the Appendix H reconciliation algorithm, re-ranks with TR-TIEBREAK, then renders the transcript. No pre-computed answer is echoed or cat'd.
-✅ pass - file_reference_mentioned: The instruction explicitly states the output path: 'Write the section 4 format to the output path' and 'produces the official standings transcript at /app/output/scoreboard.txt'. The file name scoreboard.txt is directly mentioned in instruction.md.
+✅ pass - behavior_in_task_description: All three milestone instructions explicitly name the output file (rules.json, correlation.json, findings.json), reference the normative schema files, and direct the agent to the forensic report and SQLite database as the authoritative sources. The specific behaviors verified by tests — key/nonce precedence order, nonce override values, review date, exclusion of withdrawn errata, per-frame key/nonce resolution, AES-GCM decryption results — are all derivable by reading the report (Appendix C for precedence rules, Appendix D for overrides) and the audit events in the database, which the instructions explicitly point agents toward.
+✅ pass - behavior_in_tests: All behavior described in the instructions is tested. M1 tests verify schema conformance, key/nonce precedence ordering, all 5 operative nonce overrides, correct review date, exclusion of withdrawn errata, and a full JSON match. M2 tests verify 22-frame coverage, schema conformance, and a comprehensive set of per-frame precedence scenarios (rotation, rescission, revocation, amendment, db_override, report_override). M3 tests verify schema conformance, all-frame coverage, AES-GCM authentication results (auth_ok, reason_code), and a full match to expected findings.
+✅ pass - informative_test_structure: All three test files use a clear class-per-milestone structure with descriptive test function names and docstrings explaining exactly what each test checks (e.g., test_frm006_amended_override_not_superseded, test_frm013_revocation_then_rotation, test_frm021_all_rotations_rescinded_assignment_fallback). Sections and organization are maintainable and readable.
+✅ pass - anti_cheating_measures: The Dockerfile uses explicit COPY directives and never copies steps/, tests/, or solution/ into the image. The expected_*.json ground-truth files are inaccessible at runtime. Correct answers require: (1) parsing a ~2400-line markdown report with deliberately planted decoys and superseded sections; (2) applying complex multi-precedence logic over SQLite audit events (rotations, rescissions, revocations, amendments); (3) performing real AES-256-GCM decryption of GIF frames. There is no trivial shortcut available to the agent.
+✅ pass - structured_data_schema: Each milestone instruction explicitly references a schema file in /app/schema/: rules.schema.json (M1), correlation.schema.json (M2), findings.schema.json (M3). The schemas are present in the environment and copied into the Docker image, providing normative, machine-validated specifications for all output fields, types, enumerations, and constraints.
+✅ pass - pinned_dependencies: Python dependencies are pinned with exact versions and SHA-256 hashes in requirements.txt (compiled via pip-compile from requirements.in which pins pytest==8.2.2, pytest-json-ctrf==0.3.5, jsonschema==4.23.0). Java library JARs are included as versioned files (e.g., jackson-databind-2.17.2.jar, sqlite-jdbc-3.46.1.0.jar, snakeyaml-2.2.jar). The apt package openjdk-17 is unversioned, which is acceptable per standard practice.
+✅ pass - typos: No typos were found in filenames, paths, commands, or variable names across the instruction files, test scripts, solution scripts, schemas, Dockerfile, or Java source files. All cross-references between files (schema paths, output paths, class names, package names) are consistent and correct.
+✅ pass - tests_or_solution_in_image: The Dockerfile uses only explicit COPY directives for lib/, reports/, config/, schema/, fixtures/, pipeline/, and data/seed.sql. The steps/ directory (which contains tests/ and solution/) is never referenced in any COPY command. The .dockerignore excludes tools/ but the tests and solutions are excluded by omission from the Dockerfile's explicit COPY list.
+✅ pass - hardcoded_solution: All three solution scripts build and invoke the Java pipeline, which performs genuine computation: solve1.sh copies and compiles the Java source then runs 'Main rules' to parse the forensic report and extract rules; solve2.sh runs 'Main correlate' to query the SQLite audit database and apply multi-precedence logic; solve3.sh runs 'Main decrypt' to extract GIF frame payloads and perform AES-256-GCM decryption with AAD. None of the scripts echo or cat hardcoded answers.
+✅ pass - file_reference_mentioned: All output filenames are explicitly stated in their respective instructions: M1 names /app/out/rules.json, M2 names /app/out/correlation.json, M3 names /app/out/findings.json. The tests verify these exact paths.
 
 
         ## Required workflow
         1. Read the feedback. Ignore "AutoEval execution failed" boilerplate unless
            the build log shows a real oracle/static-check failure.
-        2. Fix the root cause in `/Users/fabrice-mac-mini/Documents/snorkel-ai/repair-express-trivia-worker`.
+        2. Fix the root cause in `/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings`.
         3. Align instruction.md with tests (instruction sufficiency).
         4. For python in languages[], difficulty must be HARD (worst model ≤20%).
-        5. Run: harbor run -a oracle -p repair-express-trivia-worker
+        5. Run: harbor run -a oracle -p reproduce-java-aes-gcm-findings
            until reward is 1.0. Docker must be used for oracle.
         6. Bump `# platform-revision:` in environment/Dockerfile before resubmit.
         7. Resubmit in one call (ZIP + explanations + rubric, no send-to-reviewer):
-           python3 /Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/resubmit_trivia.py
+           python3 /Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/resubmit_aes.py
         8. Confirm assignment moves to EVALUATION_PENDING after resubmit.
 
         ## Required final report (for monitor notifications)

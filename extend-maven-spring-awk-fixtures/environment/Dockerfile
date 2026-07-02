@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-01-r6
+# platform-revision: 2026-07-02-r7
 
 WORKDIR /app
 
@@ -26,6 +26,10 @@ RUN chmod +x /app/dependency-audit/build.sh /app/dependency-audit/start.sh \
     && mvn -q -DskipTests package \
     && mvn -q org.apache.maven.plugins:maven-dependency-plugin:3.6.1:get \
         -Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.1.2 \
+    && mvn -q org.apache.maven.plugins:maven-dependency-plugin:3.6.1:get \
+        -Dartifact=org.codehaus.mojo:exec-maven-plugin:3.1.0:pom \
+    && mvn -q org.apache.maven.plugins:maven-dependency-plugin:3.6.1:get \
+        -Dartifact=org.codehaus.mojo:exec-maven-plugin:3.1.0:jar \
     && mvn -q org.codehaus.mojo:exec-maven-plugin:3.1.0:help
 
 EXPOSE 8080

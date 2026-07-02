@@ -1,0 +1,12 @@
+{
+  "folder_name": "repair-java-trailswitch-graph-rules",
+  "submission_id": "f0e91036-8b36-4f80-9e35-52e7ce33dd3e",
+  "feedback_hash": "7481db8b86d9125c",
+  "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
+  "agent_status": "dry_run",
+  "agent_report": {},
+  "git_diff_stat": "(dry run)",
+  "platform_state_after": "",
+  "dry_run": true,
+  "finished_at": "2026-07-02T02:10:09.813696+00:00"
+}
