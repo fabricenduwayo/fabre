@@ -1,0 +1,12 @@
+{
+  "files": {
+    "passwd": "carol:x:1000:100::/home/carol:/bin/bash\ndave:x:1001:100::/home/dave:/bin/bash\nerin:x:1002:100::/home/erin:/bin/bash\n",
+    "shadow": "carol:$6$rounds=5000$abcd$hash:19000:0:99999:7::19000:\ndave:$6$rounds=5000$abcd$hash:19000:0:99999:7::19000:\nerin:$6$rounds=5000$abcd$hash:19000:0:99999:7::21000:\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\ndave ALL=(ALL) NOPASSWD: ALL\nerin ALL=(ALL) NOPASSWD: ALL\n",
+    "authorized_keys": {"carol": "ssh-ed25519 AAAAcarol carol@lab\n"},
+    "sshd_config.d": {
+      "10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"
+    }
+  }
+}

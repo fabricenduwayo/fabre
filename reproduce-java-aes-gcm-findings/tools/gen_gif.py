@@ -54,9 +54,11 @@ def _image_descriptor(index: int) -> bytes:
     ])
 
 
-def _lzw_image_data() -> bytes:
+def _lzw_image_data(frame_id: str) -> bytes:
     # Smallest valid LZW minimum-code-size 2 image data for a 1x1 raster.
-    return bytes([0x02, 0x02, 0x4C, 0x01, 0x00, 0x00])
+    # Embed a decoy payload string so whole-file regex picks up wrong ciphertext.
+    decoy = f"{frame_id}|{'00' * 32}".encode("ascii")
+    return bytes([0x02, 0x02, 0x4C, 0x01, 0x00, 0x00]) + decoy
 
 
 def build_gif() -> bytes:
@@ -68,6 +70,15 @@ def build_gif() -> bytes:
 
     all_frames = list(ref.FRAMES) + [ref.DECOY_FRAME]
     for frame in sorted(all_frames, key=lambda f: f["gif_index"]):
+        if frame["frame_id"] != ref.DECOY_FRAME["frame_id"]:
+            # Superseded capture: valid MRNR/CRYPTO1 block with wrong key material.
+            stale_kv = max(1, frame["key_version"] - 1)
+            stale_nonce = ref.derived_nonce(frame["frame_id"], stale_kv)
+            stale_ct = ref.encrypt_payload(
+                frame["frame_id"], frame["plaintext"], stale_kv, stale_nonce
+            )
+            parts.extend(_app_extension(frame["frame_id"], stale_ct))
+
         if frame["frame_id"] == ref.DECOY_FRAME["frame_id"]:
             kv = frame["key_version"]
             nonce = ref.derived_nonce(frame["frame_id"], kv)
@@ -77,7 +88,7 @@ def build_gif() -> bytes:
         ct = ref.encrypt_payload(frame["frame_id"], frame["plaintext"], kv, nonce)
         parts.extend(_app_extension(frame["frame_id"], ct))
         parts.extend(_image_descriptor(frame["gif_index"]))
-        parts.extend(_lzw_image_data())
+        parts.extend(_lzw_image_data(frame["frame_id"]))
 
     parts.append(0x3B)
     return bytes(parts)

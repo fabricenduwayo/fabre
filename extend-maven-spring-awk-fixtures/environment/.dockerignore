@@ -1,6 +1,9 @@
 solution/
 tests/
 jobs/
+**/target/
+**/app.jar
+**/data/*.mv.db
 .git/
 .gitignore
 **/__pycache__/
@@ -11,3 +14,4 @@ jobs/
 **/node_modules/
 **/.DS_Store
 .submission-explanations.txt
+m2-repository/

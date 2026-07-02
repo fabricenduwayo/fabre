@@ -12,6 +12,7 @@ import urllib.request
 from pathlib import Path
 
 MATCH_ID = "match-night-2026-03-15"
+RULINGS_FILE = Path("/app/data/rulings.json")
 
 
 def request_json(
@@ -21,11 +22,12 @@ def request_json(
     headers: dict | None = None,
 ) -> tuple[int, dict | None]:
     data = None
-    hdrs = {"Content-Type": "application/json"}
+    hdrs = {}
+    if payload is not None:
+        hdrs["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode()
     if headers:
         hdrs.update(headers)
-    if payload is not None:
-        data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -57,6 +59,11 @@ def load_rows(path: Path) -> list[dict]:
             )
     rows.sort(key=lambda r: r["seq"])
     return rows
+
+
+def load_rulings(path: Path = RULINGS_FILE) -> list[dict]:
+    data = json.loads(path.read_text())
+    return data.get("rulings", [])
 
 
 def ingest_with_retry(base_url: str, row: dict) -> None:
@@ -92,8 +99,117 @@ def fetch_rulings(base_url: str) -> list[dict]:
     return body["rulings"]
 
 
+def simulate_standings(rows: list[dict]) -> list[dict]:
+    """Pure-Python reference scorer matching the referee rules."""
+    questions: dict[str, dict] = {}
+    players: dict[str, dict] = {}
+
+    def ensure_player(pid: str) -> dict:
+        if pid not in players:
+            players[pid] = {"score": 0, "correct": 0, "first_buzz_seq": None}
+        return players[pid]
+
+    def ensure_question(qid: str) -> dict:
+        if qid not in questions:
+            questions[qid] = {
+                "open": False,
+                "locked": False,
+                "buzzer": None,
+                "answered": False,
+            }
+        return questions[qid]
+
+    for row in sorted(rows, key=lambda r: r["seq"]):
+        kind = row["kind"]
+        qid = row["question"]
+        player = row["player"]
+        payload = row["payload"]
+        q = ensure_question(qid) if qid else None
+
+        if kind == "open" and qid:
+            q["open"] = True
+            q["locked"] = False
+        elif kind == "lock" and qid:
+            q["open"] = False
+            q["locked"] = True
+        elif kind == "buzzer" and qid and player:
+            if q["locked"] or not q["open"] or q["answered"]:
+                continue
+            if q["buzzer"]:
+                continue
+            q["buzzer"] = player
+            stats = ensure_player(player)
+            if stats["first_buzz_seq"] is None:
+                stats["first_buzz_seq"] = row["seq"]
+        elif kind == "answer" and qid and player:
+            if q["locked"] or not q["open"] or q["answered"] or q["buzzer"] != player:
+                continue
+            q["answered"] = True
+            stats = ensure_player(player)
+            if payload.get("correct"):
+                stats["score"] += 10
+                stats["correct"] += 1
+            else:
+                stats["score"] -= 5
+        elif kind == "penalty" and player:
+            ensure_player(player)["score"] -= int(payload.get("points", 5))
+        elif kind == "mod_override" and qid:
+            action = payload.get("action")
+            if action == "award" and player:
+                ensure_player(player)["score"] += int(payload.get("points", 0))
+            elif action == "deduct" and player:
+                ensure_player(player)["score"] -= int(payload.get("points", 0))
+            elif action == "void_buzzer":
+                q["buzzer"] = None
+            elif action == "reassign":
+                if q["locked"] or not q["open"] or q["answered"]:
+                    continue
+                target = payload.get("player")
+                q["buzzer"] = target
+                stats = ensure_player(target)
+                if stats["first_buzz_seq"] is None:
+                    stats["first_buzz_seq"] = row["seq"]
+
+    ordered = sorted(
+        players.items(),
+        key=lambda item: (
+            -item[1]["score"],
+            -item[1]["correct"],
+            item[1]["first_buzz_seq"] if item[1]["first_buzz_seq"] is not None else 10**9,
+            item[0],
+        ),
+    )
+    standings = []
+    for idx, (name, stats) in enumerate(ordered, start=1):
+        standings.append(
+            {
+                "rank": idx,
+                "player": name,
+                "score": stats["score"],
+                "correct": stats["correct"],
+                "first_buzz_seq": stats["first_buzz_seq"],
+            }
+        )
+    return standings
+
+
+def format_transcript(standings: list[dict], match_id: str = MATCH_ID) -> str:
+    """Render the section 4 standings file from reference standings rows."""
+    lines = [
+        f"STANDINGS {match_id}",
+        "rank player score correct first_buzz_seq",
+    ]
+    for row in standings:
+        fb = row["first_buzz_seq"]
+        fb_text = str(fb) if fb is not None else "-"
+        lines.append(
+            f"{row['rank']} {row['player']} {row['score']} {row['correct']} {fb_text}"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
-    """Apply the stewards' review (Appendix H) and re-rank with TR-TIEBREAK."""
+    """Apply Appendix H reconciliation, then re-rank with TR-TIEBREAK."""
     by_player = {row["player"]: dict(row) for row in standings}
 
     incidents: dict[str, dict] = {}
@@ -236,12 +352,28 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         ):
             continue
 
+        offset_correct_player = ruling.get("offset_correct_player")
+        if op == "amend" and "offset_correct_player" not in ruling:
+            offset_correct_player = None
+        if offset_correct_player and (
+            offset_correct_player not in by_player
+            or offset_correct_player == player
+        ):
+            continue
+
         if op == "amend" and "correct_ceiling" not in ruling:
             correct_ceiling = None
         elif "correct_ceiling" in ruling:
             correct_ceiling = int(ruling["correct_ceiling"])
         else:
             correct_ceiling = None
+
+        if op == "amend" and "offset_min_score" not in ruling:
+            offset_min_score = None
+        elif "offset_min_score" in ruling:
+            offset_min_score = int(ruling["offset_min_score"])
+        else:
+            offset_min_score = None
 
         entry = {
             "player": player,
@@ -253,11 +385,15 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             "score_ceiling": score_ceiling,
             "max_score_after": max_score_after,
             "offset_player": offset_player,
+            "offset_correct_player": offset_correct_player,
             "correct_ceiling": correct_ceiling,
+            "offset_min_score": offset_min_score,
             "ruling_seq": ruling["ruling_seq"],
         }
         incidents[incident] = entry
-        if applies_after_floor:
+        if op == "amend" and incident in frozen_deferred and paired_incident:
+            frozen_deferred[incident] = dict(entry)
+        elif applies_after_floor:
             if incident in deferred_order:
                 deferred_order.remove(incident)
             deferred_order.append(incident)
@@ -286,13 +422,33 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             current = incidents[current].get("requires_incident")
         return True
 
+    def apply_offset_transfer(offset: str, transfer: int) -> None:
+        """H-2026-32: cap positive offset debits at the payer's current balance."""
+        if offset not in by_player:
+            return
+        if transfer > 0:
+            transfer = min(transfer, max(0, by_player[offset]["score"]))
+        by_player[offset]["score"] -= transfer
+
+    def apply_correct_offset_transfer(offset: str, transfer: int) -> int:
+        """H-2026-39: cap positive correct debits; return the amount subtracted."""
+        if offset not in by_player:
+            return 0
+        debit = transfer
+        if debit > 0:
+            debit = min(debit, max(0, by_player[offset]["correct"]))
+        by_player[offset]["correct"] -= debit
+        return debit
+
     def apply_primary(eff: dict) -> None:
         player = eff["player"]
         if player not in by_player:
             return
         before = by_player[player]["score"]
         by_player[player]["score"] += eff["delta"]
+        correct_before = by_player[player]["correct"]
         by_player[player]["correct"] += eff["correct_delta"]
+        correct_applied = by_player[player]["correct"] - correct_before
         applied = by_player[player]["score"] - before
         cap = eff.get("max_score_after")
         if cap is not None and by_player[player]["score"] > cap:
@@ -300,24 +456,67 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             applied = cap - before
         offset = eff.get("offset_player")
         if offset and offset in by_player:
-            by_player[offset]["score"] -= applied
+            score_before_floor = by_player[player]["score"]
+            threshold = eff.get("offset_min_score")
+            if threshold is not None and score_before_floor < threshold:
+                transfer = applied // 2
+            else:
+                transfer = applied
+            apply_offset_transfer(offset, transfer)
+        offset_correct = eff.get("offset_correct_player")
+        if offset_correct and offset_correct in by_player and correct_applied != 0:
+            apply_correct_offset_transfer(offset_correct, correct_applied)
 
     def apply_deferred(eff: dict) -> None:
         player = eff["player"]
         if player not in by_player:
             return
         delta = eff["delta"]
+        offset = eff.get("offset_player")
         ceiling = eff.get("score_ceiling")
+        correct_ceiling = eff.get("correct_ceiling")
+        offset_debit = 0
+        if offset and offset in by_player:
+            transfer = delta
+            threshold = eff.get("offset_min_score")
+            if threshold is not None and by_player[player]["score"] < threshold:
+                transfer = delta // 2
+            before_offset = by_player[offset]["score"]
+            apply_offset_transfer(offset, transfer)
+            offset_debit = before_offset - by_player[offset]["score"]
         if ceiling is not None:
             headroom = ceiling - by_player[player]["score"]
-            delta = 0 if headroom <= 0 else min(delta, headroom)
-        by_player[player]["score"] += delta
+            score_applied = 0 if headroom <= 0 else min(delta, headroom)
+        else:
+            score_applied = delta
+        by_player[player]["score"] += score_applied
+        if (
+            ceiling is not None
+            and score_applied == 0
+            and delta != 0
+            and offset
+            and offset_debit > 0
+        ):
+            by_player[offset]["score"] += offset_debit
+        correct_before = by_player[player]["correct"]
         correct_delta = eff["correct_delta"]
-        correct_ceiling = eff.get("correct_ceiling")
-        if correct_ceiling is not None:
+        score_blocked_correct = False
+        if ceiling is not None and correct_ceiling is not None and score_applied == 0:
+            correct_delta = 0
+            score_blocked_correct = True
+        elif correct_ceiling is not None:
             headroom = correct_ceiling - by_player[player]["correct"]
             correct_delta = 0 if headroom <= 0 else min(correct_delta, headroom)
         by_player[player]["correct"] += correct_delta
+        correct_applied = by_player[player]["correct"] - correct_before
+        offset_correct = eff.get("offset_correct_player")
+        correct_offset_debit = 0
+        if offset_correct and offset_correct in by_player and correct_applied != 0:
+            correct_offset_debit = apply_correct_offset_transfer(
+                offset_correct, correct_applied
+            )
+        if score_blocked_correct and offset_correct and correct_offset_debit > 0:
+            by_player[offset_correct]["correct"] += correct_offset_debit
 
     def clamp_scores() -> None:
         for row in by_player.values():
@@ -348,6 +547,9 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         offset = eff.get("offset_player")
         if offset:
             clamp_player(offset)
+        offset_correct = eff.get("offset_correct_player")
+        if offset_correct:
+            clamp_player(offset_correct)
 
     clamp_scores()
 
@@ -367,6 +569,12 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         if player in by_player:
             by_player[player]["score"] = max(0, by_player[player]["score"])
             by_player[player]["correct"] = max(0, by_player[player]["correct"])
+        offset = eff.get("offset_player")
+        if offset:
+            clamp_player(offset)
+        offset_correct = eff.get("offset_correct_player")
+        if offset_correct:
+            clamp_player(offset_correct)
 
     ordered = sorted(
         by_player.values(),
@@ -382,19 +590,9 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
     return ordered
 
 
+
 def render_transcript(standings: list[dict], out: Path) -> None:
-    lines = [
-        f"STANDINGS {MATCH_ID}",
-        "rank player score correct first_buzz_seq",
-    ]
-    for row in standings:
-        fb = row["first_buzz_seq"]
-        fb_text = str(fb) if fb is not None else "-"
-        lines.append(
-            f"{row['rank']} {row['player']} {row['score']} {row['correct']} {fb_text}"
-        )
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n")
+    out.write_text(format_transcript(standings), encoding="utf-8")
 
 
 def main() -> int:

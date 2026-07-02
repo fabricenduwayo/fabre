@@ -546,15 +546,33 @@ def test_handover_rollback_restores_composed_state():
 
 
 def test_witness_active_ignores_rolled_back_bulletin():
-    """BUL-BL g-seal must skip because the rollback stripped BUL-BJ's lock ownership."""
+    """Rollback must retire BUL-BJ witness history so BUL-BL g-seal add skips."""
     rows = lock_log_rows()
     prefix = [row for row in rows if row[0] <= 63]
     locks = lock_map(effective_locks(rows=prefix))
     assert "t_sw3_g" not in locks
 
 
+def test_rollback_retires_witness_history_before_deferred_flush():
+    """Handover rollback must retire BUL-BJ before flushing deferred BUL-BM."""
+    rows = lock_log_rows()
+    through_rollback = [row for row in rows if row[0] <= 62]
+    through_deferred = [row for row in rows if row[0] <= 64]
+    assert lock_map(effective_locks(rows=through_rollback)) == lock_map(
+        effective_locks(rows=through_deferred)
+    )
+
+
+def test_tail_amend_skips_after_witness_retire():
+    """BUL-BN south amend must skip once handover rollback retires BUL-BJ witness history."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+
+
 def test_defer_after_rollback_skips_witness_active_south_replace():
-    """BUL-BM south replace must flush at handover rollback and skip on witness_active."""
+    """BUL-BM south replace must flush at handover rollback and skip after witness retire."""
     proc = run_shift()
     assert proc.returncode == 0, proc.stderr
     locks = lock_map()
@@ -570,6 +588,104 @@ def test_defer_after_rollback_runs_before_tail_g_seal():
     through_deferred = [row for row in rows if row[0] <= 64]
     assert lock_map(effective_locks(rows=through_g_seal)) == lock_map(
         effective_locks(rows=through_deferred)
+    )
+
+
+def test_unless_hold_on_skips_south_amend_during_tail_gate():
+    """BUL-BP south d-seal amend must skip while tail-gate hold hides t_sw1_c."""
+    rows = lock_log_rows()
+    through_hold = [row for row in rows if row[0] <= 66]
+    through_blocked_amend = [row for row in rows if row[0] <= 67]
+    assert lock_map(effective_locks(rows=through_hold)) == lock_map(
+        effective_locks(rows=through_blocked_amend)
+    )
+
+
+def test_unless_replayed_blocks_south_amend_after_handover():
+    """BUL-BR south amend must skip because BUL-BJ was applied before handover rollback."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+
+
+def test_unless_replayed_blocks_g_seal_replay_after_handover():
+    """BUL-BS g-seal add must skip when BUL-BJ predates the handover rollback generation."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert "t_sw3_g" not in locks
+
+
+def test_witness_track_blocks_g_seal_without_track_ownership():
+    """BUL-BT g-seal must skip because BUL-AL no longer owns t_sw2_d at apply time."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert "t_sw3_g" not in locks
+
+
+def test_witness_track_prefix_matches_prior_tail():
+    """Prefix through BUL-BT must match prefix through BUL-BS when witness_track blocks the add."""
+    rows = lock_log_rows()
+    through_bs = [row for row in rows if row[0] <= 70]
+    through_bt = [row for row in rows if row[0] <= 71]
+    assert lock_map(effective_locks(rows=through_bs)) == lock_map(
+        effective_locks(rows=through_bt)
+    )
+
+
+def test_void_after_rollback_blocks_south_replay():
+    """BUL-BU south amend must skip once handover snapshot has been rolled back."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+
+
+def test_void_after_rollback_prefix_matches_prior_tail():
+    """Prefix through BUL-BU must match prefix through BUL-BT when void_after_rollback blocks."""
+    rows = lock_log_rows()
+    through_bt = [row for row in rows if row[0] <= 71]
+    through_bu = [row for row in rows if row[0] <= 72]
+    assert lock_map(effective_locks(rows=through_bt)) == lock_map(
+        effective_locks(rows=through_bu)
+    )
+
+
+def test_witness_snapshot_blocks_g_seal_when_capture_when_differs():
+    """BUL-BV g-seal must skip because t_sw2_d when-map drifted from the handover capture."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert "t_sw3_g" not in locks
+
+
+def test_witness_snapshot_prefix_matches_prior_tail():
+    """Prefix through BUL-BV must match prefix through BUL-BU when witness_snapshot blocks the add."""
+    rows = lock_log_rows()
+    through_bu = [row for row in rows if row[0] <= 72]
+    through_bv = [row for row in rows if row[0] <= 73]
+    assert lock_map(effective_locks(rows=through_bu)) == lock_map(
+        effective_locks(rows=through_bv)
+    )
+
+
+def test_unless_snapshot_stale_blocks_south_replay():
+    """BUL-BW south amend must skip while handover capture tracks differ from current state."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+
+
+def test_unless_snapshot_stale_prefix_matches_prior_tail():
+    """Prefix through BUL-BW must match prefix through BUL-BV when unless_snapshot_stale blocks."""
+    rows = lock_log_rows()
+    through_bv = [row for row in rows if row[0] <= 73]
+    through_bw = [row for row in rows if row[0] <= 74]
+    assert lock_map(effective_locks(rows=through_bv)) == lock_map(
+        effective_locks(rows=through_bw)
     )
 
 

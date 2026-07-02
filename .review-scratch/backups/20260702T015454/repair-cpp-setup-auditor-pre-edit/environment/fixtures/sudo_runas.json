@@ -1,0 +1,12 @@
+{
+  "files": {
+    "passwd": "alice:x:1000:100::/home/alice:/bin/bash\nbob:x:1001:100::/home/bob:/bin/bash\n",
+    "shadow": "alice:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\nbob:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\n",
+    "group": "users:x:100:\n",
+    "sudoers": "Defaults env_reset\nalice ALL=(ALL) NOPASSWD: ALL\nbob ALL=(www-data) NOPASSWD: ALL\n",
+    "authorized_keys": {},
+    "sshd_config.d": {
+      "10-base.conf": "PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no\n"
+    }
+  }
+}

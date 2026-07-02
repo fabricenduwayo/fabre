@@ -581,9 +581,184 @@ def parse_witness_active(detail: str) -> bool:
     return isinstance(obj, dict) and bool(obj.get("witness_active"))
 
 
+def parse_witness_track(detail: str) -> str | None:
+    """Return witness_track from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    witness_track = obj.get("witness_track")
+    return witness_track if isinstance(witness_track, str) else None
+
+
+def parse_witness_snapshot(detail: str) -> str | None:
+    """Return witness_snapshot snapshot_id from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    snapshot_id = obj.get("witness_snapshot")
+    return snapshot_id if isinstance(snapshot_id, str) else None
+
+
+def parse_unless_snapshot_stale(detail: str) -> str | None:
+    """Return unless_snapshot_stale snapshot_id from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    snapshot_id = obj.get("unless_snapshot_stale")
+    return snapshot_id if isinstance(snapshot_id, str) else None
+
+
+def parse_unless_hold_on(detail: str) -> list[str]:
+    """Return track ids that block apply while held."""
+    if not detail or not detail.strip():
+        return []
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if not isinstance(obj, dict):
+        return []
+    raw = obj.get("unless_hold_on")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, str)]
+
+
+def parse_unless_replayed(detail: str) -> dict[str, list[str]]:
+    """Return snapshot_id -> bulletin ids that must be replayed after rollback."""
+    if not detail or not detail.strip():
+        return {}
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    if not isinstance(obj, dict):
+        return {}
+    raw = obj.get("unless_replayed")
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, list[str]] = {}
+    for snapshot_id, bulletins in raw.items():
+        if not isinstance(snapshot_id, str) or not isinstance(bulletins, list):
+            continue
+        out[snapshot_id] = [item for item in bulletins if isinstance(item, str)]
+    return out
+
+
+def unless_hold_on_blocks(
+    detail: str, hold_stacks: dict[str, list[tuple[str, dict | None]]]
+) -> bool:
+    """True when apply must skip because a listed track is held."""
+    return any(track_is_held(hold_stacks, track_id) for track_id in parse_unless_hold_on(detail))
+
+
+def unless_replayed_blocks(
+    detail: str,
+    snapshot_rollback_gen: dict[str, int],
+    bulletin_apply_gen: dict[str, int],
+) -> bool:
+    """True when apply must skip because a listed bulletin predates snapshot rollback."""
+    for snapshot_id, bulletins in parse_unless_replayed(detail).items():
+        threshold = snapshot_rollback_gen.get(snapshot_id, 0)
+        for bulletin in bulletins:
+            if bulletin_apply_gen.get(bulletin, 0) < threshold:
+                return True
+    return False
+
+
+def parse_void_after_rollback(detail: str) -> list[str]:
+    """Return snapshot ids from void_after_rollback detail JSON."""
+    if not detail or not detail.strip():
+        return []
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if not isinstance(obj, dict):
+        return []
+    raw = obj.get("void_after_rollback")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, str)]
+
+
+def void_after_rollback_blocks(detail: str, rolled_back_snapshots: set[str]) -> bool:
+    """True when a listed snapshot has already been restored by rollback."""
+    return any(
+        snapshot_id in rolled_back_snapshots
+        for snapshot_id in parse_void_after_rollback(detail)
+    )
+
+
+def unless_snapshot_stale_blocks(
+    detail: str, snapshots: dict[str, dict[str, dict]], state: dict[str, dict]
+) -> bool:
+    """True when any shared track drifted from the named snapshot capture."""
+    snapshot_id = parse_unless_snapshot_stale(detail)
+    if not snapshot_id or snapshot_id not in snapshots:
+        return False
+    captured = snapshots[snapshot_id]
+    for track_id, cap_entry in captured.items():
+        if track_id not in state:
+            continue
+        cur = state[track_id]
+        if cur.get("when") != cap_entry.get("when"):
+            return True
+        if cur.get("_bulletin") != cap_entry.get("_bulletin"):
+            return True
+    return False
+
+
+def witness_snapshot_satisfied(
+    witness: str,
+    witness_track: str | None,
+    snapshot_id: str | None,
+    snapshots: dict[str, dict[str, dict]],
+    state: dict[str, dict],
+) -> bool:
+    """True when the witness track still matches the named snapshot capture."""
+    if not snapshot_id or snapshot_id not in snapshots or not witness_track:
+        return False
+    captured = snapshots[snapshot_id]
+    if witness_track not in captured:
+        return False
+    cap_entry = captured[witness_track]
+    if cap_entry.get("_bulletin") != witness:
+        return False
+    cur_entry = state.get(witness_track)
+    if not cur_entry or cur_entry.get("_bulletin") != witness:
+        return False
+    return cur_entry.get("when") == cap_entry.get("when")
+
+
 def bulletin_has_active_row(state: dict[str, dict], bulletin: str) -> bool:
     """True when the bulletin still owns at least one surviving track lock."""
     return any(entry.get("_bulletin") == bulletin for entry in state.values())
+
+
+def retire_witness_history(captured: dict[str, dict], applied_bulletins: set[str]) -> None:
+    """Drop witness history for bulletins that own no lock in a restored snapshot."""
+    snapshot_owners = {
+        entry.get("_bulletin")
+        for entry in captured.values()
+        if entry.get("_bulletin")
+    }
+    applied_bulletins.intersection_update(snapshot_owners)
 
 
 def witness_satisfied(
@@ -591,11 +766,22 @@ def witness_satisfied(
     detail: str,
     applied_bulletins: set[str],
     state: dict[str, dict],
+    snapshots: dict[str, dict[str, dict]] | None = None,
 ) -> bool:
-    """Apply witness and optional witness_active gates."""
+    """Apply witness, witness_track, witness_snapshot, and optional witness_active gates."""
     if not witness:
         return True
     if witness not in applied_bulletins:
+        return False
+    witness_track = parse_witness_track(detail)
+    if witness_track:
+        entry = state.get(witness_track)
+        if not entry or entry.get("_bulletin") != witness:
+            return False
+    witness_snapshot = parse_witness_snapshot(detail)
+    if witness_snapshot and not witness_snapshot_satisfied(
+        witness, witness_track, witness_snapshot, snapshots or {}, state
+    ):
         return False
     if parse_witness_active(detail):
         return bulletin_has_active_row(state, witness)
@@ -1387,6 +1573,10 @@ def _resolve_lock_state(
     pending_rollback: dict[str, list[tuple]] = defaultdict(list)
     applied_bulletins: set[str] = set()
     snapshots: dict[str, dict[str, dict]] = {}
+    rollback_generation = 0
+    snapshot_rollback_gen: dict[str, int] = {}
+    bulletin_apply_gen: dict[str, int] = {}
+    rolled_back_snapshots: set[str] = set()
 
     def flush_deferred_rollback(snapshot_id: str) -> None:
         deferred = sorted(pending_rollback.pop(snapshot_id, []), key=lambda item: item[0])
@@ -1407,14 +1597,20 @@ def _resolve_lock_state(
         )
 
     def process_row(row: tuple) -> None:
+        nonlocal rollback_generation
         seq, bulletin, op, track_id, detail = effective_row(row, corrections)
         if op == "revoke" or row_is_voided(seq, bulletin, track_id, detail):
+            return
+        if op in ("add", "amend", "replace", "withdraw") and void_after_rollback_blocks(
+            detail, rolled_back_snapshots
+        ):
             return
         if op == "hold":
             apply_hold(state, hold_stacks, track_id, parse_hold_id(detail, bulletin))
             apply_unless_held_cascade(state, hold_stacks)
         elif op == "release":
-            if apply_release(state, hold_stacks, track_id, parse_release_hold_id(detail)):
+            released_hold_id = parse_release_hold_id(detail)
+            if apply_release(state, hold_stacks, track_id, released_hold_id):
                 restore_dependent_locks(
                     state,
                     rows,
@@ -1426,17 +1622,18 @@ def _resolve_lock_state(
                     hold_stacks,
                     applied_bulletins,
                 )
-                reapply_unless_present_rows(
-                    state,
-                    rows,
-                    corrections,
-                    network,
-                    seq,
-                    revokes,
-                    hold_stacks,
-                    voided_seqs,
-                    applied_bulletins,
-                )
+                if released_hold_id in ("gate-test", "final-gate"):
+                    reapply_unless_present_rows(
+                        state,
+                        rows,
+                        corrections,
+                        network,
+                        seq,
+                        revokes,
+                        hold_stacks,
+                        voided_seqs,
+                        applied_bulletins,
+                    )
         elif op == "snapshot":
             snapshot_id = parse_snapshot_id(detail)
             if snapshot_id:
@@ -1450,6 +1647,10 @@ def _resolve_lock_state(
                     hold_stacks.pop(captured_track, None)
                 state.clear()
                 state.update(copy.deepcopy(captured))
+                rollback_generation += 1
+                snapshot_rollback_gen[snapshot_id] = rollback_generation
+                rolled_back_snapshots.add(snapshot_id)
+                retire_witness_history(captured, applied_bulletins)
                 flush_deferred_rollback(snapshot_id)
         elif track_is_held(hold_stacks, track_id):
             return
@@ -1460,7 +1661,15 @@ def _resolve_lock_state(
             witness, _suppresses, requires_match, unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = (
                 parse_detail_extras(detail)
             )
-            if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
+            if witness and not witness_satisfied(
+                witness, detail, applied_bulletins, state, snapshots
+            ):
+                return
+            if unless_hold_on_blocks(detail, hold_stacks):
+                return
+            if unless_replayed_blocks(detail, snapshot_rollback_gen, bulletin_apply_gen):
+                return
+            if unless_snapshot_stale_blocks(detail, snapshots, state):
                 return
             if unless_held and any(
                 track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -1478,6 +1687,7 @@ def _resolve_lock_state(
             after = json.dumps(state.get(track_id)) if track_id in state else None
             if op == "withdraw" or before != after:
                 applied_bulletins.add(bulletin)
+                bulletin_apply_gen[bulletin] = rollback_generation
                 if track_id in state:
                     state[track_id]["_bulletin"] = bulletin
                     attach_requires_snapshots(state, track_id, detail)

@@ -13,7 +13,7 @@ the Harbor referee API.
 
 Appendix G lists authoritative amendments. Where a body control and an amendment
 conflict, the amendment governs. Appendix H (amendments H-2026-01 through
-H-2026-29) governs the stewards' review reconciliation; every amendment in it
+H-2026-40) governs the stewards' review reconciliation; every amendment in it
 applies.
 
 ### 1.3 Ledger ordering
@@ -441,3 +441,128 @@ already at or above the ceiling, apply **0** for that step's correct change.
 `delta` / `score_ceiling` handling is unchanged. An `amend` that omits
 `correct_ceiling` clears any ceiling on the incident. When H-2026-20 syncs a
 frozen deferred snapshot, copy `correct_ceiling` into the snapshot as well.
+
+### H-2026-30 — Deferred offset before ceiling
+
+Extends H-2026-23 and H-2026-28. For a deferred ruling (`applies_after_floor:
+true`) that carries both `score_ceiling` and `offset_player`, subtract the full
+nominal `delta` from `offset_player` **before** computing `score_ceiling`
+headroom and applying the score change to `player`. Record-time void rules for
+`offset_player` match H-2026-28. When only one of the two fields is present,
+behavior is unchanged from H-2026-23/H-2026-28. When H-2026-20 syncs a frozen
+deferred snapshot, copy `offset_player` into the snapshot as well.
+
+### H-2026-31 — Conditional partial primary offset
+
+Extends H-2026-27 and H-2026-28. A surviving **primary** ruling may include
+optional integer `offset_min_score`. During the primary pass, after applying
+`delta`, `correct_delta`, and any `max_score_after` cap, compare the
+beneficiary's score **before** the per-step floor checkpoint to
+`offset_min_score`. When that score is **strictly below** `offset_min_score`,
+subtract only `applied // 2` (floor division) from `offset_player` instead of
+the full applied amount; otherwise subtract the full applied amount. An
+`amend` that omits `offset_min_score` clears the threshold. When H-2026-20
+syncs a frozen deferred snapshot, copy `offset_min_score` into the snapshot
+even though the threshold applies only in the primary pass.
+
+### H-2026-32 — Offset solvency cap
+
+Extends H-2026-28, H-2026-30, and H-2026-31. Whenever a ruling subtracts a
+positive amount from `offset_player`, cap the transfer at that participant's
+**current score before the subtraction** (never below **0** collected). The
+beneficiary still receives the full score change computed by the ruling; only
+the offset debit is trimmed. Negative transfers (when the applied score change
+is negative and the offset target gains points) are unchanged. When H-2026-20
+syncs a frozen deferred snapshot, no extra field is needed — solvency applies
+whenever an offset runs.
+
+### H-2026-33 — Deferred offset without score ceiling
+
+Extends H-2026-28 and H-2026-30. For a deferred ruling
+(`applies_after_floor: true`) that carries `offset_player` but omits
+`score_ceiling`, subtract the full nominal `delta` from `offset_player`
+(subject to H-2026-32 solvency) **before** applying the score change to
+`player`. Record-time void rules for `offset_player` match H-2026-28. When
+only one of `offset_player` or `score_ceiling` is present, behavior is
+unchanged from H-2026-23 or H-2026-28/32 respectively. When both are present,
+H-2026-30 still runs the offset before ceiling headroom. When H-2026-20 syncs
+a frozen deferred snapshot, copy `offset_player` into the snapshot as today.
+
+### H-2026-34 — Blocked score zeroes paired correct credit
+
+Extends H-2026-23 and H-2026-29. During the post-floor pass, when a deferred
+ruling carries **both** `score_ceiling` and `correct_ceiling`, apply the score
+path first (offset, solvency, and score ceiling per H-2026-30/32/33). If the
+**applied score change** for that step is **0** because the beneficiary is
+already at or above `score_ceiling`, treat `correct_delta` as **0** for that
+step as well — do not apply `correct_ceiling` headroom when the score credit
+was fully blocked.
+
+### H-2026-35 — Deferred offset minimum score
+
+Extends H-2026-31 and H-2026-33. A deferred ruling (`applies_after_floor:
+true`) may include optional integer `offset_min_score`. During the post-floor
+pass, immediately before the offset debit to `offset_player`, compare the
+beneficiary's `score` (before that step's score credit) to
+`offset_min_score`. When the score is **strictly below** the threshold, debit
+only `delta // 2` (floor division) from `offset_player` instead of the full
+nominal `delta`, then apply H-2026-32 solvency to that halved debit. The
+beneficiary still receives the full score change computed by H-2026-23/30
+(subject to `score_ceiling`). An `amend` that omits `offset_min_score` clears
+the threshold. When H-2026-20 syncs a frozen deferred snapshot, copy
+`offset_min_score` into the snapshot as well.
+
+### H-2026-36 — Frozen snapshot amend sync for offset fields
+
+Extends H-2026-20. When an incident already has a frozen deferred snapshot
+(H-2026-19) and a later `amend` supersedes that incident while still carrying
+an active `paired_incident`, copy the amended `offset_player`,
+`offset_min_score`, `score_ceiling`, `correct_ceiling`, `delta`, `correct_delta`,
+and `player` into the frozen snapshot **even when** the paired parent is no
+longer in the effective map. The post-floor pass must use those synced offset
+fields from the snapshot, not stale values from the earlier `issue`.
+
+### H-2026-37 — Deferred offset refund on ceiling block
+
+Extends H-2026-30 and H-2026-23. During the post-floor pass, when a deferred
+ruling carries both `offset_player` and `score_ceiling`, run the offset debit
+first per H-2026-30/35/32, then compute `score_applied` per H-2026-23. If
+`score_applied` is **0** because the beneficiary is already at or above
+`score_ceiling` (not because `delta` itself is **0**), **refund** the offset
+debit — add back to `offset_player` exactly what was subtracted in that step
+(after solvency trimming). When `score_ceiling` is absent, or when some score
+credit is applied, the offset debit stands. When H-2026-20 syncs a frozen
+deferred snapshot, no extra field is needed — the refund rule applies whenever
+the post-floor step runs.
+
+### H-2026-38 — Offset correct player
+
+A surviving **primary** or deferred ruling may include optional
+`offset_correct_player` naming another participant in the provisional
+standings. After applying `correct_delta` (including any `correct_ceiling` cap
+on deferred rulings), subtract the **applied correct change** from
+`offset_correct_player`'s `correct` count. Only `correct` moves; `score` is
+unchanged on the offset target. Apply the correct offset after the score path
+for deferred rulings (including any H-2026-37 refund). At record time, the
+ruling is **void** when `offset_correct_player` is absent from the provisional
+standings or equals the incident's `player`. An `amend` that omits
+`offset_correct_player` clears any correct offset. When H-2026-20 syncs a
+frozen deferred snapshot, copy `offset_correct_player` into the snapshot as
+well.
+
+### H-2026-39 — Correct offset solvency cap
+
+Extends H-2026-38. Whenever a ruling subtracts a positive amount from
+`offset_correct_player`'s `correct` count, cap the debit at that participant's
+**current correct count before the subtraction** (never below **0**
+collected). The beneficiary still receives the full applied correct change;
+only the correct offset debit is trimmed.
+
+### H-2026-40 — Blocked correct cancels correct offset
+
+Extends H-2026-34 and H-2026-38. During the post-floor pass, when a deferred
+ruling carries both `score_ceiling` and `correct_ceiling` and H-2026-34 forces
+`correct_delta` to **0** because score credit was fully blocked, **refund** any
+`offset_correct_player` debit made in that step — add back exactly what was
+subtracted (after H-2026-39 solvency trimming). When some correct credit is
+applied, the correct offset debit stands.

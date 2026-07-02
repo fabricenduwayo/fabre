@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Submit repair-cpp-setup-auditor with ZIP + explanations + rubric."""
 import os
+import sys
 import tempfile
+import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from zip_task import zip_task_folder
 
 from snorkelai_stb.submission_utils import (
     create_feedback,
@@ -17,21 +22,20 @@ from snorkelai_stb.utils import (
     get_task_type,
     request_s3_presigned_url,
     upload_to_s3,
-    zip_folder,
 )
 
 PROJECT_ID = "bfe79c33-8ab0-4061-9849-08d3207c9927"
 SUBMISSION_ID = "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456"
 FOLDER = Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/repair-cpp-setup-auditor")
 RUBRIC = Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/cpp-rubrics.txt")
-EXPL = FOLDER / ".submission-explanations.txt"
+EXPL = Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/cpp-explanations.txt")
 AHT_MINUTES = int(os.environ.get("AHT_MINUTES", "240"))
 
 
 def load_explanations() -> tuple[str, str, str]:
     text = EXPL.read_text().strip().split("\n\n")
     if len(text) < 3:
-        raise SystemExit("expected three paragraphs in .submission-explanations.txt")
+        raise SystemExit("expected three paragraphs in cpp-explanations.txt")
     return text[0].strip(), text[1].strip(), text[2].strip()
 
 
@@ -47,8 +51,27 @@ def main() -> None:
     aht_field = get_task_node_aht_field_id(PROJECT_ID, task_type_str) or "submission_aht"
 
     zip_path = Path(tempfile.gettempdir()) / "repair-cpp-setup-auditor.zip"
-    zip_folder(FOLDER, zip_path)
-    print("zipped", f"{zip_path.stat().st_size / 1024:.1f} KB")
+    zip_task_folder(FOLDER, zip_path)
+    import zipfile
+
+    names = zipfile.ZipFile(zip_path).namelist()
+    leaked = [
+        n
+        for n in names
+        if any(
+            x in n.lower()
+            for x in (
+                "rubric",
+                "review-scratch",
+                "submission-explanations",
+                "tools/",
+                "readme.md",
+            )
+        )
+    ]
+    if leaked:
+        raise SystemExit(f"refusing to upload ZIP with non-task files: {leaked}")
+    print("zipped", len(names), "files", f"({zip_path.stat().st_size / 1024:.1f} KB)")
 
     presigned = request_s3_presigned_url(
         PROJECT_ID, assignment_id, "repair-cpp-setup-auditor.zip"
@@ -56,16 +79,26 @@ def main() -> None:
     upload_to_s3(presigned["presigned_url"], zip_path)
     print("uploaded")
 
-    feedback_response = create_feedback(
-        task_type_str=task_type_str,
-        task_id=SUBMISSION_ID,
-        feedback_id=feedback_id,
-        feedback_field_name=feedback_field_name,
-        s3_key=presigned["s3_key"],
-        filename="repair-cpp-setup-auditor.zip",
-        uploaded_at=presigned["uploaded_at"],
-        s3_uri=presigned["s3_uri"],
-    )
+    feedback_response = None
+    for attempt in range(1, 4):
+        try:
+            feedback_response = create_feedback(
+                task_type_str=task_type_str,
+                task_id=SUBMISSION_ID,
+                feedback_id=feedback_id,
+                feedback_field_name=feedback_field_name,
+                s3_key=presigned["s3_key"],
+                filename="repair-cpp-setup-auditor.zip",
+                uploaded_at=presigned["uploaded_at"],
+                s3_uri=presigned["s3_uri"],
+            )
+            break
+        except Exception as exc:
+            if attempt == 3 or "504" not in str(exc):
+                raise
+            print(f"static checks attempt {attempt} timed out (504); retrying in 30s...")
+            time.sleep(30)
+    assert feedback_response is not None
     outcome = feedback_response.get("feedback_outcome")
     print("static checks:", outcome)
     if outcome != "PASS":

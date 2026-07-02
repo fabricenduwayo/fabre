@@ -11,7 +11,14 @@ Agent derives the operative goal by reachability under resolved locks and rebuil
 Agent implements play_shift.py as a client of the referee on http://127.0.0.1:5000 without binding port 5000 again, +4
 Agent treats witness_active as requiring the witness bulletin to still hold a track lock, not merely appear in applied_bulletins, +5
 Agent captures snapshot rows after fixpoints and restores rollback rows with hold stacks cleared on snapshotted tracks, +5
-Agent queues defer_after_rollback rows and flushes them when the named snapshot rollback restores state, +5
+Agent retires witness history on rollback before flushing defer_after_rollback rows for the same snapshot_id, +5
+Agent queues defer_after_rollback rows and flushes them only after the named snapshot rollback restores state, +5
+Agent skips rows carrying unless_hold_on while any listed track has an active hold stack, +5
+Agent tracks rollback generation per snapshot and blocks unless_replayed rows when listed bulletins predate that rollback, +5
+Agent requires witness_track to match the witness bulletin owning the named track lock, not merely applied_bulletins membership, +5
+Agent blocks void_after_rollback rows once a listed snapshot_id has been restored by rollback, +5
+Agent requires witness_snapshot to match the named capture when-map on witness_track, not just ownership, +5
+Agent blocks unless_snapshot_stale rows while any shared capture track drifted from the named snapshot, +5
 Agent treats the release after a rollback-cleared hold as a no-op instead of restoring a stale saved entry, +4
 Agent modifies referee routes or spawns a second listener on port 5000, -5
 Agent treats hold like withdraw or clears nested holds with the wrong hold_id, -5
@@ -20,5 +27,10 @@ Agent treats witness as log presence and applies BUL-BB g-seal after BUL-AL reti
 Agent keeps inherited composite when on t_sw2_d after BUL-BA static replace, -4
 Agent trusts corrupted cartridge YAML/TOML instead of recomputing locks from evidence.duckdb, -4
 Agent keeps the maint-window hold after the pre-maintenance rollback or applies the BUL-BH release against it, -5
-Agent applies the BUL-BL g-seal because BUL-BJ appeared in applied history despite the handover rollback stripping its lock ownership, -5
-Agent folds defer_after_rollback rows at log tail or applies BUL-BM south d-seal on witness log presence alone, -5
+Agent applies BUL-BL g-seal or BUL-BN south amend because BUL-BJ stayed in witness history after handover rollback, -5
+Agent flushes defer_after_rollback rows before retiring witness history or applies BUL-BM south d-seal on stale BUL-BJ witness history, -5
+Agent applies BUL-BP south d-seal during tail-gate hold or BUL-BR/BUL-BS replay rows after handover rollback without unless_replayed generation tracking, -5
+Agent applies BUL-BT g-seal because BUL-AL stayed in applied_bulletins without witness_track ownership on t_sw2_d, -5
+Agent applies BUL-BU south d-seal replay after handover rollback without void_after_rollback snapshot tracking, -5
+Agent applies BUL-BV g-seal because BUL-BA owns t_sw2_d without witness_snapshot capture matching, -5
+Agent applies BUL-BW south d-seal while handover capture tracks still differ under unless_snapshot_stale, -5

@@ -365,3 +365,170 @@ Will auto-fix now: repair-express-trivia-worker, repair-flask-signalbox-configs,
 [2026-07-02T02:47:14Z] ERROR on repair-flask-signalbox-configs: Cursor agent run failed: 
 [2026-07-02T02:47:15Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
 [2026-07-02T02:47:15Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-02T02:52:07Z] done reproduce-java-aes-gcm-findings agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-02T02:52:07Z] next queued task on next run: reproduce-java-aes-gcm-findings
+[2026-07-02T02:52:07Z] === done — triggered 2 fix(es) ===
+[2026-07-02T04:22:09Z] === 90-minute submission check start ===
+[2026-07-02T04:22:25Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-07-02T04:22:31Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T04:22:38Z] skip 0c176558… state=REVIEW_PENDING folder=harden-php-api-defaults
+[2026-07-02T04:22:41Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T04:22:41Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T04:22:41Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T04:22:41Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T04:22:41Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T04:22:41Z] state change: reproduce-java-aes-gcm-findings: NEEDS_REVISION -> EVALUATION_PENDING
+[2026-07-02T04:22:41Z] state change: extend-maven-spring-awk-fixtures: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T04:22:41Z] state change: repair-java-trailswitch-graph-rules: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T04:22:41Z] state change: repair-cpp-setup-auditor: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T04:22:41Z] status:
+States: EVALUATION_PENDING=1, NEEDS_REVISION=6, OFFERED=4, REVIEW_PENDING=1
+Changed since last run:
+  reproduce-java-aes-gcm-findings: NEEDS_REVISION -> EVALUATION_PENDING
+  extend-maven-spring-awk-fixtures: EVALUATION_PENDING -> NEEDS_REVISION
+  repair-java-trailswitch-graph-rules: EVALUATION_PENDING -> NEEDS_REVISION
+  repair-cpp-setup-auditor: EVALUATION_PENDING -> NEEDS_REVISION
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules
+[2026-07-02T04:22:41Z] fix queue (4): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules
+[2026-07-02T04:22:41Z] skipped 2 — exclusions / green gates / already fixed
+[2026-07-02T04:22:41Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T04:22:42Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T04:32:58Z] ERROR on extend-maven-spring-awk-fixtures: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T04:32:58Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T04:32:58Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-02T05:10:58Z] ERROR on repair-express-trivia-worker: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T05:10:58Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T05:10:58Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-07-02T05:23:07Z] ERROR on repair-flask-signalbox-configs: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T05:23:08Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T05:23:08Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T05:49:27Z] ERROR on repair-java-trailswitch-graph-rules: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T05:49:27Z] next queued task on next run: extend-maven-spring-awk-fixtures
+[2026-07-02T05:49:27Z] === done — triggered 0 fix(es) ===
+[2026-07-02T07:38:51Z] === 90-minute submission check start ===
+[2026-07-02T07:38:52Z] WARN: Docker not reachable — agent fixes deferred (oracle needs Docker)
+[2026-07-02T07:40:12Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T07:40:22Z] skip 0c176558… state=EVALUATION_PENDING folder=harden-php-api-defaults
+[2026-07-02T07:40:26Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T07:40:26Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T07:40:26Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T07:40:26Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T07:40:26Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T07:40:26Z] state change: reproduce-java-aes-gcm-findings: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T07:40:26Z] state change: harden-php-api-defaults: REVIEW_PENDING -> EVALUATION_PENDING
+[2026-07-02T07:40:26Z] status:
+States: EVALUATION_PENDING=1, NEEDS_REVISION=7, OFFERED=4
+Changed since last run:
+  reproduce-java-aes-gcm-findings: EVALUATION_PENDING -> NEEDS_REVISION
+  harden-php-api-defaults: REVIEW_PENDING -> EVALUATION_PENDING
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T07:40:26Z] fix queue (5): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T07:40:26Z] skipped 2 — exclusions / green gates / already fixed
+[2026-07-02T09:10:28Z] === 90-minute submission check start ===
+[2026-07-02T09:11:00Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T09:11:08Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-02T09:11:12Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T09:11:12Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T09:11:12Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T09:11:12Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T09:11:12Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T09:11:12Z] state change: harden-php-api-defaults: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-02T09:11:12Z] status:
+States: NEEDS_REVISION=8, OFFERED=4
+Changed since last run:
+  harden-php-api-defaults: EVALUATION_PENDING -> NEEDS_REVISION
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T09:11:12Z] fix queue (5): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T09:11:12Z] skipped 3 — exclusions / green gates / already fixed
+[2026-07-02T09:11:12Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T09:11:12Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T09:50:56Z] ERROR on extend-maven-spring-awk-fixtures: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T09:50:56Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T09:50:56Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-02T10:24:25Z] ERROR on repair-express-trivia-worker: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T10:24:25Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T10:24:25Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-07-02T10:59:05Z] ERROR on repair-flask-signalbox-configs: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T10:59:05Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T10:59:05Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T11:09:54Z] ERROR on repair-java-trailswitch-graph-rules: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T11:09:54Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T11:09:54Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-02T11:21:26Z] ERROR on reproduce-java-aes-gcm-findings: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T11:21:26Z] next queued task on next run: extend-maven-spring-awk-fixtures
+[2026-07-02T11:21:26Z] === done — triggered 0 fix(es) ===
+[2026-07-02T12:51:27Z] === 90-minute submission check start ===
+[2026-07-02T12:52:03Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T12:52:11Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-02T12:52:15Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T12:52:15Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T12:52:15Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T12:52:15Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T12:52:15Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T12:52:15Z] status:
+States: NEEDS_REVISION=8, OFFERED=4
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T12:52:15Z] fix queue (5): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T12:52:15Z] skipped 3 — exclusions / green gates / already fixed
+[2026-07-02T12:52:15Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T12:52:15Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T13:02:26Z] ERROR on extend-maven-spring-awk-fixtures: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T13:02:26Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T13:02:26Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-02T13:14:59Z] ERROR on repair-express-trivia-worker: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T13:14:59Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T13:14:59Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-07-02T13:26:58Z] ERROR on repair-flask-signalbox-configs: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T13:26:58Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T13:26:58Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T13:54:16Z] ERROR on repair-java-trailswitch-graph-rules: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T13:54:16Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T13:54:16Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-02T14:25:25Z] ERROR on reproduce-java-aes-gcm-findings: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T14:25:25Z] next queued task on next run: extend-maven-spring-awk-fixtures
+[2026-07-02T14:25:25Z] === done — triggered 0 fix(es) ===
+[2026-07-02T15:55:26Z] === 90-minute submission check start ===
+[2026-07-02T15:56:07Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T15:56:17Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-02T15:56:20Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T15:56:20Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T15:56:20Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T15:56:20Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T15:56:20Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T15:56:20Z] status:
+States: NEEDS_REVISION=8, OFFERED=4
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T15:56:20Z] fix queue (5): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T15:56:20Z] skipped 3 — exclusions / green gates / already fixed
+[2026-07-02T15:56:20Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T15:56:20Z] triggering Composer fix for extend-maven-spring-awk-fixtures
+[2026-07-02T16:33:26Z] ERROR on extend-maven-spring-awk-fixtures: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T16:33:26Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T16:33:26Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-02T16:44:55Z] ERROR on repair-express-trivia-worker: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T16:44:55Z] fixing repair-flask-signalbox-configs (3a48c644…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-02T16:44:56Z] triggering Composer fix for repair-flask-signalbox-configs
+[2026-07-02T17:10:23Z] ERROR on repair-flask-signalbox-configs: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T17:10:23Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T17:10:24Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-02T17:21:29Z] ERROR on repair-java-trailswitch-graph-rules: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T17:21:29Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-02T17:21:29Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-02T17:33:02Z] ERROR on reproduce-java-aes-gcm-findings: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
+[2026-07-02T17:33:02Z] next queued task on next run: extend-maven-spring-awk-fixtures
+[2026-07-02T17:33:02Z] === done — triggered 0 fix(es) ===
+[2026-07-02T19:03:03Z] === 90-minute submission check start ===
+[2026-07-02T19:03:52Z] skip 71323da7… excluded (manual_review_queue) folder=reproduce-java-tls-waiver-findings
+[2026-07-02T19:04:00Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-02T19:04:05Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-02T19:04:05Z] skip 5ee796af… excluded (manual_review_queue) folder=repair-cpp-setup-auditor
+[2026-07-02T19:04:05Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-02T19:04:05Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-02T19:04:05Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-02T19:04:05Z] status:
+States: NEEDS_REVISION=8, OFFERED=4
+Will auto-fix now: extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T19:04:05Z] fix queue (5): extend-maven-spring-awk-fixtures, repair-express-trivia-worker, repair-flask-signalbox-configs, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-02T19:04:05Z] skipped 3 — exclusions / green gates / already fixed
+[2026-07-02T19:04:05Z] fixing extend-maven-spring-awk-fixtures (6b30193a…) — see platform feedback in monitor log
+[2026-07-02T19:04:05Z] triggering Composer fix for extend-maven-spring-awk-fixtures

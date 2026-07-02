@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Broken cartridge repair helper — predates the bulletin tail; fix before use."""
+"""Broken cartridge repair helper — predates several bulletin-tail semantics."""
 
 from __future__ import annotations
 

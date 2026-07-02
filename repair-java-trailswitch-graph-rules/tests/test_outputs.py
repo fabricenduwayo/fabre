@@ -38,10 +38,52 @@ def test_clearance_rule_opens_scenic_spur():
 
 
 def test_route_lock_blocks_staging_spur():
-    """Ascending-priority hold rule must lock the north spur when both switches are north."""
+    """A non-matching early rule must not stop a later wildcard lock from blocking north/north."""
     result = plan("A", "E", {"sw1": "north", "sw2": "north"})
     assert result["reachable"] is False
     assert result["path"] == []
+
+
+def test_platform_lock_blocks_staging_when_sw2_north():
+    """A NULL lock_sw1 rule must still lock when the listed sw2 position matches."""
+    result = plan("A", "D", {"sw1": "north", "sw2": "north"})
+    assert result["reachable"] is False
+    assert result["path"] == []
+
+
+def test_clearance_beats_later_platform_lock():
+    """A matching clear rule at lower priority must open the spur before the platform lock."""
+    result = plan("A", "D", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["A", "C", "B", "D"]
+
+
+def test_lock_group_relay_blocks_arrival_leg():
+    """A locked spur edge must relay the lock to its paired arrival leg in the yard group."""
+    result = plan("D", "E", {"sw1": "north", "sw2": "north"})
+    assert result["reachable"] is False
+    assert result["path"] == []
+
+
+def test_lock_group_relay_clears_when_spur_opens():
+    """Clearance on the spur must keep the relayed arrival leg open for staging departures."""
+    result = plan("D", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["D", "E"]
+
+
+def test_spur_hold_relay_blocks_staging_departure():
+    """A spur hold lock must relay to block staging departures even when switches match the hold."""
+    result = plan("D", "E", {"sw1": "south", "sw2": "south"})
+    assert result["reachable"] is False
+    assert result["path"] == []
+
+
+def test_scenic_spur_relay_open_after_clearance():
+    """Clearance on the yard spur must relay-open the paired arrival leg for B to E runs."""
+    result = plan("B", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["B", "D", "E"]
 
 
 def test_cycle_guard_finishes_quickly():

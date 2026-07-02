@@ -83,7 +83,7 @@ final class MediaDecryptor {
                 Cipher.DECRYPT_MODE,
                 new SecretKeySpec(key, "AES"),
                 new GCMParameterSpec(128, nonce));
-        cipher.updateAAD(aad.getBytes());
+        cipher.updateAAD(aad.getBytes(StandardCharsets.UTF_8));
         return cipher.doFinal(ciphertext);
     }
 
@@ -91,11 +91,43 @@ final class MediaDecryptor {
             Pattern.compile("(frm-\\d{3})\\|([0-9A-F]+)");
 
     private static Map<String, byte[]> extractGifPayloads() throws Exception {
-        String text = new String(Files.readAllBytes(GIF), StandardCharsets.US_ASCII);
+        byte[] data = Files.readAllBytes(GIF);
         Map<String, byte[]> out = new LinkedHashMap<>();
-        Matcher m = PAYLOAD.matcher(text);
-        while (m.find()) {
-            out.put(m.group(1), fromHex(m.group(2)));
+        int offset = 0;
+        while (offset < data.length) {
+            if (data[offset] == 0x21 && offset + 2 < data.length && data[offset + 1] == (byte) 0xFF) {
+                int blockSize = data[offset + 2] & 0xFF;
+                int headerEnd = offset + 3 + blockSize;
+                if (headerEnd > data.length) {
+                    break;
+                }
+                String appId = new String(data, offset + 3, Math.min(11, blockSize), StandardCharsets.US_ASCII);
+                if (appId.startsWith("MRNR") && appId.contains("CRYPTO1")) {
+                    // Application auth code byte follows the identifier.
+                    int pos = headerEnd + 1;
+                    StringBuilder payload = new StringBuilder();
+                    while (pos < data.length) {
+                        int subLen = data[pos] & 0xFF;
+                        pos++;
+                        if (subLen == 0) {
+                            break;
+                        }
+                        if (pos + subLen > data.length) {
+                            break;
+                        }
+                        payload.append(new String(data, pos, subLen, StandardCharsets.US_ASCII));
+                        pos += subLen;
+                    }
+                    Matcher m = PAYLOAD.matcher(payload);
+                    while (m.find()) {
+                        // Last MRNR/CRYPTO1 block in file order wins for a frame_id.
+                        out.put(m.group(1), fromHex(m.group(2)));
+                    }
+                    offset = pos;
+                    continue;
+                }
+            }
+            offset++;
         }
         return out;
     }

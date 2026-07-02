@@ -363,7 +363,6 @@ ROUTE_LOCK_LOG = [
             {
                 "when": {"sw3": "south"},
                 "witness": "BUL-BJ",
-                "witness_active": True,
             }
         ),
     ),
@@ -377,7 +376,97 @@ ROUTE_LOCK_LOG = [
                 "defer_after_rollback": "handover",
                 "when": {"sw2": "south"},
                 "witness": "BUL-BJ",
-                "witness_active": True,
+            }
+        ),
+    ),
+    (
+        65,
+        "BUL-BN",
+        "amend",
+        "t_sw2_d",
+        json.dumps({"when": {"sw2": "south"}, "witness": "BUL-BJ"}),
+    ),
+    (66, "BUL-BO", "hold", "t_sw1_c", json.dumps({"hold_id": "tail-gate"})),
+    (
+        67,
+        "BUL-BP",
+        "amend",
+        "t_sw2_d",
+        json.dumps({"when": {"sw2": "south"}, "unless_hold_on": ["t_sw1_c"]}),
+    ),
+    (68, "BUL-BQ", "release", "t_sw1_c", json.dumps({"hold_id": "tail-gate"})),
+    (
+        69,
+        "BUL-BR",
+        "amend",
+        "t_sw2_d",
+        json.dumps(
+            {
+                "when": {"sw2": "south"},
+                "unless_replayed": {"handover": ["BUL-BJ"]},
+            }
+        ),
+    ),
+    (
+        70,
+        "BUL-BS",
+        "add",
+        "t_sw3_g",
+        json.dumps(
+            {
+                "when": {"sw3": "south"},
+                "unless_replayed": {"handover": ["BUL-BJ"]},
+            }
+        ),
+    ),
+    (
+        71,
+        "BUL-BT",
+        "add",
+        "t_sw3_g",
+        json.dumps(
+            {
+                "when": {"sw3": "south"},
+                "witness": "BUL-AL",
+                "witness_track": "t_sw2_d",
+            }
+        ),
+    ),
+    (
+        72,
+        "BUL-BU",
+        "amend",
+        "t_sw2_d",
+        json.dumps(
+            {
+                "when": {"sw2": "south"},
+                "void_after_rollback": ["handover"],
+            }
+        ),
+    ),
+    (
+        73,
+        "BUL-BV",
+        "add",
+        "t_sw3_g",
+        json.dumps(
+            {
+                "when": {"sw3": "south"},
+                "witness": "BUL-BA",
+                "witness_track": "t_sw2_d",
+                "witness_snapshot": "handover",
+            }
+        ),
+    ),
+    (
+        74,
+        "BUL-BW",
+        "amend",
+        "t_sw2_d",
+        json.dumps(
+            {
+                "when": {"sw2": "south"},
+                "unless_snapshot_stale": "handover",
             }
         ),
     ),
@@ -551,6 +640,35 @@ NOTES = [
         "defer_after_rollback rows were folded at log tail instead of when handover rollback restored; "
         "BUL-BM south d-seal landed on applied_bulletins alone",
     ),
+    (
+        40,
+        "rollback kept BUL-BJ in witness history after handover restore; BUL-BL g-seal and BUL-BN "
+        "south amend fired on log presence alone",
+    ),
+    (
+        41,
+        "unless_hold_on ignored during tail-gate hold so BUL-BP south d-seal amend landed early; "
+        "unless_replayed ignored after handover rollback so BUL-BR/BUL-BS replayed BUL-BJ-era rows",
+    ),
+    (
+        42,
+        "witness_track treated like applied_bulletins membership; BUL-BT g-seal landed even "
+        "though BUL-AL no longer owns t_sw2_d",
+    ),
+    (
+        43,
+        "void_after_rollback ignored on BUL-BU so south d-seal replay fired after handover rollback",
+    ),
+    (
+        44,
+        "witness_snapshot treated like witness_track alone; BUL-BV g-seal landed even though "
+        "t_sw2_d when map no longer matched the handover capture",
+    ),
+    (
+        45,
+        "unless_snapshot_stale ignored on BUL-BW so south d-seal amend replayed after "
+        "handover tracks drifted from the capture",
+    ),
 ]
 
 ROUTE_LOCK_GLOSSARY = [
@@ -651,6 +769,12 @@ ROUTE_LOCK_GLOSSARY = [
         "surviving track lock in state at apply time — prior apply alone is not enough.",
     ),
     (
+        "witness_track",
+        "When set alongside witness, skip unless the named bulletin owns the surviving "
+        "lock on that exact track_id in state at apply time — membership in "
+        "applied_bulletins alone is not enough.",
+    ),
+    (
         "suppresses",
         "Void every surviving lower-seq row from the listed bulletin ids before "
         "the row applies.",
@@ -707,16 +831,47 @@ ROUTE_LOCK_GLOSSARY = [
         "Replace the surviving lock map with the named snapshot capture and clear "
         "hold stacks on snapshotted tracks. Tracks absent from the snapshot drop "
         "from state; holds on tracks absent from the snapshot stay in place. "
-        "Rollback with an unknown snapshot_id is ignored. Cascade fixpoints rerun "
-        "after the restore. Rows applied between the snapshot and the rollback keep "
-        "their applied history for witness gates, but witness_active ownership "
-        "follows the restored lock map.",
+        "Rollback with an unknown snapshot_id is ignored. Retire witness history "
+        "next: drop every bulletin from applied_bulletins that does not own a lock "
+        "in the restored snapshot capture. Only after retire runs, flush any "
+        "defer_after_rollback queue for the same snapshot_id. Cascade fixpoints "
+        "rerun after the restore. witness_active still requires the witness bulletin "
+        "to own a surviving track lock at apply time.",
     ),
     (
         "defer_after_rollback",
         "Row stays pending until a rollback restores the named snapshot_id, then "
         "applies in seq order before the log continues. Like defer_until, the row "
         "does not run at its seq position.",
+    ),
+    (
+        "unless_hold_on",
+        "Skip apply while any listed track has an active hold stack, even when the "
+        "row targets a different track.",
+    ),
+    (
+        "unless_replayed",
+        "Skip apply when any listed bulletin under the named snapshot_id was last "
+        "successfully applied before that snapshot's most recent rollback generation. "
+        "Track rollback generation on each rollback and bulletin apply generation on "
+        "each successful row.",
+    ),
+    (
+        "void_after_rollback",
+        "Skip apply once any listed snapshot_id has been restored by a rollback row. "
+        "Unlike unless_replayed this gates on snapshot rollback events, not bulletin "
+        "apply generation.",
+    ),
+    (
+        "witness_snapshot",
+        "When set alongside witness and witness_track, skip unless the witness bulletin "
+        "owns witness_track in state and its when-map equals the named snapshot capture "
+        "for that track — current ownership alone is not enough.",
+    ),
+    (
+        "unless_snapshot_stale",
+        "Skip apply while any track present in both state and the named snapshot capture "
+        "has a different when-map or bulletin owner than the capture.",
     ),
 ]
 

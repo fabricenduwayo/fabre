@@ -51,7 +51,7 @@ final class WaiverDecoder {
             w.put("expires_on", g.group(6));
             w.put("status", "granted");
             w.put("revoked_on", null);
-            waivers.put(g.group(3), w);
+            waivers.putIfAbsent(g.group(3), w);
         }
         Matcher r = RESCIND.matcher(text);
         while (r.find()) {

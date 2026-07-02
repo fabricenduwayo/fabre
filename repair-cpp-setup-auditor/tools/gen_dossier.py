@@ -58,6 +58,91 @@ GUIDANCE = [
     "Retain the prior configuration so that a rollback can be performed without rebuilding the host.",
 ]
 
+GENERIC_REQUIREMENTS = [
+    "The host shall record the control owner and last review date in the local compliance register.",
+    "Configuration drift from the approved baseline shall be remediated within the published SLA.",
+    "Automation that enforces this control shall emit structured evidence suitable for quarterly attestation.",
+]
+
+DOMAIN_REQUIREMENTS = {
+    "Access Control": [
+        "Interactive accounts shall be limited to approved shells and home-directory mount options.",
+        "Privilege-bearing group memberships shall be reconciled against the quarterly access review export.",
+        "Emergency break-glass accounts shall be disabled automatically when their waiver expires.",
+        "Shared interactive accounts are prohibited except where explicitly registered in Appendix A.",
+    ],
+    "Audit and Accountability": [
+        "Security-relevant events shall be forwarded to the central collector with monotonic timestamps.",
+        "Local retention shall not truncate records needed for the current assessment cycle.",
+        "Audit pipelines shall preserve ordering for correlated sign-in and privilege-use events.",
+    ],
+    "Configuration Management": [
+        "Baseline packages shall be installed only from the approved internal mirror.",
+        "Configuration files under management shall include a checksum in the host inventory.",
+        "Drift detection jobs shall run before nightly backup windows on gateway hosts.",
+    ],
+    "System Hardening": [
+        "Kernel tunables called out in the platform baseline shall match the pinned reference profile.",
+        "Listening services shall be bound to management interfaces unless a waiver is on file.",
+        "Unused filesystem mount options that weaken integrity guarantees shall be removed.",
+    ],
+    "Logging and Telemetry": [
+        "Log sources shall use a common timestamp format and include the host classification tag.",
+        "High-volume debug logging shall be disabled on production gateway instances.",
+        "Forwarded logs shall include the originating unit name and boot identifier.",
+    ],
+    "Maintenance": [
+        "Patch application shall occur only inside the published maintenance window for the site.",
+        "Post-maintenance validation shall include a targeted auditor run against the gateway profile.",
+        "Rollback media for critical packages shall be retained for one full release cycle.",
+    ],
+    "Network Controls": [
+        "East-west management traffic shall traverse only approved jump paths.",
+        "Firewall policy changes shall be staged with an explicit rollback rule set.",
+        "NTP sources shall match the site-specific list maintained by platform engineering.",
+    ],
+    "Incident Response": [
+        "Compromised credentials shall trigger an immediate access review for affected principals.",
+        "Forensic images shall preserve the state of access-control files before remediation.",
+        "Containment playbooks shall reference the gateway auditor patch output as evidence.",
+    ],
+}
+
+DOMAIN_GUIDANCE = {
+    "Access Control": [
+        "Validate `/etc/passwd`, `/etc/shadow`, and `/etc/group` together; partial reads miss effective membership.",
+        "Treat sudoers alias expansion as recursive and guard against self-referential alias loops.",
+    ],
+    "Audit and Accountability": [
+        "Separate durable audit storage from ephemeral container layers on gateway hosts.",
+        "When migrating ledger formats, never discard historical rows during in-place upgrades.",
+    ],
+    "Configuration Management": [
+        "Store rendered configuration in `/etc` only after the change ticket is approved.",
+        "Compare rendered files against the last known-good snapshot before closing a change.",
+    ],
+    "System Hardening": [
+        "Evaluate sshd drop-ins in filename order; do not assume a single monolithic config file.",
+        "Document Match-block criteria that are intentionally out of scope for the gateway auditor.",
+    ],
+    "Logging and Telemetry": [
+        "Redact key material from forwarded authentication failure events.",
+        "Keep local rotation thresholds below the central ingestion limit.",
+    ],
+    "Maintenance": [
+        "Re-run the setup auditor after privilege-affecting package updates.",
+        "Capture the patch list emitted before and after maintenance for the change record.",
+    ],
+    "Network Controls": [
+        "Confirm management CIDRs in sudoers Host fields align with the network inventory.",
+        "Stage firewall edits with a timed rollback when altering bastion paths.",
+    ],
+    "Incident Response": [
+        "Preserve authorized-keys files before revoking credentials during containment.",
+        "Attach the auditor patch list to the incident ticket as machine-readable evidence.",
+    ],
+}
+
 VERIFY = [
     "Verification is performed by the setup auditor, which compares the host state to the normalized policy expectation.",
     "Evidence is the auditor's proposed patch set; a compliant host yields an empty set for this control.",
@@ -98,17 +183,20 @@ def para(bank, n):
 
 
 def filler_control(cid, title, domain):
+    req = rng.choice(DOMAIN_REQUIREMENTS.get(domain, GENERIC_REQUIREMENTS))
+    impl = rng.choice(DOMAIN_GUIDANCE.get(domain, GUIDANCE))
+    verify = rng.choice(VERIFY)
     return f"""### {cid} — {title}
 
 **Domain:** {domain}  **Severity:** {rng.choice(SEV)}  **Applies to:** {rng.choice(HOSTCLASS)}
 
-**Rationale.** {para(RATIONALE, rng.randint(3, 5))}
+**Rationale.** {rng.choice(RATIONALE)}
 
-**Requirement.** {para(GUIDANCE, 1)} The host shall maintain the configuration described in this control at all times, and the setup auditor shall treat any deviation as reportable. {para(RATIONALE, 1)}
+**Requirement.** {req}
 
-**Implementation guidance.** {para(GUIDANCE, rng.randint(5, 8))}
+**Implementation guidance.** {impl}
 
-**Verification.** {para(VERIFY, rng.randint(3, 5))}
+**Verification.** {verify}
 
 **References.** {refs()}
 
@@ -453,6 +541,28 @@ AMENDMENTS_REAL = [
      "value greater than or equal to `20620`, does not by itself disable the "
      "account. This criterion combines with the password-token and login-shell "
      "criteria: an account disabled by any one criterion is disabled."),
+    ("G-2026-19", "AC-SUDO-NOPASSWD",
+     "For command lists, sudo command tags are stateful. A `NOPASSWD:` or "
+     "`PASSWD:` tag applies to the command entry following the colon and "
+     "remains in effect for later comma-separated command entries until another "
+     "password tag appears. Therefore a rule such as "
+     "`alice ALL=(ALL) NOPASSWD: /usr/bin/id, ALL` grants reportable "
+     "passwordless sudo because the later `ALL` command inherits `NOPASSWD`. A "
+     "rule such as `alice ALL=(ALL) NOPASSWD: /usr/bin/id, PASSWD: ALL` does "
+     "not grant reportable passwordless sudo because the `ALL` command is under "
+     "`PASSWD`. This amendment narrows how G-2026-02 is evaluated; the runas "
+     "and host-scoping amendments still apply."),
+    ("G-2026-20", "AC-KEY-REVOKE",
+     "Authorized key files may contain blank lines, comments, marker-style "
+     "retired entries, and per-key option prefixes. For AC-KEY-REVOKE, an "
+     "account is considered to possess keys only when at least one line contains "
+     "an active key record. Blank lines and lines beginning with `#` are "
+     "ignored. Lines beginning with `@` are marker-style retired entries and do "
+     "not count as active keys. A line whose first non-option token is a "
+     "recognized OpenSSH key type (`ssh-*`, `ecdsa-*`, `sk-ssh-*`, "
+     "`sk-ecdsa-*`, or `rsa-sha2-*`) counts as an active key; option prefixes "
+     "before that token are permitted. Option-only lines without a following "
+     "key type do not count."),
 ]
 
 AMENDMENTS_FILLER = [
@@ -468,6 +578,24 @@ AMENDMENTS_FILLER = [
     ("G-2026-14", "MA-PATCH-WINDOW",
      "The maintenance window is shifted by one hour for the eastern region. This "
      "amendment does not affect auditor behavior."),
+    ("G-2026-21", "CM-PACKAGE-MIRROR",
+     "The internal package mirror URL rotates quarterly. This amendment does not "
+     "affect auditor behavior."),
+    ("G-2026-22", "IR-CONTACT-ROSTER",
+     "The after-hours incident bridge number is updated. This amendment does not "
+     "affect auditor behavior."),
+    ("G-2026-23", "LG-FORWARDER-ADDR",
+     "The syslog collector address for tier-1 hosts changes. This amendment does "
+     "not affect auditor behavior."),
+    ("G-2026-24", "MA-REBOOT-NOTICE",
+     "Maintenance notifications must be posted 72 hours in advance. This amendment "
+     "does not affect auditor behavior."),
+    ("G-2026-25", "NW-JUMPHOST-LIST",
+     "The approved jump-host inventory is republished. This amendment does not "
+     "affect auditor behavior."),
+    ("G-2026-26", "CM-CHECKSUM-POLICY",
+     "Configuration checksums must be stored alongside the host inventory export. "
+     "This amendment does not affect auditor behavior."),
 ]
 
 
@@ -487,8 +615,10 @@ def build():
         "how a host inventory is parsed, normalized, and evaluated into a set of "
         "remediation patches. The auditor must agree with this Standard for every "
         "host it evaluates.\n\n"
-        + para(RATIONALE, 4)
-        + "\n\n### 1.4 Precedence of amendments\n\n"
+        "Most numbered controls in the body describe enterprise baselines that "
+        "surround gateway access. Only the controls called out in Appendix H and "
+        "their Appendix G amendments are implemented by the setup auditor.\n\n"
+        "### 1.4 Precedence of amendments\n\n"
         "This Standard is maintained as a body of numbered controls followed by "
         "an authoritative list of amendments in **Appendix G**. Where the body of "
         "a control and an amendment in Appendix G disagree, **the amendment in "
@@ -510,7 +640,7 @@ def build():
         ("Normalized inventory", "The intermediate representation produced after parsing, on which the policy rules operate."),
     ]
     for t, d in terms:
-        parts.append(f"\n**{t}.** {d} {para(RATIONALE, rng.randint(1,2))}\n")
+        parts.append(f"\n**{t}.** {d}\n")
 
     # Control domains. Interleave normative controls into the relevant domains.
     normative_by_domain = {
@@ -525,10 +655,11 @@ def build():
     section = 3
     for code, dname in DOMAINS:
         parts.append(f"\n## {section}. {dname}\n")
-        parts.append(para(RATIONALE, rng.randint(4, 6)) + "\n\n")
-        parts.append(para(GUIDANCE, rng.randint(4, 6)) + "\n")
-        # filler controls for this domain
-        n_filler = rng.randint(11, 15)
+        parts.append(
+            f"The controls in this section apply to {rng.choice(HOSTCLASS)}. "
+            f"{rng.choice(RATIONALE)}\n"
+        )
+        n_filler = rng.randint(14, 18)
         idx = 1
         # emit some filler, then normative (if any), then more filler
         for _ in range(n_filler):
@@ -547,30 +678,147 @@ def build():
 
     # Appendices
     parts.append("\n## Appendix A. Host classification\n")
+    host_notes = [
+        "Gateway hosts terminate interactive laboratory access and run the setup auditor.",
+        "Tier-1 hosts host long-lived experiments and inherit the gateway baseline.",
+        "Service-account-bearing hosts expose automation principals with lowered UID ranges.",
+        "Shared interactive hosts require quarterly access reviews and named custodians.",
+        "Bastion hosts forward only management-plane protocols to internal segments.",
+    ]
     for _ in range(rng.randint(8, 12)):
         parts.append(
             f"\n- **{rng.choice(['HC', 'GW', 'TL', 'SV'])}-{rng.randint(100,999)}**: "
-            + para(GUIDANCE, rng.randint(2, 3))
+            + rng.choice(host_notes)
+            + " "
+            + rng.choice(GUIDANCE)
         )
-    parts.append("\n\n## Appendix C. Banner wording\n\n" + para(GUIDANCE, 6) + "\n")
+    parts.append("\n\n## Appendix C. Banner wording\n\n")
+    parts.append(
+        "Authorized pre-authentication banners shall identify the facility, prohibit "
+        "unauthorized use, and provide a monitored contact address. Wording changes "
+        "require legal review and do not alter auditor patch behavior.\n"
+    )
     parts.append("\n## Appendix B. Control rationale narratives\n")
-    for _ in range(rng.randint(14, 20)):
+    narratives = [
+        "Gateway auditors reconcile raw configuration because packaged scanners often "
+        "mis-handle sudoers aliases and sshd drop-in precedence.",
+        "Primary-group membership is easy to miss when only textual group lists are parsed.",
+        "Appendix G exists because several 2026 incidents traced to ambiguous body text.",
+        "Ledger durability matters for repeat audits even when the patch set is empty.",
+        "Service-account exemptions are intentionally narrow to keep automation usable.",
+        "Match-block evaluation must use a fixed audit context or hosts disagree on sshd posture.",
+        "Includedir splicing changes last-match ordering and cannot be treated as comments.",
+    ]
+    for i in range(rng.randint(18, 24)):
         parts.append(
             f"\n### Narrative {rng.choice(['NB','RB','XB'])}-{rng.randint(10,99)}\n\n"
-            + para(RATIONALE + GUIDANCE, rng.randint(6, 10))
+            + rng.choice(narratives)
+            + " "
+            + rng.choice(GUIDANCE)
+            + "\n"
         )
     parts.append("\n\n## Appendix D. Assessment procedures\n")
-    for _ in range(rng.randint(12, 18)):
+    procedures = [
+        "Collect the auditor patch list before applying remediations.",
+        "Re-run the auditor after remediation and confirm an empty patch set.",
+        "Archive passwd, shadow, group, sudoers, authorized_keys, and sshd drop-ins with the assessment.",
+        "Compare two consecutive audits of the same snapshot to confirm idempotence.",
+        "Verify ledger schema 2 retention after a non-empty audit.",
+    ]
+    for _ in range(rng.randint(12, 16)):
         parts.append(
             f"\n- **Procedure {rng.randint(100,999)}.** "
-            + para(VERIFY + GUIDANCE, rng.randint(3, 5))
+            + rng.choice(procedures)
+            + " "
+            + rng.choice(VERIFY)
         )
     parts.append("\n\n## Appendix E. Change log\n")
-    for _ in range(rng.randint(70, 100)):
+    changelog = [
+        "Clarified appendix precedence language.",
+        "Added gateway auditor cross-reference in Appendix H.",
+        "Retired deprecated sshd keyword spelling notes.",
+        "Aligned service-account roster with operations inventory.",
+        "Editorial pass on access-control definitions.",
+        "Documented includedir handling in AC-SUDO-NOPASSWD guidance.",
+    ]
+    for _ in range(rng.randint(70, 85)):
         y = rng.choice([2023, 2024, 2025, 2026])
         parts.append(
             f"\n- {y}-{rng.randint(1,12):02d}-{rng.randint(1,28):02d}: "
-            + para(RATIONALE + GUIDANCE, rng.randint(1, 2))
+            + rng.choice(changelog)
+        )
+
+    parts.append("\n\n## Appendix F. Cross-domain dependencies\n")
+    cross_refs = [
+        "AC-KEY-REVOKE depends on the disabled-account determination in AC-ACCT-LOCK and therefore must run after account normalization.",
+        "AC-SUDO-NOPASSWD resolves `%group` principals through AC-GROUP-EFFECTIVE before applying exemptions.",
+        "HD-SSHD-KBDINT shares drop-in concatenation and Match evaluation with HD-SSHD-DROPIN under G-2026-17.",
+        "AU-LEDGER records patch objects emitted by access-control and hardening rules without wrapping them in envelopes.",
+        "AC-EXEMPT filters principals after passwordless-sudo detection but before patch emission.",
+        "G-2026-09 includedir content participates in G-2026-07 last-match ordering and G-2026-18 host scoping.",
+        "G-2026-19 command-tag stickiness applies only after a grant survives G-2026-02, G-2026-15, and G-2026-18 filtering.",
+        "G-2026-16 account expiry is evaluated on the shadow field independently of password-token locks.",
+        "G-2026-05 Defaults overrides are not host-scoped even when ordinary sudoers specs are.",
+        "G-2026-20 key detection ignores marker lines so revoked keys do not block compliance.",
+        "G-2026-10 deprecated PermitRootLogin spellings do not change PasswordAuthentication acceptance.",
+        "G-2026-04 broadens PermitRootLogin acceptance without altering the sshd patch shape.",
+        "Primary-group membership can cause a `%group` sudo grant to apply even when the member list is empty.",
+        "Host aliases in sudoers recurse like user aliases and may include negated entries.",
+        "A non-applicable Match block must not establish the first effective sshd keyword occurrence.",
+    ]
+    for i in range(rng.randint(90, 110)):
+        parts.append(
+            f"\n### Dependency note {i + 1}\n\n"
+            + rng.choice(cross_refs)
+            + " "
+            + rng.choice(DOMAIN_GUIDANCE.get(rng.choice([d[1] for d in DOMAINS]), GUIDANCE))
+            + "\n"
+        )
+
+    parts.append("\n\n## Appendix I. Assessment evidence examples\n")
+    evidence_examples = [
+        "An assessor archives the raw `sudoers` text alongside drop-in files when "
+        "passwordless grants are disputed; the auditor output is compared after "
+        "includedir splicing is applied.",
+        "When sshd posture differs between hosts, reviewers first confirm the fixed "
+        "audit context rather than assuming global keywords were ignored.",
+        "Ledger migration evidence includes the legacy bootstrap row plus every "
+        "patch object from a non-compliant fixture run.",
+        "Exemption disputes are resolved by checking UID, roster membership, and "
+        "whether the principal still holds a reportable passwordless grant.",
+        "Key-revocation findings attach the authorized-keys file showing active "
+        "key types versus `@` marker lines.",
+        "Expiry-related disablement is demonstrated with the eighth shadow field "
+        "and the published reference day rather than password-token locks alone.",
+        "Statelessness is validated by posting contradictory snapshots for the "
+        "same username in sequence and confirming the second result stands alone.",
+    ]
+    for i in range(rng.randint(80, 95)):
+        parts.append(
+            f"\n### Evidence example {i + 1}\n\n"
+            + rng.choice(evidence_examples)
+            + " "
+            + rng.choice(VERIFY)
+            + "\n"
+        )
+
+    parts.append("\n\n## Appendix J. Control crosswalk notes\n")
+    crosswalk = [
+        "AC-ACCT-LOCK feeds AC-KEY-REVOKE but does not itself emit patches.",
+        "AC-SUDO-NOPASSWD is the only control that emits `sudoers.require_password`.",
+        "HD-SSHD-DROPIN and HD-SSHD-KBDINT are the only controls that emit `systemd.set_dropin` for sshd.",
+        "AU-LEDGER is orthogonal to patch selection and only governs persistence format.",
+        "Appendix G amendments may narrow body requirements without introducing new patch types.",
+        "A compliant host satisfies every amended control simultaneously and therefore emits no patches.",
+        "Random assessment hosts exercise combinations of amendments; partial parsers fail intermittently.",
+    ]
+    for i in range(rng.randint(70, 85)):
+        parts.append(
+            f"\n- **Crosswalk {i + 1}.** "
+            + rng.choice(crosswalk)
+            + " "
+            + rng.choice(DOMAIN_REQUIREMENTS.get(rng.choice([d[1] for d in DOMAINS]), GENERIC_REQUIREMENTS))
+            + "\n"
         )
 
     parts.append("\n\n## Appendix G. Amendments (authoritative)\n\n")

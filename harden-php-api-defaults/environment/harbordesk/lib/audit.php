@@ -10,7 +10,7 @@ function audit_db($config)
         ts TEXT NOT NULL,
         event TEXT NOT NULL,
         route TEXT NOT NULL,
-        origin TEXT,
+        actor TEXT NOT NULL,
         decision TEXT NOT NULL,
         reason TEXT
     )');

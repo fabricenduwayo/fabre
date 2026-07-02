@@ -153,7 +153,7 @@ NORMATIVE["CO-PREFLIGHT"] = """### CO-PREFLIGHT — Preflight handling
 
 **Rationale.** Browser preflight (`OPTIONS`) requests must be answered consistently so that legitimate cross-origin clients function while untrusted origins gain nothing.
 
-**Requirement.** An `OPTIONS` request to any path shall return HTTP `204` with no response body. The cross-origin grant of CO-ORIGIN-ALLOW applies to the preflight response under the same allowlist rule. When (and only when) the origin is allowed, the preflight response shall additionally set:
+**Requirement.** An `OPTIONS` request to any path shall return HTTP `204` with no response body, including when the request omits `Access-Control-Request-Method`. The cross-origin grant of CO-ORIGIN-ALLOW applies to the preflight response under the same allowlist rule. When (and only when) the origin is allowed, the preflight response shall additionally set:
 
 - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
 - `Access-Control-Allow-Headers: Authorization, Content-Type, X-Bootstrap-Secret`
@@ -315,7 +315,9 @@ AMENDMENTS_REAL = [
      "column, which is why current writes fail. Reconciliation shall move the "
      "ledger to a layout that records the request `origin` for every audited row "
      "(including denials) and no longer requires `actor`, while carrying every "
-     "pre-existing historical row forward unchanged."),
+     "pre-existing historical row forward unchanged. When a request carries no "
+     "`Origin` header, the stored `origin` value for that audited row shall be "
+     "SQL `NULL`, not an empty string."),
     ("G-2026-11", "CO-PREFLIGHT",
      "The method, header, and max-age hint headers in CO-PREFLIGHT "
      "(`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and "
@@ -328,6 +330,12 @@ AMENDMENTS_REAL = [
      "hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). "
      "AC-HEALTH shall verify a presented bearer by applying the same digest "
      "before comparison."),
+    ("G-2026-13", "CO-ORIGIN-ALLOW",
+     "Cross-origin grant and preflight hint headers apply only to the current "
+     "request. When a request carries no `Origin` header, the response shall "
+     "include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, "
+     "even if an earlier request in the same long-lived process carried an "
+     "allowed origin."),
 ]
 
 AMENDMENTS_FILLER = [

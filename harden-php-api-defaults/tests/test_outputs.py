@@ -29,7 +29,7 @@ from helpers import (
     simulate,
 )
 
-RANDOM_CASES = 60
+RANDOM_CASES = 75
 SEED = 91237  # fixed seed for reproducibility
 
 ALLOWED = ALLOWED_ORIGINS[0]
@@ -103,6 +103,7 @@ def scripted():
     r["health_wrong"] = request("GET", "/health", {"Authorization": "Bearer bad"})
     r["cors_allowed"] = request("GET", "/health", {**auth, "Origin": ALLOWED})
     r["cors_allowed2"] = request("GET", "/health", {**auth, "Origin": ALLOWED2})
+    r["cors_no_origin_after_grant"] = request("GET", "/health", auth)
     r["cors_evil"] = request("GET", "/health", {**auth, "Origin": "https://evil.example"})
     r["cors_trailing_slash"] = request("GET", "/health", {**auth, "Origin": ALLOWED + "/"})
     r["preflight_allowed"] = request("OPTIONS", "/admin/bootstrap", {"Origin": ALLOWED})
@@ -161,6 +162,19 @@ def test_token_stored_non_recoverable(scripted):
     with open(TOKEN_FILE, encoding="utf-8") as fh:
         stored = fh.read().strip()
     assert stored and token not in stored
+
+
+def test_audit_origin_null_without_header(scripted):
+    """G-2026-06: requests without an Origin header store SQL NULL in origin."""
+    token = scripted["token"]
+    assert token is not None
+    rows_before = audit_rows_with_origin()
+    request("GET", "/health", {"Authorization": f"Bearer {token}"})
+    rows_after = audit_rows_with_origin()
+    assert len(rows_after) == len(rows_before) + 1
+    row = rows_after[-1]
+    assert row["event"] == "health" and row["decision"] == "accepted"
+    assert row["origin"] is None
 
 
 def test_cors_grant_follows_current_request(scripted):
@@ -226,6 +240,16 @@ def test_cors_rejects_untrusted_and_inexact(scripted):
         acao = header_ci(headers, "Access-Control-Allow-Origin")
         assert acao is None, f"{key} leaked ACAO {acao!r}"
         assert header_ci(headers, "Access-Control-Allow-Credentials") is None
+
+
+def test_cors_absent_origin_emits_no_headers(scripted):
+    """G-2026-13: a request with no Origin must not inherit a prior grant."""
+    _, headers, _, _ = scripted["cors_no_origin_after_grant"]
+    assert header_ci(headers, "Access-Control-Allow-Origin") is None
+    assert header_ci(headers, "Access-Control-Allow-Credentials") is None
+    assert header_ci(headers, "Access-Control-Allow-Methods") is None
+    assert header_ci(headers, "Access-Control-Allow-Headers") is None
+    assert header_ci(headers, "Access-Control-Max-Age") is None
 
 
 def test_preflight_scoped_and_max_age(scripted):

@@ -91,6 +91,13 @@ class TestMilestone3Decrypt:
             assert r["auth_ok"] is True, f"{r['frame_id']} failed authentication"
             assert r["reason_code"] == "authenticated"
 
+    def test_superseded_crypto_block_not_used(self, produced, expected) -> None:
+        """Operative MRNR/CRYPTO1 block must win over an earlier stale block for the frame."""
+        got = {r["frame_id"]: r for r in produced}
+        exp = {r["frame_id"]: r for r in expected}
+        assert got["frm-001"]["plaintext_sha256"] == exp["frm-001"]["plaintext_sha256"]
+        assert got["frm-011"]["plaintext_sha256"] == exp["frm-011"]["plaintext_sha256"]
+
     def test_auth_totals_match(self, produced, expected) -> None:
         """Authenticated vs failed totals must match the signed report."""
         got = collections.Counter(r["reason_code"] for r in produced)

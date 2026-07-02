@@ -1,0 +1,5 @@
+Agents must reconcile a long policy dossier with a buggy C++ HTTP auditor. The Standard body alone is misleading — Appendix G amendments change disabled-account tokens, sudo semantics, sshd Match evaluation, authorized-key parsing, and service-account exemptions. The shipped service also mishandles persistent audit bookkeeping and does not treat each request independently. Randomized verifier hosts plus named fixtures catch partial fixes.
+
+Bring POST /v1/setup/audit into conformance with the amended controls named in instruction.md: parse each snapshot independently, migrate the ledger to schema 2 inside the C++ service, append one entry per emitted patch, and rebuild with CMake.
+
+Pytest drives POST /v1/setup/audit against compliant and adversarial fixture snapshots plus seeded random hosts, comparing canonical patch lists to a reference resolver in the test image. Separate tests cover sudo edge cases, sshd drop-in precedence, ledger migration and append behavior, and statelessness across back-to-back unrelated hosts.

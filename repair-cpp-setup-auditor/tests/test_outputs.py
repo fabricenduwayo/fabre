@@ -1,10 +1,9 @@
-"""Verifies the C++ setup auditor against the resolved Lab Access Hardening Standard.
+"""Verifies the C++ setup auditor against the amended Lab Access Hardening Standard.
 
 The auditor parses a raw host snapshot and proposes remediation patches. Its
-output must match the Standard as it stands *after* the authoritative amendments
-in Appendix G. The reference implementation used to compute expectations lives
-only in the test image; the agent must derive the resolved policy from the
-dossier in /app/docs.
+output must match the controls named in instruction.md as amended by Appendix G.
+The reference implementation used to compute expectations lives only in the test
+image.
 """
 
 import json
@@ -254,3 +253,38 @@ def test_compliant_host_needs_no_patches():
     """An already-compliant host produces an empty, idempotent patch set."""
     snap = load_fixture("compliant.json")
     assert cpp_audit(snap) == []
+
+
+def test_audit_is_stateless_across_requests():
+    """A later snapshot must not inherit account lock state from an earlier audit."""
+    sshd = {
+        "10-base.conf": (
+            "PermitRootLogin no\n"
+            "PasswordAuthentication no\n"
+            "KbdInteractiveAuthentication no\n"
+        )
+    }
+    enabled = {
+        "files": {
+            "passwd": "alice:x:1001:100::/home/alice:/bin/bash\n",
+            "shadow": "alice:$6$x:19000:0:99999:7:::\n",
+            "group": "users:x:100:\n",
+            "sudoers": "Defaults env_reset\n",
+            "authorized_keys": {"alice": "ssh-ed25519 AAAAalice alice@lab\n"},
+            "sshd_config.d": sshd,
+        }
+    }
+    disabled = {
+        "files": {
+            "passwd": "alice:x:1001:100::/home/alice:/bin/bash\n",
+            "shadow": "alice:!:19000:0:99999:7:::\n",
+            "group": "users:x:100:\n",
+            "sudoers": "Defaults env_reset\n",
+            "authorized_keys": {"alice": "ssh-ed25519 AAAAalice alice@lab\n"},
+            "sshd_config.d": sshd,
+        }
+    }
+    assert cpp_audit(enabled) == []
+    assert canon(cpp_audit(disabled)) == canon(
+        [{"action": "ssh.revoke_keys", "target": "alice"}]
+    )

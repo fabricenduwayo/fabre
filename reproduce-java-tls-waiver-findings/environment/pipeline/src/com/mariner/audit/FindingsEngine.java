@@ -95,7 +95,7 @@ final class FindingsEngine {
         boolean covered = false;
         if (violation != null) {
             covered = wActive && waiverType.equals(violation)
-                    && ("all".equals(scope) || env.equals(scope));
+                    && env.equals(scope);
             if (!covered) {
                 if (waiverType.equals(violation) && "granted".equals(waiverStatus) && !wActive) {
                     return new Finding("deny", "waiver_expired", false);

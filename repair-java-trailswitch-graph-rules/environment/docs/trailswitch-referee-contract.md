@@ -11,9 +11,16 @@ it from source and SQL only — do not rely on manual playthroughs.
   positions that must be set for the edge to be traversable (`NULL` means any).
 - `route_rules` govern edge locks. Each row has `rule_action` of `lock` or `clear`.
   Lock positions use conjunction: every non-null `lock_sw*` must match the active
-  lineup. Rules on the same edge are ordered by ascending `rule_priority`; evaluate
-  in that order and apply the first matching rule. A matching `lock` rule blocks the
-  edge; a matching `clear` rule leaves it open and stops further rules on that edge.
+  lineup; a NULL `lock_sw1` or `lock_sw2` means ignore that switch. Rules on the
+  same edge are ordered by ascending `rule_priority`; walk them in that order.
+  Skip rules that do not match and keep evaluating later rules on the same edge.
+  Apply the first matching rule only. A matching `lock` rule blocks the edge; a
+  matching `clear` rule leaves it open and stops further rules on that edge.
+- `lock_groups` tie edges together. After route rules run on every edge, if any edge
+  in a group is locked, lock every edge listed for that same `group_id`. Each edge
+  still has its own ascending route-rule chain before relay runs. Relay must not
+  run until route rules finish, and `loadLockGroups` must keep every edge id for a
+  group — do not drop members when building the map.
 
 ## API shape (keep intact)
 
@@ -23,18 +30,6 @@ it from source and SQL only — do not rely on manual playthroughs.
 
 `cycle_guard` must be true when planning finishes normally. When no path exists under
 the active locks and switch positions, return `"reachable": false` and an empty path.
-
-## Handler requirements
-
-`GraphPathRepository` must load outgoing edges with **parameterized** SQL only — no
-string concatenation of station ids into queries. Route rules must load in ascending
-`rule_priority` order.
-
-`PathPlanner` must breadth-first search with a visited set and stop after depth 12.
-The seed graph contains a cycle (`E`→`C`); planning without a visited guard loops.
-
-`SwitchRuleHandler` must honor ascending per-edge rule order, conjunction lock matching,
-and `clear` vs `lock` semantics from the graph model above.
 
 Rebuild with `bash /app/trailswitch/build.sh` and restart via
 `bash /app/trailswitch/start.sh` after edits. The service listens on

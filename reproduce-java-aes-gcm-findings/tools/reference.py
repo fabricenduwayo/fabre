@@ -1236,6 +1236,55 @@ def build_audit_events() -> list[dict[str, Any]]:
         "recorded_at": "2026-05-22 16:00:00",
     })
 
+    return _finalize_event_times(rows)
+
+
+def _event_time(event: dict[str, Any]) -> str:
+    """Operative timeline position — effective_at when present, else recorded_at."""
+    return event.get("effective_at") or event["recorded_at"]
+
+
+def _finalize_event_times(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Attach effective_at and inject late-ingestion vs backdated correction pairs."""
+    for row in rows:
+        row.setdefault("effective_at", row["recorded_at"])
+
+    nonce_patches: dict[tuple[str, str, str], tuple[str, str]] = {
+        (
+            "frm-023",
+            "nonce_override_replaced",
+            NONCE_FRM023_CCC.hex().upper(),
+        ): ("2026-05-13 11:00:00", "2026-05-22 16:00:00"),
+        (
+            "frm-023",
+            "nonce_override_replacement_rescinded",
+            NONCE_FRM023_AAA.hex().upper(),
+        ): ("2026-05-18 14:00:00", "2026-05-15 13:00:00"),
+        (
+            "frm-020",
+            "nonce_override_amended",
+            NONCE_FRM020_DDD.hex().upper(),
+        ): ("2026-05-19 13:00:00", "2026-05-24 16:00:00"),
+    }
+    rotation_patches: dict[tuple[str, int, int], tuple[str, str]] = {
+        # Late-ingested v1->v6 row must not win over operative v2->v4 on recorded_at alone.
+        ("frm-011", 1, 6): ("2026-05-28 18:00:00", "2026-05-08 10:00:00"),
+        ("frm-011", 2, 4): ("2026-05-21 11:00:00", "2026-05-22 12:00:00"),
+    }
+    for row in rows:
+        nonce_hex = row.get("nonce_override_hex")
+        if nonce_hex is not None:
+            key = (row["frame_id"], row["event_type"], nonce_hex)
+            if key in nonce_patches:
+                row["recorded_at"], row["effective_at"] = nonce_patches[key]
+        if row["event_type"] == "key_rotated":
+            rot_key = (
+                row["frame_id"],
+                row["key_version"],
+                row["replacement_key_version"],
+            )
+            if rot_key in rotation_patches:
+                row["recorded_at"], row["effective_at"] = rotation_patches[rot_key]
     return rows
 
 
@@ -1301,7 +1350,7 @@ def resolve_key_version(frame_id: str, events: list[dict[str, Any]]) -> tuple[in
         and (e["key_version"], e["replacement_key_version"]) not in voided
     ]
     if rotations:
-        latest = max(rotations, key=lambda e: e["recorded_at"])
+        latest = max(rotations, key=_event_time)
         return latest["replacement_key_version"], "rotation_replacement"
     voided_assignments = rescinded_assignment_versions(frame_id, events)
     assigned = [
@@ -1309,7 +1358,7 @@ def resolve_key_version(frame_id: str, events: list[dict[str, Any]]) -> tuple[in
         if e["event_type"] == "key_assigned"
         and e["key_version"] not in voided_assignments
     ]
-    latest = max(assigned, key=lambda e: e["recorded_at"])
+    latest = max(assigned, key=_event_time)
     return latest["key_version"], "latest_assigned"
 
 
@@ -1330,7 +1379,7 @@ def db_override_candidates(
     """Eligible DB nonce rows after revocation and amendment processing."""
     frame_events = sorted(
         (e for e in events if e["frame_id"] == frame_id),
-        key=lambda e: e["recorded_at"],
+        key=_event_time,
     )
     revoked = revoked_nonce_hex(frame_id, events)
     candidates: list[tuple[str, str, int | None]] = []
@@ -1342,28 +1391,28 @@ def db_override_candidates(
         if event_type == "nonce_override_registered":
             hx = event["nonce_override_hex"]
             if hx and hx not in revoked:
-                candidates.append((event["recorded_at"], hx, event["key_version"]))
+                candidates.append((_event_time(event), hx, event["key_version"]))
         elif event_type == "nonce_override_amended":
             supersedes = event.get("supersedes_nonce_hex")
             hx = event["nonce_override_hex"]
             if supersedes:
                 candidates = [c for c in candidates if c[1] != supersedes]
             if hx and hx not in revoked:
-                candidates.append((event["recorded_at"], hx, event["key_version"]))
+                candidates.append((_event_time(event), hx, event["key_version"]))
         elif event_type == "nonce_override_replaced":
             supersedes = event.get("supersedes_nonce_hex")
             hx = event["nonce_override_hex"]
             if supersedes:
                 candidates = [c for c in candidates if c[1] != supersedes]
             if hx and hx not in revoked:
-                candidates.append((event["recorded_at"], hx, event["key_version"]))
+                candidates.append((_event_time(event), hx, event["key_version"]))
         elif event_type == "nonce_override_replacement_rescinded":
             voided = event.get("supersedes_nonce_hex")
             restored = event.get("nonce_override_hex")
             if voided:
                 candidates = [c for c in candidates if c[1] != voided]
             if restored and restored not in revoked:
-                candidates.append((event["recorded_at"], restored, event["key_version"]))
+                candidates.append((_event_time(event), restored, event["key_version"]))
 
     return [c for c in candidates if c[1] not in revoked]
 

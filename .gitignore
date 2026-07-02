@@ -5,3 +5,4 @@ tools/monitor/.venv/
 jobs/
 **/__pycache__/
 *.pyc
+**/target/

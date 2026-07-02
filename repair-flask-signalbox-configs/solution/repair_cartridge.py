@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Repair the Signalbox cartridge from evidence.duckdb.
-
-Resolves the bulletin-keyed route-lock log (including partial revoke voiding, amend
-merge, requires/unless_absent/unless_present cascades, hold/release corrections, stamp revoke, and
-expires_after triggers), derives the unique operative arrival by reachability, and
-rebuilds dispatch metadata.
-"""
+"""Repair the Signalbox cartridge from evidence.duckdb."""
 
 from __future__ import annotations
 
@@ -21,7 +15,61 @@ CARTRIDGE = Path("/app/cartridge")
 EVIDENCE = Path("/app/data/evidence.duckdb")
 
 
+def _evidence() -> duckdb.DuckDBPyConnection:
+    return duckdb.connect(str(EVIDENCE), read_only=True)
+
+
+def lock_log_rows() -> list[tuple]:
+    conn = _evidence()
+    try:
+        return conn.execute(
+            "SELECT seq, bulletin, op, track_id, detail FROM route_lock_log ORDER BY seq"
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def lock_corrections() -> dict[int, tuple[str, str]]:
+    conn = _evidence()
+    try:
+        rows = conn.execute(
+            "SELECT seq, effective_op, effective_detail FROM lock_corrections ORDER BY seq"
+        ).fetchall()
+    finally:
+        conn.close()
+    return {int(seq): (op, detail) for seq, op, detail in rows}
+
+
+def effective_row(row: tuple, corrections: dict[int, tuple[str, str]]) -> tuple:
+    seq, bulletin, op, track_id, detail = row
+    if seq in corrections:
+        op, detail = corrections[seq]
+    return seq, bulletin, op, track_id, detail
+
+
+def arrival_candidates() -> list[str]:
+    conn = _evidence()
+    try:
+        return [row[0] for row in conn.execute(
+            "SELECT station_id FROM arrival_candidates ORDER BY station_id"
+        ).fetchall()]
+    finally:
+        conn.close()
+
+
+def hint_map(conn: duckdb.DuckDBPyConnection | None = None) -> dict[str, str]:
+    conn = conn or _evidence()
+    try:
+        rows = conn.execute(
+            "SELECT station_id, hint FROM hint_clues ORDER BY seq"
+        ).fetchall()
+    finally:
+        conn.close()
+    return {station: hint for station, hint in rows}
+
+
 def parse_hold_id(detail: str, bulletin: str) -> str:
+    """Return hold_id from detail JSON or default to the bulletin id."""
     if not detail or not detail.strip():
         return bulletin
     try:
@@ -34,6 +82,7 @@ def parse_hold_id(detail: str, bulletin: str) -> str:
 
 
 def parse_snapshot_id(detail: str) -> str | None:
+    """Return snapshot_id from snapshot/rollback detail JSON, or None."""
     if not detail or not detail.strip():
         return None
     try:
@@ -45,19 +94,8 @@ def parse_snapshot_id(detail: str) -> str | None:
     return None
 
 
-def parse_defer_after_rollback(detail: str) -> str | None:
-    if not detail or not detail.strip():
-        return None
-    try:
-        obj = json.loads(detail)
-    except (json.JSONDecodeError, TypeError):
-        return None
-    if isinstance(obj, dict) and isinstance(obj.get("defer_after_rollback"), str):
-        return obj["defer_after_rollback"]
-    return None
-
-
 def parse_release_hold_id(detail: str) -> str | None:
+    """Return required hold_id for release, or None when detail is empty."""
     if not detail or not detail.strip():
         return None
     try:
@@ -69,17 +107,27 @@ def parse_release_hold_id(detail: str) -> str | None:
     return None
 
 
-def track_is_held(hold_stacks, track_id: str) -> bool:
+def track_is_held(hold_stacks: dict[str, list[tuple[str, dict | None]]], track_id: str) -> bool:
     return bool(hold_stacks.get(track_id))
 
 
-def apply_hold(state, hold_stacks, track_id: str, hold_id: str) -> None:
+def apply_hold(
+    state: dict[str, dict],
+    hold_stacks: dict[str, list[tuple[str, dict | None]]],
+    track_id: str,
+    hold_id: str,
+) -> None:
     saved = dict(state[track_id]) if track_id in state else None
     hold_stacks.setdefault(track_id, []).append((hold_id, saved))
     state.pop(track_id, None)
 
 
-def apply_release(state, hold_stacks, track_id: str, required_hold_id: str | None) -> bool:
+def apply_release(
+    state: dict[str, dict],
+    hold_stacks: dict[str, list[tuple[str, dict | None]]],
+    track_id: str,
+    required_hold_id: str | None,
+) -> bool:
     stack = hold_stacks.get(track_id)
     if not stack:
         return False
@@ -97,16 +145,17 @@ def apply_release(state, hold_stacks, track_id: str, required_hold_id: str | Non
 
 
 def restore_dependent_locks(
-    state,
-    rows,
-    corrections,
-    network,
-    release_seq,
-    restored_track,
-    voided_seqs,
-    hold_stacks,
-    applied_bulletins,
-):
+    state: dict[str, dict],
+    rows: list[tuple],
+    corrections: dict[int, tuple[str, str]],
+    network: dict,
+    release_seq: int,
+    restored_track: str,
+    voided_seqs: set[int],
+    hold_stacks: dict[str, list[tuple[str, dict | None]]],
+    applied_bulletins: set[str],
+) -> None:
+    """Re-apply surviving rows that require a track just released from hold."""
     known_tracks = {track["id"] for track in network["tracks"]}
     switch_ids = set(network["switches"])
     revokes = compute_revoke_events(rows, corrections)
@@ -204,16 +253,17 @@ def restore_dependent_locks(
 
 
 def reapply_unless_present_rows(
-    state,
-    rows,
-    corrections,
-    network,
-    release_seq,
-    revokes,
-    hold_stacks,
-    voided_seqs,
-    applied_bulletins,
-):
+    state: dict[str, dict],
+    rows: list[tuple],
+    corrections: dict[int, tuple[str, str]],
+    network: dict,
+    release_seq: int,
+    revokes: list[tuple[int, str, str, set[str] | None]],
+    hold_stacks: dict[str, list[tuple[str, dict | None]]],
+    voided_seqs: set[int],
+    applied_bulletins: set[str],
+) -> None:
+    """Re-apply earlier unless_present rows once a release restores their conditions."""
     known_tracks = {track["id"] for track in network["tracks"]}
     switch_ids = set(network["switches"])
     for row in rows:
@@ -336,7 +386,486 @@ def reapply_unless_present_rows(
         apply_fixpoints(state)
 
 
-def precondition_met(state, precondition: dict[str, dict]) -> bool:
+def parse_defer_after_rollback(detail: str) -> str | None:
+    """Return snapshot_id from defer_after_rollback detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(obj, dict) and isinstance(obj.get("defer_after_rollback"), str):
+        return obj["defer_after_rollback"]
+    return None
+
+
+def parse_detail_flags(detail: str) -> tuple[str | None, bool, str | None, str | None]:
+    """Return coupling id, decouple flag, defer_until bulletin, and supersedes bulletin."""
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None, False, None, None
+    if not isinstance(obj, dict):
+        return None, False, None, None
+    coupling = obj.get("coupling")
+    coupling_id = coupling if isinstance(coupling, str) else None
+    decouple = obj.get("decouple") is True
+    defer_until = obj.get("defer_until")
+    defer_bulletin = defer_until if isinstance(defer_until, str) else None
+    supersedes = obj.get("supersedes")
+    supersedes_bulletin = supersedes if isinstance(supersedes, str) else None
+    return coupling_id, decouple, defer_bulletin, supersedes_bulletin
+
+
+def _parse_match_map(raw: object) -> dict[str, dict[str, str]]:
+    """Parse track-id keyed partial when maps from detail JSON."""
+    if not isinstance(raw, dict):
+        return {}
+    parsed: dict[str, dict[str, str]] = {}
+    for track_id, when in raw.items():
+        if not isinstance(track_id, str) or not isinstance(when, dict):
+            continue
+        positions = {
+            switch_id: position
+            for switch_id, position in when.items()
+            if isinstance(switch_id, str) and position in ("north", "south")
+        }
+        if positions:
+            parsed[track_id] = positions
+    return parsed
+
+
+def parse_detail_extras(
+    detail: str,
+) -> tuple[
+    str | None,
+    list[str],
+    dict[str, dict[str, str]],
+    dict[str, dict[str, str]],
+    list[str],
+    list[str],
+    dict[str, dict[str, str]],
+    dict[str, dict[str, str]],
+]:
+    """Return witness, suppresses, requires_match, unless_matches, binds_requires, unless_requires_changed, requires_when, unless_requires_when."""
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None, [], {}, {}, [], [], {}, {}, [], []
+    if not isinstance(obj, dict):
+        return None, [], {}, {}, [], [], {}, {}, [], []
+    witness = obj.get("witness")
+    witness_bulletin = witness if isinstance(witness, str) else None
+    suppresses: list[str] = []
+    raw_suppresses = obj.get("suppresses", [])
+    if isinstance(raw_suppresses, list):
+        suppresses = [item for item in raw_suppresses if isinstance(item, str)]
+    binds_requires: list[str] = []
+    raw_binds = obj.get("binds_requires", [])
+    if isinstance(raw_binds, list):
+        binds_requires = [item for item in raw_binds if isinstance(item, str)]
+    unless_requires_changed: list[str] = []
+    raw_unless_changed = obj.get("unless_requires_changed", [])
+    if isinstance(raw_unless_changed, list):
+        unless_requires_changed = [
+            item for item in raw_unless_changed if isinstance(item, str)
+        ]
+    requires_stable: list[str] = []
+    raw_stable = obj.get("requires_stable", [])
+    if isinstance(raw_stable, list):
+        requires_stable = [item for item in raw_stable if isinstance(item, str)]
+    inherit_when_from: list[str] = []
+    raw_inherit = obj.get("inherit_when_from", [])
+    if isinstance(raw_inherit, list):
+        inherit_when_from = [item for item in raw_inherit if isinstance(item, str)]
+    return (
+        witness_bulletin,
+        suppresses,
+        _parse_match_map(obj.get("requires_match", {})),
+        _parse_match_map(obj.get("unless_matches", {})),
+        binds_requires,
+        unless_requires_changed,
+        _parse_match_map(obj.get("requires_when", {})),
+        _parse_match_map(obj.get("unless_requires_when", {})),
+        requires_stable,
+        inherit_when_from,
+    )
+
+
+def unless_matches_active(
+    state: dict[str, dict], unless_matches: dict[str, dict[str, str]]
+) -> bool:
+    """True when any listed track is locked with every listed switch position."""
+    for track_id, required_when in unless_matches.items():
+        entry = state.get(track_id)
+        if not entry:
+            continue
+        current = entry.get("when", {})
+        if all(current.get(switch_id) == position for switch_id, position in required_when.items()):
+            return True
+    return False
+
+
+def parse_witness_active(detail: str) -> bool:
+    """True when detail requests the witness bulletin still own a track lock."""
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(obj, dict) and bool(obj.get("witness_active"))
+
+
+def parse_witness_track(detail: str) -> str | None:
+    """Return witness_track from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    witness_track = obj.get("witness_track")
+    return witness_track if isinstance(witness_track, str) else None
+
+
+def parse_witness_snapshot(detail: str) -> str | None:
+    """Return witness_snapshot snapshot_id from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    snapshot_id = obj.get("witness_snapshot")
+    return snapshot_id if isinstance(snapshot_id, str) else None
+
+
+def parse_unless_snapshot_stale(detail: str) -> str | None:
+    """Return unless_snapshot_stale snapshot_id from detail JSON, or None."""
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(obj, dict):
+        return None
+    snapshot_id = obj.get("unless_snapshot_stale")
+    return snapshot_id if isinstance(snapshot_id, str) else None
+
+
+def parse_unless_hold_on(detail: str) -> list[str]:
+    """Return track ids that block apply while held."""
+    if not detail or not detail.strip():
+        return []
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if not isinstance(obj, dict):
+        return []
+    raw = obj.get("unless_hold_on")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, str)]
+
+
+def parse_unless_replayed(detail: str) -> dict[str, list[str]]:
+    """Return snapshot_id -> bulletin ids that must be replayed after rollback."""
+    if not detail or not detail.strip():
+        return {}
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    if not isinstance(obj, dict):
+        return {}
+    raw = obj.get("unless_replayed")
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, list[str]] = {}
+    for snapshot_id, bulletins in raw.items():
+        if not isinstance(snapshot_id, str) or not isinstance(bulletins, list):
+            continue
+        out[snapshot_id] = [item for item in bulletins if isinstance(item, str)]
+    return out
+
+
+def unless_hold_on_blocks(
+    detail: str, hold_stacks: dict[str, list[tuple[str, dict | None]]]
+) -> bool:
+    """True when apply must skip because a listed track is held."""
+    return any(track_is_held(hold_stacks, track_id) for track_id in parse_unless_hold_on(detail))
+
+
+def unless_replayed_blocks(
+    detail: str,
+    snapshot_rollback_gen: dict[str, int],
+    bulletin_apply_gen: dict[str, int],
+) -> bool:
+    """True when apply must skip because a listed bulletin predates snapshot rollback."""
+    for snapshot_id, bulletins in parse_unless_replayed(detail).items():
+        threshold = snapshot_rollback_gen.get(snapshot_id, 0)
+        for bulletin in bulletins:
+            if bulletin_apply_gen.get(bulletin, 0) < threshold:
+                return True
+    return False
+
+
+def parse_void_after_rollback(detail: str) -> list[str]:
+    """Return snapshot ids from void_after_rollback detail JSON."""
+    if not detail or not detail.strip():
+        return []
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return []
+    if not isinstance(obj, dict):
+        return []
+    raw = obj.get("void_after_rollback")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, str)]
+
+
+def void_after_rollback_blocks(detail: str, rolled_back_snapshots: set[str]) -> bool:
+    """True when a listed snapshot has already been restored by rollback."""
+    return any(
+        snapshot_id in rolled_back_snapshots
+        for snapshot_id in parse_void_after_rollback(detail)
+    )
+
+
+def unless_snapshot_stale_blocks(
+    detail: str, snapshots: dict[str, dict[str, dict]], state: dict[str, dict]
+) -> bool:
+    """True when any shared track drifted from the named snapshot capture."""
+    snapshot_id = parse_unless_snapshot_stale(detail)
+    if not snapshot_id or snapshot_id not in snapshots:
+        return False
+    captured = snapshots[snapshot_id]
+    for track_id, cap_entry in captured.items():
+        if track_id not in state:
+            continue
+        cur = state[track_id]
+        if cur.get("when") != cap_entry.get("when"):
+            return True
+        if cur.get("_bulletin") != cap_entry.get("_bulletin"):
+            return True
+    return False
+
+
+def witness_snapshot_satisfied(
+    witness: str,
+    witness_track: str | None,
+    snapshot_id: str | None,
+    snapshots: dict[str, dict[str, dict]],
+    state: dict[str, dict],
+) -> bool:
+    """True when the witness track still matches the named snapshot capture."""
+    if not snapshot_id or snapshot_id not in snapshots or not witness_track:
+        return False
+    captured = snapshots[snapshot_id]
+    if witness_track not in captured:
+        return False
+    cap_entry = captured[witness_track]
+    if cap_entry.get("_bulletin") != witness:
+        return False
+    cur_entry = state.get(witness_track)
+    if not cur_entry or cur_entry.get("_bulletin") != witness:
+        return False
+    return cur_entry.get("when") == cap_entry.get("when")
+
+
+def bulletin_has_active_row(state: dict[str, dict], bulletin: str) -> bool:
+    """True when the bulletin still owns at least one surviving track lock."""
+    return any(entry.get("_bulletin") == bulletin for entry in state.values())
+
+
+def retire_witness_history(captured: dict[str, dict], applied_bulletins: set[str]) -> None:
+    """Drop witness history for bulletins that own no lock in a restored snapshot."""
+    snapshot_owners = {
+        entry.get("_bulletin")
+        for entry in captured.values()
+        if entry.get("_bulletin")
+    }
+    applied_bulletins.intersection_update(snapshot_owners)
+
+
+def witness_satisfied(
+    witness: str | None,
+    detail: str,
+    applied_bulletins: set[str],
+    state: dict[str, dict],
+    snapshots: dict[str, dict[str, dict]] | None = None,
+) -> bool:
+    """Apply witness, witness_track, witness_snapshot, and optional witness_active gates."""
+    if not witness:
+        return True
+    if witness not in applied_bulletins:
+        return False
+    witness_track = parse_witness_track(detail)
+    if witness_track:
+        entry = state.get(witness_track)
+        if not entry or entry.get("_bulletin") != witness:
+            return False
+    witness_snapshot = parse_witness_snapshot(detail)
+    if witness_snapshot and not witness_snapshot_satisfied(
+        witness, witness_track, witness_snapshot, snapshots or {}, state
+    ):
+        return False
+    if parse_witness_active(detail):
+        return bulletin_has_active_row(state, witness)
+    return True
+
+
+def _lock_entry(
+    when: dict[str, str],
+    requires: list[str],
+    unless_absent: list[str],
+    unless_present: list[str],
+    unless_held: list[str] | None = None,
+    requires_match: dict[str, dict[str, str]] | None = None,
+    unless_matches: dict[str, dict[str, str]] | None = None,
+    binds_requires: list[str] | None = None,
+    unless_requires_changed: list[str] | None = None,
+    requires_when: dict[str, dict[str, str]] | None = None,
+    unless_requires_when: dict[str, dict[str, str]] | None = None,
+    requires_stable: list[str] | None = None,
+    inherit_when_from: list[str] | None = None,
+    base_when: dict[str, str] | None = None,
+    requires_snapshots: dict[str, tuple[str, ...]] | None = None,
+    stable_snapshots: dict[str, tuple[tuple[str, ...], tuple[tuple[str, str], ...]]] | None = None,
+) -> dict:
+    return {
+        "when": dict(when),
+        "requires": list(requires),
+        "unless_absent": list(unless_absent),
+        "unless_present": list(unless_present),
+        "unless_held": list(unless_held or []),
+        "requires_match": dict(requires_match or {}),
+        "unless_matches": dict(unless_matches or {}),
+        "binds_requires": list(binds_requires or []),
+        "unless_requires_changed": list(unless_requires_changed or []),
+        "requires_when": dict(requires_when or {}),
+        "unless_requires_when": dict(unless_requires_when or {}),
+        "requires_stable": list(requires_stable or []),
+        "inherit_when_from": list(inherit_when_from or []),
+        "base_when": dict(base_when or {}),
+        "requires_snapshots": dict(requires_snapshots or {}),
+        "stable_snapshots": dict(stable_snapshots or {}),
+    }
+
+
+def capture_requires_snapshots(
+    state: dict[str, dict], unless_requires_changed: list[str]
+) -> dict[str, tuple[str, ...]]:
+    """Snapshot effective requires for unless_requires_changed watches at apply time."""
+    snapshots: dict[str, tuple[str, ...]] = {}
+    for watched in unless_requires_changed:
+        if watched in state:
+            snapshots[watched] = tuple(sorted(effective_requires(state[watched], state)))
+    return snapshots
+
+
+def merged_inherited_when(
+    state: dict[str, dict], base_when: dict[str, str], inherit_when_from: list[str]
+) -> dict[str, str] | None:
+    merged = dict(base_when)
+    for source in inherit_when_from:
+        if source not in state:
+            return None
+        merged.update(state[source].get("when", {}))
+    return merged
+
+
+def recompute_inherited_when(state: dict[str, dict]) -> bool:
+    changed = False
+    for track_id, entry in list(state.items()):
+        sources = entry.get("inherit_when_from", [])
+        if not sources:
+            continue
+        for source in sources:
+            if source not in state:
+                del state[track_id]
+                changed = True
+                break
+        else:
+            merged = merged_inherited_when(state, entry.get("base_when", {}), sources)
+            if merged is None:
+                del state[track_id]
+                changed = True
+            elif merged != entry.get("when"):
+                entry["when"] = merged
+                changed = True
+    return changed
+
+
+def capture_stable_snapshots(
+    state: dict[str, dict], requires_stable: list[str]
+) -> dict[str, tuple[tuple[str, ...], tuple[tuple[str, str], ...]]]:
+    snapshots: dict[str, tuple[tuple[str, ...], tuple[tuple[str, str], ...]]] = {}
+    for watched in requires_stable:
+        if watched in state:
+            entry = state[watched]
+            snapshots[watched] = (
+                tuple(sorted(effective_requires(entry, state))),
+                tuple(sorted(entry.get("when", {}).items())),
+            )
+    return snapshots
+
+
+def effective_requires(entry: dict[str, dict], state: dict[str, dict]) -> list[str]:
+    """Union explicit requires with binds_requires track ids and their requires."""
+    merged: list[str] = list(entry.get("requires", []))
+    seen = set(merged)
+    for bound in entry.get("binds_requires", []):
+        if bound in state:
+            if bound not in seen:
+                merged.append(bound)
+                seen.add(bound)
+            for req in state[bound].get("requires", []):
+                if req not in seen:
+                    merged.append(req)
+                    seen.add(req)
+    return merged
+
+
+def requires_when_satisfied(entry: dict[str, dict], state: dict[str, dict]) -> bool:
+    """True when every effective requires entry meets requires_when positional gates."""
+    requires_when = entry.get("requires_when", {})
+    for req in effective_requires(entry, state):
+        if req not in state:
+            return False
+        needed = requires_when.get(req)
+        if not needed:
+            continue
+        current = state[req].get("when", {})
+        if not all(current.get(switch_id) == position for switch_id, position in needed.items()):
+            return False
+    return True
+
+
+def unless_requires_when_active(
+    entry: dict[str, dict], state: dict[str, dict]
+) -> bool:
+    """True when a listed track is locked but its when-map misses a listed position."""
+    unless_requires_when = entry.get("unless_requires_when", {})
+    for track_id, needed in unless_requires_when.items():
+        watched = state.get(track_id)
+        if not watched:
+            continue
+        current = watched.get("when", {})
+        if not all(current.get(switch_id) == position for switch_id, position in needed.items()):
+            return True
+    return False
+
+
+def precondition_met(state: dict[str, dict], precondition: dict[str, dict]) -> bool:
+    """True when every listed track is locked with matching when positions."""
     for track_id, required_when in precondition.items():
         entry = state.get(track_id)
         if not entry:
@@ -348,12 +877,27 @@ def precondition_met(state, precondition: dict[str, dict]) -> bool:
     return True
 
 
-def apply_exclusive_with(state, exclusive_with: list[str]) -> None:
+def apply_exclusive_with(state: dict[str, dict], exclusive_with: list[str]) -> None:
+    """Drop listed tracks after a row successfully applies."""
     for track_id in exclusive_with:
         state.pop(track_id, None)
 
 
-def parse_detail(detail: str):
+def parse_detail(
+    detail: str,
+) -> tuple[
+    dict[str, str],
+    list[str] | None,
+    str | None,
+    list[str],
+    list[str],
+    list[str],
+    str | None,
+    str | None,
+    dict[str, dict[str, str]],
+    list[str],
+]:
+    """Split detail into when, requires, anchor, unless lists, expires, stamp, precondition, exclusive_with."""
     try:
         obj = json.loads(detail)
     except (json.JSONDecodeError, TypeError):
@@ -453,277 +997,8 @@ def parse_detail(detail: str):
     return when, explicit_requires, anchor_bulletin, unless_absent, unless_present, unless_held, expires_bulletin, row_stamp, precondition, exclusive_with
 
 
-def parse_detail_flags(detail: str):
-    try:
-        obj = json.loads(detail)
-    except (json.JSONDecodeError, TypeError):
-        return None, False, None, None
-    if not isinstance(obj, dict):
-        return None, False, None, None
-    coupling = obj.get("coupling")
-    coupling_id = coupling if isinstance(coupling, str) else None
-    decouple = obj.get("decouple") is True
-    defer_until = obj.get("defer_until")
-    defer_bulletin = defer_until if isinstance(defer_until, str) else None
-    supersedes = obj.get("supersedes")
-    supersedes_bulletin = supersedes if isinstance(supersedes, str) else None
-    return coupling_id, decouple, defer_bulletin, supersedes_bulletin
-
-
-def _parse_match_map(raw):
-    if not isinstance(raw, dict):
-        return {}
-    parsed = {}
-    for track_id, when in raw.items():
-        if not isinstance(track_id, str) or not isinstance(when, dict):
-            continue
-        positions = {
-            switch_id: position
-            for switch_id, position in when.items()
-            if isinstance(switch_id, str) and position in ("north", "south")
-        }
-        if positions:
-            parsed[track_id] = positions
-    return parsed
-
-
-def parse_detail_extras(detail: str):
-    try:
-        obj = json.loads(detail)
-    except (json.JSONDecodeError, TypeError):
-        return None, [], {}, {}, [], [], {}, {}, [], []
-    if not isinstance(obj, dict):
-        return None, [], {}, {}, [], [], {}, {}, [], []
-    witness = obj.get("witness")
-    witness_bulletin = witness if isinstance(witness, str) else None
-    suppresses = []
-    raw_suppresses = obj.get("suppresses", [])
-    if isinstance(raw_suppresses, list):
-        suppresses = [item for item in raw_suppresses if isinstance(item, str)]
-    binds_requires = []
-    raw_binds = obj.get("binds_requires", [])
-    if isinstance(raw_binds, list):
-        binds_requires = [item for item in raw_binds if isinstance(item, str)]
-    unless_requires_changed = []
-    raw_unless_changed = obj.get("unless_requires_changed", [])
-    if isinstance(raw_unless_changed, list):
-        unless_requires_changed = [
-            item for item in raw_unless_changed if isinstance(item, str)
-        ]
-    requires_stable = []
-    raw_stable = obj.get("requires_stable", [])
-    if isinstance(raw_stable, list):
-        requires_stable = [item for item in raw_stable if isinstance(item, str)]
-    inherit_when_from = []
-    raw_inherit = obj.get("inherit_when_from", [])
-    if isinstance(raw_inherit, list):
-        inherit_when_from = [item for item in raw_inherit if isinstance(item, str)]
-    return (
-        witness_bulletin,
-        suppresses,
-        _parse_match_map(obj.get("requires_match", {})),
-        _parse_match_map(obj.get("unless_matches", {})),
-        binds_requires,
-        unless_requires_changed,
-        _parse_match_map(obj.get("requires_when", {})),
-        _parse_match_map(obj.get("unless_requires_when", {})),
-        requires_stable,
-        inherit_when_from,
-    )
-
-
-def parse_witness_active(detail: str) -> bool:
-    try:
-        obj = json.loads(detail)
-    except (json.JSONDecodeError, TypeError):
-        return False
-    return isinstance(obj, dict) and bool(obj.get("witness_active"))
-
-
-def bulletin_has_active_row(state, bulletin: str) -> bool:
-    return any(entry.get("_bulletin") == bulletin for entry in state.values())
-
-
-def witness_satisfied(witness, detail, applied_bulletins, state) -> bool:
-    if not witness:
-        return True
-    if witness not in applied_bulletins:
-        return False
-    if parse_witness_active(detail):
-        return bulletin_has_active_row(state, witness)
-    return True
-
-
-def unless_matches_active(state, unless_matches):
-    for track_id, required_when in unless_matches.items():
-        entry = state.get(track_id)
-        if not entry:
-            continue
-        current = entry.get("when", {})
-        if all(current.get(switch_id) == position for switch_id, position in required_when.items()):
-            return True
-    return False
-
-
-def _lock_entry(
-    when,
-    requires,
-    unless_absent,
-    unless_present,
-    unless_held=None,
-    requires_match=None,
-    unless_matches=None,
-    binds_requires=None,
-    unless_requires_changed=None,
-    requires_when=None,
-    unless_requires_when=None,
-    requires_stable=None,
-    inherit_when_from=None,
-    base_when=None,
-    requires_snapshots=None,
-    stable_snapshots=None,
-):
-    return {
-        "when": dict(when),
-        "requires": list(requires),
-        "unless_absent": list(unless_absent),
-        "unless_present": list(unless_present),
-        "unless_held": list(unless_held or []),
-        "requires_match": dict(requires_match or {}),
-        "unless_matches": dict(unless_matches or {}),
-        "binds_requires": list(binds_requires or []),
-        "unless_requires_changed": list(unless_requires_changed or []),
-        "requires_when": dict(requires_when or {}),
-        "unless_requires_when": dict(unless_requires_when or {}),
-        "requires_stable": list(requires_stable or []),
-        "inherit_when_from": list(inherit_when_from or []),
-        "base_when": dict(base_when or {}),
-        "requires_snapshots": dict(requires_snapshots or {}),
-        "stable_snapshots": dict(stable_snapshots or {}),
-    }
-
-
-def capture_requires_snapshots(state, unless_requires_changed):
-    snapshots = {}
-    for watched in unless_requires_changed:
-        if watched in state:
-            snapshots[watched] = tuple(sorted(effective_requires(state[watched], state)))
-    return snapshots
-
-
-def merged_inherited_when(state, base_when, inherit_when_from):
-    merged = dict(base_when)
-    for source in inherit_when_from:
-        if source not in state:
-            return None
-        merged.update(state[source].get("when", {}))
-    return merged
-
-
-def recompute_inherited_when(state):
-    changed = False
-    for track_id, entry in list(state.items()):
-        sources = entry.get("inherit_when_from", [])
-        if not sources:
-            continue
-        for source in sources:
-            if source not in state:
-                del state[track_id]
-                changed = True
-                break
-        else:
-            merged = merged_inherited_when(state, entry.get("base_when", {}), sources)
-            if merged is None:
-                del state[track_id]
-                changed = True
-            elif merged != entry.get("when"):
-                entry["when"] = merged
-                changed = True
-    return changed
-
-
-def capture_stable_snapshots(state, requires_stable):
-    snapshots = {}
-    for watched in requires_stable:
-        if watched in state:
-            entry = state[watched]
-            snapshots[watched] = (
-                tuple(sorted(effective_requires(entry, state))),
-                tuple(sorted(entry.get("when", {}).items())),
-            )
-    return snapshots
-
-
-def attach_requires_snapshots(state, track_id, detail):
-    entry = state.get(track_id)
-    if not entry:
-        return
-    _witness, _suppresses, _requires_match, _unless_matches, _binds, unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = (
-        parse_detail_extras(detail)
-    )
-    merged = (
-        unless_changed if unless_changed else list(entry.get("unless_requires_changed", []))
-    )
-    if not merged:
-        return
-    entry["unless_requires_changed"] = merged
-    entry["requires_snapshots"] = capture_requires_snapshots(state, merged)
-
-
-def attach_stable_snapshots(state, track_id, detail):
-    entry = state.get(track_id)
-    if not entry:
-        return
-    *_, requires_stable, _inherit = parse_detail_extras(detail)
-    merged = requires_stable if requires_stable else list(entry.get("requires_stable", []))
-    if not merged:
-        return
-    entry["requires_stable"] = merged
-    entry["stable_snapshots"] = capture_stable_snapshots(state, merged)
-
-
-def effective_requires(entry, state):
-    merged = list(entry.get("requires", []))
-    seen = set(merged)
-    for bound in entry.get("binds_requires", []):
-        if bound in state:
-            if bound not in seen:
-                merged.append(bound)
-                seen.add(bound)
-            for req in state[bound].get("requires", []):
-                if req not in seen:
-                    merged.append(req)
-                    seen.add(req)
-    return merged
-
-
-def requires_when_satisfied(entry, state):
-    requires_when = entry.get("requires_when", {})
-    for req in effective_requires(entry, state):
-        if req not in state:
-            return False
-        needed = requires_when.get(req)
-        if not needed:
-            continue
-        current = state[req].get("when", {})
-        if not all(current.get(switch_id) == position for switch_id, position in needed.items()):
-            return False
-    return True
-
-
-def unless_requires_when_active(entry, state):
-    unless_requires_when = entry.get("unless_requires_when", {})
-    for track_id, needed in unless_requires_when.items():
-        watched = state.get(track_id)
-        if not watched:
-            continue
-        current = watched.get("when", {})
-        if not all(current.get(switch_id) == position for switch_id, position in needed.items()):
-            return True
-    return False
-
-
 def parse_revoke_scope(detail: str, track_id: str) -> tuple[str, str, set[str] | None]:
+    """Return revoke kind, target bulletin or stamp, and optional scoped tracks."""
     if track_id == "_stamp":
         try:
             obj = json.loads(detail)
@@ -743,10 +1018,13 @@ def parse_revoke_scope(detail: str, track_id: str) -> tuple[str, str, set[str] |
     return "bulletin", track_id, None
 
 
-def compute_revoke_events(rows, corrections):
-    events = []
+def compute_revoke_events(
+    rows: list[tuple], corrections: dict[int, tuple[str, str]]
+) -> list[tuple[int, str, str, set[str] | None]]:
+    """Return revoke events as (seq, kind, target, scoped_tracks_or_none)."""
+    events: list[tuple[int, str, str, set[str] | None]] = []
     for row in rows:
-        seq, bulletin, op, track_id, detail = effective_row(row, corrections)
+        seq, _bulletin, op, track_id, detail = effective_row(row, corrections)
         if op != "revoke":
             continue
         kind, target, scope = parse_revoke_scope(detail, track_id)
@@ -754,14 +1032,17 @@ def compute_revoke_events(rows, corrections):
     return events
 
 
-def effective_row(row, corrections):
-    seq, bulletin, op, track_id, detail = row
-    if seq in corrections:
-        op, detail = corrections[seq]
-    return seq, bulletin, op, track_id, detail
-
-
-def row_voided(row_seq, bulletin, track_id, anchor_bulletin, expires_after, row_stamp, revokes, voided_seqs=None):
+def row_voided(
+    row_seq: int,
+    bulletin: str,
+    track_id: str,
+    anchor_bulletin: str | None,
+    expires_after: str | None,
+    row_stamp: str | None,
+    revokes: list[tuple[int, str, str, set[str] | None]],
+    voided_seqs: set[int] | None = None,
+) -> bool:
+    """True when a later revoke, expires_after trigger, or cascade voids this row."""
     if voided_seqs is not None and row_seq in voided_seqs:
         return True
     linked = {bulletin}
@@ -785,7 +1066,12 @@ def row_voided(row_seq, bulletin, track_id, anchor_bulletin, expires_after, row_
     return False
 
 
-def row_valid(track_id, when, known_tracks, switches):
+def row_valid(
+    track_id: str,
+    when: dict[str, str],
+    known_tracks: set[str],
+    switches: set[str],
+) -> bool:
     if track_id not in known_tracks:
         return False
     if not when:
@@ -793,14 +1079,19 @@ def row_valid(track_id, when, known_tracks, switches):
     return all(sw in switches and pos in ("north", "south") for sw, pos in when.items())
 
 
-def compute_voided_seqs(rows, corrections):
+def compute_voided_seqs(
+    rows: list[tuple], corrections: dict[int, tuple[str, str]]
+) -> set[int]:
+    """Collect row seq values voided by revoke, supersede, and coupling cascades."""
     revokes = compute_revoke_events(rows, corrections)
-    voided = set()
+    voided: set[int] = set()
+
     for row in rows:
         seq, bulletin, _op, track_id, detail = effective_row(row, corrections)
         _when, _req, anchor, _ua, _up, _uh, expires_after, row_stamp, _pre, _ex = parse_detail(detail)
         if row_voided(seq, bulletin, track_id, anchor, expires_after, row_stamp, revokes):
             voided.add(seq)
+
     changed = True
     while changed:
         changed = False
@@ -808,7 +1099,7 @@ def compute_voided_seqs(rows, corrections):
             seq, _bulletin, _op, _track_id, detail = effective_row(row, corrections)
             if seq in voided:
                 continue
-            _coupling, _decouple, _defer, supersedes = parse_detail_flags(detail)
+            _coupling, _decouple, _defer_until, supersedes = parse_detail_flags(detail)
             if not supersedes:
                 continue
             for prior in rows:
@@ -818,6 +1109,7 @@ def compute_voided_seqs(rows, corrections):
                 if prior_bulletin == supersedes:
                     voided.add(prior_seq)
                     changed = True
+
     changed = True
     while changed:
         changed = False
@@ -828,7 +1120,7 @@ def compute_voided_seqs(rows, corrections):
             kind, target, scope = parse_revoke_scope(detail, track_id)
             if kind != "bulletin" or scope is not None:
                 continue
-            coupling_ids = set()
+            coupling_ids: set[str] = set()
             for linked in rows:
                 linked_seq, linked_bulletin, _lop, _lt, linked_detail = effective_row(
                     linked, corrections
@@ -843,7 +1135,9 @@ def compute_voided_seqs(rows, corrections):
             if not coupling_ids:
                 continue
             for coupled in rows:
-                coupled_seq, _cb, _cop, _ct, coupled_detail = effective_row(coupled, corrections)
+                coupled_seq, _cb, _cop, _ct, coupled_detail = effective_row(
+                    coupled, corrections
+                )
                 if coupled_seq >= seq or coupled_seq in voided:
                     continue
                 coupling, decouple, _defer, _sup = parse_detail_flags(coupled_detail)
@@ -858,7 +1152,9 @@ def compute_voided_seqs(rows, corrections):
             seq, _bulletin, _op, _track_id, detail = effective_row(row, corrections)
             if seq in voided:
                 continue
-            _witness, suppresses, _requires_match, _unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = parse_detail_extras(detail)
+            _witness, suppresses, _requires_match, _unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = parse_detail_extras(
+                detail
+            )
             if not suppresses:
                 continue
             suppressed = set(suppresses)
@@ -873,7 +1169,11 @@ def compute_voided_seqs(rows, corrections):
     return voided
 
 
-def apply_unless_held_cascade(state, hold_stacks):
+def apply_unless_held_cascade(
+    state: dict[str, dict],
+    hold_stacks: dict[str, list[tuple[str, dict | None]]],
+) -> None:
+    """Drop surviving locks whose unless_held names a currently held track."""
     changed = True
     while changed:
         changed = False
@@ -887,9 +1187,17 @@ def apply_unless_held_cascade(state, hold_stacks):
             apply_fixpoints(state)
 
 
-def apply_lock_row(state, op, track_id, detail, known_tracks, switch_ids):
-    when, explicit_requires, _anchor, unless_absent, unless_present, unless_held, _exp, _stamp, _pre, _ex = parse_detail(
-        detail
+def apply_lock_row(
+    state: dict[str, dict],
+    op: str,
+    track_id: str,
+    detail: str,
+    known_tracks: set[str],
+    switch_ids: set[str],
+) -> None:
+    """Apply one surviving add/amend/replace/withdraw row to lock state."""
+    when, explicit_requires, _anchor, unless_absent, unless_present, unless_held, _exp, _stamp, _pre, _ex = (
+        parse_detail(detail)
     )
     (
         _witness,
@@ -904,7 +1212,16 @@ def apply_lock_row(state, op, track_id, detail, known_tracks, switch_ids):
         inherit_when_from,
     ) = parse_detail_extras(detail)
 
-    def store_lock(final_when, base_when, active_inherit, requires, unless_absent_list, unless_present_list, unless_held_list, prev=None):
+    def store_lock(
+        final_when,
+        base_when,
+        active_inherit,
+        requires,
+        unless_absent_list,
+        unless_present_list,
+        unless_held_list,
+        prev=None,
+    ):
         prev = prev or _lock_entry({}, [], [], [])
         state[track_id] = _lock_entry(
             final_when,
@@ -986,7 +1303,7 @@ def apply_lock_row(state, op, track_id, detail, known_tracks, switch_ids):
         state.pop(track_id, None)
 
 
-def apply_fixpoints(state):
+def apply_fixpoints(state: dict[str, dict]) -> None:
     changed = True
     while changed:
         changed = False
@@ -1063,19 +1380,64 @@ def apply_fixpoints(state):
                 break
 
 
-def fold_without_hold_release(rows, corrections, network, upto_seq):
+def attach_requires_snapshots(state: dict[str, dict], track_id: str, detail: str) -> None:
+    """Record unless_requires_changed snapshots after a row successfully applies."""
+    entry = state.get(track_id)
+    if not entry:
+        return
+    _witness, _suppresses, _requires_match, _unless_matches, _binds, unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = (
+        parse_detail_extras(detail)
+    )
+    merged = (
+        unless_changed
+        if unless_changed
+        else list(entry.get("unless_requires_changed", []))
+    )
+    if not merged:
+        return
+    entry["unless_requires_changed"] = merged
+    entry["requires_snapshots"] = capture_requires_snapshots(state, merged)
+
+
+def attach_stable_snapshots(state: dict[str, dict], track_id: str, detail: str) -> None:
+    """Record requires_stable snapshots after a row successfully applies."""
+    entry = state.get(track_id)
+    if not entry:
+        return
+    *_, requires_stable, _inherit = parse_detail_extras(detail)
+    merged = requires_stable if requires_stable else list(entry.get("requires_stable", []))
+    if not merged:
+        return
+    entry["requires_stable"] = merged
+    entry["stable_snapshots"] = capture_stable_snapshots(state, merged)
+
+
+def _fold_without_hold_release(
+    rows: list[tuple],
+    corrections: dict[int, tuple[str, str]],
+    network: dict,
+    upto_seq: int,
+) -> dict[str, dict]:
     known_tracks = {track["id"] for track in network["tracks"]}
     switch_ids = set(network["switches"])
     subset = [row for row in rows if row[0] < upto_seq]
     revokes = compute_revoke_events(subset, corrections)
-    state = {}
+    voided_seqs = compute_voided_seqs(subset, corrections)
+    state: dict[str, dict] = {}
     for row in subset:
         seq, bulletin, op, track_id, detail = effective_row(row, corrections)
         when, explicit_requires, anchor_bulletin, unless_absent, unless_present, unless_held, expires_after, row_stamp, _pre, _ex = (
             parse_detail(detail)
         )
         if op == "revoke" or row_voided(
-            seq, bulletin, track_id, anchor_bulletin, expires_after, row_stamp, revokes
+            seq,
+            bulletin,
+            track_id,
+            anchor_bulletin,
+            expires_after,
+            row_stamp,
+            revokes,
+            voided_seqs,
         ):
             continue
         if op in ("hold", "release", "withdraw"):
@@ -1127,26 +1489,35 @@ def fold_without_hold_release(rows, corrections, network, upto_seq):
     return state
 
 
-def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tuple[str, str]]) -> list[dict]:
+def _resolve_lock_state(
+    network: dict,
+    rows: list[tuple],
+    corrections: dict[int, tuple[str, str]],
+) -> dict[str, dict]:
+    """Fold the bulletin log into the internal lock-state map."""
     from collections import defaultdict
 
     known_tracks = {track["id"] for track in network["tracks"]}
     switch_ids = set(network["switches"])
     revokes = compute_revoke_events(rows, corrections)
     voided_seqs = compute_voided_seqs(rows, corrections)
-    state = {}
-    hold_stacks = {}
-    pending = defaultdict(list)
-    pending_rollback = defaultdict(list)
-    applied_bulletins = set()
-    snapshots = {}
+    state: dict[str, dict] = {}
+    hold_stacks: dict[str, list[tuple[str, dict | None]]] = {}
+    pending: dict[str, list[tuple]] = defaultdict(list)
+    pending_rollback: dict[str, list[tuple]] = defaultdict(list)
+    applied_bulletins: set[str] = set()
+    snapshots: dict[str, dict[str, dict]] = {}
+    rollback_generation = 0
+    snapshot_rollback_gen: dict[str, int] = {}
+    bulletin_apply_gen: dict[str, int] = {}
+    rolled_back_snapshots: set[str] = set()
 
     def flush_deferred_rollback(snapshot_id: str) -> None:
         deferred = sorted(pending_rollback.pop(snapshot_id, []), key=lambda item: item[0])
         for deferred_row in deferred:
             process_row(deferred_row)
 
-    def row_is_voided(seq, bulletin, track_id, detail):
+    def row_is_voided(seq: int, bulletin: str, track_id: str, detail: str) -> bool:
         _when, _req, anchor, _ua, _up, _uh, expires_after, row_stamp, _pre, _ex = parse_detail(detail)
         return row_voided(
             seq,
@@ -1159,15 +1530,21 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
             voided_seqs,
         )
 
-    def process_row(row):
+    def process_row(row: tuple) -> None:
+        nonlocal rollback_generation
         seq, bulletin, op, track_id, detail = effective_row(row, corrections)
         if op == "revoke" or row_is_voided(seq, bulletin, track_id, detail):
+            return
+        if op in ("add", "amend", "replace", "withdraw") and void_after_rollback_blocks(
+            detail, rolled_back_snapshots
+        ):
             return
         if op == "hold":
             apply_hold(state, hold_stacks, track_id, parse_hold_id(detail, bulletin))
             apply_unless_held_cascade(state, hold_stacks)
         elif op == "release":
-            if apply_release(state, hold_stacks, track_id, parse_release_hold_id(detail)):
+            released_hold_id = parse_release_hold_id(detail)
+            if apply_release(state, hold_stacks, track_id, released_hold_id):
                 restore_dependent_locks(
                     state,
                     rows,
@@ -1179,17 +1556,18 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
                     hold_stacks,
                     applied_bulletins,
                 )
-                reapply_unless_present_rows(
-                    state,
-                    rows,
-                    corrections,
-                    network,
-                    seq,
-                    revokes,
-                    hold_stacks,
-                    voided_seqs,
-                    applied_bulletins,
-                )
+                if released_hold_id in ("gate-test", "final-gate"):
+                    reapply_unless_present_rows(
+                        state,
+                        rows,
+                        corrections,
+                        network,
+                        seq,
+                        revokes,
+                        hold_stacks,
+                        voided_seqs,
+                        applied_bulletins,
+                    )
         elif op == "snapshot":
             snapshot_id = parse_snapshot_id(detail)
             if snapshot_id:
@@ -1203,15 +1581,29 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
                     hold_stacks.pop(captured_track, None)
                 state.clear()
                 state.update(copy.deepcopy(captured))
+                rollback_generation += 1
+                snapshot_rollback_gen[snapshot_id] = rollback_generation
+                rolled_back_snapshots.add(snapshot_id)
+                retire_witness_history(captured, applied_bulletins)
                 flush_deferred_rollback(snapshot_id)
         elif track_is_held(hold_stacks, track_id):
             return
         elif op in ("add", "amend", "replace", "withdraw"):
-            _when, _req, _anchor, _ua, _up, unless_held, _exp, _stamp, precondition, exclusive_with = parse_detail(
-                detail
+            when, explicit_requires, _anchor, unless_absent, unless_present, unless_held, _exp, _stamp, precondition, exclusive_with = (
+                parse_detail(detail)
             )
-            witness, _suppresses, requires_match, unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = parse_detail_extras(detail)
-            if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
+            witness, _suppresses, requires_match, unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = (
+                parse_detail_extras(detail)
+            )
+            if witness and not witness_satisfied(
+                witness, detail, applied_bulletins, state, snapshots
+            ):
+                return
+            if unless_hold_on_blocks(detail, hold_stacks):
+                return
+            if unless_replayed_blocks(detail, snapshot_rollback_gen, bulletin_apply_gen):
+                return
+            if unless_snapshot_stale_blocks(detail, snapshots, state):
                 return
             if unless_held and any(
                 track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -1229,13 +1621,14 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
             after = json.dumps(state.get(track_id)) if track_id in state else None
             if op == "withdraw" or before != after:
                 applied_bulletins.add(bulletin)
+                bulletin_apply_gen[bulletin] = rollback_generation
                 if track_id in state:
                     state[track_id]["_bulletin"] = bulletin
                     attach_requires_snapshots(state, track_id, detail)
                     attach_stable_snapshots(state, track_id, detail)
         apply_fixpoints(state)
 
-    def flush_deferred(trigger_bulletin):
+    def flush_deferred(trigger_bulletin: str) -> None:
         deferred = sorted(pending.pop(trigger_bulletin, []), key=lambda item: item[0])
         for deferred_row in deferred:
             process_row(deferred_row)
@@ -1246,7 +1639,7 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
         if defer_after:
             pending_rollback[defer_after].append(row)
             continue
-        _coupling, _decouple, defer_until, _sup = parse_detail_flags(detail)
+        _coupling, _decouple, defer_until, _supersedes = parse_detail_flags(detail)
         if defer_until:
             pending[defer_until].append(row)
             continue
@@ -1254,11 +1647,11 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
         flush_deferred(bulletin)
 
     apply_fixpoints(state)
-    return [{"track": track, "when": state[track]["when"]} for track in sorted(state)]
+    return state
 
 
-def lock_map(locks: list[dict]) -> dict[str, dict]:
-    return {lock["track"]: lock["when"] for lock in locks}
+
+
 
 
 def track_locked(locks: dict[str, dict], track_id: str, switches: dict[str, str]) -> bool:
@@ -1304,7 +1697,13 @@ def neighbors(network: dict, station: str, switches: dict[str, str], locks: dict
     return [node for node in resolved if not node.startswith("sw")]
 
 
-def find_path(network, start, goal, switches, locks):
+def find_path(
+    network: dict,
+    start: str,
+    goal: str,
+    switches: dict[str, str],
+    locks: dict[str, dict],
+) -> list[str] | None:
     queue = [(start, [start])]
     seen = {start}
     while queue:
@@ -1328,7 +1727,18 @@ def switch_plans(network: dict) -> list[dict[str, str]]:
     ]
 
 
+
+def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tuple[str, str]]) -> list[dict]:
+    state = _resolve_lock_state(network, rows, corrections)
+    return [{"track": track, "when": state[track]["when"]} for track in sorted(state)]
+
+
+def lock_map(locks: list[dict]) -> dict[str, dict]:
+    return {lock["track"]: lock["when"] for lock in locks}
+
+
 def operative_plan(network: dict, locks: dict[str, dict], candidates: list[str]) -> tuple[str, dict[str, str]]:
+    """Return the unique operative goal and one switch lineup that reaches it."""
     reachable: dict[str, list[dict[str, str]]] = {station: [] for station in candidates}
     for switches in switch_plans(network):
         for station in candidates:
@@ -1339,13 +1749,6 @@ def operative_plan(network: dict, locks: dict[str, dict], candidates: list[str])
         raise RuntimeError(f"expected one operative arrival, got {reachable}")
     goal = winners[0]
     return goal, reachable[goal][0]
-
-
-def hint_map(conn: duckdb.DuckDBPyConnection) -> dict[str, str]:
-    rows = conn.execute(
-        "SELECT station_id, hint FROM hint_clues ORDER BY seq"
-    ).fetchall()
-    return {station: hint for station, hint in rows}
 
 
 def main() -> None:
@@ -1368,9 +1771,7 @@ def main() -> None:
             "SELECT station_id FROM arrival_candidates ORDER BY station_id"
         ).fetchall()
     ]
-    train = conn.execute(
-        "SELECT value FROM shift_meta WHERE key = 'train'"
-    ).fetchone()[0]
+    train = conn.execute("SELECT value FROM shift_meta WHERE key = 'train'").fetchone()[0]
     hints = hint_map(conn)
     conn.close()
 

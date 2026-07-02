@@ -11,21 +11,29 @@ Agent omits db_override from nonce_selection_precedence, -4
 
 # Rubric 2
 Agent loads rules.json and inspects audit_events via JDBC before implementing correlate, +2
-Agent orders audit events by recorded_at rather than event_id or Appendix B prose, +4
+Agent orders audit events by effective_at rather than event_id or Appendix B prose, +4
+Agent picks the key_rotated row with greatest effective_at rather than max replacement_key_version or latest recorded_at, +4
 Agent voids key_rotated rows matched by key_rotation_rescinded and falls back to latest_key_assigned when all rotations are rescinded, +4
 Agent voids key_assigned rows matched by key_assignment_rescinded before choosing assignment, +3
 Agent scopes nonce_override_registered to the operative key_version after rotation, +4
 Agent walks nonce_override_amended chains and allows later re-registration of voided bytes, +4
 Agent pairs nonce_override_replaced and nonce_override_replacement_rescinded by supersedes_nonce_hex, +4
+Agent honors effective_at over recorded_at when a late-ingested row backdates a correction, +3
 Agent keeps Appendix D report overrides fixed across key rotation, +3
 Agent produces byte-exact /app/out/correlation.json for every in-scope frame, +4
 Agent picks max replacement_key_version without rescission voiding, -4
+Agent treats a late-ingested key_rotated row as operative because recorded_at is newest, -4
 Agent treats revoked or amended nonce registrations as still operative, -4
+Agent orders voiding steps by recorded_at when effective_at differs on frm-020 or frm-023, -4
 Agent keeps a voided replacement nonce after replacement_rescinded instead of the final chain, -4
 Agent re-derives nonces for frames with report overrides after rotation, -3
 
 # Rubric 3
 Agent extracts ciphertext from GIF MRNR/CRYPTO1 blocks per frame, +3
+Agent uses the last MRNR/CRYPTO1 block when a frame has a superseded capture before the operative payload, +4
+Agent ignores decoy frm|HEX strings embedded outside MRNR/CRYPTO1 application extensions, +3
 Agent decrypts with AES-256-GCM using correlated key_version, nonce, and frame_id AAD, +5
 Agent produces schema-valid /app/out/findings.json with auth_ok on every in-scope frame, +5
 Agent compiles decrypt outside /app/classes or /app/pipeline/classes, -3
+Agent regex-scans the whole GIF and authenticates against decoy embedded payloads, -4
+Agent decrypts from the first MRNR/CRYPTO1 block when a superseded capture precedes the operative one, -4

@@ -18,6 +18,7 @@ public class SwitchRuleHandler {
 
     public Set<String> lockedEdges(Map<String, String> switches) {
         Set<String> locked = new HashSet<>();
+        applyLockGroups(locked);
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new java.util.HashMap<>();
         for (RouteRule rule : rules) {
@@ -30,6 +31,22 @@ public class SwitchRuleHandler {
             edgeDecided.put(rule.edgeId(), true);
         }
         return locked;
+    }
+
+    private void applyLockGroups(Set<String> locked) {
+        Map<String, Set<String>> groups = repository.loadLockGroups();
+        for (Set<String> edges : groups.values()) {
+            boolean triggered = false;
+            for (String edgeId : edges) {
+                if (locked.contains(edgeId)) {
+                    triggered = true;
+                    break;
+                }
+            }
+            if (triggered) {
+                locked.addAll(edges);
+            }
+        }
     }
 
     private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {

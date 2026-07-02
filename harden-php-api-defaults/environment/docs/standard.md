@@ -751,7 +751,7 @@ The wildcard value `*` shall never be emitted. *(Appendix G amends the allowlist
 
 **Rationale.** Browser preflight (`OPTIONS`) requests must be answered consistently so that legitimate cross-origin clients function while untrusted origins gain nothing.
 
-**Requirement.** An `OPTIONS` request to any path shall return HTTP `204` with no response body. The cross-origin grant of CO-ORIGIN-ALLOW applies to the preflight response under the same allowlist rule. When (and only when) the origin is allowed, the preflight response shall additionally set:
+**Requirement.** An `OPTIONS` request to any path shall return HTTP `204` with no response body, including when the request omits `Access-Control-Request-Method`. The cross-origin grant of CO-ORIGIN-ALLOW applies to the preflight response under the same allowlist rule. When (and only when) the origin is allowed, the preflight response shall additionally set:
 
 - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
 - `Access-Control-Allow-Headers: Authorization, Content-Type, X-Bootstrap-Secret`
@@ -2796,6 +2796,11 @@ The method, header, and max-age hint headers in CO-PREFLIGHT (`Access-Control-Al
 The refusal status for an already-bootstrapped node is changed from `403` to `409` (Conflict). The decision remains `denied` and the reason remains `already_bootstrapped`; only the HTTP status changes.
 
 
+### G-2026-07 — amends NW-TLS-CIPHERS
+
+The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+
+
 ### G-2026-09 — amends IR-CONTACT
 
 The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
@@ -2803,12 +2808,12 @@ The incident-response on-call rotation contact list is revised. This amendment d
 
 ### G-2026-06 — amends AU-LEDGER-SCOPE
 
-Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged.
+Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
 
 
-### G-2026-07 — amends NW-TLS-CIPHERS
+### G-2026-13 — amends CO-ORIGIN-ALLOW
 
-The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, even if an earlier request in the same long-lived process carried an allowed origin.
 
 
 ## Appendix H. Implementation checklist

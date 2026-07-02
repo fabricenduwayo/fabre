@@ -2,7 +2,6 @@
 
 return [
     'debug' => true,
-    'allow_plaintext_bootstrap' => true,
     'cors_allow_origin' => '*',
     'allowed_origins' => ['https://harbordesk.internal'],
     'preflight_max_age' => 600,

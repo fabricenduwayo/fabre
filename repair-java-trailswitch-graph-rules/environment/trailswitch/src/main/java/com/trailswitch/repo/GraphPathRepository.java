@@ -1,8 +1,13 @@
 package com.trailswitch.repo;
 
 import com.trailswitch.model.EdgeRow;
+import com.trailswitch.model.LockGroupRow;
 import com.trailswitch.model.RouteRule;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -43,6 +48,19 @@ public class GraphPathRepository {
                                 rs.getString("lock_sw1"),
                                 rs.getString("lock_sw2"),
                                 rs.getString("rule_action")));
+    }
+
+    public Map<String, Set<String>> loadLockGroups() {
+        List<LockGroupRow> rows =
+                jdbc.query(
+                        "SELECT group_id, edge_id FROM lock_groups ORDER BY group_id, edge_id",
+                        (rs, rowNum) ->
+                                new LockGroupRow(rs.getString("group_id"), rs.getString("edge_id")));
+        Map<String, Set<String>> groups = new HashMap<>();
+        for (LockGroupRow row : rows) {
+            groups.put(row.groupId(), new HashSet<>(Set.of(row.edgeId())));
+        }
+        return groups;
     }
 
     public List<String> listStations() {

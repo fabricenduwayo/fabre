@@ -2294,78 +2294,16 @@ key versions, rotation replacements, or nonce override bytes.
 ## Appendix C — Normative cryptographic exception precedence
 
 The following precedence is binding when correlating audit events to a
-frame's operative decryption material.
+frame's operative decryption material. Detailed voiding and scoping rules
+for SQLite audit_events are not repeated here.
 
 ### C.1 Key-version selection
-
-1. **rotation_replacement** — when a `key_rotated` audit event exists for the
-   frame, the operative key version is the event's `replacement_key_version`,
-   not the superseded `key_version` and not any later `key_assigned` row that
-   merely restates an unrelated version. When more than one `key_rotated` event
-   exists for a frame, the one with the greatest `recorded_at` is operative, and
-   its `replacement_key_version` is used as-is even if it is numerically lower
-   than a superseded version.
-2. **latest_key_assigned** — otherwise, take the `key_assigned` event with the
-   greatest `recorded_at` timestamp for the frame.
-
-A `key_rotation_rescinded` event voids every prior `key_rotated` row for the
-same frame whose `key_version` and `replacement_key_version` match the
-rescission's pair. When choosing the operative rotation, exclude voided rows
-first, then take the greatest `recorded_at` among the survivors. When **every**
-`key_rotated` row for a frame has been voided, treat the frame as having no
-operative rotation and apply **latest_key_assigned** instead.
-
-A `key_assignment_rescinded` event voids every prior `key_assigned` row for
-the same frame whose `key_version` equals the rescission's `key_version`.
-When falling back to **latest_key_assigned**, exclude voided assignments
-before choosing the greatest `recorded_at`.
 
 ```json
 ["rotation_replacement", "latest_key_assigned"]
 ```
 
 ### C.2 Nonce selection
-
-1. **report_override** — when Appendix D names an explicit nonce override,
-   that 12-byte value must be used even if key rotation later changes the
-   operative key version for the frame.
-2. **db_override** — when no Appendix D entry exists for the frame, a
-   `nonce_override_registered` audit row is operative only if its `key_version`
-   equals the operative key version after key-selection precedence (including
-   any non-rescinded `key_rotated` replacement). A registration tied to a
-   superseded key version must be ignored once rotation changes the operative
-   version — do not reuse the override bytes after rotation. When rotation
-   changes the operative key version, a later registration for the new version
-   may become operative; a later registration that still names a superseded key
-   version must not win over that match even if its `recorded_at` is greater.
-
-   A `nonce_override_revoked` event voids every prior `nonce_override_registered`
-   row for the same frame whose `nonce_override_hex` equals the revocation's
-   `nonce_override_hex`. After excluding revoked registrations, the latest
-   remaining `nonce_override_registered` row by `recorded_at` is eligible —
-   but still subject to the operative key-version match above.
-
-   A `nonce_override_amended` event voids every prior registration whose
-   `nonce_override_hex` equals the amendment's `supersedes_nonce_hex`, then
-   introduces the amendment's own `nonce_override_hex` as a new eligible row
-   at that timestamp. A later `nonce_override_registered` row may register
-   the same bytes again — re-registration after amendment is operative and
-   must not be treated as permanently void.
-
-   A `nonce_override_replaced` event voids every prior registration whose
-   `nonce_override_hex` equals the replacement's `supersedes_nonce_hex`, then
-   introduces the replacement's own `nonce_override_hex` as a new eligible row
-   at that timestamp.
-
-   A `nonce_override_replacement_rescinded` event voids the replacement row
-   whose `nonce_override_hex` equals the rescission's `supersedes_nonce_hex`,
-   then re-introduces the rescission's `nonce_override_hex` as an eligible row
-   — restoring the pre-replacement bytes without treating them as revoked.
-   A later `nonce_override_replaced` event may supersede the restored bytes
-   again; only the final surviving replacement chain determines the operative
-   DB override.
-3. **derived_sha256_prefix** — otherwise derive the nonce as the first 12 bytes
-   of SHA-256(frame_id + ':' + key_version).
 
 ```json
 ["report_override", "db_override", "derived_sha256_prefix"]

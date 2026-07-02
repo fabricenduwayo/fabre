@@ -77,6 +77,9 @@ def main() -> None:
     outcome = feedback_response.get("feedback_outcome")
     print("static checks:", outcome)
     if outcome != "PASS":
+        import json
+
+        print(json.dumps(feedback_response, indent=2)[:12000])
         raise SystemExit(f"static checks failed: {outcome}")
 
     try:

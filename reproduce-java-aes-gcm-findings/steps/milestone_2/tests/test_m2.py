@@ -140,6 +140,12 @@ class TestMilestone2Correlate:
         assert got["frm-011"]["key_source"] == "rotation_replacement"
         assert got["frm-011"]["nonce_source"] == "derived"
 
+    def test_frm011_key_resolution_by_effective_at(self, produced) -> None:
+        """frm-011 must pick the rotation with greatest effective_at, not latest recorded_at."""
+        got = {r["frame_id"]: r for r in produced}
+        assert got["frm-011"]["key_version"] == 4
+        assert got["frm-011"]["key_version"] != 6
+
     def test_frm012_rotation_voids_stale_db_nonce(self, produced) -> None:
         """frm-012 registered a DB nonce for v2 then rotated to v4; derived nonce wins."""
         got = {r["frame_id"]: r for r in produced}
@@ -217,6 +223,11 @@ class TestMilestone2Correlate:
         assert got["frm-020"]["nonce_hex"] != "C3D4E5F60718293A4B5C6D7E"
         assert got["frm-020"]["nonce_hex"] != "B2C3D4E5F60718293A4B5C6D"
 
+    def test_frm020_effective_at_not_recorded_at(self, produced) -> None:
+        """frm-020 amendment chain must follow effective_at, not ingestion recorded_at."""
+        got = {r["frame_id"]: r for r in produced}
+        assert got["frm-020"]["nonce_hex"] != "C3D4E5F60718293A4B5C6D7E"
+
     def test_frm021_all_rotations_rescinded_assignment_fallback(self, produced) -> None:
         """frm-021 must fall back to v2 when every key_rotated row is voided."""
         got = {r["frame_id"]: r for r in produced}
@@ -241,6 +252,11 @@ class TestMilestone2Correlate:
         assert got["frm-023"]["nonce_source"] == "override"
         assert got["frm-023"]["nonce_hex"] == "3C4D5E6F708192A3B4C5D6E7"
         assert got["frm-023"]["nonce_hex"] != "2B3C4D5E6F708192A3B4C5D6"
+        assert got["frm-023"]["nonce_hex"] != "1A2B3C4D5E6F708192A3B4C5"
+
+    def test_frm023_effective_at_not_recorded_at(self, produced) -> None:
+        """frm-023 replacement chain must follow effective_at, not scrambled recorded_at."""
+        got = {r["frame_id"]: r for r in produced}
         assert got["frm-023"]["nonce_hex"] != "1A2B3C4D5E6F708192A3B4C5"
 
     def test_frm024_rotation_voids_replacement_scoped_nonce(self, produced) -> None:

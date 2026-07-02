@@ -58,9 +58,7 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
         : null;
 
     $allowed = false;
-    if (!empty($config['allow_plaintext_bootstrap'])) {
-        $allowed = true;
-    } elseif ($expected !== null && $secret !== null && hash_equals($expected, $secret)) {
+    if ($expected !== null && $secret !== null && hash_equals($expected, $secret)) {
         $allowed = true;
     }
 

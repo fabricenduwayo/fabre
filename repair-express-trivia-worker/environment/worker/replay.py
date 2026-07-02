@@ -93,107 +93,19 @@ def fetch_rulings(base_url: str) -> list[dict]:
 
 
 def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
-    """Appendix H reconciliation with staging bugs left in place."""
+    """Naive ruling replay — ignores Appendix H lifecycle controls."""
     by_player = {row["player"]: dict(row) for row in standings}
 
-    incidents: dict[str, dict] = {}
-    deferred_order: list[str] = []
-    frozen_deferred: dict[str, dict] = {}
-
     for ruling in sorted(rulings, key=lambda r: r["ruling_seq"]):
-        op = ruling["op"]
-        incident = ruling["incident"]
-
-        if op == "rescind":
-            if incident in incidents:
-                incidents.pop(incident)
-                if incident in deferred_order:
-                    deferred_order.remove(incident)
+        if ruling["op"] == "rescind":
             continue
-
-        if op not in ("issue", "amend"):
+        if ruling["op"] not in ("issue", "amend"):
             continue
-
-        requires = ruling.get("requires_incident")
-        if requires and requires not in incidents:
+        player = ruling.get("player")
+        if not player or player not in by_player:
             continue
-
-        paired = ruling.get("paired_incident")
-        if paired and paired not in incidents:
-            continue
-
-        prev = incidents.get(incident)
-        if op == "amend" and "correct_delta" not in ruling and prev is not None:
-            correct_delta = prev["correct_delta"]
-        else:
-            correct_delta = int(ruling.get("correct_delta", 0))
-
-        if op == "amend" and "delta" not in ruling and prev is not None:
-            delta = prev["delta"]
-        else:
-            delta = int(ruling["delta"])
-
-        if op == "amend" and "applies_after_floor" not in ruling and prev is not None:
-            applies_after_floor = prev["applies_after_floor"]
-        else:
-            applies_after_floor = bool(ruling.get("applies_after_floor", False))
-
-        if op == "amend" and "player" not in ruling:
-            player = ""
-        else:
-            player = ruling["player"]
-
-        entry = {
-            "player": player,
-            "delta": delta,
-            "correct_delta": correct_delta,
-            "applies_after_floor": applies_after_floor,
-            "requires_incident": requires,
-            "paired_incident": paired,
-            "score_ceiling": ruling.get("score_ceiling"),
-            "ruling_seq": ruling["ruling_seq"],
-        }
-        incidents[incident] = entry
-        if applies_after_floor:
-            if incident in deferred_order:
-                deferred_order.remove(incident)
-            deferred_order.append(incident)
-            if paired and paired in incidents:
-                frozen_deferred[incident] = dict(entry)
-        elif incident in deferred_order:
-            deferred_order.remove(incident)
-
-    def apply_adjustment(eff: dict) -> None:
-        player = eff["player"]
-        if player not in by_player:
-            return
-        by_player[player]["score"] += eff["delta"]
-        by_player[player]["correct"] += eff["correct_delta"]
-
-    def clamp_scores() -> None:
-        for row in by_player.values():
-            row["score"] = max(0, row["score"])
-            row["correct"] = max(0, row["correct"])
-
-    for _inc, eff in incidents.items():
-        if not eff["applies_after_floor"]:
-            apply_adjustment(eff)
-
-    clamp_scores()
-
-    for incident in sorted(
-        deferred_order,
-        key=lambda inc: incidents[inc]["ruling_seq"],
-    ):
-        eff = incidents[incident]
-        requires = eff.get("requires_incident")
-        if requires and requires not in incidents:
-            continue
-        apply_adjustment(eff)
-        player = eff["player"]
-        if player in by_player:
-            by_player[player]["score"] = max(0, by_player[player]["score"])
-            by_player[player]["correct"] = max(0, by_player[player]["correct"])
+        by_player[player]["score"] += int(ruling.get("delta", 0))
+        by_player[player]["correct"] += int(ruling.get("correct_delta", 0))
 
     ordered = sorted(
         by_player.values(),

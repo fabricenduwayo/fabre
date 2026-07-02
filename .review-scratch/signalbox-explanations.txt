@@ -1,0 +1,5 @@
+Agents must query a DuckDB evidence bundle and repair a corrupted Signalbox cartridge whose route-lock semantics span holds, revokes, snapshots, rollbacks, witness gates, and cascade fixpoints. The broken helper script predates the bulletin tail; the glossary and crew notes must be reconciled before writing network.yaml and dispatch.toml.
+
+Repair or replace the cartridge tooling, derive the operative goal by reachability under resolved locks, rebuild dispatch.toml from evidence, implement play_shift.py against the bundled referee, and write a winning transcript.
+
+Pytest compares resolved locks, dispatch metadata, and a completed shift transcript against a hidden reference folder engine, including prefix tests for each bulletin semantic and a property test over random seq prefixes.

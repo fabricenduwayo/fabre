@@ -58,6 +58,7 @@ def gen_seed_sql() -> None:
     lines.append("    nonce_override_hex      TEXT,")
     lines.append("    supersedes_nonce_hex    TEXT,")
     lines.append("    recorded_at             TEXT NOT NULL,")
+    lines.append("    effective_at            TEXT NOT NULL,")
     lines.append("    FOREIGN KEY (frame_id) REFERENCES frames(frame_id)")
     lines.append(");")
     lines.append("")
@@ -104,9 +105,9 @@ def gen_seed_sql() -> None:
         lines.append(
             "INSERT INTO audit_events "
             "(frame_id, event_type, key_version, replacement_key_version, "
-            "nonce_override_hex, supersedes_nonce_hex, recorded_at) VALUES ("
+            "nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at) VALUES ("
             f"'{e['frame_id']}', '{e['event_type']}', {kv}, {repl}, {nov}, {sup}, "
-            f"'{e['recorded_at']}');"
+            f"'{e['recorded_at']}', '{e['effective_at']}');"
         )
     lines.append("")
     _w(ENV / "data" / "seed.sql", "\n".join(lines) + "\n")

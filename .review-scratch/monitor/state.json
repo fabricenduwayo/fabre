@@ -2,86 +2,52 @@
   "runs": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
       "folder_name": "reproduce-java-aes-gcm-findings",
-      "feedback_hash": "041495a3fe8796fd",
-      "attempts": 1,
-      "status": "dry_run",
-      "agent_status": "dry_run",
-      "agent_summary": "skipped",
-      "agent_report": {},
-      "git_diff_stat": "(dry run)",
-      "platform_state_after": "",
-      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021010Z.json",
-      "last_run": "2026-07-02T02:10:10.791573+00:00"
+      "feedback_hash": "936f695108e1a073",
+      "attempts": 3,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-02T17:33:02.572476+00:00"
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
-      "feedback_hash": "f6cee60f1d716d22",
-      "attempts": 1,
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "The task was failing the **EASY** difficulty gate (Python tasks need **HARD**, worst-model \u226420%). I hardened it with three interacting Appendix H rules instead of relabeling difficulty.\n\n## Changes\n\n**New Appendix H rules** in `scoring_standard.md`:\n- **H-2026-27** \u2014 Primary `max_score_after` cap (discard score excess after delta, before floor clamp)\n- **H-2026-28** \u2014 `offset_player` transfer subtracts the **applied** score change (after cap), not nominal delta\n- **H-2026-29** \u2014 Deferred `correct_ceiling` clamp on `correct_delta` (parallel to `score_ceiling`)\n\n**Production data** \u2014 Added INC-90 through INC-93 to `rulings.json` so the main transcript exercises these rules (carol 18\u219221, dave correct 3\u21924).\n\n**Implementation** \u2014 Updated `solution/replay.py` and `tests/helpers.py` with `apply_primary()` / deferred correct-ceiling logic. The broken worker in `environment/worker/replay.py` still omits these rules.\n\n**Tests** \u2014 Added 4 tests for the new rules; updated carol score assertions (18\u219221). Oracle passes **54/54** tests.\n\n**Platform** \u2014 Bumped `platform-revision: 2026-07-01-r32`, updated rubrics/explanations, resubmitted without send-to-reviewer. Assignment is **EVALUATION_PENDING**.\n\n```json\n{\n  \"changes_summary\": \"Hardened repair-express-trivia-worker for the EASY\u2192HARD gate by adding Appendix H rules H-2026-27 (primary max_score_after caps), H-2026-28 (offset_player transfers using applied delta after the cap), and H-2026-29 (deferred correct_ceiling clamping). Updated scoring_standard.md, rulings.json with INC-90\u2013INC-93, solution/replay.py, tests/helpers.py, and tests/test_outputs.py with four new tests plus carol score updates. Bumped Dockerfile platform-revision to r32 and refreshed submission explanations/rubrics.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Hardened repair-express-trivia-worker for the EASY\u2192HARD gate by adding Appendix H rules H-2026-27 (primary max_score_after caps), H-2026-28 (offset_player transfers using applied delta after the cap), and H-2026-29 (deferred correct_ceiling clamping). Updated scoring_standard.md, rulings.json with INC-90\u2013INC-93, solution/replay.py, tests/helpers.py, and tests/test_outputs.py with four new tests plus carol score updates. Bumped Dockerfile platform-revision to r32 and refreshed submission explanations/rubrics.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": "(no git diff detected)",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T023156Z.json",
-      "last_run": "2026-07-02T02:31:56.386913+00:00"
+      "feedback_hash": "0726b8c92428d085",
+      "attempts": 4,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-02T16:44:55.924377+00:00"
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
-      "feedback_hash": "3795a9b83ac1cc47",
-      "attempts": 1,
+      "feedback_hash": "04d7214c28661b4e",
+      "attempts": 4,
       "status": "error",
-      "error": "Cursor agent run failed: ",
-      "last_run": "2026-07-02T02:47:15.135038+00:00"
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-02T17:10:23.918299+00:00"
     },
     "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": {
       "folder_name": "extend-maven-spring-awk-fixtures",
-      "feedback_hash": "52baa11a4297cc49",
-      "attempts": 2,
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "Fixed the `extend-maven-spring-awk-fixtures` submission based on platform feedback.\n\n## Root cause\n\nThe oracle failed because Maven tried to download `exec-maven-plugin:3.1.0` at verifier time with no network (`allow_internet = false`). The image only ran `:help`, which wasn\u2019t enough for a reliable offline cache on the platform.\n\n## Changes\n\n1. **`environment/Dockerfile`** \u2014 Prefetch `exec-maven-plugin` pom and jar explicitly via `maven-dependency-plugin:get`, then run `:help`. Bumped `# platform-revision: 2026-07-02-r7` to bust platform cache.\n\n2. **`instruction.md`** \u2014 Added the requirements the quality checks flagged:\n   - Run `/app/dependency-audit/build.sh` to produce `/app/dependency-audit/app.jar`\n   - Packaged jar must contain seed SQL at `BOOT-INF/classes/data/seed-dependencies.sql`\n   - `GET /health` must return `{\"status\":\"ok\"}`\n   - Unknown build IDs should 404\n\n3. **`.submission-explanations.txt`** \u2014 Updated verification text to match.\n\n## Verification\n\n- `harbor run -a oracle -p extend-maven-spring-awk-fixtures --force-build` \u2192 **reward 1.0**\n- Static checks on resubmit \u2192 **PASS**\n- Platform state \u2192 **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Fixed the oracle failure by hardening offline Maven prefetch for exec-maven-plugin (pom + jar + help) in environment/Dockerfile and bumping platform-revision to 2026-07-02-r7. Updated instruction.md to state build.sh output at /app/dependency-audit/app.jar, BOOT-INF/classes/data/seed-dependencies.sql in the packaged jar, GET /health returning {\\\"status\\\":\\\"ok\\\"}, and 404 for unknown build ids. Refreshed .submission-explanations.txt verification paragraph. Committed, pushed, and resubmitted with static checks PASS.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Fixed the oracle failure by hardening offline Maven prefetch for exec-maven-plugin (pom + jar + help) in environment/Dockerfile and bumping platform-revision to 2026-07-02-r7. Updated instruction.md to state build.sh output at /app/dependency-audit/app.jar, BOOT-INF/classes/data/seed-dependencies.sql in the packaged jar, GET /health returning {\"status\":\"ok\"}, and 404 for unknown build ids. Refreshed .submission-explanations.txt verification paragraph. Committed, pushed, and resubmitted with static checks PASS.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": "(no git diff detected)",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "see platform feedback in monitor log",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021745Z.json",
-      "last_run": "2026-07-02T02:17:46.413918+00:00"
+      "feedback_hash": "bbebeff9973eecef",
+      "attempts": 4,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-02T16:33:26.671396+00:00"
     },
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
       "folder_name": "repair-java-trailswitch-graph-rules",
-      "feedback_hash": "7481db8b86d9125c",
-      "attempts": 1,
-      "status": "dry_run",
-      "agent_status": "dry_run",
-      "agent_summary": "skipped",
-      "agent_report": {},
-      "git_diff_stat": "(dry run)",
-      "platform_state_after": "",
-      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T021009Z.json",
-      "last_run": "2026-07-02T02:10:10.236267+00:00"
+      "feedback_hash": "87810eea09cac4c5",
+      "attempts": 4,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-02T17:21:29.370067+00:00"
     }
   },
-  "last_check": "2026-07-02T02:22:22.441844+00:00",
+  "last_check": "2026-07-02T19:03:03.340267+00:00",
   "last_queue": {
     "fix_queue": [
+      "extend-maven-spring-awk-fixtures",
       "repair-express-trivia-worker",
       "repair-flask-signalbox-configs",
+      "repair-java-trailswitch-graph-rules",
       "reproduce-java-aes-gcm-findings"
     ],
     "manual_ui": [],
@@ -90,21 +56,31 @@
         "submission_id": "71323da7-976c-405b-9dcd-c24d83fa6102",
         "folder_name": "reproduce-java-tls-waiver-findings",
         "reason": "manual_review_queue"
+      },
+      {
+        "submission_id": "0c176558-e5c1-444a-804b-f4b4cc3cbd29",
+        "folder_name": "harden-php-api-defaults",
+        "reason": "manual_review_queue"
+      },
+      {
+        "submission_id": "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456",
+        "folder_name": "repair-cpp-setup-auditor",
+        "reason": "manual_review_queue"
       }
     ],
-    "checked_at": "2026-07-02T02:22:58.325314+00:00"
+    "checked_at": "2026-07-02T19:04:05.114994+00:00"
   },
-  "next_fix_allowed_after": "2026-07-01T05:35:24.345022+00:00",
+  "next_fix_allowed_after": "2026-07-02T03:52:07.892176+00:00",
   "last_states": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "NEEDS_REVISION",
     "71323da7-976c-405b-9dcd-c24d83fa6102": "NEEDS_REVISION",
     "3a48c644-09b8-4357-9466-403cb2674a1c": "NEEDS_REVISION",
-    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": "EVALUATION_PENDING",
-    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "REVIEW_PENDING",
-    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "EVALUATION_PENDING",
+    "6b30193a-b8fc-4a73-86c1-0b5c3182d99c": "NEEDS_REVISION",
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "NEEDS_REVISION",
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
     "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
-    "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "EVALUATION_PENDING",
+    "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "NEEDS_REVISION",
     "586f2352-d2c5-435f-a8dd-546725e95bc7": "OFFERED",
     "c1f49663-527b-4f9b-82e4-08c5b0c005bd": "OFFERED",
     "8e261009-10eb-47db-bb7b-ddc5c3af83ba": "OFFERED"

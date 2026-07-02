@@ -57,9 +57,10 @@ final class AuditCorrelator {
             Integer replacementKeyVersion,
             String nonceOverrideHex,
             String supersedesNonceHex,
-            String recordedAt) {}
+            String recordedAt,
+            String effectiveAt) {}
 
-    private record NonceCandidate(String recordedAt, String nonceHex, Integer keyVersion) {}
+    private record NonceCandidate(String effectiveAt, String nonceHex, Integer keyVersion) {}
 
     private static List<FrameRow> loadFrames() throws Exception {
         List<FrameRow> rows = new ArrayList<>();
@@ -81,7 +82,7 @@ final class AuditCorrelator {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(
                      "SELECT frame_id, event_type, key_version, replacement_key_version, "
-                     + "nonce_override_hex, supersedes_nonce_hex, recorded_at "
+                     + "nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at "
                      + "FROM audit_events")) {
             while (rs.next()) {
                 rows.add(new AuditEvent(
@@ -91,7 +92,8 @@ final class AuditCorrelator {
                         (Integer) rs.getObject(4),
                         rs.getString(5),
                         rs.getString(6),
-                        rs.getString(7)));
+                        rs.getString(7),
+                        rs.getString(8)));
             }
         }
         return rows;
@@ -115,7 +117,7 @@ final class AuditCorrelator {
         java.util.Set<String> revoked = revokedNonceHex(frameId, events);
         List<AuditEvent> frameEvents = events.stream()
                 .filter(e -> frameId.equals(e.frameId()))
-                .sorted(Comparator.comparing(AuditEvent::recordedAt))
+                .sorted(Comparator.comparing(AuditEvent::effectiveAt))
                 .toList();
         List<NonceCandidate> candidates = new ArrayList<>();
 
@@ -128,7 +130,7 @@ final class AuditCorrelator {
                 String hex = event.nonceOverrideHex();
                 if (hex != null && !revoked.contains(hex)) {
                     candidates.add(new NonceCandidate(
-                            event.recordedAt(), hex, event.keyVersion()));
+                            event.effectiveAt(), hex, event.keyVersion()));
                 }
             } else if ("nonce_override_amended".equals(eventType)) {
                 String supersedes = event.supersedesNonceHex();
@@ -138,7 +140,7 @@ final class AuditCorrelator {
                 String hex = event.nonceOverrideHex();
                 if (hex != null && !revoked.contains(hex)) {
                     candidates.add(new NonceCandidate(
-                            event.recordedAt(), hex, event.keyVersion()));
+                            event.effectiveAt(), hex, event.keyVersion()));
                 }
             } else if ("nonce_override_replaced".equals(eventType)) {
                 String supersedes = event.supersedesNonceHex();
@@ -148,7 +150,7 @@ final class AuditCorrelator {
                 String hex = event.nonceOverrideHex();
                 if (hex != null && !revoked.contains(hex)) {
                     candidates.add(new NonceCandidate(
-                            event.recordedAt(), hex, event.keyVersion()));
+                            event.effectiveAt(), hex, event.keyVersion()));
                 }
             } else if ("nonce_override_replacement_rescinded".equals(eventType)) {
                 String voided = event.supersedesNonceHex();
@@ -158,7 +160,7 @@ final class AuditCorrelator {
                 String restored = event.nonceOverrideHex();
                 if (restored != null && !revoked.contains(restored)) {
                     candidates.add(new NonceCandidate(
-                            event.recordedAt(), restored, event.keyVersion()));
+                            event.effectiveAt(), restored, event.keyVersion()));
                 }
             }
         }
@@ -228,14 +230,14 @@ final class AuditCorrelator {
                 .toList();
         if (!rotations.isEmpty()) {
             AuditEvent latest = rotations.stream()
-                    .max(Comparator.comparing(AuditEvent::recordedAt))
+                    .max(Comparator.comparing(AuditEvent::effectiveAt))
                     .orElseThrow();
             return latest.replacementKeyVersion();
         }
         AuditEvent latestAssigned = events.stream()
                 .filter(e -> frameId.equals(e.frameId()) && "key_assigned".equals(e.eventType()))
                 .filter(e -> !rescindedAssignmentVersions(frameId, events).contains(e.keyVersion()))
-                .max(Comparator.comparing(AuditEvent::recordedAt))
+                .max(Comparator.comparing(AuditEvent::effectiveAt))
                 .orElseThrow();
         return latestAssigned.keyVersion();
     }
@@ -255,7 +257,7 @@ final class AuditCorrelator {
                 .toList();
         if (!matching.isEmpty()) {
             NonceCandidate latest = matching.stream()
-                    .max(Comparator.comparing(NonceCandidate::recordedAt))
+                    .max(Comparator.comparing(NonceCandidate::effectiveAt))
                     .orElseThrow();
             return fromHex(latest.nonceHex());
         }

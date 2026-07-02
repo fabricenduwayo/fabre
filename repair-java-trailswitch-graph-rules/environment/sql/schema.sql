@@ -21,9 +21,15 @@ CREATE TABLE route_rules (
     rule_action TEXT NOT NULL DEFAULT 'lock'
 );
 
+CREATE TABLE lock_groups (
+    group_id TEXT NOT NULL,
+    edge_id TEXT NOT NULL REFERENCES edges(edge_id),
+    PRIMARY KEY (group_id, edge_id)
+);
+
 CREATE TABLE policy_expectations (
     check_id TEXT PRIMARY KEY,
     description TEXT NOT NULL
 );
 
-GRANT SELECT ON stations, edges, route_rules, policy_expectations TO trailswitch;
+GRANT SELECT ON stations, edges, route_rules, lock_groups, policy_expectations TO trailswitch;

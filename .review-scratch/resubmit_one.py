@@ -3,7 +3,11 @@
 import os
 import sys
 import tempfile
+import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from zip_task import zip_task_folder
 
 from snorkelai_stb.submission_utils import (
     create_feedback,
@@ -18,7 +22,6 @@ from snorkelai_stb.utils import (
     get_task_type,
     request_s3_presigned_url,
     upload_to_s3,
-    zip_folder,
 )
 
 PROJECT_ID = "bfe79c33-8ab0-4061-9849-08d3207c9927"
@@ -31,13 +34,13 @@ TASKS = {
         "zip_name": "harden-php-api-defaults.zip",
         "difficulty": (
             "Agents must reconcile a broken PHP API against a long hardening standard "
-            "with numbered controls and an amendments appendix that overrides the body, "
-            "without the instruction naming which controls to fix. The staging code keeps "
+            "whose body text is superseded by Appendix G amendments, without the "
+            "instruction enumerating each amendment inline. The staging code keeps "
             "sticky CORS grants, cached bootstrap/token reads, and a silent audit-schema "
             "defect across one long-lived process while the verifier reseeds the on-disk "
-            "ledger between randomized lifecycles. CORS must track each request's Origin, "
-            "bootstrap eligibility must follow the token file on disk, health auth must "
-            "use the amended digest format, and audit migration must preserve history."
+            "ledger between randomized lifecycles. Agents must discover digest-based token "
+            "storage, bootstrap ordering, exact-origin CORS, and SQL NULL origin semantics "
+            "from the Standard."
         ),
         "solution": (
             "Read /app/docs/standard.md including Appendix G, then patch config.php, "
@@ -48,11 +51,12 @@ TASKS = {
         ),
         "verification": (
             "Pytest drives curl against the live PHP server across deterministic replays "
-            "and 60 randomized lifecycles. Checks include per-request CORS grants, "
+            "and 75 randomized lifecycles. Checks include per-request CORS grants, "
             "bootstrap ordering and on-disk eligibility after token removal, digest-based "
-            "token storage, authenticated /health with correct denial reasons, no debug "
-            "leak, audit rows with origin preserved, legacy history retained, and full "
-            "agreement with a hidden reference simulator."
+            "token storage, authenticated /health with correct denial reasons, SQL NULL "
+            "origin when no Origin header is present, no debug leak, audit rows with origin "
+            "preserved, legacy history retained, and full agreement with a hidden reference "
+            "simulator."
         ),
     },
     "aes": {
@@ -136,23 +140,52 @@ def main() -> None:
     aht_field = get_task_node_aht_field_id(PROJECT_ID, task_type_str) or "submission_aht"
 
     zip_path = Path(tempfile.gettempdir()) / task["zip_name"]
-    zip_folder(task["folder"], zip_path)
-    print("zipped", f"{zip_path.stat().st_size / 1024:.1f} KB")
+    zip_task_folder(task["folder"], zip_path)
+    import zipfile
+
+    names = zipfile.ZipFile(zip_path).namelist()
+    leaked = [
+        n
+        for n in names
+        if any(
+            x in n.lower()
+            for x in (
+                "rubric",
+                "review-scratch",
+                "submission-explanations",
+                "tools/",
+                "readme.md",
+            )
+        )
+    ]
+    if leaked:
+        raise SystemExit(f"refusing to upload ZIP with non-task files: {leaked}")
+    print("zipped", len(names), "files", f"({zip_path.stat().st_size / 1024:.1f} KB)")
 
     presigned = request_s3_presigned_url(PROJECT_ID, assignment_id, task["zip_name"])
     upload_to_s3(presigned["presigned_url"], zip_path)
     print("uploaded")
 
-    feedback_response = create_feedback(
-        task_type_str=task_type_str,
-        task_id=task["id"],
-        feedback_id=feedback_id,
-        feedback_field_name=feedback_field_name,
-        s3_key=presigned["s3_key"],
-        filename=task["zip_name"],
-        uploaded_at=presigned["uploaded_at"],
-        s3_uri=presigned["s3_uri"],
-    )
+    feedback_response = None
+    for attempt in range(1, 4):
+        try:
+            feedback_response = create_feedback(
+                task_type_str=task_type_str,
+                task_id=task["id"],
+                feedback_id=feedback_id,
+                feedback_field_name=feedback_field_name,
+                s3_key=presigned["s3_key"],
+                filename=task["zip_name"],
+                uploaded_at=presigned["uploaded_at"],
+                s3_uri=presigned["s3_uri"],
+            )
+            break
+        except Exception as exc:
+            if attempt == 3 or "504" not in str(exc):
+                raise
+            print(f"static checks attempt {attempt} timed out (504); retrying in 30s...")
+            time.sleep(30)
+    assert feedback_response is not None
     outcome = feedback_response.get("feedback_outcome")
     print("static checks:", outcome)
     if outcome != "PASS":

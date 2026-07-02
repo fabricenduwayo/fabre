@@ -45,10 +45,13 @@ def _load(path: pathlib.Path):
 
 
 def _normalize_rules(rules: dict) -> dict:
-    """Treat a trailing period on derived_nonce_rule as optional."""
+    """Normalize derived_nonce_rule punctuation and optional report preamble."""
     out = json.loads(json.dumps(rules))
     prose = out.get("derived_nonce_rule")
     if isinstance(prose, str):
+        prefix = "The derived-nonce rule in prose: "
+        if prose.startswith(prefix):
+            prose = prose[len(prefix) :]
         out["derived_nonce_rule"] = prose.rstrip(".")
     return out
 

@@ -1,0 +1,16 @@
+{
+  "files": {
+    "passwd": "root:x:0:0::/root:/bin/bash\nalice:x:1000:100::/home/alice:/bin/bash\n",
+    "shadow": "root:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\nalice:$6$rounds=5000$abcd$hash:19000:0:99999:7:::\n",
+    "group": "root:x:0:\nwheel:x:10:\nusers:x:100:\n",
+    "sudoers": "Defaults env_reset\n",
+    "authorized_keys": {},
+    "sshd_config.d": {
+      "10-base.conf": "PermitRootLogin no\n",
+      "20-neg.conf": "Match User *,!root\nPasswordAuthentication yes\n",
+      "30-out.conf": "Match Address 10.0.0.0/8\nPasswordAuthentication yes\n",
+      "40-in.conf": "Match User root Address 198.51.0.0/16\nPasswordAuthentication yes\n",
+      "50-kbd.conf": "KbdInteractiveAuthentication no\n"
+    }
+  }
+}
