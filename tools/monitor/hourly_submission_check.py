@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Hourly Snorkel submission monitor — fix NEEDS_REVISION tasks via Cursor SDK.
+"""Snorkel submission monitor (every 2 hours) — fix NEEDS_REVISION tasks via Cursor SDK.
 
 Polls Terminus submissions, fetches platform feedback for items that need revision,
-and triggers a local Composer agent to fix + oracle + resubmit. Rules and docs
+and triggers a local Composer 2.5 agent to fix + oracle + resubmit. Rules and docs
 from .cursor/rules/ and docs/ are injected into every agent prompt.
+
+Only NEEDS_REVISION tasks are ever touched. NEEDS_REVISION tasks whose eval gates
+are already green (difficulty, solvability, instruction sufficiency, quality
+checks) are never auto-fixed — those only need manual UI field edits
+(explanations / rubric) and are reported in the status text instead.
 """
 
 from __future__ import annotations
@@ -44,7 +49,7 @@ from notifications import (  # noqa: E402
     parse_agent_report,
     write_run_report,
 )
-from feedback_gates import is_green_autoeval_only_bounce  # noqa: E402
+from feedback_gates import green_eval_skip_reason  # noqa: E402
 
 PROJECT_ID = os.environ.get(
     "TERMINUS_PROJECT_ID", "bfe79c33-8ab0-4061-9849-08d3207c9927"
@@ -212,6 +217,11 @@ def fix_cooldown_seconds() -> int:
     return int(os.environ.get("FIX_COOLDOWN_SEC", "3600"))
 
 
+def max_attempts_per_feedback() -> int:
+    """How many agent attempts to allow on the same unchanged feedback."""
+    return int(os.environ.get("MAX_ATTEMPTS_PER_FEEDBACK", "2"))
+
+
 def cooldown_active(state: dict) -> bool:
     until = state.get("next_fix_allowed_after")
     if not until:
@@ -243,13 +253,17 @@ def cooldown_remaining_sec(state: dict) -> int:
 def list_submission_queue(
     exclusions: dict[str, dict],
     state: dict,
+    subs: list[dict],
     *,
     dry_run: bool,
-) -> tuple[list[dict], list[dict]]:
-    """Return (fix_queue, skipped) after filters and feedback gates."""
-    subs = list_submission_ids(project_id=PROJECT_ID)
-    fetch_folder_names(subs, fetch_all=True)
+) -> tuple[list[dict], list[dict], list[dict]]:
+    """Return (fix_queue, manual_ui, skipped) after filters and feedback gates.
+
+    manual_ui: NEEDS_REVISION tasks whose eval gates are all green — the task
+    content must not be changed; the owner finishes explanations/rubric in the UI.
+    """
     fix_queue: list[dict] = []
+    manual_ui: list[dict] = []
     skipped: list[dict] = []
 
     for sub in subs:
@@ -289,10 +303,14 @@ def list_submission_queue(
             skipped.append({"submission_id": sid, "folder_name": folder, "reason": f"feedback_error: {exc}"})
             continue
 
-        if is_green_autoeval_only_bounce(notes):
-            log(f"skip {folder} — green eval (AutoEval noise only)")
+        green_reason = green_eval_skip_reason(notes)
+        if green_reason:
+            log(f"skip {folder} — eval gates green ({green_reason}); UI fields only")
+            manual_ui.append(
+                {"submission_id": sid, "folder_name": folder, "reason": green_reason}
+            )
             skipped.append(
-                {"submission_id": sid, "folder_name": folder, "reason": "green_autoeval_only"}
+                {"submission_id": sid, "folder_name": folder, "reason": green_reason}
             )
             continue
 
@@ -306,6 +324,11 @@ def list_submission_queue(
             log(f"skip {folder} — already fixed this feedback ({fhash})")
             skipped.append({"submission_id": sid, "folder_name": folder, "reason": "already_fixed"})
             continue
+        attempts = int(prev.get("attempts", 0)) if prev.get("feedback_hash") == fhash else 0
+        if not dry_run and attempts >= max_attempts_per_feedback():
+            log(f"skip {folder} — attempt cap reached ({attempts}) on feedback {fhash}")
+            skipped.append({"submission_id": sid, "folder_name": folder, "reason": "attempt_cap"})
+            continue
 
         fix_queue.append(
             {
@@ -315,11 +338,12 @@ def list_submission_queue(
                 "state": state_name,
                 "feedback_notes": notes,
                 "feedback_hash": fhash,
+                "attempts": attempts,
             }
         )
 
     fix_queue.sort(key=lambda item: item["folder_name"])
-    return fix_queue, skipped
+    return fix_queue, manual_ui, skipped
 
 
 def build_agent_prompt(item: dict, notes: str, tasks_map: dict) -> str:
@@ -539,6 +563,7 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
     state.setdefault("runs", {})[sid] = {
         "folder_name": folder,
         "feedback_hash": fhash,
+        "attempts": int(item.get("attempts", 0)) + 1,
         "status": "agent_finished" if not dry_run else "dry_run",
         "agent_status": status,
         "agent_summary": summary,
@@ -554,19 +579,70 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
     return True
 
 
+def detect_state_changes(state: dict, all_subs: list[dict]) -> list[str]:
+    """Compare platform states to the previous run and return change lines."""
+    previous: dict[str, str] = dict(state.get("last_states") or {})
+    current: dict[str, str] = {}
+    changes: list[str] = []
+    for sub in all_subs:
+        sid = sub["submission_id"]
+        name = (sub.get("folder_name") or sid[:8]).strip() or sid[:8]
+        st = sub.get("assignment_state") or "?"
+        current[sid] = st
+        old = previous.get(sid)
+        if old and old != st:
+            changes.append(f"{name}: {old} -> {st}")
+        elif not old and previous:
+            changes.append(f"{name}: new submission ({st})")
+    state["last_states"] = current
+    return changes
+
+
+def build_status_text(
+    all_subs: list[dict],
+    fix_queue: list[dict],
+    manual_ui: list[dict],
+    changes: list[str],
+) -> str:
+    """Human status message sent at the start of every run."""
+    counts: dict[str, int] = {}
+    for sub in all_subs:
+        counts[sub.get("assignment_state") or "?"] = (
+            counts.get(sub.get("assignment_state") or "?", 0) + 1
+        )
+    lines = [
+        "States: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())),
+    ]
+    if changes:
+        lines.append("Changed since last run:")
+        lines.extend(f"  {c}" for c in changes[:6])
+    if fix_queue:
+        lines.append(
+            "Will auto-fix now: " + ", ".join(i["folder_name"] for i in fix_queue[:5])
+        )
+    else:
+        lines.append("Will auto-fix now: none")
+    if manual_ui:
+        lines.append(
+            "Green — finish in UI (explanations/rubric only, task untouched): "
+            + ", ".join(i["folder_name"] for i in manual_ui[:5])
+        )
+    return "\n".join(lines)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Hourly Snorkel submission monitor")
+    parser = argparse.ArgumentParser(description="Snorkel submission monitor (2-hourly)")
     parser.add_argument("--dry-run", action="store_true", help="Check only; do not call Cursor")
     parser.add_argument(
         "--max-fixes",
         type=int,
-        default=int(os.environ.get("MAX_FIXES_PER_RUN", "1")),
-        help="Max agent runs per invocation (default 1; next queued task waits FIX_COOLDOWN_SEC)",
+        default=int(os.environ.get("MAX_FIXES_PER_RUN", "3")),
+        help="Max agent runs per invocation (remainder waits for the next 2-hour run)",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Ignore fix cooldown (still respects exclusions and green-bounce skip)",
+        help="Ignore fix cooldown (still respects exclusions and green-gate skip)",
     )
     args = parser.parse_args()
 
@@ -576,41 +652,66 @@ def main() -> int:
     state["last_check"] = datetime.now(UTC).isoformat()
     save_state(state)
 
-    log("=== hourly submission check start ===")
-    if not docker_ready():
-        log("WARN: Docker not reachable — agent may fail oracle step")
+    log("=== 2-hourly submission check start ===")
+    docker_ok = docker_ready()
+    if not docker_ok:
+        log("WARN: Docker not reachable — agent fixes deferred (oracle needs Docker)")
 
     try:
         all_subs = list_submission_ids(project_id=PROJECT_ID)
         fetch_folder_names(all_subs, fetch_all=True)
         exclusions = sync_review_exclusions(all_subs)
-        fix_queue, skipped = list_submission_queue(exclusions, state, dry_run=args.dry_run)
+        fix_queue, manual_ui, skipped = list_submission_queue(
+            exclusions, state, all_subs, dry_run=args.dry_run
+        )
     except Exception as exc:
         log(f"ERROR listing submissions: {exc}")
+        notify_all(
+            "Snorkel monitor: error",
+            f"Could not list submissions: {exc}",
+            subtitle="2-hour check",
+        )
         return 1
+
+    changes = detect_state_changes(state, all_subs)
+    for change in changes:
+        log(f"state change: {change}")
 
     state["last_queue"] = {
         "fix_queue": [i["folder_name"] for i in fix_queue],
+        "manual_ui": [i["folder_name"] for i in manual_ui],
         "skipped": skipped,
         "checked_at": datetime.now(UTC).isoformat(),
     }
     save_state(state)
 
+    # Status text before any work starts — every run, even when idle.
+    status_text = build_status_text(all_subs, fix_queue, manual_ui, changes)
+    log("status:\n" + status_text)
+    notify_all(
+        "Snorkel monitor: status",
+        status_text,
+        subtitle="2-hour check",
+    )
+
     if not fix_queue:
         log("no auto-fix candidates after exclusions and feedback gates")
         if skipped:
             log(f"skipped {len(skipped)} item(s) — see state.last_queue")
-        if os.environ.get("NOTIFY_ON_IDLE", "0").strip() in {"1", "true", "yes"}:
-            notify_all(
-                "Snorkel monitor: idle",
-                "No tasks need auto-fix this hour.",
-                subtitle="hourly check",
-            )
         return 0
 
     log(f"fix queue ({len(fix_queue)}): {', '.join(i['folder_name'] for i in fix_queue)}")
     if skipped:
-        log(f"skipped {len(skipped)} — exclusions / green bounce / already fixed")
+        log(f"skipped {len(skipped)} — exclusions / green gates / already fixed")
+
+    if not docker_ok and not args.dry_run:
+        notify_all(
+            "Snorkel monitor: waiting for Docker",
+            f"{len(fix_queue)} task(s) need fixes but Docker is down. "
+            "Start Docker Desktop; will retry in 2h.",
+            subtitle="blocked",
+        )
+        return 0
 
     if cooldown_active(state) and not args.force and not args.dry_run:
         remain = cooldown_remaining_sec(state)
@@ -623,53 +724,46 @@ def main() -> int:
         )
         return 0
 
-    names = ", ".join(i["folder_name"] for i in fix_queue[:4])
-    notify_all(
-        "Snorkel monitor: check",
-        f"{len(fix_queue)} task(s) queued for auto-fix: {names}",
-        subtitle="hourly check",
-    )
-
     tasks_map = load_tasks_map()
     fixed = 0
     for item in fix_queue:
         if fixed >= args.max_fixes:
-            log(f"reached max fixes per run ({args.max_fixes}) — remainder waits for next hour")
+            log(f"reached max fixes per run ({args.max_fixes}) — remainder waits for next run")
             break
         try:
             if process_one(item, state, tasks_map, dry_run=args.dry_run):
                 fixed += 1
-                if not args.dry_run:
-                    set_fix_cooldown(state)
-                    save_state(state)
         except Exception as exc:
             log(f"ERROR on {item['folder_name']}: {exc}")
             notify_all(
                 "Snorkel monitor: error",
                 f"{item['folder_name']}: {exc}",
-                subtitle="hourly check",
+                subtitle="2-hour check",
             )
             sid = item["submission_id"]
             state.setdefault("runs", {})[sid] = {
                 "folder_name": item["folder_name"],
+                "feedback_hash": item.get("feedback_hash", ""),
+                "attempts": int(item.get("attempts", 0)) + 1,
                 "status": "error",
                 "error": str(exc),
                 "last_run": datetime.now(UTC).isoformat(),
             }
-            if not args.dry_run:
-                set_fix_cooldown(state)
             save_state(state)
+    if fixed and not args.dry_run:
+        set_fix_cooldown(state)
+        save_state(state)
 
     if fix_queue and fixed < len(fix_queue):
         nxt = fix_queue[fixed]["folder_name"] if fixed < len(fix_queue) else ""
         if nxt:
-            log(f"next queued task after cooldown: {nxt}")
+            log(f"next queued task on next run: {nxt}")
 
     log(f"=== done — triggered {fixed} fix(es) ===")
     notify_all(
         "Snorkel monitor: run complete",
-        f"Fixed {fixed} task(s) this run. Next queued fix in {fix_cooldown_seconds() // 60}m.",
-        subtitle="hourly check",
+        f"Fixed {fixed} of {len(fix_queue)} queued task(s). Next check in 2h.",
+        subtitle="2-hour check",
     )
     return 0
 

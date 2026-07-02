@@ -1,7 +1,9 @@
-# Hourly Snorkel submission monitor
+# Snorkel submission monitor (every 2 hours)
 
-Polls Terminus submissions every hour. **One task auto-fixed per hour** when
-eligible; scans every run but respects a 1-hour cooldown between fixes.
+Polls Terminus submissions **every 2 hours**. Each run sends a status text
+first (all states, changes since last run, what will be fixed, what needs
+manual UI edits), then auto-fixes up to `MAX_FIXES_PER_RUN` (default 3)
+`NEEDS_REVISION` tasks using Composer 2.5 via the Cursor SDK.
 
 Every agent run injects the current rules and docs:
 
@@ -18,20 +20,31 @@ Only `NEEDS_REVISION` tasks that pass all of:
 - Local folder exists on disk
 - **Not** in `tools/monitor/review_exclusions.json` (manual review queue)
 - **Not** currently or previously `REVIEW_PENDING` (those IDs are added to exclusions automatically each run)
-- **Not** a green eval with only AutoEval boilerplate failure (difficulty, instruction sufficiency, solvability, quality checks all pass — see `feedback_gates.py`)
+- **Not** green on the eval gates (difficulty ✅, solvable ✅, instruction
+  sufficiency ✅, quality checks ✅ — see `feedback_gates.py`). Green tasks only
+  need manual UI edits (explanations / rubric / paragraph nits); the monitor
+  reports them in the status text as "finish in UI" and never touches the task
+  content.
 - Feedback hash not already fixed in `state.json`
+- Fewer than `MAX_ATTEMPTS_PER_FEEDBACK` (default 2) agent attempts on the
+  same unchanged feedback — prevents retry loops on a stuck task
 
 Skipped states: `EVALUATION_PENDING`, `REVIEW_PENDING`, `OFFERED`, `ACCEPTED`.
 
-## One fix per hour
+## Run flow (every 2 hours)
 
-Each successful fix (or error during fix) sets `next_fix_allowed_after` in
-`.review-scratch/monitor/state.json` (default 3600s via `FIX_COOLDOWN_SEC`).
-The next hourly trigger scans the queue but waits until cooldown expires before
-starting another agent. Use `--force` to bypass cooldown (exclusions still apply).
+1. Status text to your phone before any work: state counts, state changes since
+   the last run, the auto-fix queue, and the "finish in UI" list.
+2. If Docker Desktop is down and fixes are queued, you get a "waiting for
+   Docker" text and nothing runs (the oracle needs Docker).
+3. Per task: "fix started" text → Composer 2.5 agent (fix, oracle to 1.0,
+   revision bump, resubmit without reviewer) → "resubmitted" or "verify" text
+   with oracle/static-check results and a diff stat.
+4. "Run complete" text with the fixed count.
 
 To re-enable auto-fix for a task you reviewed manually, delete its entry from
-`review_exclusions.json`.
+`review_exclusions.json`. To retry a task that hit the attempt cap, delete its
+entry from `.review-scratch/monitor/state.json` `runs`.
 
 ## One-time setup
 
@@ -52,7 +65,7 @@ Verify `stb login` already works (Snorkel auth persists on disk).
 # Check submissions, write prompt preview, no agent call
 ./run-hourly.sh --dry-run
 
-# Live fix (max 1 task per run by default)
+# Live fix (max 3 tasks per run by default)
 ./run-hourly.sh
 ```
 
@@ -102,9 +115,12 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 
 | Event | Phone message includes |
 |-------|------------------------|
+| Status (every run, before work) | State counts, changes since last run, fix queue, finish-in-UI list |
 | Fix started | Task name + platform issue |
 | Resubmitted | State, oracle, static checks, change summary |
+| Waiting for Docker | Queue blocked until Docker Desktop is running |
 | Error | Failure reason |
+| Run complete | Fixed count + next check time |
 
 Full JSON: `.review-scratch/monitor/last-run-report.json`
 

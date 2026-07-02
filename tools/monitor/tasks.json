@@ -16,7 +16,14 @@
     "resubmit_arg": "php"
   },
   "repair-cpp-setup-auditor": {
-    "resubmit_script": null,
-    "note": "No dedicated resubmit script yet — agent must zip + submit via stb API"
+    "resubmit_script": ".review-scratch/resubmit_cpp.py"
+  },
+  "extend-maven-spring-awk-fixtures": {
+    "resubmit_script": ".review-scratch/submit_new_tasks.py",
+    "resubmit_arg": "awk"
+  },
+  "repair-java-trailswitch-graph-rules": {
+    "resubmit_script": ".review-scratch/submit_new_tasks.py",
+    "resubmit_arg": "trailswitch"
   }
 }
