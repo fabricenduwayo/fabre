@@ -1,0 +1,36 @@
+=== UPLOAD THIS ZIP ===
+/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/repair-cpp-setup-auditor-submit.zip
+
+Submission ID: 5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456
+
+Oracle verified locally: 1.000 (2026-07-01)
+Dockerfile cache bump: platform-revision: 2026-07-01-r2
+
+=== Difficulty explanation ===
+
+Agents must reconcile a long policy dossier with a buggy C++ HTTP auditor. The Standard body alone is misleading — Appendix G amendments change disabled-account tokens, sudo NOPASSWD sticky tag semantics, last-match ordering, runas and host scoping, includedir splicing, Defaults bindings, authorized-key marker parsing, sshd Match evaluation for a fixed audit context, and the service-account UID ceiling. The shipped code also keeps a static global registry that bleeds state between unrelated POST /v1/setup/audit calls, and the audit ledger stopped appending under schema 2. Randomized verifier hosts plus named fixtures catch partial fixes.
+
+=== Solution explanation ===
+
+Patch parse.cpp, audit.cpp, and main.cpp under /app/cpp-auditor so POST /v1/setup/audit returns the patch set the amended Standard implies for any snapshot. Remove cross-request mutable state, migrate legacy ledger records into schema 2 entries, rebuild with CMake, and restart the service.
+
+=== Verification explanation ===
+
+Pytest drives POST /v1/setup/audit against compliant and adversarial fixture snapshots plus 60 seeded random hosts, comparing canonical patch lists to a reference resolver in the test image. Separate tests cover primary GID sudo grants, locked shells, sudo tag/host/runas edge cases, sshd drop-in precedence, ledger append after audit, and statelessness across back-to-back unrelated hosts.
+
+=== Test rubrics (paste into test_rubrics) ===
+
+Agent reads /app/docs/standard.md including Appendix G before editing the auditor, +2
+Agent removes cross-request state so each audit uses only the posted snapshot and migrates the ledger to schema 2 with durable append logging, +6
+Agent fixes disabled-account detection per the amended shadow, shell, and expiry rules, +4
+Agent fixes effective group membership and authorized-key parsing per the standard, +4
+Agent implements amended sudoers semantics including NOPASSWD scope, last-match ordering, runas and host scoping, includedir splicing, and Defaults bindings, +8
+Agent evaluates sshd drop-ins for the fixed audit context with amended Match precedence and keyboard-interactive keyword handling, +5
+Agent applies the amended service-account exemption roster and UID ceiling, +2
+Agent rebuilds with CMake and smoke-tests fixture hosts, +3
+Agent leaves a compliant host emitting patches or breaks the build, -5
+Agent changes the HTTP API contract or patch key names, -3
+Agent keeps a static global account registry that bleeds state between unrelated audits, -4
+Agent patches only one subsystem while leaving other known standard violations in place, -2
+
+(Rubric positive total: 34. Enable "Evaluate rubrics".)

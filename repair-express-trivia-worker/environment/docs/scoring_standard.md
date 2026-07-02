@@ -12,7 +12,9 @@ the Harbor referee API.
 ### 1.2 Amendments
 
 Appendix G lists authoritative amendments. Where a body control and an amendment
-conflict, the amendment governs.
+conflict, the amendment governs. Appendix H (amendments H-2026-01 through
+H-2026-26) governs the stewards' review reconciliation; every amendment in it
+applies.
 
 ### 1.3 Ledger ordering
 
@@ -150,10 +152,11 @@ per Appendix H, then re-ranked with TR-TIEBREAK.
 ### H-2026-01 — Rulings feed
 
 `GET /v1/rulings` returns the stewards' review as a list of ruling objects, each with
-`ruling_seq`, `incident`, `op` (`issue`, `amend`, or `rescind`), `player`, `delta`
-(a signed integer score adjustment; `0` for `rescind`), and optional `correct_delta`
-(a signed integer adjustment to the player's `correct` count). `issued_at` is
-informational and must not be used for ordering.
+`ruling_seq`, `incident`, `op` (`issue`, `amend`, `rescind`, or `reinstate`),
+`player`, `delta` (a signed integer score adjustment; `0` for `rescind`), and
+optional `correct_delta` (a signed integer adjustment to the player's `correct`
+count). A `reinstate` ruling carries only `ruling_seq`, `incident`, and `op`
+(H-2026-25). `issued_at` is informational and must not be used for ordering.
 
 ### H-2026-02 — Incident precedence
 
@@ -237,9 +240,12 @@ A ruling may include optional `paired_incident` naming another incident id. A ru
 with `paired_incident` is **void** unless that named incident is active in the map when
 the ruling is recorded (the same moment as H-2026-06). When accepted, store the link
 on the incident's effective entry; an `amend` that omits `paired_incident` clears any
-stored link. When a `rescind` clears incident X, also clear every other incident Y
-still in the map whose effective entry has `paired_incident` equal to X (and remove Y
-from the deferred pass list if present) before continuing replay.
+stored link **and drops any frozen deferred snapshot (H-2026-19) held for that
+incident** — when such an amend keeps `applies_after_floor: true`, the incident stays
+in the deferred pass as an ordinary, unsnapshotted deferred ruling. When a `rescind`
+clears incident X, also clear every other incident Y still in the map whose effective
+entry has `paired_incident` equal to X (and remove Y from the deferred pass list if
+present) before continuing replay.
 
 ### H-2026-13 — Amend omission resets deferred flag and dependency
 
@@ -277,8 +283,11 @@ every incident id that was `rescind`ed at least once. After replay finishes, a
 surviving **primary** ruling is void if any id in its `requires_incident` chain
 appears in that set — even when a later `issue` or `amend` re-establishes an
 effective entry for the same incident id. Re-issuing an incident after rescind does
-not revive primaries that depend on it. Deferred `applies_after_floor` rulings are
-unchanged: H-2026-08 still snapshots only the direct dependency at record time.
+not revive primaries that depend on it. The taint walk follows `requires_incident`
+links only; it must never continue through `paired_incident` links (H-2026-17 covers
+the ruling's own direct paired parent and nothing further). Deferred
+`applies_after_floor` rulings are unchanged: H-2026-08 still snapshots only the
+direct dependency at record time.
 
 ### H-2026-17 — Rescinded paired parents stay tainted
 
@@ -287,8 +296,10 @@ the same set of incident ids that were `rescind`ed at least once (H-2026-16).
 After replay finishes, a surviving **primary** ruling is void if its
 `paired_incident` names an id in that set — even when that parent was re-issued
 and is active again in the effective map. Re-issuing a paired parent after rescind
-does not revive primaries that point at it. Deferred `applies_after_floor` rulings
-are unchanged.
+does not revive primaries that point at it. This check is **direct-only**: compare
+the ruling's own `paired_incident` value against the set. Do not walk chains of
+paired incidents, and do not extend the H-2026-16 requires-chain walk through
+paired links. Deferred `applies_after_floor` rulings are unchanged.
 
 ### H-2026-18 — Amend omission retains player
 
@@ -309,8 +320,11 @@ the paired parent was not active at record time. Rescinding the paired parent
 after the deferred ruling was accepted does not retroactively remove a
 snapshotted deferred ruling from the post-floor pass (H-2026-12's paired cascade
 still clears the incident from the map but must not drop a snapshotted deferred
-ruling). An `amend` that omits `applies_after_floor` demotes the incident to
-primary per H-2026-13 and clears any deferred paired snapshot for that incident.
+ruling). A `rescind` that directly names the snapshotted incident itself removes
+the frozen snapshot along with the effective entry — only removals via the paired
+cascade preserve the snapshot. An `amend` that omits `applies_after_floor`
+demotes the incident to primary per H-2026-13 and clears any deferred paired
+snapshot for that incident.
 
 ### H-2026-20 — Frozen deferred snapshot sync on amend
 
@@ -319,7 +333,9 @@ and a later `amend` supersedes that incident's effective entry, copy the amended
 `player`, `delta`, and `correct_delta` into the frozen snapshot before the
 post-floor pass. The snapshotted post-floor adjustment must use the latest amended
 values even when the paired parent is later rescinded and the incident is cleared
-from the effective map.
+from the effective map. This sync applies only when the amend itself still carries
+an active `paired_incident`; an amend that omits `paired_incident` drops the
+snapshot entirely per H-2026-12.
 
 ### H-2026-21 — Supersede clears without rescind taint
 
@@ -340,3 +356,53 @@ When an `amend` omits `applies_after_floor` (H-2026-13 demotion to primary),
 remove from `frozen_deferred` every incident whose snapshotted entry has
 `paired_incident` equal to the demoted incident id. The demoted incident itself
 follows H-2026-10 at replay end.
+
+### H-2026-23 — Deferred score ceiling
+
+A deferred ruling (`applies_after_floor: true`) may include optional integer
+`score_ceiling`. During the post-floor pass, before adding `delta` to the named
+player, cap the applied score change so the player's `score` after the step does
+not exceed `score_ceiling`. If the player is already at or above the ceiling,
+apply **0** for that step's score change. `correct_delta` is unchanged. An
+`amend` that omits `score_ceiling` clears any ceiling on the incident. When
+H-2026-20 syncs a frozen deferred snapshot on amend, copy `score_ceiling` into
+the snapshot as well.
+
+### H-2026-24 — Mutex at record time
+
+A ruling may include optional `mutex_incident` naming another incident id. When an
+`issue` or `amend` is recorded during the ascending `ruling_seq` replay, the
+ruling is **void** if `mutex_incident` names an incident that is present in the
+effective map at that moment. Void mutex rulings must not update the incident map.
+An `amend` that omits `mutex_incident` clears any mutex on the incident.
+
+### H-2026-25 — Reinstate restores the pre-rescind entry
+
+New op `reinstate`, carrying only `ruling_seq`, `incident`, and `op`. When a
+`rescind` **directly names** an incident and clears its effective entry, retain a
+copy of that entry (the rescind snapshot). A later `reinstate` for the incident:
+
+- is a **no-op** when the incident currently has an effective entry, or when no
+  rescind snapshot exists. An incident that was never directly rescinded has no
+  snapshot. Removal via the paired cascade or via `supersedes_incident` also
+  **deletes** any rescind snapshot held for the removed incident, so such
+  incidents cannot be reinstated until directly rescinded again;
+- otherwise restores the snapshot as the incident's effective entry with
+  `ruling_seq` set to the reinstate ruling's own seq. When the incident was
+  directly rescinded more than once, the snapshot from the **most recent** direct
+  rescind wins — earlier lifetimes of the incident are not restored.
+
+Reinstate does **not** remove the incident id from the ever-rescinded set
+(H-2026-16 / H-2026-17): primaries whose `requires_incident` chain reaches the id,
+or whose `paired_incident` names it, stay void, while the reinstated incident's
+own adjustment applies normally. Incidents cleared by the paired cascade of the
+original rescind are not restored by reinstating the parent.
+
+### H-2026-26 — Reinstated deferred rulings
+
+When the restored entry has `applies_after_floor: true`, the incident rejoins the
+deferred pass ordered by the reinstate ruling's `ruling_seq`. Reinstate never
+creates or restores a frozen paired snapshot (H-2026-19), even when the restored
+entry carries `paired_incident`. Reinstate does not re-evaluate
+`requires_incident`, `paired_incident`, or `mutex_incident` at reinstate time;
+primary eligibility is still decided at replay end per H-2026-10/14/16/17.

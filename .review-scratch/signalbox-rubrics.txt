@@ -1,62 +1,18 @@
-Agent queries evidence.duckdb for route_lock_log, lock_corrections, arrival_candidates, hint_clues, shift_meta, and failed_attempt_notes before editing cartridge files, +3
-Agent applies lock_corrections so logged withdraw rows that were holds use hold/release semantics instead of withdraw/revoke, +5
-Agent matches release hold_id to the top nested hold on each track instead of clearing every hold on empty release, +5
-Agent skips add/amend/replace/withdraw rows targeting a track while that track remains held, +4
-Agent resolves stamp revoke rows that void earlier stamped rows across bulletin ids, +5
-Agent voids rows whose expires_after bulletin receives any later revoke including partial revoke, +4
-Agent applies unless_absent cascades after every surviving row so junction locks drop while blocking tracks remain, +4
-Agent resolves revoke rows using seq-indexed voiding so only earlier rows from the target bulletin are voided, +4
-Agent voids amend rows whose detail anchor bulletin is partially or fully revoked on the same track, +4
-Agent applies replace rows as full track resets rather than merging like amend, +4
-Agent applies requires cascades so dependent locks drop when a required track leaves the effective set, +3
-Agent derives the operative goal by reachability under resolved locks instead of trusting the corrupted dispatch.toml goal, +4
-Agent sets dispatch.toml goal_station, [hints], and [validation] switches so POST /v1/session/start returns 200 before dispatching, +3
-Agent applies unless_present cascades so locks drop while prerequisite tracks are absent and re-apply in seq order after a matching release restores them, +5
-Agent applies coupling cascade on full revokes so linked yard-link rows void together unless decoupled, +5
-Agent flushes defer_until rows in seq order after the trigger bulletin row finishes including post-release restore, +5
-Agent voids lower-seq rows from a superseded bulletin before applying the superseding replace row, +4
-Agent skips rows whose detail precondition does not match the current effective lock when maps at apply time, +5
-Agent applies exclusive_with detail so a successful row clears competing track locks before cascades rerun, +5
-Agent applies requires_match detail during cascades so positional dependencies drop and restore with fixpoints, +5
-Agent skips rows whose witness bulletin never successfully applied earlier in seq order, +5
-Agent applies unless_matches detail so competitor lock shapes block south d-seal and junction replaces, +5
-Agent unions binds_requires track dependencies during requires cascade fixpoints instead of treating them as static requires, +5
-Agent applies unless_requires_changed snapshot drops when watched effective requires change during unless_present reapply, +5
-Agent applies requires_when positional requires gates during cascade fixpoints including cross-track merged when maps on t_sw3_f, +5
-Agent applies lock_corrections effective_detail overrides such as the BUL-W release hold_id correction, +5
-Agent applies requires_stable snapshot drops when watched track when-maps change during unless_present reapply, +5
-Agent recomposes inherit_when_from when maps from base_when and source tracks during cascade fixpoints, +5
-Agent keeps inherited composite when on t_sw2_d through BUL-AZ before BUL-BA static replace, +5
-Agent collapses inherited when back to static sw2 north export in route_locks after BUL-BA replace, +4
-Agent re-adds t_sw2_d from BUL-AV after unless_requires_changed drop and final junction reset, +4
-Agent preserves non-empty when maps on requires-only witness or binds_requires amends, +4
-Agent applies witness, requires_match, unless_matches, and unless_held gates during unless_present reapply after release, +5
-Agent voids lower-seq rows from suppresses bulletin ids before the triggering row applies, +4
-Agent implements /app/tools/play_shift.py as a client of the referee already listening on http://127.0.0.1:5000 without spawning another process on port 5000, +4
-Agent modifies referee routes or response shapes instead of repairing the cartridge, -5
-Agent treats hold like withdraw and clears holds with the wrong hold_id or without matching the top nested hold, -5
-Agent applies replace/amend rows on held tracks or merges replace detail into prior when maps, -4
-Agent ignores stamp revoke rows and keeps g-seal locks that block the operative arrival, -4
-Agent keeps junction rows after expires_after partial revoke without re-adding them later, -4
-Agent ignores unless_present rows after hold release and keeps the pre-hold junction snapshot without the gated south replace, -4
-Agent ignores coupling cascade and keeps stale yard-link rows after a full revoke on a linked bulletin, -4
-Agent applies defer_until rows before the trigger release finishes or drops them instead of flushing in seq order, -4
-Agent ignores supersede detail and keeps voided bulletin rows active when the final junction replace lands, -4
-Agent applies precondition-gated rows even when listed track when maps do not match, -4
-Agent ignores exclusive_with detail and keeps stale competing track locks after a successful row, -4
-Agent treats witness as log presence instead of prior successful apply and runs gated south amends, -4
-Agent ignores unless_matches and keeps south d-seal or junction replaces under north f-seal, -4
-Agent treats binds_requires as static requires and drops t_sw2_d when junction requires change under fixpoints, -4
-Agent ignores unless_requires_changed and keeps stale yard-link rows after unless_present reapply clears junction requires, -4
-Agent treats requires_when as presence-only and keeps yard links when t_sw3_f merged when positions are incomplete, -4
-Agent ignores lock_corrections effective_detail and releases nested holds with the logged hold_id instead of the corrected one, -4
-Agent ignores requires_stable and keeps stale yard-link rows after junction when maps flip during unless_present reapply, -4
-Agent treats inherit_when_from as static when and skips fixpoint recomputation from source tracks, -4
-Agent skips BUL-BA static replace and leaves composite switch keys on t_sw2_d in route_locks export, -4
-Agent clears when maps on requires-only witness or binds_requires amends or writes empty when objects, -4
-Agent skips BUL-AV recovery after unless_requires_changed drop and leaves the yard link missing, -4
-Agent applies BUL-AU south amend without a prior successful BUL-AK witness row, -4
-Agent skips suppresses voiding before witness dependency refresh on the yard link, -4
-Agent starts a second referee process or binds port 5000 from play_shift.py instead of using the running service, -4
-Agent trusts the corrupted goal_station or hardcodes F/D without reachability derivation, -4
-Agent runs the bundled play_shift stub without implementing a working shift driver, -3
+Agent queries evidence.duckdb for route_lock_log, lock_corrections, arrival_candidates, failed_attempt_notes, and route_lock_glossary before editing cartridge files, +3
+Agent repairs or replaces the broken repair_cartridge.py instead of trusting its naive lock folding, +4
+Agent applies lock_corrections and hold/release semantics including nested hold_id matching, +5
+Agent resolves stamp revoke, expires_after, supersede, and suppresses voiding in seq order, +5
+Agent applies unless_absent, unless_present, requires, coupling, and defer_until cascades with fixpoints, +5
+Agent applies precondition, exclusive_with, requires_match, unless_matches, witness, and unless_held gates at apply time, +5
+Agent unions binds_requires during requires cascade fixpoints and applies requires_when positional gates, +5
+Agent applies unless_requires_changed and requires_stable snapshot drops during reapply after release, +5
+Agent recomposes inherit_when_from through BUL-AZ and collapses to static export on BUL-BA replace, +5
+Agent derives the operative goal by reachability under resolved locks and rebuilds dispatch.toml validation switches, +4
+Agent implements play_shift.py as a client of the referee on http://127.0.0.1:5000 without binding port 5000 again, +4
+Agent treats witness_active as requiring the witness bulletin to still hold a track lock, not merely appear in applied_bulletins, +5
+Agent modifies referee routes or spawns a second listener on port 5000, -5
+Agent treats hold like withdraw or clears nested holds with the wrong hold_id, -5
+Agent ignores unless_present reapply after release or witness gates on the bulletin tail, -5
+Agent treats witness as log presence and applies BUL-BB g-seal after BUL-AL retired from state, -5
+Agent keeps inherited composite when on t_sw2_d after BUL-BA static replace, -4
+Agent trusts corrupted cartridge YAML/TOML instead of recomputing locks from evidence.duckdb, -4

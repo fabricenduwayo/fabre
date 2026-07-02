@@ -83,13 +83,6 @@ For milestone tasks the layout is different (per-milestone `steps/milestone_N/` 
 * Tests must match what instruction.md asks for, and everything tested must be stated or clearly implied in instruction.md.
 * Do not test requirements that are not stated or clearly implied in instruction.md.
 
-## General behavior
-
-* Explain important changes before making them.
-* Do not make the task hard only by adding too many edge cases.
-* Keep the task multi-step and terminal/environment based.
-* If something may violate Terminus rules, warn me before editing.
-
 ## Git after changes and submissions
 
 After any task edit, rule change, tool/script update, or platform submit/resubmit, commit and push in the same session — do not leave work uncommitted.
@@ -100,3 +93,10 @@ After any task edit, rule change, tool/script update, or platform submit/resubmi
 * Push to the current branch immediately after a successful commit (`git push` or `git push -u origin HEAD` if needed).
 * If commit or push fails, fix and retry before moving on.
 * Do not amend or force-push unless I explicitly ask.
+
+## General behavior
+
+* Explain important changes before making them.
+* Do not make the task hard only by adding too many edge cases.
+* Keep the task multi-step and terminal/environment based.
+* If something may violate Terminus rules, warn me before editing.

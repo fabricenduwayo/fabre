@@ -2,9 +2,9 @@
 
 A minimal Java command-line scaffold for the AES-GCM media-evidence review.
 `com.mariner.forensic.Main` dispatches three stages — `rules`, `correlate`, and
-`decrypt` — each currently an unimplemented stub. Implement them per the
-milestone briefs so each stage reads its inputs and writes its JSON output under
-`/app/out`.
+`decrypt`. The shipped `rules` and `correlate` stages compile but are not
+normative; repair them per the milestone briefs. `decrypt` is still a stub.
+Each stage reads its inputs and writes JSON under `/app/out`.
 
 Build with:
 

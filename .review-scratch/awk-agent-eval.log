@@ -1,0 +1,298 @@
+⠋ 0/2 Running trials...                                          0:00:00 -:--:--
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site-pac │
+│ kages/harbor/cli/jobs.py:1032 in start                                       │
+│                                                                              │
+│   1029 │                                                                     │
+│   1030 │   show_registry_hint_if_first_run(console)                          │
+│   1031 │                                                                     │
+│ ❱ 1032 │   job, job_result = run_async(_run_job())                           │
+│   1033 │                                                                     │
+│   1034 │   console.print()                                                   │
+│   1035 │   print_job_results_tables(job_result)                              │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site-pac │
+│ kages/harbor/cli/utils.py:19 in run_async                                    │
+│                                                                              │
+│   16 │   """                                                                 │
+│   17 │   if sys.platform == "win32":                                         │
+│   18 │   │   return asyncio.run(coro,                                        │
+│      loop_factory=asyncio.ProactorEventLoop)                                 │
+│ ❱ 19 │   return asyncio.run(coro)                                            │
+│   20                                                                         │
+│   21                                                                         │
+│   22 def parse_kwargs(kwargs_list: list[str] | None) -> dict[str, Any]:      │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64 │
+│ -none/lib/python3.13/asyncio/runners.py:196 in run                           │
+│                                                                              │
+│   193 │   │   │   "asyncio.run() cannot be called from a running event       │
+│       loop")                                                                 │
+│   194 │                                                                      │
+│   195 │   with Runner(debug=debug, loop_factory=loop_factory) as runner:     │
+│ ❱ 196 │   │   return runner.run(main)                                        │
+│   197                                                                        │
+│   198                                                                        │
+│   199 def _cancel_all_tasks(loop):                                           │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64 │
+│ -none/lib/python3.13/asyncio/runners.py:119 in run                           │
+│                                                                              │
+│   116 │   │                                                                  │
+│   117 │   │   self._interrupt_count = 0                                      │
+│   118 │   │   try:                                                           │
+│ ❱ 119 │   │   │   return self._loop.run_until_complete(task)                 │
+│   120 │   │   except exceptions.CancelledError:                              │
+│   121 │   │   │   if self._interrupt_count > 0:                              │
+│   122 │   │   │   │   uncancel = getattr(task, "uncancel", None)             │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64 │
+│ -none/lib/python3.13/asyncio/base_events.py:725 in run_until_complete        │
+│                                                                              │
+│    722 │   │   if not future.done():                                         │
+│    723 │   │   │   raise RuntimeError('Event loop stopped before Future      │
+│        completed.')                                                          │
+│    724 │   │                                                                 │
+│ ❱  725 │   │   return future.result()                                        │
+│    726 │                                                                     │
+│    727 │   def stop(self):                                                   │
+│    728 │   │   """Stop running the event loop.                               │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site-pac │
+│ kages/harbor/cli/jobs.py:1013 in _run_job                                    │
+│                                                                              │
+│   1010 │   │   │   explicit_env_file_keys=explicit_env_file_keys,            │
+│   1011 │   │   │   skip_confirm=yes,                                         │
+│   1012 │   │   )                                                             │
+│ ❱ 1013 │   │   return job, await job.run()                                   │
+│   1014 │                                                                     │
+│   1015 │   from harbor.environments.factory import EnvironmentFactory        │
+│   1016                                                                       │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site-pac │
+│ kages/harbor/job.py:500 in run                                               │
+│                                                                              │
+│   497 │   │   │   │   │   │   completed=n_existing,                          │
+│   498 │   │   │   │   │   )                                                  │
+│   499 │   │   │   │   │                                                      │
+│ ❱ 500 │   │   │   │   │   trial_results = await self._run_trials_with_queue( │
+│   501 │   │   │   │   │   │   loading_progress, progress_task,               │
+│       running_progress                                                       │
+│   502 │   │   │   │   │   )                                                  │
+│   503                                                                        │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site-pac │
+│ kages/harbor/job.py:635 in _run_trials_with_queue                            │
+│                                                                              │
+│   632 │   │                                                                  │
+│   633 │   │   coros =                                                        │
+│       self._trial_queue.submit_batch(self._remaining_trial_configs)          │
+│   634 │   │                                                                  │
+│ ❱ 635 │   │   async with asyncio.TaskGroup() as tg:                          │
+│   636 │   │   │   tasks = [tg.create_task(coro) for coro in coros]           │
+│   637 │   │                                                                  │
+│   638 │   │   return [t.result() for t in tasks]                             │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64 │
+│ -none/lib/python3.13/asyncio/taskgroups.py:71 in __aexit__                   │
+│                                                                              │
+│    68 │   async def __aexit__(self, et, exc, tb):                            │
+│    69 │   │   tb = None                                                      │
+│    70 │   │   try:                                                           │
+│ ❱  71 │   │   │   return await self._aexit(et, exc)                          │
+│    72 │   │   finally:                                                       │
+│    73 │   │   │   # Exceptions are heavy objects that can have object        │
+│    74 │   │   │   # cycles (bad for GC); let's not keep a reference to       │
+│                                                                              │
+│ /Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64 │
+│ -none/lib/python3.13/asyncio/taskgroups.py:173 in _aexit                     │
+│                                                                              │
+│   170 │   │   │   │   self._parent_task.uncancel()                           │
+│   171 │   │   │   │   self._parent_task.cancel()                             │
+│   172 │   │   │   try:                                                       │
+│ ❱ 173 │   │   │   │   raise BaseExceptionGroup(                              │
+│   174 │   │   │   │   │   'unhandled errors in a TaskGroup',                 │
+│   175 │   │   │   │   │   self._errors,                                      │
+│   176 │   │   │   │   ) from None                                            │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ExceptionGroup: unhandled errors in a TaskGroup (2 sub-exceptions)
+
+╭────────────────────────────── Sub-exception #1 ──────────────────────────────╮
+│ ╭─────────────────── Traceback (most recent call last) ────────────────────╮ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/queue.py:153 in _run_trial                        │ │
+│ │                                                                          │ │
+│ │   150 │   async def _run_trial(self, trial_config: TrialConfig) ->       │ │
+│ │       TrialResult:                                                       │ │
+│ │   151 │   │   """Execute a single trial, acquiring the semaphore for     │ │
+│ │       concurrency control."""                                            │ │
+│ │   152 │   │   async with self._semaphore:                                │ │
+│ │ ❱ 153 │   │   │   return await                                           │ │
+│ │       self._execute_trial_with_retries(trial_config)                     │ │
+│ │   154 │                                                                  │ │
+│ │   155 │   def submit(self, trial_config: TrialConfig) -> Coroutine[Any,  │ │
+│ │       Any, TrialResult]:                                                 │ │
+│ │   156 │   │   """                                                        │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/queue.py:112 in _execute_trial_with_retries       │ │
+│ │                                                                          │ │
+│ │   109 │   │   from harbor.trial.trial import Trial                       │ │
+│ │   110 │   │                                                              │ │
+│ │   111 │   │   for attempt in range(self._retry_config.max_retries + 1):  │ │
+│ │ ❱ 112 │   │   │   trial = await Trial.create(trial_config)               │ │
+│ │   113 │   │   │   self._setup_hooks(trial)                               │ │
+│ │   114 │   │   │   result = await trial.run()                             │ │
+│ │   115                                                                    │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/trial.py:279 in create                            │ │
+│ │                                                                          │ │
+│ │    276 │   @classmethod                                                  │ │
+│ │    277 │   async def create(cls, config: TrialConfig) -> "Trial":        │ │
+│ │    278 │   │   task = await cls._load_task(config)                       │ │
+│ │ ❱  279 │   │   return cls(config, _task=task)                            │ │
+│ │    280 │                                                                 │ │
+│ │    281 │   @staticmethod                                                 │ │
+│ │    282 │   async def _load_task(config: TrialConfig) -> Task:            │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/trial.py:193 in __init__                          │ │
+│ │                                                                          │ │
+│ │    190 │   │   if self._task.config.environment.skills_dir:              │ │
+│ │    191 │   │   │   extra_kwargs["skills_dir"] =                          │ │
+│ │        self._task.config.environment.skills_dir                          │ │
+│ │    192 │   │                                                             │ │
+│ │ ❱  193 │   │   self._agent = AgentFactory.create_agent_from_config(      │ │
+│ │    194 │   │   │   config.agent,                                         │ │
+│ │    195 │   │   │   logs_dir=self._trial_paths.agent_dir,                 │ │
+│ │    196 │   │   │   logger=self._logger,                                  │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/factory.py:154 in create_agent_from_config       │ │
+│ │                                                                          │ │
+│ │   151 │   │   """                                                        │ │
+│ │   152 │   │   extra_env = resolve_env_vars(config.env)                   │ │
+│ │   153 │   │   if config.name is not None and config.name in              │ │
+│ │       AgentName.values():                                                │ │
+│ │ ❱ 154 │   │   │   return cls.create_agent_from_name(                     │ │
+│ │   155 │   │   │   │   AgentName(config.name),                            │ │
+│ │   156 │   │   │   │   logs_dir=logs_dir,                                 │ │
+│ │   157 │   │   │   │   model_name=config.model_name,                      │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/factory.py:91 in create_agent_from_name          │ │
+│ │                                                                          │ │
+│ │    88 │   │                                                              │ │
+│ │    89 │   │   agent_class = cls._AGENT_MAP[name]                         │ │
+│ │    90 │   │                                                              │ │
+│ │ ❱  91 │   │   return agent_class(logs_dir=logs_dir,                      │ │
+│ │       model_name=model_name, **kwargs)                                   │ │
+│ │    92 │                                                                  │ │
+│ │    93 │   @classmethod                                                   │ │
+│ │    94 │   def create_agent_from_import_path(                             │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/terminus_2/terminus_2.py:228 in __init__         │ │
+│ │                                                                          │ │
+│ │    225 │   │   self._extra_env = extra_env                               │ │
+│ │    226 │   │                                                             │ │
+│ │    227 │   │   if model_name is None:                                    │ │
+│ │ ❱  228 │   │   │   raise ValueError("model_name is required for Terminus │ │
+│ │        2")                                                               │ │
+│ │    229 │   │                                                             │ │
+│ │    230 │   │   self._model_name = model_name                             │ │
+│ │    231 │   │   self._last_response_model_name: str | None = None         │ │
+│ ╰──────────────────────────────────────────────────────────────────────────╯ │
+│ ValueError: model_name is required for Terminus 2                            │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭────────────────────────────── Sub-exception #2 ──────────────────────────────╮
+│ ╭─────────────────── Traceback (most recent call last) ────────────────────╮ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/queue.py:153 in _run_trial                        │ │
+│ │                                                                          │ │
+│ │   150 │   async def _run_trial(self, trial_config: TrialConfig) ->       │ │
+│ │       TrialResult:                                                       │ │
+│ │   151 │   │   """Execute a single trial, acquiring the semaphore for     │ │
+│ │       concurrency control."""                                            │ │
+│ │   152 │   │   async with self._semaphore:                                │ │
+│ │ ❱ 153 │   │   │   return await                                           │ │
+│ │       self._execute_trial_with_retries(trial_config)                     │ │
+│ │   154 │                                                                  │ │
+│ │   155 │   def submit(self, trial_config: TrialConfig) -> Coroutine[Any,  │ │
+│ │       Any, TrialResult]:                                                 │ │
+│ │   156 │   │   """                                                        │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/queue.py:112 in _execute_trial_with_retries       │ │
+│ │                                                                          │ │
+│ │   109 │   │   from harbor.trial.trial import Trial                       │ │
+│ │   110 │   │                                                              │ │
+│ │   111 │   │   for attempt in range(self._retry_config.max_retries + 1):  │ │
+│ │ ❱ 112 │   │   │   trial = await Trial.create(trial_config)               │ │
+│ │   113 │   │   │   self._setup_hooks(trial)                               │ │
+│ │   114 │   │   │   result = await trial.run()                             │ │
+│ │   115                                                                    │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/trial.py:279 in create                            │ │
+│ │                                                                          │ │
+│ │    276 │   @classmethod                                                  │ │
+│ │    277 │   async def create(cls, config: TrialConfig) -> "Trial":        │ │
+│ │    278 │   │   task = await cls._load_task(config)                       │ │
+│ │ ❱  279 │   │   return cls(config, _task=task)                            │ │
+│ │    280 │                                                                 │ │
+│ │    281 │   @staticmethod                                                 │ │
+│ │    282 │   async def _load_task(config: TrialConfig) -> Task:            │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/trial/trial.py:193 in __init__                          │ │
+│ │                                                                          │ │
+│ │    190 │   │   if self._task.config.environment.skills_dir:              │ │
+│ │    191 │   │   │   extra_kwargs["skills_dir"] =                          │ │
+│ │        self._task.config.environment.skills_dir                          │ │
+│ │    192 │   │                                                             │ │
+│ │ ❱  193 │   │   self._agent = AgentFactory.create_agent_from_config(      │ │
+│ │    194 │   │   │   config.agent,                                         │ │
+│ │    195 │   │   │   logs_dir=self._trial_paths.agent_dir,                 │ │
+│ │    196 │   │   │   logger=self._logger,                                  │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/factory.py:154 in create_agent_from_config       │ │
+│ │                                                                          │ │
+│ │   151 │   │   """                                                        │ │
+│ │   152 │   │   extra_env = resolve_env_vars(config.env)                   │ │
+│ │   153 │   │   if config.name is not None and config.name in              │ │
+│ │       AgentName.values():                                                │ │
+│ │ ❱ 154 │   │   │   return cls.create_agent_from_name(                     │ │
+│ │   155 │   │   │   │   AgentName(config.name),                            │ │
+│ │   156 │   │   │   │   logs_dir=logs_dir,                                 │ │
+│ │   157 │   │   │   │   model_name=config.model_name,                      │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/factory.py:91 in create_agent_from_name          │ │
+│ │                                                                          │ │
+│ │    88 │   │                                                              │ │
+│ │    89 │   │   agent_class = cls._AGENT_MAP[name]                         │ │
+│ │    90 │   │                                                              │ │
+│ │ ❱  91 │   │   return agent_class(logs_dir=logs_dir,                      │ │
+│ │       model_name=model_name, **kwargs)                                   │ │
+│ │    92 │                                                                  │ │
+│ │    93 │   @classmethod                                                   │ │
+│ │    94 │   def create_agent_from_import_path(                             │ │
+│ │                                                                          │ │
+│ │ /Users/fabrice-mac-mini/.local/share/uv/tools/harbor/lib/python3.13/site │ │
+│ │ -packages/harbor/agents/terminus_2/terminus_2.py:228 in __init__         │ │
+│ │                                                                          │ │
+│ │    225 │   │   self._extra_env = extra_env                               │ │
+│ │    226 │   │                                                             │ │
+│ │    227 │   │   if model_name is None:                                    │ │
+│ │ ❱  228 │   │   │   raise ValueError("model_name is required for Terminus │ │
+│ │        2")                                                               │ │
+│ │    229 │   │                                                             │ │
+│ │    230 │   │   self._model_name = model_name                             │ │
+│ │    231 │   │   self._last_response_model_name: str | None = None         │ │
+│ ╰──────────────────────────────────────────────────────────────────────────╯ │
+│ ValueError: model_name is required for Terminus 2                            │
+╰──────────────────────────────────────────────────────────────────────────────╯

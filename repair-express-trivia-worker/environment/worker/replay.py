@@ -98,6 +98,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
 
     incidents: dict[str, dict] = {}
     deferred_order: list[str] = []
+    frozen_deferred: dict[str, dict] = {}
 
     for ruling in sorted(rulings, key=lambda r: r["ruling_seq"]):
         op = ruling["op"]
@@ -115,6 +116,10 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
 
         requires = ruling.get("requires_incident")
         if requires and requires not in incidents:
+            continue
+
+        paired = ruling.get("paired_incident")
+        if paired and paired not in incidents:
             continue
 
         prev = incidents.get(incident)
@@ -144,13 +149,19 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             "correct_delta": correct_delta,
             "applies_after_floor": applies_after_floor,
             "requires_incident": requires,
+            "paired_incident": paired,
+            "score_ceiling": ruling.get("score_ceiling"),
             "ruling_seq": ruling["ruling_seq"],
         }
         incidents[incident] = entry
-        if entry["applies_after_floor"]:
+        if applies_after_floor:
             if incident in deferred_order:
                 deferred_order.remove(incident)
             deferred_order.append(incident)
+            if paired and paired in incidents:
+                frozen_deferred[incident] = dict(entry)
+        elif incident in deferred_order:
+            deferred_order.remove(incident)
 
     def apply_adjustment(eff: dict) -> None:
         player = eff["player"]

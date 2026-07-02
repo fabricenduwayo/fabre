@@ -1,0 +1,5 @@
+Agents must wire build-time fixture generation into a running Spring Boot API without the instruction naming every Maven hook detail. The broken AWK stub only inserts the builds row, the pom.xml lacks a working generate-resources execution, and the nested JSON tree in /app/dependency-audit/fixtures/resolution-tree.json must become hierarchical node_key paths per /app/docs/generator-contract.md. POSIX AWK must track child ordinals across multi-line nodes, escape SQL quotes, and emit classpath seed SQL that H2 loads after schema.sql. Offline jqwik property tests still require Spring Boot, H2, and jqwik coordinates to resolve from the image's prefetched local Maven repository.
+
+Implement flatten-deps.awk and the exec-maven-plugin generate-resources binding in pom.xml so mvn test package writes target/classes/data/seed-dependencies.sql, then rebuild and restart the dependency-audit service.
+
+Pytest runs mvn test package, checks jqwik property tests pass, asserts the packaged jar contains generated seed SQL with bench-build rows, verifies GET /api/builds/bench-build/dependency-tree matches the nested fixture, and confirms unknown build ids return 404.

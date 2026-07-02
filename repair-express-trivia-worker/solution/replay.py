@@ -100,6 +100,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
     deferred_order: list[str] = []
     ever_rescinded: set[str] = set()
     frozen_deferred: dict[str, dict] = {}
+    rescind_snapshot: dict[str, dict] = {}
 
     for ruling in sorted(rulings, key=lambda r: r["ruling_seq"]):
         op = ruling["op"]
@@ -108,9 +109,10 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         if op == "rescind":
             removed: set[str] = set()
             if incident in incidents:
-                incidents.pop(incident)
+                rescind_snapshot[incident] = dict(incidents.pop(incident))
                 removed.add(incident)
                 ever_rescinded.add(incident)
+                frozen_deferred.pop(incident, None)
                 if incident in deferred_order:
                     deferred_order.remove(incident)
             while True:
@@ -124,8 +126,20 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
                 for inc in paired_remove:
                     incidents.pop(inc, None)
                     removed.add(inc)
+                    rescind_snapshot.pop(inc, None)
                     if inc not in frozen_deferred and inc in deferred_order:
                         deferred_order.remove(inc)
+            continue
+
+        if op == "reinstate":
+            if incident not in incidents and incident in rescind_snapshot:
+                entry = dict(rescind_snapshot[incident])
+                entry["ruling_seq"] = ruling["ruling_seq"]
+                incidents[incident] = entry
+                if entry["applies_after_floor"]:
+                    if incident in deferred_order:
+                        deferred_order.remove(incident)
+                    deferred_order.append(incident)
             continue
 
         if op not in ("issue", "amend"):
@@ -141,6 +155,12 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         if paired and paired not in incidents:
             continue
 
+        mutex = ruling.get("mutex_incident")
+        if op == "amend" and "mutex_incident" not in ruling:
+            mutex = None
+        if mutex and mutex in incidents:
+            continue
+
         supersedes = ruling.get("supersedes_incident")
         if supersedes and supersedes in incidents:
             removed = {supersedes}
@@ -148,6 +168,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             if supersedes in deferred_order:
                 deferred_order.remove(supersedes)
             frozen_deferred.pop(supersedes, None)
+            rescind_snapshot.pop(supersedes, None)
             while True:
                 paired_remove = [
                     inc
@@ -159,6 +180,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
                 for inc in paired_remove:
                     incidents.pop(inc, None)
                     removed.add(inc)
+                    rescind_snapshot.pop(inc, None)
                     if inc not in frozen_deferred and inc in deferred_order:
                         deferred_order.remove(inc)
 
@@ -192,6 +214,13 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         else:
             player = ruling["player"]
 
+        if op == "amend" and "score_ceiling" not in ruling:
+            score_ceiling = None
+        elif "score_ceiling" in ruling:
+            score_ceiling = int(ruling["score_ceiling"])
+        else:
+            score_ceiling = None
+
         entry = {
             "player": player,
             "delta": delta,
@@ -199,6 +228,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             "applies_after_floor": applies_after_floor,
             "requires_incident": requires,
             "paired_incident": paired_incident,
+            "score_ceiling": score_ceiling,
             "ruling_seq": ruling["ruling_seq"],
         }
         incidents[incident] = entry
@@ -208,6 +238,8 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             deferred_order.append(incident)
             if paired_incident and paired_incident in incidents:
                 frozen_deferred[incident] = dict(entry)
+            else:
+                frozen_deferred.pop(incident, None)
         else:
             frozen_deferred.pop(incident, None)
             if incident in deferred_order:
@@ -215,9 +247,6 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
             for inc, snap in list(frozen_deferred.items()):
                 if snap.get("paired_incident") == incident:
                     frozen_deferred.pop(inc, None)
-
-        if op == "amend" and incident in frozen_deferred:
-            frozen_deferred[incident] = dict(entry)
 
     def dependency_chain_active(requires: str | None) -> bool:
         """H-2026-14/H-2026-16: every requires_incident link must survive at replay end."""
@@ -237,6 +266,18 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         if player not in by_player:
             return
         by_player[player]["score"] += eff["delta"]
+        by_player[player]["correct"] += eff["correct_delta"]
+
+    def apply_deferred(eff: dict) -> None:
+        player = eff["player"]
+        if player not in by_player:
+            return
+        delta = eff["delta"]
+        ceiling = eff.get("score_ceiling")
+        if ceiling is not None:
+            headroom = ceiling - by_player[player]["score"]
+            delta = 0 if headroom <= 0 else min(delta, headroom)
+        by_player[player]["score"] += delta
         by_player[player]["correct"] += eff["correct_delta"]
 
     def clamp_scores() -> None:
@@ -279,7 +320,7 @@ def reconcile(standings: list[dict], rulings: list[dict]) -> list[dict]:
         eff = frozen_deferred.get(incident) or incidents.get(incident)
         if not eff:
             continue
-        apply_adjustment(eff)
+        apply_deferred(eff)
         player = eff["player"]
         if player in by_player:
             by_player[player]["score"] = max(0, by_player[player]["score"])

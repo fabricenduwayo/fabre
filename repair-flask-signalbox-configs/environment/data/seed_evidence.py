@@ -330,6 +330,19 @@ ROUTE_LOCK_LOG = [
             }
         ),
     ),
+    (
+        53,
+        "BUL-BB",
+        "add",
+        "t_sw3_g",
+        json.dumps(
+            {
+                "when": {"sw3": "south"},
+                "witness": "BUL-AL",
+                "witness_active": True,
+            }
+        ),
+    ),
 ]
 
 LOCK_CORRECTIONS = [
@@ -471,9 +484,89 @@ NOTES = [
         33,
         "BUL-BA static replace skipped after inherited when tail; route_locks kept composite switch keys on t_sw2_d",
     ),
+    (
+        24,
+        "witness_active treated prior apply as enough; BUL-BB g-seal landed after BUL-AL retired from state",
+    ),
 ]
 
 ROUTE_LOCK_GLOSSARY = [
+    (
+        "revoke",
+        "Void every earlier row sharing the revoked bulletin id on the same track. "
+        "Partial revokes list scoped track ids in detail JSON. Stamp revokes use "
+        "track_id _stamp with a stamp name in detail and void every earlier row "
+        "carrying that stamp. Rows with expires_after void when the named bulletin "
+        "is revoked. Later rows from the same bulletin still apply after a revoke "
+        "unless voided.",
+    ),
+    (
+        "hold",
+        "Remove a track lock until release with matching hold_id. Nested holds "
+        "stack per track. Rows targeting a held track skip until the hold clears.",
+    ),
+    (
+        "release",
+        "Pop the top nested hold on the track. required hold_id must match the "
+        "top hold or the release is ignored.",
+    ),
+    (
+        "unless_absent",
+        "Drop the lock while any listed track is absent from state; re-apply in "
+        "seq order once conditions restore.",
+    ),
+    (
+        "unless_present",
+        "Drop the lock while any listed prerequisite track is absent; re-apply in "
+        "seq order after a matching release restores conditions.",
+    ),
+    (
+        "coupling",
+        "Full revoke on a coupled bulletin voids every earlier row sharing that "
+        "coupling id unless decouple is set on a later add.",
+    ),
+    (
+        "defer_until",
+        "Row stays pending until the named release completes, then applies in seq "
+        "order.",
+    ),
+    (
+        "supersedes",
+        "Void surviving lower-seq rows from the named bulletin before the row "
+        "applies.",
+    ),
+    (
+        "exclusive_with",
+        "Clear listed competing tracks from state after the row lands.",
+    ),
+    (
+        "precondition",
+        "Skip apply when required switch positions in detail do not match the "
+        "effective lock state at apply time.",
+    ),
+    (
+        "amend",
+        "Merge when maps and dependency lists into an existing lock. requires-only "
+        "amend replaces dependency lists without changing when maps. amend without "
+        "a surviving add seeds a new lock. anchored amends void when their anchor "
+        "bulletin is partially revoked on that track.",
+    ),
+    (
+        "replace",
+        "Reset the track lock from detail when maps; do not merge like amend.",
+    ),
+    (
+        "requires_cascade",
+        "After every surviving row, drop locks whose explicit requires list "
+        "references a track that left the effective set.",
+    ),
+    (
+        "cascade_fixpoint",
+        "After every surviving row rerun requires, unless_absent, unless_present, "
+        "unless_held, requires_match, unless_matches, witness, witness_active, suppresses, "
+        "binds_requires, unless_requires_changed, requires_when, "
+        "unless_requires_when, requires_stable, and inherit_when_from until stable.",
+    ),
     (
         "requires_match",
         "Drop during every cascade while any listed track is absent or its when-map "
@@ -488,6 +581,11 @@ ROUTE_LOCK_GLOSSARY = [
         "witness",
         "Skip the row unless the named bulletin already contributed a successfully "
         "applied row earlier in seq order.",
+    ),
+    (
+        "witness_active",
+        "When true alongside witness, skip unless the named bulletin still owns a "
+        "surviving track lock in state at apply time — prior apply alone is not enough.",
     ),
     (
         "suppresses",

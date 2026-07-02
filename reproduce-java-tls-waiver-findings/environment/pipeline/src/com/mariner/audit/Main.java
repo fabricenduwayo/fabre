@@ -1,7 +1,7 @@
 package com.mariner.audit;
 
 /**
- * Mariner TLS waiver reconciliation pipeline (starter scaffold).
+ * Mariner TLS waiver reconciliation pipeline (broken starter scaffold).
  *
  * Usage: java com.mariner.audit.Main &lt;decode|join|validate&gt;
  *
@@ -9,8 +9,8 @@ package com.mariner.audit;
  *   join      join the H2 probe evidence  -&gt; /app/out/evidence.json
  *   validate  reconcile config + decide   -&gt; /app/out/findings.json
  *
- * Each stage is a no-argument subcommand. The three stage classes below are
- * stubbed out — implement them as described in the milestone briefs.
+ * Each stage is a no-argument subcommand. Repair the stage classes below per
+ * the milestone briefs and /app/reports/mariner-tls-waiver-review.md.
  */
 public final class Main {
     public static void main(String[] args) throws Exception {

@@ -166,7 +166,7 @@ def test_amend_retargets_incident_player():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
     assert official["bob"]["score"] == 5
 
 
@@ -186,7 +186,7 @@ def test_rescinded_rulings_have_no_effect():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["dave"]["score"] == provisional["dave"]["score"] + 3
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
     assert official["bob"]["score"] == 5
 
 
@@ -231,7 +231,7 @@ def test_requires_incident_skips_rescinded_dependency():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
 
 
 def test_requires_incident_applies_when_dependency_active():
@@ -273,7 +273,7 @@ def test_amend_omit_resets_delta():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 15
+    assert official["carol"]["score"] == 18
 
 
 def test_primary_requires_active_at_replay_end():
@@ -405,8 +405,8 @@ def test_rescind_cascades_to_paired_incident():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
-    assert official["carol"]["score"] == 15
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
+    assert official["carol"]["score"] == 18
 
 
 def test_paired_incident_void_when_parent_missing():
@@ -426,7 +426,10 @@ def test_paired_incident_void_when_parent_missing():
         rulings + [orphan],
     )
     dave = next(r for r in official if r["player"] == "dave")
-    assert dave["score"] == 18
+    provisional_dave = next(
+        r for r in simulate_standings(load_ledger_rows()) if r["player"] == "dave"
+    )
+    assert dave["score"] == provisional_dave["score"] + 4
 
 
 def test_transitive_requires_incident_void_at_replay_end():
@@ -443,8 +446,8 @@ def test_transitive_paired_incident_cascade_on_rescind():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["dave"]["score"] == provisional["dave"]["score"] + 3
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
 
 
 def test_reissued_incident_does_not_restore_dependency():
@@ -497,7 +500,7 @@ def test_reissued_paired_parent_does_not_restore_paired_ruling():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
 
 
 def test_amend_omit_retains_player():
@@ -506,7 +509,7 @@ def test_amend_omit_retains_player():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["dave"]["score"] == provisional["dave"]["score"] + 3
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
 
 
 def test_deferred_paired_snapshot_after_parent_rescind():
@@ -515,8 +518,8 @@ def test_deferred_paired_snapshot_after_parent_rescind():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
-    assert official["carol"]["score"] == 15
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
+    assert official["carol"]["score"] == 18
 
 
 def test_amend_syncs_frozen_deferred_snapshot():
@@ -526,7 +529,7 @@ def test_amend_syncs_frozen_deferred_snapshot():
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["bob"]["score"] == 5
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
 
 
 def test_supersede_clears_without_rescind_taint():
@@ -535,7 +538,7 @@ def test_supersede_clears_without_rescind_taint():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["dave"]["score"] == provisional["dave"]["score"] + 3
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
     assert official["bob"]["score"] == 5
 
 
@@ -544,7 +547,7 @@ def test_supersede_blocks_dependency_at_record_time():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["carol"]["score"] == 15
+    assert official["carol"]["score"] == 18
 
 
 def test_demotion_clears_paired_frozen_snapshot():
@@ -553,5 +556,83 @@ def test_demotion_clears_paired_frozen_snapshot():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
-    assert official["carol"]["score"] == 15
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
+    assert official["carol"]["score"] == 18
+
+
+def test_deferred_score_ceiling_clamps_partial_delta():
+    """INC-62 must add only +1 to dave because score_ceiling 19 caps the deferred +5 (H-2026-23)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
+
+
+def test_mutex_incident_void_when_parent_active():
+    """INC-63 must stay void while INC-34 is active in the map at record time (H-2026-24)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["bob"]["score"] == 5
+
+
+def test_reinstate_restores_most_recent_rescind_snapshot():
+    """INC-75 reinstate must restore the +2 second-lifetime entry, not the +8 first one (H-2026-25)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
+    assert official["alice"]["score"] != provisional["alice"]["score"] + 13
+
+
+def test_reinstate_does_not_clear_dependency_taint():
+    """INC-70 reinstate applies its own +2 but INC-72 requiring it stays void (H-2026-25)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["carol"]["score"] == 18
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
+
+
+def test_reinstate_noop_after_paired_cascade_removal():
+    """INC-74 reinstate must be a no-op because it was cleared by the paired cascade (H-2026-25)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["bob"]["score"] == 5
+
+
+def test_reinstate_noop_after_supersede():
+    """INC-76 reinstate must be a no-op because supersede deleted its rescind snapshot (H-2026-25)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["bob"]["score"] == 5
+
+
+def test_reinstated_deferred_rejoins_post_floor_pass():
+    """INC-78 reinstate must rejoin the deferred pass and add carol's +1 after the clamp (H-2026-26)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["carol"]["score"] == 18
+
+
+def test_direct_rescind_drops_frozen_deferred_snapshot():
+    """Directly rescinding snapshotted INC-80 must drop its -5, unlike a paired-cascade removal (H-2026-19)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 7
+
+
+def test_reinstate_does_not_restore_cascade_removed_paired():
+    """Reinstating INC-81 must not resurrect INC-82, which fell to the paired cascade (H-2026-25)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    assert official["carol"]["score"] == 18

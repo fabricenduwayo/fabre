@@ -1,0 +1,13 @@
+Agent reads /app/docs/trailswitch-referee-contract.md and /app/sql/schema.sql before editing Java handlers, +3
+Agent inspects GraphPathRepository for string-concatenated station ids in SQL, +3
+Agent repairs PathPlanner to track visited stations and cap search depth, +4
+Agent repairs SwitchRuleHandler to require all lock switch positions to match, +4
+Agent restores ascending rule_priority evaluation per edge in SwitchRuleHandler, +3
+Agent rebuilds the Spring Boot jar with bash /app/trailswitch/build.sh after code edits, +3
+Agent restarts TrailSwitch with bash /app/trailswitch/start.sh without changing API routes, +2
+Agent keeps POST /v1/plan response shape with reachable, path, and cycle_guard fields, +3
+Agent leaves GraphPathRepository concatenating user input into SQL strings, -4
+Agent removes the visited-set guard from path planning on the cyclic seed graph, -4
+Agent treats route-lock switch positions as OR instead of AND conjunction, -4
+Agent evaluates route_rules in descending priority order, -3
+Agent changes or removes the /v1/plan endpoint contract, -4

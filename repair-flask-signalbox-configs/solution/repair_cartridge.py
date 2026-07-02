@@ -100,7 +100,7 @@ def restore_dependent_locks(
         requires = list(explicit_requires or [])
         if restored_track not in requires and restored_track not in binds_requires:
             continue
-        if witness and witness not in applied_bulletins:
+        if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
             continue
         if unless_held and any(
             track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -212,7 +212,7 @@ def reapply_unless_present_rows(
         )
         if not unless_present or op not in ("add", "amend", "replace"):
             continue
-        if witness and witness not in applied_bulletins:
+        if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
             continue
         if unless_held and any(
             track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -505,6 +505,28 @@ def parse_detail_extras(detail: str):
         requires_stable,
         inherit_when_from,
     )
+
+
+def parse_witness_active(detail: str) -> bool:
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(obj, dict) and bool(obj.get("witness_active"))
+
+
+def bulletin_has_active_row(state, bulletin: str) -> bool:
+    return any(entry.get("_bulletin") == bulletin for entry in state.values())
+
+
+def witness_satisfied(witness, detail, applied_bulletins, state) -> bool:
+    if not witness:
+        return True
+    if witness not in applied_bulletins:
+        return False
+    if parse_witness_active(detail):
+        return bulletin_has_active_row(state, witness)
+    return True
 
 
 def unless_matches_active(state, unless_matches):
@@ -1143,7 +1165,7 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
                 detail
             )
             witness, _suppresses, requires_match, unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = parse_detail_extras(detail)
-            if witness and witness not in applied_bulletins:
+            if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
                 return
             if unless_held and any(
                 track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -1162,6 +1184,7 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
             if op == "withdraw" or before != after:
                 applied_bulletins.add(bulletin)
                 if track_id in state:
+                    state[track_id]["_bulletin"] = bulletin
                     attach_requires_snapshots(state, track_id, detail)
                     attach_stable_snapshots(state, track_id, detail)
         apply_fixpoints(state)

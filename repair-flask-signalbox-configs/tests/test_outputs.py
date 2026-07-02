@@ -476,6 +476,14 @@ def test_static_replace_clears_inherited_when_for_export():
     assert not state["t_sw2_d"].get("inherit_when_from")
 
 
+def test_witness_active_skips_retired_bulletin():
+    """BUL-BB g-seal must skip when BUL-AL no longer owns a surviving track lock."""
+    state = effective_lock_state()
+    assert "t_sw3_g" not in state
+    locks = lock_map()
+    assert "t_sw3_g" not in locks
+
+
 def test_transcript_has_required_fields():
     """Transcript JSON must expose the documented GET /v1/transcript fields."""
     proc = run_shift()

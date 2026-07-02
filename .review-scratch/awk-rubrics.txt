@@ -1,0 +1,12 @@
+Agent reads /app/docs/generator-contract.md and the resolution-tree.json fixture before editing AWK or pom.xml, +3
+Agent inspects the placeholder flatten-deps.awk and identifies missing dependency_nodes emission, +3
+Agent implements POSIX AWK that walks nested children with root/ordinal node_key paths, +5
+Agent wires exec-maven-plugin during generate-resources to run AWK into target/classes/data/seed-dependencies.sql, +4
+Agent doubles single quotes in generated SQL string literals per the contract, +2
+Agent runs mvn test so jqwik property tests resolve artifacts from the offline Maven repo, +3
+Agent rebuilds the Spring Boot jar so runtime H2 loads generated seed SQL, +3
+Agent verifies GET /api/builds/bench-build/dependency-tree returns the nested tree, +2
+Agent hand-edits seed-dependencies.sql in source control instead of generating it via Maven, -4
+Agent leaves the generate-resources hook missing so the H2 graph stays empty, -4
+Agent uses non-POSIX AWK syntax that fails under the image awk implementation, -3
+Agent changes the REST endpoint contract or bench-build fixture identity, -3

@@ -1,0 +1,12 @@
+Agent reads /app/docs/standard.md including Appendix G before editing the auditor, +2
+Agent removes cross-request state so each audit uses only the posted snapshot and migrates the ledger to schema 2 with durable append logging, +6
+Agent fixes disabled-account detection per the amended shadow, shell, and expiry rules, +4
+Agent fixes effective group membership and authorized-key parsing per the standard, +4
+Agent implements amended sudoers semantics including NOPASSWD scope, last-match ordering, runas and host scoping, includedir splicing, and Defaults bindings, +8
+Agent evaluates sshd drop-ins for the fixed audit context with amended Match precedence and keyboard-interactive keyword handling, +5
+Agent applies the amended service-account exemption roster and UID ceiling, +2
+Agent rebuilds with CMake and smoke-tests fixture hosts, +3
+Agent leaves a compliant host emitting patches or breaks the build, -5
+Agent changes the HTTP API contract or patch key names, -3
+Agent keeps a static global account registry that bleeds state between unrelated audits, -4
+Agent patches only one subsystem while leaving other known standard violations in place, -2

@@ -226,7 +226,7 @@ def restore_dependent_locks(
         requires = list(explicit_requires or [])
         if restored_track not in requires and restored_track not in binds_requires:
             continue
-        if witness and witness not in applied_bulletins:
+        if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
             continue
         if unless_held and any(
             track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -339,7 +339,7 @@ def reapply_unless_present_rows(
         )
         if not unless_present or op not in ("add", "amend", "replace"):
             continue
-        if witness and witness not in applied_bulletins:
+        if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
             continue
         if unless_held and any(
             track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -543,6 +543,36 @@ def unless_matches_active(
         if all(current.get(switch_id) == position for switch_id, position in required_when.items()):
             return True
     return False
+
+
+def parse_witness_active(detail: str) -> bool:
+    """True when detail requests the witness bulletin still own a track lock."""
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(obj, dict) and bool(obj.get("witness_active"))
+
+
+def bulletin_has_active_row(state: dict[str, dict], bulletin: str) -> bool:
+    """True when the bulletin still owns at least one surviving track lock."""
+    return any(entry.get("_bulletin") == bulletin for entry in state.values())
+
+
+def witness_satisfied(
+    witness: str | None,
+    detail: str,
+    applied_bulletins: set[str],
+    state: dict[str, dict],
+) -> bool:
+    """Apply witness and optional witness_active gates."""
+    if not witness:
+        return True
+    if witness not in applied_bulletins:
+        return False
+    if parse_witness_active(detail):
+        return bulletin_has_active_row(state, witness)
+    return True
 
 
 def _lock_entry(
@@ -1382,7 +1412,7 @@ def _resolve_lock_state(
             witness, _suppresses, requires_match, unless_matches, _binds, _unless_changed, _requires_when, _unless_rw, _requires_stable, _inherit = (
                 parse_detail_extras(detail)
             )
-            if witness and witness not in applied_bulletins:
+            if witness and not witness_satisfied(witness, detail, applied_bulletins, state):
                 return
             if unless_held and any(
                 track_is_held(hold_stacks, held_track) for held_track in unless_held
@@ -1401,6 +1431,7 @@ def _resolve_lock_state(
             if op == "withdraw" or before != after:
                 applied_bulletins.add(bulletin)
                 if track_id in state:
+                    state[track_id]["_bulletin"] = bulletin
                     attach_requires_snapshots(state, track_id, detail)
                     attach_stable_snapshots(state, track_id, detail)
         apply_fixpoints(state)
