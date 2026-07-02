@@ -367,6 +367,20 @@ ROUTE_LOCK_LOG = [
             }
         ),
     ),
+    (
+        64,
+        "BUL-BM",
+        "replace",
+        "t_sw2_d",
+        json.dumps(
+            {
+                "defer_after_rollback": "handover",
+                "when": {"sw2": "south"},
+                "witness": "BUL-BJ",
+                "witness_active": True,
+            }
+        ),
+    ),
 ]
 
 LOCK_CORRECTIONS = [
@@ -532,6 +546,11 @@ NOTES = [
         38,
         "witness_active treated the rolled-back BUL-BJ replace as still owning a lock; final g-seal add landed",
     ),
+    (
+        39,
+        "defer_after_rollback rows were folded at log tail instead of when handover rollback restored; "
+        "BUL-BM south d-seal landed on applied_bulletins alone",
+    ),
 ]
 
 ROUTE_LOCK_GLOSSARY = [
@@ -692,6 +711,12 @@ ROUTE_LOCK_GLOSSARY = [
         "after the restore. Rows applied between the snapshot and the rollback keep "
         "their applied history for witness gates, but witness_active ownership "
         "follows the restored lock map.",
+    ),
+    (
+        "defer_after_rollback",
+        "Row stays pending until a rollback restores the named snapshot_id, then "
+        "applies in seq order before the log continues. Like defer_until, the row "
+        "does not run at its seq position.",
     ),
 ]
 

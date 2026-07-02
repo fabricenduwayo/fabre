@@ -45,6 +45,18 @@ def parse_snapshot_id(detail: str) -> str | None:
     return None
 
 
+def parse_defer_after_rollback(detail: str) -> str | None:
+    if not detail or not detail.strip():
+        return None
+    try:
+        obj = json.loads(detail)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(obj, dict) and isinstance(obj.get("defer_after_rollback"), str):
+        return obj["defer_after_rollback"]
+    return None
+
+
 def parse_release_hold_id(detail: str) -> str | None:
     if not detail or not detail.strip():
         return None
@@ -1125,8 +1137,14 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
     state = {}
     hold_stacks = {}
     pending = defaultdict(list)
+    pending_rollback = defaultdict(list)
     applied_bulletins = set()
     snapshots = {}
+
+    def flush_deferred_rollback(snapshot_id: str) -> None:
+        deferred = sorted(pending_rollback.pop(snapshot_id, []), key=lambda item: item[0])
+        for deferred_row in deferred:
+            process_row(deferred_row)
 
     def row_is_voided(seq, bulletin, track_id, detail):
         _when, _req, anchor, _ua, _up, _uh, expires_after, row_stamp, _pre, _ex = parse_detail(detail)
@@ -1185,6 +1203,7 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
                     hold_stacks.pop(captured_track, None)
                 state.clear()
                 state.update(copy.deepcopy(captured))
+                flush_deferred_rollback(snapshot_id)
         elif track_is_held(hold_stacks, track_id):
             return
         elif op in ("add", "amend", "replace", "withdraw"):
@@ -1223,6 +1242,10 @@ def effective_locks(network: dict, rows: list[tuple], corrections: dict[int, tup
 
     for row in rows:
         _seq, bulletin, _op, _track_id, detail = effective_row(row, corrections)
+        defer_after = parse_defer_after_rollback(detail)
+        if defer_after:
+            pending_rollback[defer_after].append(row)
+            continue
         _coupling, _decouple, defer_until, _sup = parse_detail_flags(detail)
         if defer_until:
             pending[defer_until].append(row)

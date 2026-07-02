@@ -1,34 +1,5 @@
-The last round still measured EASY (gpt5-5 5/5, opus 4/5), so this revision adds
-a genuinely new interacting mechanism instead of more edge cases: snapshot and
-rollback bulletin ops on a 63-row log. A rollback restores a captured lock map,
-clears hold stacks on snapshotted tracks (so the later matching release must be
-treated as a no-op), and rolls back witness_active bulletin ownership while
-applied-row history stays intact. The maintenance-window tail interleaves these
-with an amend, a hold, a junction replace, and a requires_when cascade wipe that
-the handover rollback has to undo — agents that model rollback as a plain state
-reset, keep the hold alive, or treat the rolled-back BUL-BJ replace as a live
-witness land on the wrong lock set or a wrong goal. Everything is specified only
-in route_lock_glossary and failed_attempt_notes inside evidence.duckdb, so the
-folding engine has to be rebuilt from the evidence, not patched from the naive
-shipped tool.
+The last round still measured EASY (opus 5/5, gpt5 4/5) despite snapshot/rollback hardening, so this revision adds defer_after_rollback: rows stay pending until a named snapshot rollback restores state, then apply in seq order before the log continues. BUL-BM is a deferred south d-seal replace that witnesses BUL-BJ with witness_active — it must flush when handover rollback lands at seq 62 and skip because rollback stripped BUL-BJ's lock ownership even though BUL-BJ still appears in applied history. Agents that fold defer_after_rollback at log tail or treat witness_active as log presence alone land a south d-seal on t_sw2_d and fail decoy reachability. Instruction.md now names the evidence tables, dispatch.toml sections, and glossary op keys the verifier covers.
 
-Query evidence.duckdb for the bulletin tables and apply lock_corrections to each
-row's effective op and detail before folding the log. Resolve semantics from
-route_lock_glossary and failed_attempt_notes, including the snapshot/rollback
-lifecycle on top of holds, witness gates, and cascade fixpoints; write the
-resolved {track, when} route_locks to network.yaml, derive the unique operative
-goal by reachability, rebuild dispatch.toml goal/hints/validation from the
-evidence tables, then implement play_shift.py so python3
-/app/tools/play_shift.py calls the referee on http://127.0.0.1:5000 and writes
-GET /v1/transcript to /app/output/transcript.json.
+Query evidence.duckdb for route_lock_log, lock_corrections, route_lock_glossary, failed_attempt_notes, arrival_candidates, hint_clues, and shift_meta. Apply lock_corrections before folding the log; resolve every glossary op including defer_after_rollback, snapshot/rollback lifecycle, witness_active ownership, and cascade fixpoints; write resolved route_locks to network.yaml; derive the unique operative goal by reachability; rebuild dispatch.toml goal/hints/validation from the evidence tables; implement play_shift.py to call the referee on http://127.0.0.1:5000 and write GET /v1/transcript to /app/output/transcript.json.
 
-Pytest recomputes every expectation from evidence.duckdb at verify time: the
-resolved locks must match network.yaml, prefix tests pin the south d-seal amend
-before rollback, the maint-window hold plus junction flip, the pre-maintenance
-restore with the hold cleared, the ignored post-rollback release, the
-requires_when cascade wipe after the f-seal north replace, the handover restore,
-and the skipped witness_active g-seal add after rollback strips BUL-BJ's
-ownership — on top of the existing hold/coupling/defer/supersede/witness/
-inherit_when_from suite, dispatch.toml goal and validation checks, decoy
-unreachability under all lineups, and a winning legal transcript produced
-through the referee already on port 5000.
+Pytest recomputes every expectation from evidence.duckdb: resolved locks match network.yaml, defer_after_rollback flush timing and witness_active skip on BUL-BM, snapshot/rollback and maint-window hold semantics, requires_when/inherit_when_from tail behavior, dispatch.toml goal and validation checks, decoy unreachability under all lineups, and a winning legal transcript through the referee on port 5000.

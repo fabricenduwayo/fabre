@@ -553,6 +553,26 @@ def test_witness_active_ignores_rolled_back_bulletin():
     assert "t_sw3_g" not in locks
 
 
+def test_defer_after_rollback_skips_witness_active_south_replace():
+    """BUL-BM south replace must flush at handover rollback and skip on witness_active."""
+    proc = run_shift()
+    assert proc.returncode == 0, proc.stderr
+    locks = lock_map()
+    assert locks.get("t_sw2_d") == {"sw2": "north"}
+    rows = lock_log_rows()
+    assert any(row[0] == 64 and row[1] == "BUL-BM" for row in rows)
+
+
+def test_defer_after_rollback_runs_before_tail_g_seal():
+    """Deferred BUL-BM must apply at seq 62 rollback, not after BUL-BL at log tail."""
+    rows = lock_log_rows()
+    through_g_seal = [row for row in rows if row[0] <= 63]
+    through_deferred = [row for row in rows if row[0] <= 64]
+    assert lock_map(effective_locks(rows=through_g_seal)) == lock_map(
+        effective_locks(rows=through_deferred)
+    )
+
+
 def test_transcript_has_required_fields():
     """Transcript JSON must expose the documented GET /v1/transcript fields."""
     proc = run_shift()

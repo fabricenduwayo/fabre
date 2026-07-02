@@ -16,9 +16,23 @@
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
-      "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-01T04:13:53.730597+00:00"
+      "feedback_hash": "f6cee60f1d716d22",
+      "attempts": 1,
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "The task was failing the **EASY** difficulty gate (Python tasks need **HARD**, worst-model \u226420%). I hardened it with three interacting Appendix H rules instead of relabeling difficulty.\n\n## Changes\n\n**New Appendix H rules** in `scoring_standard.md`:\n- **H-2026-27** \u2014 Primary `max_score_after` cap (discard score excess after delta, before floor clamp)\n- **H-2026-28** \u2014 `offset_player` transfer subtracts the **applied** score change (after cap), not nominal delta\n- **H-2026-29** \u2014 Deferred `correct_ceiling` clamp on `correct_delta` (parallel to `score_ceiling`)\n\n**Production data** \u2014 Added INC-90 through INC-93 to `rulings.json` so the main transcript exercises these rules (carol 18\u219221, dave correct 3\u21924).\n\n**Implementation** \u2014 Updated `solution/replay.py` and `tests/helpers.py` with `apply_primary()` / deferred correct-ceiling logic. The broken worker in `environment/worker/replay.py` still omits these rules.\n\n**Tests** \u2014 Added 4 tests for the new rules; updated carol score assertions (18\u219221). Oracle passes **54/54** tests.\n\n**Platform** \u2014 Bumped `platform-revision: 2026-07-01-r32`, updated rubrics/explanations, resubmitted without send-to-reviewer. Assignment is **EVALUATION_PENDING**.\n\n```json\n{\n  \"changes_summary\": \"Hardened repair-express-trivia-worker for the EASY\u2192HARD gate by adding Appendix H rules H-2026-27 (primary max_score_after caps), H-2026-28 (offset_player transfers using applied delta after the cap), and H-2026-29 (deferred correct_ceiling clamping). Updated scoring_standard.md, rulings.json with INC-90\u2013INC-93, solution/replay.py, tests/helpers.py, and tests/test_outputs.py with four new tests plus carol score updates. Bumped Dockerfile platform-revision to r32 and refreshed submission explanations/rubrics.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Hardened repair-express-trivia-worker for the EASY\u2192HARD gate by adding Appendix H rules H-2026-27 (primary max_score_after caps), H-2026-28 (offset_player transfers using applied delta after the cap), and H-2026-29 (deferred correct_ceiling clamping). Updated scoring_standard.md, rulings.json with INC-90\u2013INC-93, solution/replay.py, tests/helpers.py, and tests/test_outputs.py with four new tests plus carol score updates. Bumped Dockerfile platform-revision to r32 and refreshed submission explanations/rubrics.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": "(no git diff detected)",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "Difficulty: \u274c EASY - Requires at least HARD for python",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260702T023156Z.json",
+      "last_run": "2026-07-02T02:31:56.386913+00:00"
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
