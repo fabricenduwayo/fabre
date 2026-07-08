@@ -14,6 +14,7 @@ INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2
     ('e_d_e', 'D', 'E', NULL, NULL),
     ('e_e_c', 'E', 'C', NULL, NULL);
 
+-- route_rules: ascending rule_priority per edge_id; first matching row wins (clear opens, lock closes)
 INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action) VALUES
     ('r_warn_d', 'e_b_d', 5, 'south', 'south', 'lock'),
     ('r_release_d', 'e_b_d', 7, 'south', 'north', 'clear'),
@@ -23,6 +24,7 @@ INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, ru
     ('r_platform_de', 'e_d_e', 9, NULL, 'north', 'lock'),
     ('r_gate_ce', 'e_c_e', 15, 'south', 'north', 'lock');
 
+-- lock_groups: a lock on any member relays to every edge sharing group_id (after route rules)
 INSERT INTO lock_groups (group_id, edge_id) VALUES
     ('yard_spur', 'e_b_d'),
     ('yard_spur', 'e_d_e');

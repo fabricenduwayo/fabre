@@ -18,6 +18,7 @@ public class SwitchRuleHandler {
 
     public Set<String> lockedEdges(Map<String, String> switches) {
         Set<String> locked = new HashSet<>();
+        // Relay yard holds before route rules so paired arrival legs inherit early locks.
         applyLockGroups(locked);
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new java.util.HashMap<>();

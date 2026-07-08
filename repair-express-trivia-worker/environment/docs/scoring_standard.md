@@ -13,7 +13,7 @@ the Harbor referee API.
 
 Appendix G lists authoritative amendments. Where a body control and an amendment
 conflict, the amendment governs. Appendix H (amendments H-2026-01 through
-H-2026-40) governs the stewards' review reconciliation; every amendment in it
+H-2026-45) governs the stewards' review reconciliation; every amendment in it
 applies.
 
 ### 1.3 Ledger ordering
@@ -571,3 +571,51 @@ ruling carries both `score_ceiling` and `correct_ceiling` and H-2026-34 forces
 `offset_correct_player` debit made in that step — add back exactly what was
 subtracted (after H-2026-39 solvency trimming). When some correct credit is
 applied, the correct offset debit stands.
+
+### H-2026-41 — Primary offset funding match
+
+Extends H-2026-28, H-2026-31, and H-2026-32. During the primary pass, when a
+ruling carries `offset_player` and the intended positive transfer (after
+H-2026-31 halving) exceeds what H-2026-32 solvency actually debited from
+`offset_player`, reduce the beneficiary's score by the shortfall before the
+per-step floor checkpoint. The beneficiary must not keep score credit that the
+offset payer could not fund. Negative transfers (offset target gaining points)
+are unchanged.
+
+### H-2026-42 — Deferred offset funding match
+
+Extends H-2026-30, H-2026-32, H-2026-33, and H-2026-37. During the post-floor
+pass, when a deferred ruling carries `offset_player` and the intended positive
+transfer (after H-2026-35 halving) exceeds what solvency actually debited,
+cap `score_applied` for that step at the collected offset debit before adding
+it to the beneficiary. Do not apply this cap when H-2026-37 refunds the offset
+because `score_ceiling` blocked all score credit with `score_applied` **0**.
+
+### H-2026-43 — Reinstate clears offset fields
+
+Extends H-2026-25 and H-2026-26. When a `reinstate` restores a rescind
+snapshot, clear `offset_player`, `offset_correct_player`, and
+`offset_min_score` from the restored entry before storing it. Reinstate never
+reintroduces offset transfers unless a later `amend` adds them back.
+
+### H-2026-44 — Primary correct offset funding match
+
+Extends H-2026-38, H-2026-39, and H-2026-41. During the primary pass, when a
+ruling carries `offset_correct_player` and the intended positive correct
+transfer exceeds what H-2026-39 solvency actually debited from
+`offset_correct_player`, reduce the beneficiary's `correct` count by the
+shortfall before the per-step floor checkpoint. The beneficiary must not keep
+correct credit the offset payer could not fund. Negative transfers (when the
+applied correct change is negative and the offset target gains correct) are
+unchanged.
+
+### H-2026-45 — Deferred correct offset funding match
+
+Extends H-2026-38, H-2026-39, and H-2026-42. During the post-floor pass, when
+a deferred ruling carries `offset_correct_player` and the intended positive
+correct transfer (after H-2026-29 and H-2026-34 caps) exceeds what solvency
+actually debited, cap the applied correct change at the collected debit
+before adding it to the beneficiary. Do not apply this cap when H-2026-40
+refunds a correct offset because H-2026-34 blocked score credit. When
+H-2026-20 syncs a frozen deferred snapshot, no extra field is needed — the
+funding rule applies whenever the post-floor correct offset runs.

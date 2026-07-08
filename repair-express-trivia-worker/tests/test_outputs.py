@@ -139,10 +139,11 @@ def test_amend_retargets_incident_player():
     """INC-4 amend must move the +8 adjustment from bob to alice, not apply both."""
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_ruling_score_floor_clamps_at_zero():
@@ -151,8 +152,9 @@ def test_ruling_score_floor_clamps_at_zero():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
     assert provisional["bob"]["score"] < 0
-    assert official["bob"]["score"] == 5
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_rescinded_rulings_have_no_effect():
@@ -162,7 +164,7 @@ def test_rescinded_rulings_have_no_effect():
     expected = {r["player"]: r for r in expected_standings()}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["dave"]["score"] == expected["dave"]["score"]
-    assert official["bob"]["score"] == 5
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_nonparticipant_ruling_is_void():
@@ -200,9 +202,10 @@ def test_requires_incident_skips_rescinded_dependency():
     """A ruling requiring a rescinded incident must not change standings."""
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_requires_incident_applies_when_dependency_active():
@@ -280,7 +283,8 @@ def test_primary_requires_active_at_replay_end():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_deferred_requires_snapshot_after_dependency_rescind():
@@ -301,8 +305,9 @@ def test_correct_count_floor_clamps_at_zero():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
     assert provisional["bob"]["score"] < 0
-    assert official["bob"]["score"] == 5
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_sequential_primary_floor_checkpoint():
@@ -311,9 +316,10 @@ def test_sequential_primary_floor_checkpoint():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
     # Batch primary apply would leave bob at zero; sequential checkpoints yield eight.
     assert provisional["bob"]["score"] < 0
-    assert official["bob"]["score"] == 5
+    assert official["bob"]["score"] == expected["bob"]["score"]
     assert official["bob"]["score"] != 0
 
 
@@ -362,7 +368,8 @@ def test_amend_omit_resets_applies_after_floor():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_amend_omit_clears_requires_incident():
@@ -411,9 +418,9 @@ def test_rescind_cascades_to_paired_incident():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     expected = {r["player"]: r for r in expected_standings()}
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    assert official["alice"]["score"] == expected["alice"]["score"]
     assert official["carol"]["score"] == expected["carol"]["score"]
 
 
@@ -439,7 +446,8 @@ def test_transitive_requires_incident_void_at_replay_end():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_transitive_paired_incident_cascade_on_rescind():
@@ -447,10 +455,10 @@ def test_transitive_paired_incident_cascade_on_rescind():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     expected = {r["player"]: r for r in expected_standings()}
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["dave"]["score"] == expected["dave"]["score"]
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_reissued_incident_does_not_restore_dependency():
@@ -458,7 +466,8 @@ def test_reissued_incident_does_not_restore_dependency():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_transcript_ends_with_trailing_newline():
@@ -501,9 +510,10 @@ def test_reissued_paired_parent_does_not_restore_paired_ruling():
     """INC-41 stays void after INC-40 is re-issued post-rescind (H-2026-17)."""
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_amend_omit_retains_player():
@@ -521,9 +531,9 @@ def test_deferred_paired_snapshot_after_parent_rescind():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     expected = {r["player"]: r for r in expected_standings()}
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    assert official["alice"]["score"] == expected["alice"]["score"]
     assert official["carol"]["score"] == expected["carol"]["score"]
 
 
@@ -531,10 +541,11 @@ def test_amend_syncs_frozen_deferred_snapshot():
     """INC-46 amend retargeting to bob must apply snapshotted -6 to bob, not alice (H-2026-20)."""
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_supersede_clears_without_rescind_taint():
@@ -545,7 +556,7 @@ def test_supersede_clears_without_rescind_taint():
     {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
     assert official["dave"]["score"] == expected["dave"]["score"]
-    assert official["bob"]["score"] == 5
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_supersede_blocks_dependency_at_record_time():
@@ -562,9 +573,9 @@ def test_demotion_clears_paired_frozen_snapshot():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     expected = {r["player"]: r for r in expected_standings()}
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    assert official["alice"]["score"] == expected["alice"]["score"]
     assert official["carol"]["score"] == expected["carol"]["score"]
 
 
@@ -583,7 +594,8 @@ def test_mutex_incident_void_when_parent_active():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_reinstate_restores_most_recent_rescind_snapshot():
@@ -592,7 +604,8 @@ def test_reinstate_restores_most_recent_rescind_snapshot():
     assert proc.returncode == 0, proc.stderr
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
     assert official["alice"]["score"] != provisional["alice"]["score"] + 13
 
 
@@ -612,7 +625,8 @@ def test_reinstate_noop_after_paired_cascade_removal():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_reinstate_noop_after_supersede():
@@ -620,7 +634,8 @@ def test_reinstate_noop_after_supersede():
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["bob"]["score"] == 5
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
 
 
 def test_reinstated_deferred_rejoins_post_floor_pass():
@@ -636,9 +651,10 @@ def test_direct_rescind_drops_frozen_deferred_snapshot():
     """Directly rescinding snapshotted INC-80 must drop its -5, unlike a paired-cascade removal (H-2026-19)."""
     proc = run_worker()
     assert proc.returncode == 0, proc.stderr
-    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 12
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_reinstate_does_not_restore_cascade_removed_paired():
@@ -671,8 +687,8 @@ def test_primary_max_score_after_caps_applied_delta():
         },
     ]
     official = worker_player_map(rulings=rulings)
-    assert official["carol"]["score"] == provisional["carol"]["score"] + 12
     assert official["carol"]["score"] == 20
+    assert official["carol"]["score"] == provisional["carol"]["score"] + 12
 
 
 def test_offset_player_transfers_applied_score_change():
@@ -690,7 +706,7 @@ def test_offset_player_transfers_applied_score_change():
         }
     ]
     official = worker_player_map(rulings=rulings)
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["alice"]["score"] == provisional["alice"]["score"]
     assert official["bob"]["score"] == 0
 
 
@@ -751,12 +767,13 @@ def test_offset_solvency_caps_primary_transfer():
         }
     ]
     official = worker_player_map(rulings=rulings)
-    assert official["alice"]["score"] == provisional["alice"]["score"] + 10
+    assert official["alice"]["score"] == provisional["alice"]["score"]
     assert official["bob"]["score"] == 0
 
 
 def test_deferred_offset_without_score_ceiling():
     """Deferred offset_player must run even when score_ceiling is omitted (H-2026-33)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     rulings = [
         {
             "ruling_seq": 1,
@@ -770,7 +787,7 @@ def test_deferred_offset_without_score_ceiling():
     ]
     official = worker_player_map(rulings=rulings)
     assert official["bob"]["score"] == 5
-    assert official["alice"]["score"] == 25
+    assert official["alice"]["score"] == provisional["alice"]["score"] - 5
 
 
 def test_offset_min_score_halves_primary_transfer():
@@ -948,7 +965,7 @@ def test_offset_correct_player_transfers_applied_correct_change():
 
 
 def test_correct_offset_solvency_caps_debit():
-    """Correct offset must not debit more than offset_correct_player's current correct count (H-2026-39)."""
+    """Correct offset solvency and funding match must leave dave unchanged when bob cannot fund (H-2026-39/H-2026-44)."""
     provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
     rulings = [
         {
@@ -962,7 +979,7 @@ def test_correct_offset_solvency_caps_debit():
         }
     ]
     official = worker_player_map(rulings=rulings)
-    assert official["dave"]["correct"] == provisional["dave"]["correct"] + 3
+    assert official["dave"]["correct"] == provisional["dave"]["correct"]
     assert official["bob"]["correct"] == 0
 
 
@@ -1019,3 +1036,177 @@ def test_blocked_correct_leaves_offset_correct_untouched():
     assert official["carol"]["score"] == 24
     assert official["carol"]["correct"] == provisional["carol"]["correct"]
     assert official["alice"]["correct"] == provisional["alice"]["correct"]
+
+
+def test_primary_offset_funding_match_clamps_beneficiary():
+    """Primary offset must not credit more score than offset_player solvency collected (H-2026-41)."""
+    {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "alice",
+            "delta": -23,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "bob",
+            "delta": 12,
+            "offset_player": "alice",
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["alice"]["score"] == 0
+    assert official["bob"]["score"] == 0
+
+
+def test_deferred_offset_funding_match_clamps_score_applied():
+    """Deferred offset must cap score_applied at collected debit when solvency trims the transfer (H-2026-42)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "dave",
+            "delta": -10,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "carol",
+            "delta": 8,
+            "offset_player": "dave",
+            "applies_after_floor": True,
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["dave"]["score"] == 0
+    assert official["carol"]["score"] == provisional["carol"]["score"] + 5
+
+
+def test_reinstate_clears_offset_fields():
+    """Reinstate must restore score credit without offset_player transfers stripped at restore (H-2026-43)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-X",
+            "op": "issue",
+            "player": "bob",
+            "delta": 10,
+            "offset_player": "alice",
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-X",
+            "op": "rescind",
+            "player": "bob",
+            "delta": 0,
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+        {
+            "ruling_seq": 3,
+            "incident": "INC-X",
+            "op": "reinstate",
+            "issued_at": "2026-03-15T22:00:02Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["bob"]["score"] == provisional["bob"]["score"] + 10
+    assert official["alice"]["score"] == provisional["alice"]["score"]
+
+
+def test_inc105_funding_match_in_full_replay():
+    """INC-105 must cap bob's +12 credit when alice can fund only part after INC-107 (H-2026-41)."""
+    without105 = [r for r in load_rulings() if r["incident"] != "INC-105"]
+    baseline = worker_player_map(
+        rulings=without105,
+        output=OUTPUT.parent / "baseline_inc105.txt",
+    )
+    official = worker_player_map()
+    assert official["bob"]["score"] == baseline["bob"]["score"] + 8
+    assert official["alice"]["score"] == baseline["alice"]["score"] - 8
+
+
+def test_inc106_reinstate_clears_offset_in_full_replay():
+    """INC-106 reinstate must restore bob's +10 without debiting alice (H-2026-43)."""
+    without = [r for r in load_rulings() if r["incident"] != "INC-106"]
+    baseline = worker_player_map(
+        rulings=without,
+        output=OUTPUT.parent / "baseline_inc106.txt",
+    )
+    official = worker_player_map()
+    assert official["bob"]["score"] == baseline["bob"]["score"] + 10
+    assert official["alice"]["score"] == baseline["alice"]["score"]
+
+
+def test_primary_correct_offset_funding_match_clamps_beneficiary():
+    """Primary correct offset must not credit more correct than offset_correct_player solvency collected (H-2026-44)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "dave",
+            "delta": 0,
+            "correct_delta": 3,
+            "offset_correct_player": "bob",
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["dave"]["correct"] == provisional["dave"]["correct"]
+    assert official["bob"]["correct"] == provisional["bob"]["correct"]
+
+
+def test_deferred_correct_offset_funding_match_clamps_correct_applied():
+    """Deferred correct offset must cap correct_applied at collected debit when solvency trims (H-2026-45)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "alice",
+            "delta": 0,
+            "correct_delta": -3,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "dave",
+            "delta": 0,
+            "correct_delta": 3,
+            "offset_correct_player": "alice",
+            "applies_after_floor": True,
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["dave"]["correct"] == provisional["dave"]["correct"]
+    assert official["alice"]["correct"] == 0
+
+
+def test_inc108_correct_funding_match_in_full_replay():
+    """INC-108 must not credit dave +3 correct when bob has no correct count to fund the offset (H-2026-44)."""
+    without = [r for r in load_rulings() if r["incident"] != "INC-108"]
+    baseline = worker_player_map(
+        rulings=without,
+        output=OUTPUT.parent / "baseline_inc108.txt",
+    )
+    official = worker_player_map()
+    assert official["dave"]["correct"] == baseline["dave"]["correct"]
+    assert official["bob"]["correct"] == baseline["bob"]["correct"]

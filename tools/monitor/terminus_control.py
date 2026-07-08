@@ -312,6 +312,25 @@ def handle_parsed_command(cmd: ParsedCommand, *, dry_run: bool = False) -> str:
         folder = args[0] if args else None
         ok, msg = run_monitor_now(dry_run=True, force=True, folder=folder)
         return f"{'OK' if ok else 'FAIL'}: {msg}"
+    if action == "prompt":
+        folder = args[0] if args else None
+        if not folder:
+            return "FAIL: prompt needs a task folder name"
+        folder = resolve_folder_name(folder, _fetch_subs(), REPO_ROOT) or folder
+        script = MONITOR_DIR / "generate_fix_prompt.py"
+        python = MONITOR_DIR / ".venv" / "bin" / "python"
+        if not python.is_file():
+            python = Path(sys.executable)
+        proc = subprocess.run(
+            [str(python), str(script), folder],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            return f"FAIL: {(proc.stderr or proc.stdout or 'prompt failed')[:300]}"
+        return (proc.stdout or "prompt written").strip()[:400]
     if action == "run":
         folder = args[0] if args else None
         ok, msg = run_monitor_now(dry_run=dry_run, force=True, folder=folder)

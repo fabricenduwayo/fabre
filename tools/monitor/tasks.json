@@ -23,8 +23,7 @@
     "resubmit_arg": "awk"
   },
   "repair-java-trailswitch-graph-rules": {
-    "resubmit_script": ".review-scratch/submit_new_tasks.py",
-    "resubmit_arg": "trailswitch"
+    "resubmit_script": ".review-scratch/resubmit_trailswitch.py"
   },
   "reconcile-spring-boot-model-registry-with-h2-experiment": {}
 }

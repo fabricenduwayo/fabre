@@ -1,12 +1,14 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-07-r9
+# platform-revision: 2026-07-08-r10
 
 WORKDIR /app
 
+# JDK 17 plus agent runtime tooling. forensic_audit.db is vendored at build time
+# so we skip the sqlite3 CLI package and an extra RUN step that was flaking on
+# Daytona when environment start approached the build_timeout_sec ceiling.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         openjdk-17-jdk-headless \
-        sqlite3 \
         procps \
         tmux \
         asciinema \
@@ -25,7 +27,4 @@ COPY fixtures/ /app/fixtures/
 # stub + build.sh). The agent repairs rules/correlate; it carries no solution logic.
 COPY pipeline/ /app/pipeline/
 
-COPY data/seed.sql /tmp/seed.sql
-RUN mkdir -p /app/data \
-    && sqlite3 /app/data/forensic_audit.db < /tmp/seed.sql \
-    && rm -f /tmp/seed.sql
+COPY data/forensic_audit.db /app/data/forensic_audit.db

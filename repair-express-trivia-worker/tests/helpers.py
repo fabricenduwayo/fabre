@@ -314,6 +314,9 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
         if op == "reinstate":
             if incident not in incidents and incident in rescind_snapshot:
                 entry = dict(rescind_snapshot[incident])
+                entry.pop("offset_player", None)
+                entry.pop("offset_correct_player", None)
+                entry.pop("offset_min_score", None)
                 entry["ruling_seq"] = ruling["ruling_seq"]
                 incidents[incident] = entry
                 if entry["applies_after_floor"]:
@@ -486,13 +489,14 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
             current = incidents[current].get("requires_incident")
         return True
 
-    def apply_offset_transfer(offset: str, transfer: int) -> None:
-        """H-2026-32: cap positive offset debits at the payer's current balance."""
+    def apply_offset_transfer(offset: str, transfer: int) -> int:
+        """H-2026-32: cap positive offset debits; return the amount subtracted."""
         if offset not in by_player:
-            return
+            return 0
         if transfer > 0:
             transfer = min(transfer, max(0, by_player[offset]["score"]))
         by_player[offset]["score"] -= transfer
+        return transfer
 
     def apply_correct_offset_transfer(offset: str, transfer: int) -> int:
         """H-2026-39: cap positive correct debits; return the amount subtracted."""
@@ -526,10 +530,14 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
                 transfer = applied // 2
             else:
                 transfer = applied
-            apply_offset_transfer(offset, transfer)
+            actual = apply_offset_transfer(offset, transfer)
+            if transfer > 0 and actual < transfer:
+                by_player[player]["score"] -= transfer - actual
         offset_correct = eff.get("offset_correct_player")
         if offset_correct and offset_correct in by_player and correct_applied != 0:
-            apply_correct_offset_transfer(offset_correct, correct_applied)
+            actual = apply_correct_offset_transfer(offset_correct, correct_applied)
+            if correct_applied > 0 and actual < correct_applied:
+                by_player[player]["correct"] -= correct_applied - actual
 
     def apply_deferred(eff: dict) -> None:
         player = eff["player"]
@@ -540,19 +548,27 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
         ceiling = eff.get("score_ceiling")
         correct_ceiling = eff.get("correct_ceiling")
         offset_debit = 0
+        intended_transfer = 0
         if offset and offset in by_player:
             transfer = delta
             threshold = eff.get("offset_min_score")
             if threshold is not None and by_player[player]["score"] < threshold:
                 transfer = delta // 2
-            before_offset = by_player[offset]["score"]
-            apply_offset_transfer(offset, transfer)
-            offset_debit = before_offset - by_player[offset]["score"]
+            intended_transfer = transfer
+            by_player[offset]["score"]
+            offset_debit = apply_offset_transfer(offset, transfer)
         if ceiling is not None:
             headroom = ceiling - by_player[player]["score"]
             score_applied = 0 if headroom <= 0 else min(delta, headroom)
         else:
             score_applied = delta
+        if (
+            offset
+            and intended_transfer > 0
+            and offset_debit < intended_transfer
+            and score_applied > 0
+        ):
+            score_applied = min(score_applied, offset_debit)
         by_player[player]["score"] += score_applied
         if (
             ceiling is not None
@@ -571,16 +587,26 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
         elif correct_ceiling is not None:
             headroom = correct_ceiling - by_player[player]["correct"]
             correct_delta = 0 if headroom <= 0 else min(correct_delta, headroom)
-        by_player[player]["correct"] += correct_delta
-        correct_applied = by_player[player]["correct"] - correct_before
         offset_correct = eff.get("offset_correct_player")
-        correct_offset_debit = 0
-        if offset_correct and offset_correct in by_player and correct_applied != 0:
-            correct_offset_debit = apply_correct_offset_transfer(
-                offset_correct, correct_applied
-            )
-        if score_blocked_correct and offset_correct and correct_offset_debit > 0:
-            by_player[offset_correct]["correct"] += correct_offset_debit
+        if (
+            offset_correct
+            and offset_correct in by_player
+            and not score_blocked_correct
+            and correct_delta > 0
+        ):
+            collected = apply_correct_offset_transfer(offset_correct, correct_delta)
+            if collected < correct_delta:
+                correct_delta = collected
+        by_player[player]["correct"] += correct_delta
+        if (
+            offset_correct
+            and offset_correct in by_player
+            and not score_blocked_correct
+            and correct_delta < 0
+        ):
+            correct_applied = by_player[player]["correct"] - correct_before
+            if correct_applied != 0:
+                apply_correct_offset_transfer(offset_correct, correct_applied)
 
     def clamp_scores() -> None:
         for row in by_player.values():

@@ -69,6 +69,7 @@ def parse_command(body: str) -> ParsedCommand | None:
         "ui",
         "draft",
         "health",
+        "prompt",
     }:
         if verb == "dryrun":
             verb = "dry-run"
@@ -89,6 +90,7 @@ def help_text() -> str:
 status | queue | health | docker | summary
 start | stop | resume
 run [task-folder]
+prompt [task-folder]
 dry-run [task-folder]
 pause 6h | pause 30m
 exclude <task> | unexclude <task>

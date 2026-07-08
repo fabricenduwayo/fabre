@@ -10,11 +10,23 @@
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
-      "feedback_hash": "0726b8c92428d085",
-      "attempts": 4,
-      "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-02T16:44:55.924377+00:00"
+      "feedback_hash": "903f38f16f5e455e",
+      "attempts": 1,
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "Hardened the task for the Python **HARD** gate (was TRIVIAL at 100% on both models). Summary of what changed:\n\n## Root cause\nAgents passed every test because Appendix H was fully specified in `scoring_standard.md` and the full replay never exercised **H-2026-41** (alice had enough score to fund INC-105\u2019s full +12 offset).\n\n## Hardening (real interacting logic)\n\n**New rules**\n- **H-2026-44** \u2014 Primary correct-offset funding match: beneficiary `correct` cannot exceed what `offset_correct_player` solvency actually funded.\n- **H-2026-45** \u2014 Deferred correct-offset funding match: same cap on the post-floor pass.\n\n**New rulings in `rulings.json`**\n- **INC-107** (seq 96): alice `delta: -34` \u2014 drains alice to 8 before INC-105 so funding match actually fires in the full replay.\n- **INC-108** (seq 101): dave `correct_delta: 3` with `offset_correct_player: bob` \u2014 bob has 0 correct, so H-2026-44 blocks the credit.\n\n**Tests**\n- Fixed `test_inc105_funding_match_in_full_replay` baseline (compare against replay without INC-105 only, since INC-107 is in both).\n- Added isolated tests for H-2026-44/45 and full-replay INC-108.\n- Updated `test_correct_offset_solvency_caps_debit` for combined solvency + funding match.\n- Fixed 12 ruff F841 lint errors (unused variables).\n\n**Other**\n- Oracle: **1.0**\n- `# platform-revision: 2026-07-08-r14` in Dockerfile\n- Resubmitted with updated explanations/rubrics; **not** sent to reviewer\n- Assignment state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Added H-2026-44/45 correct-offset funding-match rules to scoring_standard.md and instruction.md; implemented them in solution/replay.py and tests/helpers.py; added INC-107 (drains alice before INC-105 so primary funding match fires in full replay) and INC-108 (correct-offset funding block) to rulings.json; added/fixed pytest cases for score and correct funding match; fixed ruff F841 lint; bumped Dockerfile platform-revision to r14; updated trivia explanations and rubrics; resubmitted without send-to-reviewer.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Added H-2026-44/45 correct-offset funding-match rules to scoring_standard.md and instruction.md; implemented them in solution/replay.py and tests/helpers.py; added INC-107 (drains alice before INC-105 so primary funding match fires in full replay) and INC-108 (correct-offset funding block) to rulings.json; added/fixed pytest cases for score and correct funding match; fixed ruff F841 lint; bumped Dockerfile platform-revision to r14; updated trivia explanations and rubrics; resubmitted without send-to-reviewer.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": ".../environment/Dockerfile                         |   2 +-\n .../environment/data/rulings.json                  |   8 +-\n .../environment/docs/scoring_standard.md           |  50 +++-\n repair-express-trivia-worker/instruction.md        |  15 +-\n repair-express-trivia-worker/solution/replay.py    |  60 +++--\n repair-express-trivia-worker/tests/helpers.py      |  60 +++--\n repair-express-trivia-worker/tests/test_outputs.py | 269 ++++++++++++++++++---\n 7 files changed, 376 insertions(+), 88 deletions(-)",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T081809Z.json",
+      "last_run": "2026-07-08T08:18:10.428499+00:00"
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
@@ -34,14 +46,26 @@
     },
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
       "folder_name": "repair-java-trailswitch-graph-rules",
-      "feedback_hash": "87810eea09cac4c5",
-      "attempts": 4,
-      "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-02T17:21:29.370067+00:00"
+      "feedback_hash": "923cd53173201874",
+      "attempts": 1,
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "## Summary\n\nRevised `repair-java-trailswitch-graph-rules` to address the TRIVIAL difficulty bounce and the `behavior_in_task_description` quality failure.\n\n**Difficulty hardening**\n- Trimmed `/app/docs/trailswitch-referee-contract.md` \u2014 removed the detailed rule-evaluation cheat sheet (ascending priority, first-match, clear vs lock, conjunction). Contract now covers API shape, SQL parameterization, and cycle guarding only.\n- Added misleading comments in broken Java (`GraphPathRepository` claims ASC order but uses DESC; `SwitchRuleHandler` relays lock groups before route rules).\n- Added brief normative SQL comments in `seed.sql` instead of a `policy_expectations` table.\n\n**Instruction sufficiency**\n- Expanded `instruction.md` to name every tested control: ascending `rule_priority` with per-edge first-match, `clear` vs `lock`, AND conjunction with NULL wildcards, lock-group relay after route rules, parameterized JDBC, and `cycle_guard` on all normal finishes.\n\n**Submission**\n- Bumped `# platform-revision: 2026-07-08-r11` in the Dockerfile.\n- Updated `.review-scratch/trailswitch-explanations.txt` and `trailswitch-rubrics.txt` (removed `policy_expectations` references).\n- Oracle: **1.0**\n- Static checks: **PASS**\n- Platform state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Trimmed trailswitch-referee-contract.md to remove normative rule-evaluation cheat sheet; expanded instruction.md with explicit per-edge first-match, clear/lock, AND conjunction, lock-group relay, JDBC, and cycle_guard requirements; added seed SQL comments and misleading comments in broken GraphPathRepository/SwitchRuleHandler; bumped Dockerfile platform-revision to 2026-07-08-r11; updated submission explanations and rubrics. Oracle reward 1.0; resubmitted with static checks PASS.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Trimmed trailswitch-referee-contract.md to remove normative rule-evaluation cheat sheet; expanded instruction.md with explicit per-edge first-match, clear/lock, AND conjunction, lock-group relay, JDBC, and cycle_guard requirements; added seed SQL comments and misleading comments in broken GraphPathRepository/SwitchRuleHandler; bumped Dockerfile platform-revision to 2026-07-08-r11; updated submission explanations and rubrics. Oracle reward 1.0; resubmitted with static checks PASS.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": "repair-java-trailswitch-graph-rules/environment/Dockerfile    |  2 +-\n .../environment/docs/trailswitch-referee-contract.md          | 11 ++---------\n repair-java-trailswitch-graph-rules/environment/sql/seed.sql  |  2 ++\n .../main/java/com/trailswitch/repo/GraphPathRepository.java   |  1 +\n .../main/java/com/trailswitch/service/SwitchRuleHandler.java  |  1 +\n repair-java-trailswitch-graph-rules/instruction.md            |  6 +++++-\n 6 files changed, 12 insertions(+), 11 deletions(-)",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T082201Z.json",
+      "last_run": "2026-07-08T08:22:02.379546+00:00"
     }
   },
-  "last_check": "2026-07-08T06:42:49.561671+00:00",
+  "last_check": "2026-07-08T08:09:12.352325+00:00",
   "last_queue": {
     "fix_queue": [
       "repair-express-trivia-worker",
@@ -49,21 +73,16 @@
       "reproduce-java-aes-gcm-findings"
     ],
     "manual_ui": [],
-    "skipped": [
-      {
-        "submission_id": "0c176558-e5c1-444a-804b-f4b4cc3cbd29",
-        "folder_name": "harden-php-api-defaults",
-        "reason": "manual_review_queue"
-      }
-    ],
-    "checked_at": "2026-07-08T06:43:32.620923+00:00"
+    "skipped": [],
+    "checked_at": "2026-07-08T08:09:41.953776+00:00"
   },
   "next_fix_allowed_after": "2026-07-02T03:52:07.892176+00:00",
   "last_states": {
+    "66067373-eca1-43cf-8a0d-2911c7b737fb": "EVALUATION_PENDING",
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "NEEDS_REVISION",
     "71323da7-976c-405b-9dcd-c24d83fa6102": "ACCEPTED",
-    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "NEEDS_REVISION",
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "EVALUATION_PENDING",
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
     "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
     "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "REVIEW_PENDING",
@@ -73,8 +92,8 @@
   },
   "daily_stats": {
     "date": "2026-07-08",
-    "fixes": 0,
-    "agent_minutes": 0,
+    "fixes": 2,
+    "agent_minutes": 12.2,
     "events": [
       {
         "at": "2026-07-08T02:54:46.315736+00:00",
@@ -120,6 +139,28 @@
         "at": "2026-07-08T04:05:22.982513+00:00",
         "type": "oracle_skip",
         "folder": "reproduce-java-aes-gcm-findings"
+      },
+      {
+        "at": "2026-07-08T08:18:10.428374+00:00",
+        "type": "resubmitted",
+        "folder": "repair-express-trivia-worker"
+      },
+      {
+        "at": "2026-07-08T08:18:10.428449+00:00",
+        "type": "fix",
+        "folder": "repair-express-trivia-worker",
+        "agent_minutes": 8.434626622233191
+      },
+      {
+        "at": "2026-07-08T08:22:02.379451+00:00",
+        "type": "resubmitted",
+        "folder": "repair-java-trailswitch-graph-rules"
+      },
+      {
+        "at": "2026-07-08T08:22:02.379511+00:00",
+        "type": "fix",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "agent_minutes": 3.8396806382001767
       }
     ]
   }

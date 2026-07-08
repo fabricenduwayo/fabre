@@ -8,8 +8,14 @@ conflict, the amendment governs (section 1.4).
 
 Bring the running service into conformance so that, for every request, the API
 returns exactly the status, headers, and body the Standard as amended requires
-and records exactly the audit row it implies. Keep the existing routes (`GET
-/health`, `POST /admin/bootstrap`) and their JSON shapes. The ledger already
+and records exactly the audit row it implies. Reconcile the full Standard at
+`/app/docs/standard.md`, including at least these controls as amended in
+Appendix G: CO-ORIGIN-ALLOW (credentialed exact-origin grants, including
+`Vary: Origin`); CO-PREFLIGHT (including G-2026-11 preflight-hint scoping);
+AC-BOOTSTRAP (including G-2026-03, G-2026-05, G-2026-15, and G-2026-16);
+AC-HEALTH (including G-2026-04); AC-TOKEN-STORE (including G-2026-12);
+AU-LEDGER-SCOPE (including G-2026-06); and EH-NO-DISCLOSE. Keep the existing
+routes (`GET /health`, `POST /admin/bootstrap`) and their JSON shapes. The ledger already
 holds historical rows that reconciliation must preserve; note that the on-disk
 ledger is restored to its older layout before every run, so the migration has to
 be idempotent runtime code that reconciles the schema whenever the database is

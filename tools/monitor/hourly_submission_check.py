@@ -50,6 +50,7 @@ from notifications import (  # noqa: E402
     write_run_report,
 )
 from feedback_gates import green_eval_skip_reason  # noqa: E402
+from monitor_prompt import generate_fix_brief  # noqa: E402
 from monitor_env import load_env_file  # noqa: E402
 from monitor_exclusions import load_review_exclusions, sync_review_exclusions  # noqa: E402
 from monitor_health import docker_ready, git_dirty_task_folders, health_report  # noqa: E402
@@ -323,6 +324,7 @@ def build_agent_prompt(item: dict, notes: str, tasks_map: dict) -> str:
         )
 
     rules = read_context_bundle()
+    brief = generate_fix_brief(folder, notes, task_dir=item["task_dir"])
     return textwrap.dedent(
         f"""\
         Fix this Terminus/Harbor submission task based on platform feedback.
@@ -342,6 +344,8 @@ def build_agent_prompt(item: dict, notes: str, tasks_map: dict) -> str:
 
         ## Platform feedback (triage using docs/terminus-lessons-learned.md §0)
         {notes}
+
+        {brief}
 
         ## Required workflow
         1. Read the feedback. Ignore "AutoEval execution failed" boilerplate unless

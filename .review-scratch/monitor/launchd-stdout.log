@@ -642,3 +642,58 @@ git: task folders clean
 [2026-07-08T06:43:33Z] fix queue (3): repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
 [2026-07-08T06:43:33Z] skipped 1 — exclusions / green gates / already fixed
 [2026-07-08T06:43:33Z] AUTO_AGENT_FIX=0 — scan only (Telegram: run or run <task> to use Cursor)
+[2026-07-08T07:50:34Z] === 90-minute submission check start ===
+[2026-07-08T07:50:49Z] skip 66067373… state=EVALUATION_PENDING folder=reconcile-spring-boot-model-registry-with-h2-experiment
+[2026-07-08T07:51:00Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T07:51:00Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-08T07:51:05Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T07:51:05Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T07:51:05Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T07:51:05Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T07:51:05Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T07:51:05Z] state change: reconcile-spring-boot-model-registry-with-h2-experiment: new submission (EVALUATION_PENDING)
+[2026-07-08T07:51:06Z] status:
+States: ACCEPTED=1, EVALUATION_PENDING=1, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Changed since last run:
+  reconcile-spring-boot-model-registry-with-h2-experiment: new submission (EVALUATION_PENDING)
+Fix queue: repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+
+Docker: up
+stb: ok (installed)
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+git: task folders clean
+[2026-07-08T07:51:06Z] fix queue (3): repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-08T07:51:06Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-08T07:51:06Z] AUTO_AGENT_FIX=0 — scan only (Telegram: run or run <task> to use Cursor)
+[2026-07-08T08:09:12Z] === 90-minute submission check start ===
+[2026-07-08T08:09:27Z] skip 66067373… state=EVALUATION_PENDING folder=reconcile-spring-boot-model-registry-with-h2-experiment
+[2026-07-08T08:09:38Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T08:09:38Z] skip 0c176558… state=EVALUATION_PENDING folder=harden-php-api-defaults
+[2026-07-08T08:09:41Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T08:09:41Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T08:09:41Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T08:09:41Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T08:09:41Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T08:09:41Z] state change: harden-php-api-defaults: NEEDS_REVISION -> EVALUATION_PENDING
+[2026-07-08T08:09:42Z] status:
+States: ACCEPTED=1, EVALUATION_PENDING=2, NEEDS_REVISION=3, OFFERED=4, REVIEW_PENDING=1
+Changed since last run:
+  harden-php-api-defaults: NEEDS_REVISION -> EVALUATION_PENDING
+Fix queue: repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+
+Docker: up
+stb: ok (installed)
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+uncommitted task folders (2): harden-php-api-defaults, repair-express-trivia-worker
+[2026-07-08T08:09:42Z] fix queue (3): repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-08T08:09:42Z] Cursor agent model: composer-2.5
+[2026-07-08T08:09:42Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ❌ TRIVIAL - Requires at least HARD for python
+[2026-07-08T08:09:43Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-08T08:18:10Z] done repair-express-trivia-worker agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-08T08:18:10Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-08T08:18:11Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-08T08:22:02Z] done repair-java-trailswitch-graph-rules agent_status=finished state_after=EVALUATION_PENDING
+[2026-07-08T08:22:02Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — see platform feedback in monitor log
+[2026-07-08T08:22:02Z] triggering Composer fix for reproduce-java-aes-gcm-findings

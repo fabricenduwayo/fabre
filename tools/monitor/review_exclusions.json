@@ -5,10 +5,6 @@
       "folder_name": "reproduce-java-tls-waiver-findings",
       "reason": "manual_review_queue"
     },
-    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": {
-      "folder_name": "harden-php-api-defaults",
-      "reason": "manual_review_queue"
-    },
     "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": {
       "folder_name": "repair-cpp-setup-auditor",
       "reason": "manual_review_queue"

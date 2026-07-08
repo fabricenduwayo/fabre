@@ -95,6 +95,12 @@
     {"ruling_seq": 92, "incident": "INC-99", "op": "issue", "player": "bob", "delta": 5, "offset_player": "alice", "applies_after_floor": true, "issued_at": "2026-03-15T22:22:20Z"},
     {"ruling_seq": 93, "incident": "INC-101", "op": "issue", "player": "carol", "delta": 0, "correct_delta": 1, "applies_after_floor": true, "score_ceiling": 24, "correct_ceiling": 4, "issued_at": "2026-03-15T22:22:25Z"},
     {"ruling_seq": 94, "incident": "INC-102", "op": "issue", "player": "carol", "delta": 6, "applies_after_floor": true, "score_ceiling": 30, "offset_player": "dave", "offset_min_score": 25, "issued_at": "2026-03-15T22:22:30Z"},
-    {"ruling_seq": 95, "incident": "INC-103", "op": "issue", "player": "carol", "delta": 5, "offset_player": "dave", "applies_after_floor": true, "score_ceiling": 24, "issued_at": "2026-03-15T22:22:35Z"}
+    {"ruling_seq": 95, "incident": "INC-103", "op": "issue", "player": "carol", "delta": 5, "offset_player": "dave", "applies_after_floor": true, "score_ceiling": 24, "issued_at": "2026-03-15T22:22:35Z"},
+    {"ruling_seq": 96, "incident": "INC-107", "op": "issue", "player": "alice", "delta": -34, "issued_at": "2026-03-15T22:22:38Z"},
+    {"ruling_seq": 97, "incident": "INC-105", "op": "issue", "player": "bob", "delta": 12, "offset_player": "alice", "issued_at": "2026-03-15T22:22:40Z"},
+    {"ruling_seq": 98, "incident": "INC-106", "op": "issue", "player": "bob", "delta": 10, "offset_player": "alice", "issued_at": "2026-03-15T22:22:45Z"},
+    {"ruling_seq": 99, "incident": "INC-106", "op": "rescind", "player": "bob", "delta": 0, "issued_at": "2026-03-15T22:22:50Z"},
+    {"ruling_seq": 100, "incident": "INC-106", "op": "reinstate", "issued_at": "2026-03-15T22:22:55Z"},
+    {"ruling_seq": 101, "incident": "INC-108", "op": "issue", "player": "dave", "delta": 0, "correct_delta": 3, "offset_correct_player": "bob", "issued_at": "2026-03-15T22:23:00Z"}
   ]
 }
