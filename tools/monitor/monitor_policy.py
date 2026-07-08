@@ -16,7 +16,7 @@ def _env_bool(flag: str, default: str = "0") -> bool:
 
 def auto_agent_enabled() -> bool:
     """When false, scheduled runs scan/notify only — no Cursor agent unless you `run`."""
-    return _env_bool("AUTO_AGENT_FIX", "1")
+    return _env_bool("AUTO_AGENT_FIX", "0")
 
 
 def digest_mode() -> bool:

@@ -1,9 +1,10 @@
-"""Health checks: Docker, stb, bridge orphans, git hygiene."""
+"""Health checks: Docker, stb, bridge orphans, git hygiene, Cursor preflight."""
 
 from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -41,6 +42,39 @@ def stb_ok() -> tuple[bool, str]:
     if proc.returncode != 0:
         return False, "stb --help failed"
     return True, "installed"
+
+
+def cursor_app_running() -> bool:
+    """True when the Cursor desktop app process is running (macOS local SDK bridge)."""
+    if sys.platform != "darwin":
+        return True
+    try:
+        proc = subprocess.run(
+            ["pgrep", "-x", "Cursor"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return proc.returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def local_agent_ready() -> tuple[bool, str]:
+    """Fast preflight before cursor_sdk local bridge (avoids long ReadTimeout hangs)."""
+    if os.environ.get("REQUIRE_CURSOR_OPEN", "1").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }:
+        return True, ""
+    if cursor_app_running():
+        return True, ""
+    return False, (
+        "Cursor is not running. Open Cursor.app before agent fixes. "
+        "Scheduled scans do not need Cursor (set AUTO_AGENT_FIX=0)."
+    )
 
 
 def bridge_orphan_count(repo_root: Path) -> int:
@@ -92,9 +126,13 @@ def health_report(repo_root: Path, state: dict | None = None) -> str:
     stb_status, stb_detail = stb_ok()
     bridges = bridge_orphan_count(repo_root)
     dirty = git_dirty_task_folders(repo_root)
+    cursor = "running" if cursor_app_running() else "NOT RUNNING"
+    auto_fix = os.environ.get("AUTO_AGENT_FIX", "0").strip()
     lines = [
         f"Docker: {docker}",
         f"stb: {'ok' if stb_status else 'FAIL'} ({stb_detail})",
+        f"Cursor app: {cursor}",
+        f"AUTO_AGENT_FIX: {auto_fix}",
         f"cursor-sdk bridges: {bridges} orphan(s)",
     ]
     if state:

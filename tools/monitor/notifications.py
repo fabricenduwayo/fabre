@@ -29,8 +29,11 @@ def _escape_applescript(text: str) -> str:
 
 
 def notify_macos(title: str, message: str, *, subtitle: str = "") -> bool:
-    """Show a native macOS notification (works when user session is active)."""
-    if not _enabled("NOTIFY_MACOS"):
+    """Show a native macOS notification via osascript (can trigger TCC prompts).
+
+    Disabled by default — use Telegram/ntfy instead to avoid macOS privacy dialogs.
+    """
+    if not _enabled("NOTIFY_MACOS", "0"):
         return False
     title_e = _escape_applescript(title[:120])
     msg_e = _escape_applescript(message[:250])

@@ -53,7 +53,7 @@ from feedback_gates import green_eval_skip_reason  # noqa: E402
 from monitor_prompt import generate_fix_brief  # noqa: E402
 from monitor_env import load_env_file  # noqa: E402
 from monitor_exclusions import load_review_exclusions, sync_review_exclusions  # noqa: E402
-from monitor_health import docker_ready, git_dirty_task_folders, health_report  # noqa: E402
+from monitor_health import docker_ready, git_dirty_task_folders, health_report, local_agent_ready  # noqa: E402
 from monitor_agent import assert_cursor_sdk_only, resolve_cursor_model  # noqa: E402
 from monitor_messages import build_run_report_message  # noqa: E402
 from monitor_notify import notify_event  # noqa: E402
@@ -398,6 +398,10 @@ def run_cursor_agent(prompt: str, *, dry_run: bool) -> tuple[str, str]:
             "CURSOR_API_KEY not set — copy tools/monitor/.env.example to tools/monitor/.env"
         )
 
+    ready, reason = local_agent_ready()
+    if not ready:
+        raise RuntimeError(reason)
+
     from cursor_sdk import Agent, AgentOptions, CursorAgentError, LocalAgentOptions
 
     try:
@@ -526,6 +530,13 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> t
             subtitle="resubmit OK",
         )
         record_daily_event(state, "resubmitted", folder=folder)
+        from monitor_git import commit_and_push_repo
+
+        committed, git_msg = commit_and_push_repo(REPO_ROOT, folder, changes)
+        if committed:
+            log(f"git: committed and pushed — {git_msg}")
+        elif git_msg != "nothing to commit":
+            log(f"git: {git_msg}")
     else:
         notify_event(
             "fix_finished",
@@ -873,6 +884,19 @@ def main() -> int:
         _finish_run(state)
         return 1
     log(f"Cursor agent model: {composer_model}")
+    ready, cursor_reason = local_agent_ready()
+    if not ready and not args.dry_run:
+        log(f"Cursor preflight: {cursor_reason}")
+        _update_run_report(agent_blocked=cursor_reason)
+        notify_event(
+            "error",
+            "Snorkel monitor: Cursor not ready",
+            cursor_reason,
+            force=True,
+        )
+        _finish_run(state)
+        return 0
+
     fixed = 0
     oracle_skipped: list[tuple[str, str]] = []
     run_errors: list[str] = []

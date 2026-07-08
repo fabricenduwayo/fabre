@@ -21,10 +21,13 @@ cp .env.example .env    # if needed — fill CURSOR_API_KEY + Telegram
 ## Token savings (recommended defaults)
 
 ```bash
-AUTO_AGENT_FIX=0          # scheduled runs = scan + notify only
+AUTO_AGENT_FIX=0          # scheduled runs = scan + notify only (no macOS privacy prompts)
+NOTIFY_MACOS=0            # use Telegram only — osascript banners trigger TCC dialogs
+REQUIRE_CURSOR_OPEN=1     # fast-fail if Cursor.app is closed (avoids 30m bridge timeouts)
+AUTO_GIT_COMMIT=1         # commit + push after successful resubmit
 ORACLE_PRECHECK=1         # run harbor oracle before Cursor; skip agent only when gates are green
 MAX_FIXES_PER_RUN=1       # scheduled runs fix at most 1 task per cycle
-MAX_FIXES_PER_FORCE_RUN=8 # Telegram `run` fixes up to 8 tasks per cycle
+MAX_FIXES_PER_FORCE_RUN=3 # Telegram `run` fixes up to 3 tasks per cycle
 MAX_FIXES_PER_DAY=8
 MAX_AGENT_MINUTES_PER_DAY=180
 ```
@@ -34,7 +37,16 @@ Trigger Cursor only when you want it:
 - Telegram: `run` or `run repair-flask-signalbox-configs`
 - CLI: `./terminus-control.sh run`
 
-Set `AUTO_AGENT_FIX=1` for fully unattended agent fixes on schedule.
+Set `AUTO_AGENT_FIX=1` for fully unattended agent fixes on schedule (requires Cursor.app open and a one-time macOS Allow for python ↔ Cursor).
+
+## macOS privacy prompt
+
+If you see **"python3.13 would like to access data from other apps"**:
+
+- It comes from the **Cursor SDK local bridge** (talks to Cursor.app) or `osascript` banners.
+- **Recommended:** keep `AUTO_AGENT_FIX=0` and `NOTIFY_MACOS=0` — scheduled runs never touch the bridge.
+- Trigger fixes manually: Telegram `run` or `./terminus-control.sh run` with **Cursor open**.
+- Click **Allow** once if you do run local agents; set `REQUIRE_CURSOR_OPEN=1` so closed-Cursor runs fail fast instead of timing out.
 
 ## Telegram commands
 
