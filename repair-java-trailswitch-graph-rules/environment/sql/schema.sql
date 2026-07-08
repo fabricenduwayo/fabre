@@ -27,9 +27,4 @@ CREATE TABLE lock_groups (
     PRIMARY KEY (group_id, edge_id)
 );
 
-CREATE TABLE policy_expectations (
-    check_id TEXT PRIMARY KEY,
-    description TEXT NOT NULL
-);
-
-GRANT SELECT ON stations, edges, route_rules, lock_groups, policy_expectations TO trailswitch;
+GRANT SELECT ON stations, edges, route_rules, lock_groups TO trailswitch;

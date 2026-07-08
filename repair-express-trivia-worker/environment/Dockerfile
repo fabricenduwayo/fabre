@@ -1,17 +1,16 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-02-r38
+# platform-revision: 2026-07-07-r11
 
 WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl \
         ca-certificates \
+        nodejs \
+        npm \
         procps \
         tmux \
         asciinema \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
     && npm install -g pnpm@9.15.4 \
     && rm -rf /var/lib/apt/lists/*
 

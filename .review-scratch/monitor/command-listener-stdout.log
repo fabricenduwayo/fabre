@@ -1,0 +1,4 @@
+[2026-07-08T01:50:01Z] [terminus-control] command listener started (poll every 20s)
+[2026-07-08T01:50:01Z] [terminus-control] repo: /Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-08T01:50:01Z] [terminus-control] Telegram commands: stop | start | status | run
+[2026-07-08T01:50:02Z] [terminus-control] command from Telegram: start (update 791742627)

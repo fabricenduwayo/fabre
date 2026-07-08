@@ -15,8 +15,6 @@ function loadRulings() {
   }
 }
 
-const RULINGS = loadRulings();
-
 /** @type {Map<string, { body: string, applied: boolean }>} */
 const idempotency = new Map();
 
@@ -196,7 +194,7 @@ app.get("/v1/standings", (_req, res) => {
 });
 
 app.get("/v1/rulings", (_req, res) => {
-  res.json({ match: MATCH_ID, rulings: RULINGS });
+  res.json({ match: MATCH_ID, rulings: loadRulings() });
 });
 
 app.post("/v1/ingest", (req, res) => {

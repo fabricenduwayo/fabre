@@ -14,14 +14,14 @@ export MONITOR_DIR
 import os
 import sys
 sys.path.insert(0, os.environ.get("MONITOR_DIR", "."))
-from notifications import notify_all, notify_imessage, notify_ntfy, notify_macos
+from notifications import notify_all, notify_macos, notify_ntfy, notify_telegram
 
 title = "Snorkel monitor test"
-msg = "If you see this on your phone, phone notifications work."
+msg = "If you see this on your phone, notifications work."
 
-notify_macos(title, msg, subtitle="Mac only")
-notify_all(title, msg, subtitle="all channels")
+notify_macos(title, msg, subtitle="test")
+notify_all(title, msg, subtitle="test")
 print("macOS:", os.environ.get("NOTIFY_MACOS", "1"))
-print("iMessage:", os.environ.get("NOTIFY_IMESSAGE", "0"), "→", os.environ.get("IMESSAGE_TO", "(unset)"))
-print("ntfy:", os.environ.get("NOTIFY_NTFY", "0"), "→", os.environ.get("NTFY_TOPIC", "(unset)"))
+print("Telegram:", os.environ.get("NOTIFY_TELEGRAM", "0"))
+print("ntfy:", os.environ.get("NOTIFY_NTFY", "0"))
 PY

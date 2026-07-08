@@ -6,21 +6,22 @@ it from source and SQL only — do not rely on manual playthroughs.
 
 ## Graph model
 
-- `stations` lists node ids (`A` depot through `E` arrival).
-- `edges` are directed rails. `requires_sw1` / `requires_sw2` list the switch
-  positions that must be set for the edge to be traversable (`NULL` means any).
-- `route_rules` govern edge locks. Each row has `rule_action` of `lock` or `clear`.
-  Lock positions use conjunction: every non-null `lock_sw*` must match the active
-  lineup; a NULL `lock_sw1` or `lock_sw2` means ignore that switch. Rules on the
-  same edge are ordered by ascending `rule_priority`; walk them in that order.
-  Skip rules that do not match and keep evaluating later rules on the same edge.
-  Apply the first matching rule only. A matching `lock` rule blocks the edge; a
-  matching `clear` rule leaves it open and stops further rules on that edge.
-- `lock_groups` tie edges together. After route rules run on every edge, if any edge
-  in a group is locked, lock every edge listed for that same `group_id`. Each edge
-  still has its own ascending route-rule chain before relay runs. Relay must not
-  run until route rules finish, and `loadLockGroups` must keep every edge id for a
-  group — do not drop members when building the map.
+- `stations`, `edges`, `route_rules`, and `lock_groups` define the railway graph and
+  lock semantics. The authoritative rows live in `/app/sql/schema.sql` and
+  `/app/sql/seed.sql`.
+- `GraphPathRepository` must bind station ids as SQL parameters — do not concatenate
+  them into query strings.
+- Path planning on the cyclic graph (including the `E`→`C` return edge) must track
+  visited nodes so search terminates with `cycle_guard` true.
+- `SwitchRuleHandler` must implement route-lock semantics consistent with the
+  `route_rules` and `lock_groups` seed rows and this contract.
+- For each edge, evaluate that edge's `route_rules` rows in **ascending**
+  `rule_priority` order. The **first** row on the edge whose switch-position
+  predicates match the request wins for that edge; later rows on the same edge
+  are not consulted.
+- A winning row with `rule_action` `clear` opens the edge. A winning row with
+  `rule_action` `lock` locks it. Both `lock_sw1` and `lock_sw2` must match when
+  present; a NULL column is a wildcard for that switch.
 
 ## API shape (keep intact)
 

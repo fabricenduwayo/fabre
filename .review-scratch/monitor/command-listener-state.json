@@ -1,0 +1,9 @@
+{
+  "telegram_update_offset": 791742628,
+  "last_command": {
+    "command": "start",
+    "at": "2026-07-08T01:50:21.327453+00:00",
+    "reply": "OK: monitor already running (re-kicked)\nOK: kick fix \u2014 [2026-07-08T01:50:20Z] no auto-fix candidates after exclusions and feedback gates",
+    "source": "telegram"
+  }
+}

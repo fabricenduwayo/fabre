@@ -3,12 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.snorkel.terminus-imessage-control</string>
+    <string>com.snorkel.terminus-command-listener</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/open</string>
-        <string>-W</string>
-        <string>__LISTENER_APP__</string>
+        <string>__PYTHON_REAL__</string>
+        <string>__MONITOR_DIR__/command_listener.py</string>
     </array>
     <key>WorkingDirectory</key>
     <string>__REPO_ROOT__</string>
@@ -16,18 +15,28 @@
     <true/>
     <key>KeepAlive</key>
     <true/>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
     <key>StandardOutPath</key>
-    <string>__REPO_ROOT__/.review-scratch/monitor/imessage-listener-stdout.log</string>
+    <string>__REPO_ROOT__/.review-scratch/monitor/command-listener-stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>__REPO_ROOT__/.review-scratch/monitor/imessage-listener-stderr.log</string>
+    <string>__REPO_ROOT__/.review-scratch/monitor/command-listener-stderr.log</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
         <key>REPO_ROOT</key>
         <string>__REPO_ROOT__</string>
+        <key>MONITOR_DIR</key>
+        <string>__MONITOR_DIR__</string>
+        <key>MONITOR_ENV_FILE</key>
+        <string>__MONITOR_ENV__</string>
         <key>HOME</key>
         <string>__HOME__</string>
+        <key>PYTHONPATH</key>
+        <string>__VENV_SITE__</string>
+        <key>VIRTUAL_ENV</key>
+        <string>__VENV__</string>
     </dict>
 </dict>
 </plist>

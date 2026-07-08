@@ -34,13 +34,11 @@ TASKS = {
         "zip_name": "harden-php-api-defaults.zip",
         "difficulty": (
             "Agents must reconcile a broken PHP API against a long hardening standard "
-            "whose body text is superseded by Appendix G amendments, without the "
-            "instruction enumerating each amendment inline. The staging code keeps "
-            "sticky CORS grants, cached bootstrap/token reads, and a silent audit-schema "
-            "defect across one long-lived process while the verifier reseeds the on-disk "
-            "ledger between randomized lifecycles. Agents must discover digest-based token "
-            "storage, bootstrap ordering, exact-origin CORS, and SQL NULL origin semantics "
-            "from the Standard."
+            "whose body text is superseded by Appendix G amendments. The instruction "
+            "names the amended controls but leaves exact header shapes, status codes, "
+            "and denial reasons in /app/docs/standard.md. Sticky in-process CORS/"
+            "bootstrap caches and a silent audit-schema defect still trip agents "
+            "across randomized lifecycles."
         ),
         "solution": (
             "Read /app/docs/standard.md including Appendix G, then patch config.php, "
@@ -64,27 +62,30 @@ TASKS = {
         "folder": Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings"),
         "zip_name": "reproduce-java-aes-gcm-findings.zip",
         "difficulty": (
-            "This task is hard because the rules you need are buried in a long forensic "
-            "report, not in a summary table. The agent extends a Java pipeline that must "
-            "scope parsing to normative appendices — withdrawn errata after Appendix D "
-            "repeats override phrasing with wrong hex values. Appendix B indexes event "
-            "types only; correlate must walk SQLite in recorded_at order with "
-            "rotation-replacement precedence. The ledger is adversarial: triple rotations "
-            "where only the latest replacement counts, rotation to a lower version, stale "
-            "assigns after rotations, DB-only nonce overrides, and report overrides that "
-            "beat later SQLite rows."
+            "This task is hard because the rules you need are buried in a long "
+            "adversarial forensic report, not in the milestone briefs. The normative "
+            "voiding, ordering, and scoping semantics live only in Appendix C "
+            "subsections C.3-C.5; narrative padding elsewhere claims recorded_at "
+            "ordering while the binding rule is effective_at, and withdrawn errata "
+            "after Appendix D repeat override phrasing with wrong hex values. The "
+            "M1 rules stage ships nearly complete but with errata-filtering bugs agents "
+            "must repair before correlating the adversarial ledger: triple rotations where only the latest-effective replacement counts, "
+            "rotation to a lower version, rescission chains, amendment/replacement/"
+            "revocation nonce chains paired by supersedes_nonce_hex, key-version "
+            "scoping after rotation, and report overrides that beat later SQLite rows."
         ),
         "solution": (
-            "Extend the three-stage Java CLI under com.mariner.forensic.Main. The rules "
-            "stage scopes parsing to normative Appendix C and D, extracts precedence and "
-            "three report overrides, anchors review_date on Findings overview. correlate "
-            "applies latest rotation_replacement, report overrides before DB rows, derived "
-            "nonces otherwise. decrypt parses GIF MRNR/CRYPTO1 blocks and verifies "
-            "AES-256-GCM with frame_id as AAD."
+            "Extend the three-stage Java CLI under com.mariner.forensic.Main. Repair the "
+            "rules stage to scope parsing to normative Appendix C and D, extract precedence and "
+            "five report overrides, anchors review_date on Findings overview. correlate "
+            "applies the Appendix C.3-C.5 semantics: effective_at ordering, rescission "
+            "voiding, override chain pairing, key-version scoping, report overrides "
+            "before DB rows, derived nonces otherwise. decrypt parses GIF MRNR/CRYPTO1 "
+            "blocks and verifies AES-256-GCM with frame_id as AAD."
         ),
         "verification": (
             "Each milestone runs the compiled Main subcommand and checks JSON against "
-            "schema plus hidden expected files. M1 checks precedence, three Appendix D "
+            "schema plus hidden expected files. M1 checks precedence, five Appendix D "
             "overrides without withdrawn errata hex, review_date. M2 checks JDBC "
             "correlation with report-then-DB-then-derived nonce precedence, "
             "triple-rotation frm-011, report-over-DB frm-010, latest DB among "
@@ -105,7 +106,10 @@ TASKS = {
             "a violation; a covered violation whose waiver is comfortably in date falls "
             "through to the hygiene reason while still counting as applied; and a lapsing "
             "waiver that excuses no violation pulls nothing. A naive Appendix G reading "
-            "mislabels several. Each milestone builds on the prior Java pipeline stage."
+            "mislabels several. Each milestone builds on the prior Java pipeline stage; "
+            "the starter scaffold is near-complete with subtle defects (wrong probe "
+            "selection, scope matching, and precedence ordering) that agents must find "
+            "by reading the report and schemas rather than rewriting from scratch."
         ),
         "solution": (
             "Extend the provided Java CLI under com.mariner.audit.Main. decode parses "

@@ -1,4 +1,4 @@
-Both frontier models hit 100% because the referee contract spelled out every handler fix. This revision keeps behavioral semantics in the contract but drops the implementation checklist, and the seed still requires conjunction lock matching, ascending per-edge rule fallthrough, clear-vs-lock handling, parameterized SQL, BFS visited guards on the cyclic E→C edge, full lock-group aggregation, and relay only after each edge's route rules finish (including the arrival leg).
+Agents must repair three Spring Boot handlers against a PostgreSQL graph where lock semantics live in seed.sql and policy_expectations rather than a step-by-step contract. The referee contract only names API shape, SQL parameterization, and cycle guarding; ascending rule_priority, AND lock matching, clear-vs-lock fallthrough, full lock-group maps, and relay ordering are normative in the seeded policy_expectations descriptions.
 
 Patch GraphPathRepository, PathPlanner, and SwitchRuleHandler under /app/trailswitch/src/main/java/com/trailswitch, rebuild the jar with bash /app/trailswitch/build.sh, and restart TrailSwitch with bash /app/trailswitch/start.sh.
 

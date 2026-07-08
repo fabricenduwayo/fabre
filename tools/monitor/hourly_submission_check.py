@@ -14,12 +14,14 @@ checks) are never auto-fixed — those only need manual UI field edits
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import subprocess
 import sys
 import textwrap
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,7 +29,6 @@ UTC = timezone.utc
 
 MONITOR_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(MONITOR_DIR))
-REPO_ROOT = Path(os.environ.get("REPO_ROOT", MONITOR_DIR.parent.parent)).resolve()
 STB_SITE = Path(
     os.environ.get(
         "STB_SITE",
@@ -45,19 +46,45 @@ from snorkelai_stb.submission_utils import (  # noqa: E402
 
 from notifications import (  # noqa: E402
     git_diff_stat,
-    notify_all,
     parse_agent_report,
     write_run_report,
 )
 from feedback_gates import green_eval_skip_reason  # noqa: E402
+from monitor_env import load_env_file  # noqa: E402
+from monitor_exclusions import load_review_exclusions, sync_review_exclusions  # noqa: E402
+from monitor_health import docker_ready, git_dirty_task_folders, health_report  # noqa: E402
+from monitor_notify import begin_digest, end_digest, notify_event  # noqa: E402
+from monitor_oracle import oracle_passes  # noqa: E402
+from monitor_policy import (  # noqa: E402
+    auto_agent_enabled,
+    can_run_agent_today,
+    clear_skip_once,
+    is_paused,
+    pause_remaining_sec,
+    record_daily_event,
+    record_fix,
+    skip_once_folders,
+)
+from monitor_state import (  # noqa: E402
+    REPO_ROOT,
+    STATE_DIR,
+    STATE_FILE,
+    TASKS_FILE,
+    load_state,
+    save_state,
+)
+from monitor_summary import (  # noqa: E402
+    build_daily_summary,
+    extract_difficulty_line,
+    mark_daily_summary_sent,
+    should_send_daily_summary,
+    state_change_alerts,
+)
+from monitor_tasks import sync_tasks_json  # noqa: E402
 
 PROJECT_ID = os.environ.get(
     "TERMINUS_PROJECT_ID", "bfe79c33-8ab0-4061-9849-08d3207c9927"
 )
-STATE_DIR = REPO_ROOT / ".review-scratch" / "monitor"
-STATE_FILE = STATE_DIR / "state.json"
-EXCLUSIONS_FILE = MONITOR_DIR / "review_exclusions.json"
-TASKS_FILE = MONITOR_DIR / "tasks.json"
 RULES_GLOBS = [
     REPO_ROOT / ".cursor" / "rules" / "terminus.mdc",
     REPO_ROOT / ".cursor" / "rules" / "final-check.mdc",
@@ -82,30 +109,8 @@ def log(msg: str) -> None:
         fh.write(line + "\n")
 
 
-def load_env_file() -> None:
-    env_path = MONITOR_DIR / ".env"
-    if not env_path.exists():
-        return
-    for raw in env_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip())
-
-
-def load_state() -> dict:
-    if not STATE_FILE.exists():
-        return {"runs": {}, "last_check": None}
-    return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-
-
-def save_state(state: dict) -> None:
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
-
-
 def load_tasks_map() -> dict:
+    sync_tasks_json(REPO_ROOT, TASKS_FILE)
     if not TASKS_FILE.exists():
         return {}
     return json.loads(TASKS_FILE.read_text(encoding="utf-8"))
@@ -119,20 +124,6 @@ def read_context_bundle() -> str:
     if not parts:
         raise RuntimeError("No rules/docs files found — cannot run unattended fixes")
     return "\n\n---\n\n".join(parts)
-
-
-def docker_ready() -> bool:
-    try:
-        proc = subprocess.run(
-            ["docker", "info"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        return proc.returncode == 0
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return False
 
 
 def fetch_feedback_notes(submission_id: str) -> str:
@@ -163,48 +154,6 @@ def fetch_feedback_notes(submission_id: str) -> str:
 
 def feedback_hash(notes: str) -> str:
     return hashlib.sha256(notes.encode()).hexdigest()[:16]
-
-
-def load_review_exclusions() -> dict[str, dict]:
-    if not EXCLUSIONS_FILE.exists():
-        return {}
-    data = json.loads(EXCLUSIONS_FILE.read_text(encoding="utf-8"))
-    return dict(data.get("submission_ids") or {})
-
-
-def save_review_exclusions(exclusions: dict[str, dict]) -> None:
-    payload = {
-        "_comment": (
-            "Submissions excluded from auto-fix. REVIEW_PENDING tasks are added "
-            "automatically. Delete an entry to re-enable auto-fix after manual review."
-        ),
-        "submission_ids": exclusions,
-    }
-    EXCLUSIONS_FILE.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-
-
-def sync_review_exclusions(all_subs: list[dict]) -> dict[str, dict]:
-    """Persist REVIEW_PENDING tasks so they stay excluded if bounced to NEEDS_REVISION."""
-    exclusions = load_review_exclusions()
-    changed = False
-    now = datetime.now(UTC).isoformat()
-    for sub in all_subs:
-        sid = sub["submission_id"]
-        state = sub.get("assignment_state", "")
-        folder = (sub.get("folder_name") or "").strip()
-        if state != MANUAL_REVIEW_STATE:
-            continue
-        if sid not in exclusions:
-            exclusions[sid] = {
-                "folder_name": folder,
-                "reason": "REVIEW_PENDING",
-                "added_at": now,
-            }
-            changed = True
-            log(f"excluded {sid[:8]}… ({folder or '?'}) — REVIEW_PENDING manual review")
-    if changed:
-        save_review_exclusions(exclusions)
-    return exclusions
 
 
 def is_excluded(sid: str, folder: str, exclusions: dict[str, dict]) -> str | None:
@@ -265,6 +214,7 @@ def list_submission_queue(
     fix_queue: list[dict] = []
     manual_ui: list[dict] = []
     skipped: list[dict] = []
+    skip_once = skip_once_folders(state)
 
     for sub in subs:
         sid = sub["submission_id"]
@@ -294,6 +244,11 @@ def list_submission_queue(
         task_dir = REPO_ROOT / folder
         if not task_dir.is_dir():
             log(f"skip {sid[:8]}… folder missing on disk: {folder}")
+            continue
+
+        if folder in skip_once:
+            log(f"skip {folder} — skip-once (Telegram skip command)")
+            skipped.append({"submission_id": sid, "folder_name": folder, "reason": "skip_once"})
             continue
 
         try:
@@ -415,6 +370,12 @@ def build_agent_prompt(item: dict, notes: str, tasks_map: dict) -> str:
     )
 
 
+def cleanup_cursor_bridges() -> None:
+    """Stop orphaned cursor-sdk-bridge processes from finished agent runs."""
+    pattern = f"cursor-sdk-bridge.js.*{REPO_ROOT}"
+    subprocess.run(["pkill", "-f", pattern], capture_output=True, check=False)
+
+
 def run_cursor_agent(prompt: str, *, dry_run: bool) -> tuple[str, str]:
     model = os.environ.get("MONITOR_MODEL", "composer-2.5")
     if dry_run:
@@ -443,6 +404,8 @@ def run_cursor_agent(prompt: str, *, dry_run: bool) -> tuple[str, str]:
         )
     except CursorAgentError as exc:
         raise RuntimeError(f"Cursor agent startup failed: {exc.message}") from exc
+    finally:
+        cleanup_cursor_bridges()
 
     if result.status == "error":
         raise RuntimeError(f"Cursor agent run failed: {getattr(result, 'result', '')}")
@@ -473,26 +436,44 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
     notes = item.get("feedback_notes") or fetch_feedback_notes(sid)
     fhash = item.get("feedback_hash") or feedback_hash(notes)
     issue = summarize_feedback_issue(notes)
+
+    if not dry_run and oracle_passes(folder, repo_root=REPO_ROOT):
+        log(f"skip {folder} — oracle already 1.0 (saved Cursor tokens)")
+        notify_event(
+            "oracle_skip",
+            "Snorkel monitor: oracle OK",
+            f"{folder} already passes harbor oracle — no Cursor agent run.\n"
+            "Finish resubmit/UI if platform still shows NEEDS_REVISION.",
+            subtitle=folder,
+        )
+        record_daily_event(state, "oracle_skip", folder=folder)
+        save_state(state)
+        return False
+
     log(f"fixing {folder} ({sid[:8]}…) — {issue}")
-    notify_all(
+    notify_event(
+        "fix_started",
         "Snorkel monitor: fix started",
         f"Composer is fixing {folder}.\nIssue: {issue}",
         subtitle=folder,
-        slack=f":hammer_and_wrench: *Fix started* — `{folder}`\nIssue: {issue}",
     )
 
     prompt = build_agent_prompt(item, notes, tasks_map)
     log(f"triggering Composer fix for {folder}")
+    agent_start = time.monotonic()
     try:
         status, summary = run_cursor_agent(prompt, dry_run=dry_run)
     except Exception as exc:
-        notify_all(
+        notify_event(
+            "fix_failed",
             "Snorkel monitor: fix failed",
             f"{folder}: {exc}",
             subtitle="agent error",
-            slack=f":x: *Fix failed* — `{folder}`\n{exc}",
+            force=True,
         )
+        record_daily_event(state, "error", folder=folder, detail=str(exc)[:200])
         raise
+    agent_minutes = (time.monotonic() - agent_start) / 60.0
 
     diff_stat = git_diff_stat(REPO_ROOT, folder) if not dry_run else "(dry run)"
     parsed = parse_agent_report(summary)
@@ -523,13 +504,15 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
     report_path = write_run_report(STATE_DIR, report)
 
     if dry_run:
-        notify_all(
+        notify_event(
+            "dry_run",
             "Snorkel monitor: dry run",
             f"Would fix {folder}. Prompt saved.",
             subtitle=folder,
         )
     elif resubmitted or new_state == "EVALUATION_PENDING":
-        notify_all(
+        notify_event(
+            "resubmitted",
             "Snorkel monitor: resubmitted",
             (
                 f"{folder} → {new_state or 'EVALUATION_PENDING'}\n"
@@ -537,15 +520,11 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
                 f"Changes: {changes[:180]}"
             ),
             subtitle="resubmit OK",
-            slack=(
-                f":white_check_mark: *Resubmitted* — `{folder}`\n"
-                f"State: `{new_state}` | Oracle: `{oracle}` | Checks: `{static}`\n"
-                f"Changes: {changes}\n"
-                f"Diff:\n```\n{diff_stat[:1500]}\n```"
-            ),
         )
+        record_daily_event(state, "resubmitted", folder=folder)
     else:
-        notify_all(
+        notify_event(
+            "fix_finished",
             "Snorkel monitor: fix finished",
             (
                 f"{folder} — agent done but verify resubmit.\n"
@@ -553,12 +532,10 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> b
                 f"Changes: {changes[:180]}"
             ),
             subtitle="review needed",
-            slack=(
-                f":warning: *Fix finished — verify* `{folder}`\n"
-                f"State: `{new_state}` | Oracle: `{oracle}` | Checks: `{static}`\n"
-                f"Changes: {changes}"
-            ),
         )
+
+    if not dry_run:
+        record_fix(state, folder, agent_minutes=agent_minutes)
 
     state.setdefault("runs", {})[sid] = {
         "folder_name": folder,
@@ -630,6 +607,52 @@ def build_status_text(
     return "\n".join(lines)
 
 
+def _acquire_run_lock() -> object | None:
+    """Prevent overlapping hourly runs (e.g. RunAtLoad + manual kickstart)."""
+    lock_path = STATE_DIR / ".hourly.lock"
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    fh = lock_path.open("w", encoding="utf-8")
+    try:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        fh.close()
+        return None
+    fh.write(f"{os.getpid()}\n")
+    fh.flush()
+    return fh
+
+
+def _finish_run(state: dict) -> None:
+    """Daily summary, digest flush, git warning, clear skip-once."""
+    dirty = git_dirty_task_folders(REPO_ROOT)
+    warn_at = int(os.environ.get("GIT_WARN_MIN_FOLDERS", "3"))
+    if len(dirty) >= warn_at:
+        notify_event(
+            "git_warning",
+            "Snorkel monitor: git hygiene",
+            f"{len(dirty)} task folders have uncommitted changes:\n"
+            + ", ".join(dirty[:8]),
+            force=True,
+        )
+    if should_send_daily_summary(state):
+        summary = build_daily_summary(state)
+        notify_event(
+            "daily_summary",
+            "Snorkel daily summary",
+            summary,
+            force=True,
+        )
+        mark_daily_summary_sent(state)
+    digest = end_digest()
+    if digest:
+        from notifications import notify_all
+
+        notify_all("Snorkel monitor digest", digest, subtitle="90-min run")
+    if state.get("skip_once_folders"):
+        clear_skip_once(state)
+    save_state(state)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Snorkel submission monitor (every 90 minutes)")
     parser.add_argument("--dry-run", action="store_true", help="Check only; do not call Cursor")
@@ -644,13 +667,37 @@ def main() -> int:
         action="store_true",
         help="Ignore fix cooldown (still respects exclusions and green-gate skip)",
     )
+    parser.add_argument(
+        "--folder",
+        type=str,
+        default="",
+        help="Only consider this task folder name",
+    )
     args = parser.parse_args()
 
     load_env_file()
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+    lock = _acquire_run_lock()
+    if lock is None:
+        log("SKIP — another hourly run is already in progress")
+        return 0
+
+    begin_digest()
     state = load_state()
     state["last_check"] = datetime.now(UTC).isoformat()
     save_state(state)
+
+    if is_paused(state):
+        remain = pause_remaining_sec(state)
+        log(f"paused — {remain}s remaining")
+        notify_event(
+            "paused",
+            "Snorkel monitor: paused",
+            f"No fixes until pause ends ({remain // 60}m left).\nSend resume on Telegram.",
+            force=True,
+        )
+        _finish_run(state)
+        return 0
 
     log("=== 90-minute submission check start ===")
     docker_ok = docker_ready()
@@ -660,22 +707,46 @@ def main() -> int:
     try:
         all_subs = list_submission_ids(project_id=PROJECT_ID)
         fetch_folder_names(all_subs, fetch_all=True)
-        exclusions = sync_review_exclusions(all_subs)
+        exclusions = sync_review_exclusions(all_subs, log_fn=log)
         fix_queue, manual_ui, skipped = list_submission_queue(
             exclusions, state, all_subs, dry_run=args.dry_run
         )
+        if args.folder.strip():
+            needle = args.folder.strip().lower()
+            fix_queue = [
+                i
+                for i in fix_queue
+                if i["folder_name"].lower() == needle or needle in i["folder_name"].lower()
+            ]
     except Exception as exc:
         log(f"ERROR listing submissions: {exc}")
-        notify_all(
+        notify_event(
+            "error",
             "Snorkel monitor: error",
             f"Could not list submissions: {exc}",
             subtitle="90-min check",
+            force=True,
         )
+        _finish_run(state)
         return 1
 
     changes = detect_state_changes(state, all_subs)
     for change in changes:
         log(f"state change: {change}")
+    for alert in state_change_alerts(changes):
+        notify_event("state_alert", "Snorkel monitor: state change", alert, force=True)
+        if "ACCEPTED" in alert:
+            record_daily_event(state, "accepted", folder=alert.split(":")[-1].strip())
+
+    for item in fix_queue:
+        diff_line = extract_difficulty_line(item.get("feedback_notes") or "")
+        if diff_line:
+            notify_event(
+                "difficulty_alert",
+                f"Snorkel monitor: {item['folder_name']}",
+                diff_line,
+                force=True,
+            )
 
     state["last_queue"] = {
         "fix_queue": [i["folder_name"] for i in fix_queue],
@@ -685,10 +756,11 @@ def main() -> int:
     }
     save_state(state)
 
-    # Status text before any work starts — every run, even when idle.
     status_text = build_status_text(all_subs, fix_queue, manual_ui, changes)
+    status_text += "\n\n" + health_report(REPO_ROOT, state)
     log("status:\n" + status_text)
-    notify_all(
+    notify_event(
+        "status",
         "Snorkel monitor: status",
         status_text,
         subtitle="90-min check",
@@ -698,6 +770,7 @@ def main() -> int:
         log("no auto-fix candidates after exclusions and feedback gates")
         if skipped:
             log(f"skipped {len(skipped)} item(s) — see state.last_queue")
+        _finish_run(state)
         return 0
 
     log(f"fix queue ({len(fix_queue)}): {', '.join(i['folder_name'] for i in fix_queue)}")
@@ -705,23 +778,50 @@ def main() -> int:
         log(f"skipped {len(skipped)} — exclusions / green gates / already fixed")
 
     if not docker_ok and not args.dry_run:
-        notify_all(
+        notify_event(
+            "waiting_docker",
             "Snorkel monitor: waiting for Docker",
             f"{len(fix_queue)} task(s) need fixes but Docker is down. "
-            "Start Docker Desktop; will retry in 2h.",
+            "Start Docker Desktop; will retry next run.",
             subtitle="blocked",
+            force=True,
         )
+        _finish_run(state)
         return 0
 
     if cooldown_active(state) and not args.force and not args.dry_run:
         remain = cooldown_remaining_sec(state)
         nxt = fix_queue[0]["folder_name"]
         log(f"cooldown active ({remain}s left) — next up: {nxt}")
-        notify_all(
+        notify_event(
+            "queued",
             "Snorkel monitor: queued",
             f"Next fix in {remain // 60}m: {nxt}\nQueue: {', '.join(i['folder_name'] for i in fix_queue[:4])}",
             subtitle="cooldown",
         )
+        _finish_run(state)
+        return 0
+
+    agent_ok, cap_reason = can_run_agent_today(state)
+    if not agent_ok and not args.dry_run:
+        log(f"daily cap: {cap_reason}")
+        notify_event(
+            "error",
+            "Snorkel monitor: daily cap",
+            cap_reason,
+            force=True,
+        )
+        _finish_run(state)
+        return 0
+
+    if (
+        not auto_agent_enabled()
+        and not args.force
+        and not args.folder.strip()
+        and not args.dry_run
+    ):
+        log("AUTO_AGENT_FIX=0 — scan only (Telegram: run or run <task> to use Cursor)")
+        _finish_run(state)
         return 0
 
     tasks_map = load_tasks_map()
@@ -735,10 +835,12 @@ def main() -> int:
                 fixed += 1
         except Exception as exc:
             log(f"ERROR on {item['folder_name']}: {exc}")
-            notify_all(
+            notify_event(
+                "error",
                 "Snorkel monitor: error",
                 f"{item['folder_name']}: {exc}",
                 subtitle="90-min check",
+                force=True,
             )
             sid = item["submission_id"]
             state.setdefault("runs", {})[sid] = {
@@ -760,11 +862,13 @@ def main() -> int:
             log(f"next queued task on next run: {nxt}")
 
     log(f"=== done — triggered {fixed} fix(es) ===")
-    notify_all(
+    notify_event(
+        "run_complete",
         "Snorkel monitor: run complete",
         f"Fixed {fixed} of {len(fix_queue)} queued task(s). Next check in 90m.",
         subtitle="90-min check",
     )
+    _finish_run(state)
     return 0
 
 

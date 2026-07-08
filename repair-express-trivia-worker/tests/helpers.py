@@ -13,6 +13,7 @@ from pathlib import Path
 MATCH_ID = "match-night-2026-03-15"
 REF_API = "http://127.0.0.1:3000"
 LEDGER = Path("/app/data/match_night.csv")
+RULINGS_PATH = Path("/app/data/rulings.json")
 OUTPUT = Path("/app/output/scoreboard.txt")
 WORKER = Path("/app/worker/replay.py")
 
@@ -183,13 +184,92 @@ def format_transcript(standings: list[dict], match_id: str = MATCH_ID) -> str:
     return "\n".join(lines) + "\n"
 
 
-RULINGS_FILE = Path("/app/data/rulings.json")
+RULINGS_FILE = RULINGS_PATH
 
 
 def load_rulings(path: Path = RULINGS_FILE) -> list[dict]:
     """Read the stewards' review feed the referee serves at /v1/rulings."""
     data = json.loads(path.read_text())
     return data.get("rulings", [])
+
+
+def parse_transcript(text: str) -> list[dict]:
+    """Parse a STANDINGS transcript into ranked player rows."""
+    lines = text.strip().splitlines()
+    rows = []
+    for line in lines[2:]:
+        rank, player, score, correct, fb = line.split()
+        rows.append(
+            {
+                "rank": int(rank),
+                "player": player,
+                "score": int(score),
+                "correct": int(correct),
+                "first_buzz_seq": None if fb == "-" else int(fb),
+            }
+        )
+    return rows
+
+
+def player_map_from_transcript(text: str) -> dict[str, dict]:
+    """Index transcript rows by player id."""
+    return {row["player"]: row for row in parse_transcript(text)}
+
+
+def rulings_snapshot() -> str:
+    """Return the current rulings.json contents."""
+    return RULINGS_PATH.read_text(encoding="utf-8")
+
+
+def write_rulings(rulings: list[dict]) -> None:
+    """Replace the on-disk rulings feed and reset referee ingest state."""
+    RULINGS_PATH.write_text(
+        json.dumps({"rulings": rulings}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    reset_referee()
+
+
+def restore_rulings(snapshot: str) -> None:
+    """Restore a prior rulings.json snapshot and reset referee ingest state."""
+    RULINGS_PATH.write_text(snapshot, encoding="utf-8")
+    reset_referee()
+
+
+def run_worker_checked(
+    *,
+    ledger: Path = LEDGER,
+    output: Path = OUTPUT,
+    rulings: list[dict] | None = None,
+) -> list[dict]:
+    """Run the replay worker and return parsed transcript rows."""
+    snapshot = None
+    if rulings is not None:
+        snapshot = rulings_snapshot()
+        write_rulings(rulings)
+    try:
+        proc = run_worker(ledger=ledger, output=output)
+        if proc.returncode != 0:
+            raise AssertionError(proc.stderr)
+        if not output.exists():
+            raise AssertionError("worker did not write scoreboard transcript")
+        return parse_transcript(output.read_text(encoding="utf-8"))
+    finally:
+        if snapshot is not None:
+            restore_rulings(snapshot)
+
+
+def worker_player_map(
+    *,
+    ledger: Path = LEDGER,
+    output: Path = OUTPUT,
+    rulings: list[dict] | None = None,
+) -> dict[str, dict]:
+    """Run the worker and index the transcript rows by player."""
+    return {
+        row["player"]: row
+        for row in run_worker_checked(ledger=ledger, output=output, rulings=rulings)
+    }
 
 
 def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:

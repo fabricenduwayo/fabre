@@ -1,0 +1,5 @@
+📋 Fetching feedback for submission: fbb351b7-0c45-4402-9b19-08d2cd8fddf8
+Revision Notes:
+  AutoEval Execution Summary: AutoEval execution failed. Build status: FAILED. Build ID: CodeExecutionEnvironment:750ad213-6294-42e3-ae49-745a73244d60.
+
+Feedback written to /var/folders/_y/s7yt89ld12j14754my8wxy200000gn/T/feedback_fbb351b7-0c45-4402-9b19-08d2cd8fddf8_20260706T154756Z

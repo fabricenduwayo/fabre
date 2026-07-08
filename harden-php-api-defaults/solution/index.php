@@ -73,12 +73,15 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
         exit;
     }
 
-    $secret = isset($_SERVER['HTTP_X_BOOTSTRAP_SECRET']) ? $_SERVER['HTTP_X_BOOTSTRAP_SECRET'] : null;
+    $secret = isset($_SERVER['HTTP_X_BOOTSTRAP_SECRET'])
+        ? trim($_SERVER['HTTP_X_BOOTSTRAP_SECRET'])
+        : null;
     $expected = is_file($config['bootstrap_secret_file'])
         ? trim(file_get_contents($config['bootstrap_secret_file']))
         : null;
 
-    if ($expected === null || $secret === null || !hash_equals($expected, $secret)) {
+    if ($expected === null || $secret === null
+            || !hash_equals(strtolower($expected), strtolower($secret))) {
         audit_log($config, 'bootstrap', $path, $origin, 'denied', 'invalid_secret');
         fail($config, 403, 'forbidden');
         exit;

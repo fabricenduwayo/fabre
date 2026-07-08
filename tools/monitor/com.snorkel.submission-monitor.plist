@@ -32,7 +32,7 @@
         <key>MONITOR_DIR</key>
         <string>__MONITOR_DIR__</string>
         <key>MONITOR_ENV_FILE</key>
-        <string>__SUPPORT_ENV__</string>
+        <string>__MONITOR_ENV__</string>
         <key>HOME</key>
         <string>__HOME__</string>
         <key>PYTHONPATH</key>

@@ -196,9 +196,13 @@ any score or correct count.
 
 A ruling may include `"applies_after_floor": true`. Defer such rulings until after
 H-2026-04 has clamped every participant. Then apply each deferred incident's surviving
-adjustment in ascending `ruling_seq`, adding its `delta` and `correct_delta` to the
-named participant (if they appear in the provisional standings), and clamp each
-adjusted `score` and `correct` to **0** again before re-ranking with TR-TIEBREAK.
+adjustment in ascending `ruling_seq`, including incidents that survive only as a
+frozen deferred snapshot (H-2026-19) even when they no longer appear in the
+effective map at replay end. Merge snapshotted and ordinary deferred incidents into
+one pass ordered by ascending `ruling_seq`. For each step, add `delta` and
+`correct_delta` to the named participant (if they appear in the provisional
+standings), and clamp each adjusted `score` and `correct` to **0** again before
+re-ranking with TR-TIEBREAK.
 
 ### H-2026-08 — Deferred dependency snapshot
 
@@ -428,8 +432,9 @@ participant in the provisional standings. During the primary pass, after applyin
 the nominal `delta`). Only `score` moves; `correct` is unchanged on the offset
 target. Apply the offset before the per-step floor checkpoint for both
 participants. An `amend` that omits `offset_player` clears any offset. At record
-time, the ruling is **void** when `offset_player` is absent from the provisional
-standings or equals the incident's `player`.
+time, the **entire** ruling is **void** when `offset_player` is absent from the
+provisional standings or equals the incident's `player` — drop the incident with
+no `delta`, `correct_delta`, or offset transfer applied.
 
 ### H-2026-29 — Deferred correct ceiling
 
@@ -496,7 +501,7 @@ path first (offset, solvency, and score ceiling per H-2026-30/32/33). If the
 **applied score change** for that step is **0** because the beneficiary is
 already at or above `score_ceiling`, treat `correct_delta` as **0** for that
 step as well — do not apply `correct_ceiling` headroom when the score credit
-was fully blocked.
+was fully blocked. This applies even when the ruling's nominal `delta` is **0**.
 
 ### H-2026-35 — Deferred offset minimum score
 

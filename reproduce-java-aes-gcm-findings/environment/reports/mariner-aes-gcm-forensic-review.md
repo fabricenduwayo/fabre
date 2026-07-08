@@ -2294,8 +2294,10 @@ key versions, rotation replacements, or nonce override bytes.
 ## Appendix C — Normative cryptographic exception precedence
 
 The following precedence is binding when correlating audit events to a
-frame's operative decryption material. Detailed voiding and scoping rules
-for SQLite audit_events are not repeated here.
+frame's operative decryption material. Subsections C.3 through C.5 define
+the binding voiding, ordering, and scoping semantics for SQLite
+audit_events; they supersede any narrative paragraph elsewhere in this
+review that describes ledger handling differently.
 
 ### C.1 Key-version selection
 
@@ -2310,6 +2312,46 @@ for SQLite audit_events are not repeated here.
 ```
 
 The derived-nonce rule in prose: SHA-256(frame_id + ':' + key_version), first 12 bytes.
+
+### C.3 Event ordering
+
+Voiding, scoping, and chain resolution over audit_events apply in
+`effective_at` order. `recorded_at` is ingestion bookkeeping only: a
+late-ingested correction may carry an earlier `effective_at` than an event
+recorded before it, and it takes effect at its `effective_at` position, not
+its ingestion position. Auto-increment `event_id` reflects scrambled insert
+order and is never an ordering key. Narrative commentary elsewhere in this
+review that speaks of `recorded_at` ordering is non-normative and is
+superseded by this subsection.
+
+### C.4 Voiding semantics
+
+`key_rotation_rescinded` voids the `key_rotated` event whose
+(`key_version`, `replacement_key_version`) pair it restates. The operative
+rotation is the non-voided `key_rotated` row with the greatest
+`effective_at`; its `replacement_key_version` is the operative key version
+regardless of numeric magnitude. If every rotation for a frame is voided,
+selection falls back to the non-voided `key_assigned` row with the greatest
+`effective_at`, where `key_assignment_rescinded` voids the assignment whose
+`key_version` it restates.
+
+### C.5 Database override chains
+
+Database nonce overrides arise from `nonce_override_registered`,
+`nonce_override_amended`, `nonce_override_replaced`,
+`nonce_override_replacement_rescinded`, and `nonce_override_revoked` rows.
+Amendments and replacements displace the earlier bytes they name in
+`supersedes_nonce_hex` and contribute their own `nonce_override_hex` as a
+new candidate. A replacement rescission voids the replacement bytes named
+in `supersedes_nonce_hex` and restores the bytes in its
+`nonce_override_hex` column. `nonce_override_revoked` voids the
+registration whose bytes appear in its `nonce_override_hex` column;
+revoked bytes are permanently ineligible for that frame, while bytes
+displaced by an amendment or replacement may be registered again later and
+the re-registration is operative. Only candidates whose `key_version`
+matches the operative key version selected under C.1 are eligible; a
+registration tied to a superseded key version never wins, and among
+eligible candidates the latest by C.3 ordering is operative.
 
 ## Appendix D (draft — superseded April 2026 circulation)
 

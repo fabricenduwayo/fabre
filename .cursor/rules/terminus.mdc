@@ -50,6 +50,7 @@ For milestone tasks the layout is different (per-milestone `steps/milestone_N/` 
 * Use a sanctioned/canonical Terminal-Bench base image for the final runtime stage; if non-canonical, add a short written justification in the Dockerfile or README.md.
 * Install tmux and asciinema — the agent runtime needs both or all runs fail.
 * Pin application dependency versions (pip, npm, apt, etc.) and pin any downloaded binary by version + sha256.
+* Install language runtimes from the base image's package manager (apt, etc.) — do **not** pipe remote setup scripts into the shell during the image build (e.g. `curl … | bash` from NodeSource or similar). That violates environment policy and breaks reproducibility.
 * Include a .dockerignore for any non-trivial task; prefer narrow `COPY src/ src/` over `COPY . .`.
 * Keep environment/ at or below 100 MiB total and 50 MiB per file.
 * Store source as real files, not heredocs. Do not run apt-get upgrade.
@@ -79,6 +80,7 @@ For milestone tasks the layout is different (per-milestone `steps/milestone_N/` 
 * Every test needs an informative docstring (CI checks this).
 * Tests must pass ruff lint.
 * Tests should check behavior and final correctness, not just source-code text patterns.
+* Tests must exercise the **real program under test** — rerun the worker CLI, compiled `Main` subcommand, HTTP API, etc. Helpers may hold reference logic, but passing tests must not rely only on calling a shadow implementation in `/tests/helpers.py` while the broken artifact is never run.
 * No order-dependent tests and no hardcoded random values (seed or assert on properties).
 * Tests must match what instruction.md asks for, and everything tested must be stated or clearly implied in instruction.md.
 * Do not test requirements that are not stated or clearly implied in instruction.md.

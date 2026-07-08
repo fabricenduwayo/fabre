@@ -2751,6 +2751,16 @@ Inconsistent application of this requirement across nodes complicates evidence c
 The following amendments are in force and **supersede** the body of the referenced controls per section 1.4. They are listed in effective-date order.
 
 
+### G-2026-10 — amends SV-BANNER
+
+The approved service banner wording is updated. This amendment does not affect API behavior.
+
+
+### G-2026-07 — amends NW-TLS-CIPHERS
+
+The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+
+
 ### G-2026-12 — amends AC-TOKEN-STORE
 
 The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
@@ -2761,19 +2771,9 @@ The on-disk administrative token representation shall be the lowercase hexadecim
 The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
 
 
-### G-2026-04 — amends AC-HEALTH
+### G-2026-16 — amends AC-BOOTSTRAP
 
-The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
-
-
-### G-2026-08 — amends MA-PATCH-WINDOW
-
-The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
-
-
-### G-2026-10 — amends SV-BANNER
-
-The approved service banner wording is updated. This amendment does not affect API behavior.
+Before the case-insensitive comparison of G-2026-15, both the presented `X-Bootstrap-Secret` header value and the on-disk bootstrap secret file contents shall be trimmed of leading and trailing ASCII whitespace.
 
 
 ### G-2026-02 — amends CO-PREFLIGHT
@@ -2781,9 +2781,19 @@ The approved service banner wording is updated. This amendment does not affect A
 The preflight cache lifetime in CO-PREFLIGHT is lowered from `600` to `300` seconds. The `Access-Control-Max-Age` header on an allowed-origin preflight shall therefore be `300`.
 
 
+### G-2026-08 — amends MA-PATCH-WINDOW
+
+The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
+
+
 ### G-2026-05 — amends AC-BOOTSTRAP
 
 The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong**. Secret validation is reached only when no token yet exists.
+
+
+### G-2026-04 — amends AC-HEALTH
+
+The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
 
 
 ### G-2026-11 — amends CO-PREFLIGHT
@@ -2796,9 +2806,9 @@ The method, header, and max-age hint headers in CO-PREFLIGHT (`Access-Control-Al
 The refusal status for an already-bootstrapped node is changed from `403` to `409` (Conflict). The decision remains `denied` and the reason remains `already_bootstrapped`; only the HTTP status changes.
 
 
-### G-2026-07 — amends NW-TLS-CIPHERS
+### G-2026-15 — amends AC-BOOTSTRAP
 
-The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+Bootstrap secret validation shall compare the presented `X-Bootstrap-Secret` header to the on-disk secret using a **case-insensitive** ASCII match. Letter case in the header value must not cause an otherwise-correct secret to be rejected.
 
 
 ### G-2026-09 — amends IR-CONTACT

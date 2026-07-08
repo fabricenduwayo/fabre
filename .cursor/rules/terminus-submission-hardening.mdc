@@ -219,3 +219,69 @@ SHOULD DO:
 SHOULD NOT DO:
 - Do not raise difficulty with a long list of trivial edge cases - it is a
   reviewer red flag and does not raise real difficulty.
+- Do not strip instruction requirements that show **0/10** in the per-test
+  breakdown just to chase difficulty — that causes instruction sufficiency FAIL.
+  Harden with interacting logic instead; name killer requirements in the
+  instruction without giving the solution.
+- Do not add a `policy_expectations`-style cheat-sheet table or overly explicit
+  appendix walkthrough in the instruction — that often drives TRIVIAL pass rates.
+
+## What worked: `reproduce-java-tls-waiver-findings` (ACCEPTED)
+
+Use this as the reference pattern for milestone and multi-stage tasks.
+
+SHOULD DO:
+- Ship a **broken but compilable scaffold** in `environment/` (`Main` dispatcher,
+  stubbed stage classes, `build.sh`); point the instruction at it.
+- Write milestone instructions in **agent-facing** terms: name output paths,
+  schemas, `Main` subcommands, and reproducibility — never "the verifier reruns …".
+- Name **killer requirements** the tests check (e.g. rescind/replacement waiver
+  pairing by `waiver_id`, latest probe by `captured_at`) without step-by-step hints.
+- Make pytest **rerun the real pipeline stage** (`subprocess` → `Main decode`,
+  worker CLI, live API) and compare output to hidden fixtures — not only a
+  reference function in `helpers.py`.
+- Discover compiled classes **flexibly** (`/app/classes`, `/app/pipeline/classes`,
+  or other reasonable trees) unless the instruction mandates one path.
+- Set `languages` to agent/oracle languages only (`java`, `bash`, `sql` — not
+  verifier-only `python`). Set `difficulty` from measured platform runs.
+- Populate **three explanation fields** and **milestone rubric blocks** (one
+  `# Rubric N` per milestone, 10–40 positive points, ≥1 negative each) in the
+  **same** `create_submission` payload as the ZIP upload.
+- Default `--no-send-to-reviewer` until AutoEval is green and the user confirms.
+
+## Dockerfile — no remote setup scripts
+
+SHOULD DO:
+- Install runtimes from apt/npm/pip already available in the pinned base image
+  (e.g. Debian `nodejs`/`npm` packages, not NodeSource `curl | bash`).
+
+SHOULD NOT DO:
+- Do not download and execute third-party install scripts during `docker build`.
+  Human reviewers flag this; it also breaks offline/reproducibility policy.
+
+## Tests must run the artifact under test
+
+SHOULD DO:
+- For workers/CLIs/services: pytest starts the real process (or calls the compiled
+  entrypoint) and asserts on its output or side effects.
+- Keep `helpers.py` as a hidden reference for randomized/property tests only when
+  the primary tests also exercise the agent's program.
+
+SHOULD NOT DO:
+- Do not write tests that only call `helpers.reconcile_*()` or similar while the
+  broken `/app/worker/…` or pipeline stage is never executed — a wrong solution
+  can still pass.
+
+## Instruction sufficiency vs difficulty (do not trade one for the other)
+
+SHOULD DO:
+- When per-test breakdown shows **0/10** on specific tests, add a short, explicit
+  requirement to `instruction.md` (or the normative doc it points at) for that
+  behavior — e.g. "entire ruling void", dual-ceiling refund, frozen deferred pass.
+- Harden difficulty by adding interacting state (waiver lifecycle, sticky CORS
+  across requests, lock-group relay) — not by deleting spec agents need.
+
+SHOULD NOT DO:
+- Do not remove tested requirements from the instruction to lower pass rates.
+- Do not add `policy_expectations` rows or milestone appendix slicing hints that
+  spell out the answer — that drives TRIVIAL evals.

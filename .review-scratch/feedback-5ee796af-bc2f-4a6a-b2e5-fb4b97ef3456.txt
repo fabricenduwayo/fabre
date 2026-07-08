@@ -1,0 +1,5 @@
+📋 Fetching feedback for submission: 5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456
+Revision Notes:
+  The problem delegates the actual contract to /app/docs/standard.md, and hence the verifier will rely on the policies not provided in instruction.md; the problem also provides hints for the solution in the form of .submission-explanations.txt file and leaves one requirement untouched. The long context dataset contains additional filler.
+
+Feedback written to /var/folders/_y/s7yt89ld12j14754my8wxy200000gn/T/feedback_5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456_20260706T154820Z

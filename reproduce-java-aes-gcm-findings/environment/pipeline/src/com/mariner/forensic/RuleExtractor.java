@@ -9,35 +9,35 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Milestone 1 — parse the forensic report's appendices and write rules.json.
- *
- * Shipped implementation predates errata filtering; repair before relying on it.
+ * Milestone 1 — extract cryptographic exception rules from the forensic report.
  */
 final class RuleExtractor {
     private static final Path REPORT =
             Path.of("/app/reports/mariner-aes-gcm-forensic-review.md");
     private static final Path OUT = Path.of("/app/out/rules.json");
 
-    private static final String APPENDIX_C = "## Appendix C";
+    private static final String NORMATIVE_C =
+            "## Appendix C — Normative cryptographic exception precedence";
+    private static final String NORMATIVE_D =
+            "## Appendix D — Registered nonce overrides";
+
     private static final Pattern KEY_PREC = Pattern.compile(
-            "```json\\s*\\[\"latest_key_assigned\", \"rotation_replacement\"\\]\\s*```");
+            "```json\\s*\\[\"rotation_replacement\", \"latest_key_assigned\"\\]\\s*```");
     private static final Pattern NONCE_PREC = Pattern.compile(
-            "```json\\s*\\[\"report_override\", \"derived_sha256_prefix\"\\]\\s*```");
+            "```json\\s*\\[\"report_override\", \"db_override\", \"derived_sha256_prefix\"\\]\\s*```");
     private static final Pattern DERIVED_RULE = Pattern.compile(
             "The derived-nonce rule in prose: ([^.]+)\\.");
     private static final Pattern REVIEW_DATE = Pattern.compile(
-            "Review date: (\\d{4}-\\d{2}-\\d{2})");
+            "## Findings overview\\s*\\n\\s*\\nReview date: (\\d{4}-\\d{2}-\\d{2})\\.");
     private static final Pattern NONCE_OVERRIDE = Pattern.compile(
             "The operative nonce override for (frm-\\d{3}) is `([0-9A-F]{24})`\\.");
 
     static void run() throws Exception {
         String text = Files.readString(REPORT);
-        int cStart = text.indexOf(APPENDIX_C);
-        if (cStart < 0) {
-            throw new IllegalStateException("Appendix C missing");
-        }
-        int dStart = text.indexOf("## Appendix D", cStart + APPENDIX_C.length());
-        String appendixC = dStart > 0 ? text.substring(cStart, dStart) : text.substring(cStart);
+        String appendixC = slice(text, NORMATIVE_C,
+                "## Appendix D (draft", NORMATIVE_D);
+        String appendixD = slice(text, NORMATIVE_D,
+                "## Appendix D — Post-review errata");
 
         Matcher rd = REVIEW_DATE.matcher(text);
         if (!rd.find()) {
@@ -61,11 +61,11 @@ final class RuleExtractor {
         rules.put("key_selection_precedence", List.of(
                 "latest_key_assigned", "rotation_replacement"));
         rules.put("nonce_selection_precedence", List.of(
-                "report_override", "derived_sha256_prefix"));
+                "report_override", "db_override", "derived_sha256_prefix"));
         rules.put("derived_nonce_rule", dr.group(1).trim());
 
         Map<String, String> overrides = new LinkedHashMap<>();
-        Matcher nov = NONCE_OVERRIDE.matcher(text);
+        Matcher nov = NONCE_OVERRIDE.matcher(appendixD);
         while (nov.find()) {
             overrides.put(nov.group(1), nov.group(2));
         }
@@ -73,6 +73,21 @@ final class RuleExtractor {
 
         Json.writeMap(OUT, rules);
         System.out.println("rules: wrote exception register to " + OUT);
+    }
+
+    private static String slice(String text, String startMarker, String... endMarkers) {
+        int start = text.indexOf(startMarker);
+        if (start < 0) {
+            throw new IllegalStateException(startMarker + " missing");
+        }
+        int end = text.length();
+        for (String marker : endMarkers) {
+            int pos = text.indexOf(marker, start + startMarker.length());
+            if (pos >= 0 && pos < end) {
+                end = pos;
+            }
+        }
+        return text.substring(start, end);
     }
 
     private RuleExtractor() {}

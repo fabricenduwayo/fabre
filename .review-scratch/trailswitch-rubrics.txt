@@ -1,17 +1,10 @@
-Agent reads /app/docs/trailswitch-referee-contract.md and /app/sql/seed.sql before editing Java handlers, +3
+Agent reads /app/docs/trailswitch-referee-contract.md, /app/sql/seed.sql, and policy_expectations before editing Java handlers, +3
 Agent inspects GraphPathRepository for string-concatenated station ids in SQL, +3
 Agent repairs PathPlanner to track visited stations and cap search depth, +4
-Agent repairs SwitchRuleHandler to require all lock switch positions to match, +4
-Agent restores ascending rule_priority evaluation per edge in GraphPathRepository and SwitchRuleHandler, +3
-Agent implements clear route rules that leave edges unlocked and stop further rules on that edge, +4
-Agent handles NULL lock_sw columns as wildcards that skip that switch position, +3
-Agent keeps evaluating later rules on an edge when an earlier rule does not match, +3
-Agent loads lock_groups from the database and relays locks to every edge in a triggered group, +4
-Agent repairs GraphPathRepository.loadLockGroups so every edge id for a group_id is retained, +4
-Agent runs lock-group relay only after all per-edge route rules finish, +4
+Agent repairs SwitchRuleHandler: AND lock match, ascending rule_priority, clear stops further rules, NULL wildcards, non-match continues, +6
+Agent restores lock_groups relay after per-edge route rules with every member edge per group_id, +6
 Agent evaluates the arrival leg e_d_e route-rule chain before lock-group relay runs, +3
-Agent rebuilds the Spring Boot jar with bash /app/trailswitch/build.sh after code edits, +3
-Agent restarts TrailSwitch with bash /app/trailswitch/start.sh without changing API routes, +2
+Agent rebuilds the Spring Boot jar and restarts TrailSwitch after code edits, +4
 Agent keeps POST /v1/plan response shape with reachable, path, and cycle_guard fields, +3
 Agent leaves GraphPathRepository concatenating user input into SQL strings, -4
 Agent removes the visited-set guard from path planning on the cyclic seed graph, -4

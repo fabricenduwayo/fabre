@@ -397,24 +397,129 @@ fi
     before the ZIP — see 1.3a).
 13. Submit with `--no-send-to-reviewer`. Only send to reviewer after checks pass
     and the user confirms.
-
----
+14. Primary pytest tests rerun the real worker/CLI/API/Main stage — not only
+    `helpers.*` reference functions.
+15. Dockerfile installs runtimes from apt/pip/npm in the image — no `curl | bash`
+    setup scripts.
+16. Killer requirements with 0/10 agent pass rate are named in `instruction.md`
+    (or the normative doc it cites) — not stripped for difficulty.
+17. No answer-leak cheat sheets (`policy_expectations`, appendix slicing hints)
+    unless you want TRIVIAL evals.
+18. Rubric scores use only allowed values (+1/+2/+3/+5, -1/-2/-3/-5).
 
 ## 10. Per-task quick reference
 
+- **`reproduce-java-tls-waiver-findings` (Java, milestones) — ACCEPTED:** use
+  this as the gold pattern. Broken compilable scaffold in `environment/pipeline/`;
+  milestone instructions agent-facing (no "verifier" wording); killer requirements
+  named in brief (rescind/replacement by `waiver_id`, latest probe selection);
+  pytest reruns `com.mariner.audit.Main <stage>` from compiled classes with
+  flexible class-dir discovery; `languages = ["java", "bash", "sql"]` (no
+  verifier-only python); measured `difficulty = "medium"`; three explanation
+  fields + three milestone rubric blocks uploaded in the same payload as the ZIP;
+  `--no-send-to-reviewer` until checks green. See section 11.
 - **`harden-php-api-defaults` (PHP):** dropped verifier-only `python` from
   `languages` (-> `php, bash, sql`), set `difficulty = "medium"`, and named the
-  tested controls (incl. `AC-TOKEN-STORE`) in the instruction.
+  tested controls (incl. `AC-TOKEN-STORE`) in the instruction. **Lesson:** soft
+  "reconcile the whole standard" and explicit control checklists both hit TRIVIAL
+  at 100% — difficulty needs interacting state, not just obscuring the spec.
 - **`repair-cpp-setup-auditor` (C++):** raised from `TRIVIAL` to `medium` by
   adding sudo sticky command-tag semantics and active authorized-key parsing,
-  with matching fixtures/tests/docs.
-- **`reproduce-java-tls-waiver-findings` (Java, milestones):** fixed the
-  `unknown` difficulty, corrected `codebase_size` to `small`, removed trailing
-  `exit` from each milestone `test.sh`, made the verifier find compiled classes
-  flexibly, and hardened Milestone 1 with a replacement-waiver lifecycle.
-  **Second reviewer pass:** filled blank explanation fields, added three
-  milestone rubric blocks (10–40 positive points, negative lines each),
-  reworded milestone instructions to agent-facing reproducibility language (no
-  "verifier reruns" phrasing). Lesson: upload ZIP and platform fields in one
-  submission action — API-only payload update locked the assignment before the
-  instruction ZIP landed.
+  with matching fixtures/tests/docs. Rubric scores must use allowed values only
+  (+1/+2/+3/+5, -1/-2/-3/-5) — rescale before resubmit.
+- **`repair-express-trivia-worker` (Python):** reviewer flagged NodeSource
+  `curl | bash` in Dockerfile and tests that only called `helpers.reconcile_*()`
+  instead of `/app/worker/replay.py`. Instruction sufficiency FAIL when killer
+  rules (H-2026-28 void scope, H-2026-34/40 dual ceiling) were trimmed for
+  difficulty — name them in the instruction; harden elsewhere.
+- **`repair-java-trailswitch-graph-rules` (Java):** `policy_expectations` table
+  in seed made the task TRIVIAL — agents read the cheat sheet and passed
+  everything. Derive semantics from `route_rules`/`lock_groups` row data and
+  seed comments instead.
+- **`reproduce-java-aes-gcm-findings` (Java, milestones):** explicit appendix
+  slicing in milestone instructions (C.3–C.5, operative D blocks) drove TRIVIAL.
+  Keep adversarial report; trim hand-holding in instructions; rely on scaffold +
+  broken stages for difficulty.
+
+---
+
+## 11. What worked: `reproduce-java-tls-waiver-findings` (ACCEPTED)
+
+This is the pattern to copy for multi-step / milestone tasks.
+
+### 11.1 Task design
+
+| Pattern | What TLS did | Why it worked |
+|---|---|---|
+| Scaffold | `environment/pipeline/` with `Main decode\|join\|validate`, broken stage classes, `build.sh` | Passes `codebase_applicability`; agent extends instead of hallucinating a layout |
+| Difficulty | Grant → rescind → **replacement** waiver lifecycle keyed by `waiver_id` | Real interacting state; measured **medium**, not edge-case spam |
+| Long context | Facts in narrative appendices of a long report, not a summary table | Agents must read and reconcile; not solvable by one grep |
+| Instructions | Short, agent-facing; names outputs, schemas, subcommands, killer semantics | Sufficiency pass without solution walkthrough |
+| Verifier | `_run_stage("decode")` via `subprocess` → compiled `Main`; flexible `_class_dir()` | Tests the real pipeline; no hidden path requirement |
+| `task.toml` | `languages = ["java", "bash", "sql"]`; `codebase_size = "small"`; measured difficulty | No false HARD gate from verifier-only python |
+
+### 11.2 Submission workflow (second pass that got accepted)
+
+1. Filled **difficulty / solution / verification** explanations (reviewer bounced blank fields).
+2. Added **three milestone rubric blocks** in platform `test_rubrics` (10–40 positive each, negative lines, allowed score values).
+3. Uploaded ZIP **and** platform fields in **one** `create_submission` — never API-only first.
+4. Reworded milestone instructions to remove "verifier reruns …" phrasing.
+5. `--no-send-to-reviewer` until AutoEval green; send to reviewer only when ready.
+
+### 11.3 Acceptance checklist (copy for next milestone task)
+
+1. Broken scaffold compiles in the image; oracle replaces or repairs it deterministically.
+2. Each milestone `instruction.md` names: output file, schema, stage subcommand, killer semantics tested.
+3. No "verifier" in milestone instructions.
+4. Each milestone test module reruns the real stage entrypoint.
+5. Class/output paths flexible or explicitly stated.
+6. `languages` excludes verifier-only python.
+7. Difficulty measured on platform; interacting logic if under gate.
+8. Three explanations + milestone rubrics drafted locally; one combined submit.
+9. Oracle green; `# platform-revision` bumped in Dockerfile.
+
+---
+
+## 12. What we kept doing wrong (revision cycle)
+
+These are the mistakes that burned us **after** the TLS acceptance — avoid repeating them.
+
+### 12.1 Verifier tested helpers, not the program (human reviewer)
+
+- **Symptom:** Reviewer: "tests may pass even when the solution is wrong."
+- **What we did:** Trivia tests called `helpers.reconcile_rulings()` directly.
+- **Fix:** Pytest drives `/app/worker/replay.py` (or `Main <stage>`, live API) and compares output.
+- **Rule:** Primary tests must execute the artifact the agent is asked to fix.
+
+### 12.2 Dockerfile pulled remote setup scripts (human reviewer)
+
+- **Symptom:** NodeSource `curl | bash` in trivia Dockerfile.
+- **Fix:** Install `nodejs`/`npm` from Debian apt; pin npm globals by version.
+- **Rule:** No `curl | bash` install scripts in `docker build`.
+
+### 12.3 Trimmed instruction to chase difficulty → sufficiency FAIL
+
+- **Symptom:** Trivia H-2026-28 / H-2026-34 / H-2026-40 at 0/10 or 1/10; instruction sufficiency FAIL.
+- **What we did:** Removed explicit killer-rule wording to keep HARD pass rates.
+- **Fix:** Name killer requirements in `instruction.md` (void entire ruling, dual-ceiling refund, frozen deferred pass).
+- **Rule:** Do not trade instruction sufficiency for difficulty — harden logic instead.
+
+### 12.4 Cheat-sheet tables / over-explicit instructions → TRIVIAL
+
+- **Symptom:** Trailswitch `policy_expectations` and AES appendix slicing at 100% pass.
+- **What we did:** Put normative semantics in a table or spelled out which appendix subsections to read.
+- **Fix:** Semantics live in seed data + normative docs; instructions point at paths, not answers.
+- **Rule:** If agents pass 100%, remove answer leakage before relabeling `task.toml`.
+
+### 12.5 Platform workflow mistakes (expensive)
+
+- Sent to reviewer too early (`REVIEW_PENDING` lock).
+- Blank explanation fields on an otherwise green AutoEval.
+- API-pushed explanations/rubrics **before** ZIP → `403` until admin returns to `NEEDS_REVISION`.
+- Rubric scores outside allowed set (+6, +4, +8, -4) on CPP reviewer return.
+
+### 12.6 Difficulty is not a knob on `task.toml`
+
+- Relabeling `easy` → `medium` without hardening fails the gate.
+- PHP at both soft instruction and explicit checklist still hit TRIVIAL — the broken API is too easy once agents read `standard.md`.
+- Real fix: add interacting cross-request state (sticky caches, bootstrap order, ledger migration) that requires reasoning, not more bullet points.

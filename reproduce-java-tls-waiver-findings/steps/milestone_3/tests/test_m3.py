@@ -22,10 +22,10 @@ MAIN_CLASS_REL = pathlib.Path("com/mariner/audit/Main.class")
 def _class_dir() -> pathlib.Path | None:
     candidates = [pathlib.Path("/app/classes"), pathlib.Path("/app/pipeline/classes")]
     candidates.extend(sorted(pathlib.Path("/app").glob("*/classes")))
-    for candidate in candidates:
-        if (candidate / MAIN_CLASS_REL).exists():
-            return candidate
-    return None
+    existing = [candidate for candidate in candidates if (candidate / MAIN_CLASS_REL).exists()]
+    if not existing:
+        return None
+    return max(existing, key=lambda path: (path / MAIN_CLASS_REL).stat().st_mtime)
 
 
 def _run_stage(stage: str) -> None:

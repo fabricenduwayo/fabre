@@ -26,14 +26,3 @@ INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, ru
 INSERT INTO lock_groups (group_id, edge_id) VALUES
     ('yard_spur', 'e_b_d'),
     ('yard_spur', 'e_d_e');
-
-INSERT INTO policy_expectations (check_id, description) VALUES
-    ('sql_parameterized', 'Graph JDBC lookups must bind station ids via PreparedStatement parameters'),
-    ('cycle_guard', 'Path planning must track visited stations and cap depth at 12'),
-    ('rule_priority', 'Route rules evaluate ascending rule_priority per edge; first matching rule wins'),
-    ('lock_conjunction', 'A lock rule applies only when every listed switch position matches'),
-    ('clearance_rule', 'A matching clear rule leaves the edge unlocked and stops further rules on that edge'),
-    ('rule_fallthrough', 'Non-matching rules on an edge are skipped; later rules on the same edge still run'),
-    ('wildcard_lock', 'A NULL lock_sw column means that switch position is not checked'),
-    ('lock_group_relay', 'When any edge in a lock group is locked, every edge in that group is locked'),
-    ('arrival_rule_chain', 'The arrival leg e_d_e has its own ascending route-rule chain independent of spur clearance');

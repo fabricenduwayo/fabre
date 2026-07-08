@@ -1,6 +1,6 @@
 """Notification helpers for the submission monitor.
 
-Channels: macOS banners, iMessage (phone via same Apple ID), ntfy push, Slack.
+Channels: macOS banners, Telegram, ntfy push, Slack.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+from telegram_commands import send_telegram
 
 UTC = timezone.utc
 
@@ -62,30 +64,15 @@ def notify_slack(text: str) -> bool:
         return False
 
 
-def notify_imessage(text: str) -> bool:
-    """Send iMessage to yourself — arrives on iPhone when using the same Apple ID.
-
-    Requires Messages signed in on this Mac and Automation permission for the
-    runner (Terminal/python). Background launchd jobs may need the permission
-    granted to run-hourly.sh specifically.
-    """
-    recipient = os.environ.get("IMESSAGE_TO", "").strip()
-    if not recipient or not _enabled("NOTIFY_IMESSAGE", "0"):
+def notify_telegram(title: str, message: str) -> bool:
+    """Send a Telegram message to TELEGRAM_CHAT_ID."""
+    if not _enabled("NOTIFY_TELEGRAM", "0"):
         return False
-    body = text[:900]
-    recipient_e = _escape_applescript(recipient)
-    body_e = _escape_applescript(body)
-    script = f'''
-tell application "Messages"
-    set targetService to 1st service whose service type is iMessage
-    set targetBuddy to buddy "{recipient_e}" of targetService
-    send "{body_e}" to targetBuddy
-end tell
-'''
-    proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=False)
-    if proc.returncode != 0 and proc.stderr:
-        sys.stderr.write(proc.stderr[:300] + "\n")
-    return proc.returncode == 0
+    if message:
+        body = message if not title or message.startswith(title) else f"{title}\n{message}"
+    else:
+        body = title
+    return send_telegram(body[:4096])
 
 
 def notify_ntfy(title: str, message: str) -> bool:
@@ -128,7 +115,7 @@ def notify_all(
             parts.append(message)
         phone_text = "\n".join(parts)
 
-    notify_imessage(phone_text)
+    notify_telegram(title, phone_text)
     notify_ntfy(title, phone_text)
 
     if slack:
@@ -145,14 +132,12 @@ def parse_agent_report(text: str) -> dict:
     """Extract MONITOR_REPORT_JSON from agent output if present."""
     if not text:
         return {}
-    # Fenced ```json ... ``` block
     match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL | re.IGNORECASE)
     if match:
         try:
             return json.loads(match.group(1))
         except json.JSONDecodeError:
             pass
-    # Bare JSON object with expected keys
     match = re.search(
         r'\{[^{}]*"changes_summary"[^{}]*\}',
         text,

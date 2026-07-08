@@ -1,0 +1,5 @@
+Agents must repair a Python trivia replay worker whose output diverges from Appendix H of a long scoring standard. Rulings carry amend omission resets, rescind taint chains (H-2026-16), deferred floor/ceiling passes, offset credits, and match-night fixture ordering. The H-2026-34 edge where a player already sits on score_ceiling with nominal delta 0 still blocks correct_delta when correct_ceiling is also present, and H-2026-40 cancels any offset_correct_player debit in that case — that interaction drives the remaining solvability gap.
+
+Patch /app/worker/replay.py so GET /v1/standings and GET /v1/rulings reconcile the match-night ledger per the standard, then rebuild/restart the worker.
+
+Pytest drives the live worker against the referee API for the full match-night ledger plus isolated ruling fixtures for tiebreak correct_delta, amend omissions, rescind taint, deferred ceilings, offset_correct_player, and dual-ceiling score blocking, comparing API output to a hidden reference resolver.

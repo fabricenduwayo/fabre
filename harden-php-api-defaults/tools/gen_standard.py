@@ -336,6 +336,15 @@ AMENDMENTS_REAL = [
      "include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, "
      "even if an earlier request in the same long-lived process carried an "
      "allowed origin."),
+    ("G-2026-15", "AC-BOOTSTRAP",
+     "Bootstrap secret validation shall compare the presented "
+     "`X-Bootstrap-Secret` header to the on-disk secret using a "
+     "**case-insensitive** ASCII match. Letter case in the header value must "
+     "not cause an otherwise-correct secret to be rejected."),
+    ("G-2026-16", "AC-BOOTSTRAP",
+     "Before the case-insensitive comparison of G-2026-15, both the presented "
+     "`X-Bootstrap-Secret` header value and the on-disk bootstrap secret file "
+     "contents shall be trimmed of leading and trailing ASCII whitespace."),
 ]
 
 AMENDMENTS_FILLER = [

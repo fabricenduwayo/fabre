@@ -18,7 +18,7 @@
     {"ruling_seq": 15, "incident": "INC-11", "op": "amend", "player": "bob", "delta": 5, "requires_incident": "INC-5", "issued_at": "2026-03-15T21:41:00Z"},
     {"ruling_seq": 16, "incident": "INC-12", "op": "issue", "player": "alice", "delta": 100, "requires_incident": "INC-3", "issued_at": "2026-03-15T21:42:00Z"},
     {"ruling_seq": 17, "incident": "INC-5", "op": "rescind", "player": "bob", "delta": 0, "issued_at": "2026-03-15T21:44:00Z"},
-    {"ruling_seq": 18, "incident": "INC-13", "op": "issue", "player": "carol", "delta": 0, "issued_at": "2026-03-15T21:46:00Z"},
+    {"ruling_seq": 18, "incident": "INC-13", "op": "issue", "player": "carol", "delta": 0, "correct_delta": 2, "issued_at": "2026-03-15T21:46:00Z"},
     {"ruling_seq": 19, "incident": "INC-13", "op": "amend", "player": "carol", "delta": -5, "issued_at": "2026-03-15T21:48:00Z"},
     {"ruling_seq": 20, "incident": "INC-14", "op": "issue", "player": "bob", "delta": -5, "issued_at": "2026-03-15T21:50:00Z"},
     {"ruling_seq": 21, "incident": "INC-15", "op": "issue", "player": "bob", "delta": 8, "issued_at": "2026-03-15T21:52:00Z"},
@@ -93,6 +93,7 @@
     {"ruling_seq": 90, "incident": "INC-94", "op": "issue", "player": "carol", "delta": 6, "applies_after_floor": true, "score_ceiling": 24, "offset_player": "dave", "issued_at": "2026-03-15T22:22:10Z"},
     {"ruling_seq": 91, "incident": "INC-100", "op": "issue", "player": "alice", "delta": 10, "offset_player": "bob", "issued_at": "2026-03-15T22:22:15Z"},
     {"ruling_seq": 92, "incident": "INC-99", "op": "issue", "player": "bob", "delta": 5, "offset_player": "alice", "applies_after_floor": true, "issued_at": "2026-03-15T22:22:20Z"},
+    {"ruling_seq": 93, "incident": "INC-101", "op": "issue", "player": "carol", "delta": 0, "correct_delta": 1, "applies_after_floor": true, "score_ceiling": 24, "correct_ceiling": 4, "issued_at": "2026-03-15T22:22:25Z"},
     {"ruling_seq": 94, "incident": "INC-102", "op": "issue", "player": "carol", "delta": 6, "applies_after_floor": true, "score_ceiling": 30, "offset_player": "dave", "offset_min_score": 25, "issued_at": "2026-03-15T22:22:30Z"},
     {"ruling_seq": 95, "incident": "INC-103", "op": "issue", "player": "carol", "delta": 5, "offset_player": "dave", "applies_after_floor": true, "score_ceiling": 24, "issued_at": "2026-03-15T22:22:35Z"}
   ]

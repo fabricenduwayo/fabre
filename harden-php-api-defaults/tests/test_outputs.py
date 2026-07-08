@@ -84,13 +84,22 @@ def scripted():
     """Reset state, replay a fixed sequence, and return captured responses."""
     reset_state()
     secret = read_secret()
+    mixed_secret = secret.swapcase()
+    if mixed_secret == secret:
+        mixed_secret = secret.upper()
+
     r = {}
 
     r["health_noauth"] = request("GET", "/health")
     r["boot_wrong"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": "nope"}, "{}")
     r["boot_nosecret"] = request("POST", "/admin/bootstrap", JSON, "{}")
     r["boot_malformed"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": secret}, "{bad json")
-    r["boot_ok"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": secret}, "{}")
+    r["boot_ok"] = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": f"  {mixed_secret}  "},
+        "{}",
+    )
 
     status, _, _, body = r["boot_ok"]
     token = body["token"] if (status == 201 and body) else None
@@ -126,7 +135,7 @@ def test_bootstrap_requires_secret(scripted):
 
 
 def test_bootstrap_succeeds_with_secret(scripted):
-    """A first bootstrap with the correct secret mints a token."""
+    """G-2026-15/G-2026-16: bootstrap accepts alternate ASCII case and trimmed whitespace."""
     status, _, _, body = scripted["boot_ok"]
     assert status == 201
     assert body and isinstance(body.get("token"), str) and body["token"]
