@@ -6,10 +6,14 @@
 **/.mypy_cache/
 **/.ruff_cache/
 **/node_modules/
-**/target/
+model-registry/**
+!model-registry/target/
+model-registry/target/**
+!model-registry/target/model-registry-0.1.0.jar
 **/*.mv.db
 !experiment-db/experiments.mv.db
 **/*.trace.db
 *.log
+maven-repo/
 solution/
 tests/

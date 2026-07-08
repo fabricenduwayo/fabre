@@ -1,9 +1,9 @@
 {
-  "telegram_update_offset": 791742642,
+  "telegram_update_offset": 791742644,
   "last_command": {
-    "command": "status",
-    "at": "2026-07-08T08:28:01.749628+00:00",
-    "reply": "hourly monitor: scheduled (every 90 minutes)\nremote commands: running\nDocker: up\nstb: ok (installed)\ncursor-sdk bridges: 0 orphan(s)\npaused: no\ngit: task folders clean\nfix queue: repair-express-trivia",
+    "command": "pause 3h",
+    "at": "2026-07-08T13:49:59.952726+00:00",
+    "reply": "OK: paused until 2026-07-08T16:49:59.510509+00:00 (3h)",
     "source": "telegram"
   }
 }

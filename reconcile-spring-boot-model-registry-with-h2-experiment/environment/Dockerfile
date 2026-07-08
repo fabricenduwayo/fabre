@@ -1,9 +1,9 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-08-r3
+# platform-revision: 2026-07-08-r7
 
 WORKDIR /app
 
-# JDK 17 + Maven for the two Java projects, plus the agent runtime tooling.
+# JDK 17 + Maven for the agent/oracle offline reconcile build, plus runtime tooling.
 # Common Debian packages are left unpinned: bookworm serves a single version of
 # each and the digest-pinned base fixes the snapshot, so this stays reproducible.
 RUN apt-get update \
@@ -16,39 +16,34 @@ RUN apt-get update \
         asciinema \
     && rm -rf /var/lib/apt/lists/*
 
-# Fully pinned, hash-locked verifier dependencies (pytest, pytest-json-ctrf,
-# jsonschema, and their transitive deps).
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
 
-# Both Maven projects. A full `mvn package` per project at build time warms
-# /root/.m2 with every dependency and plugin artifact (so `mvn -o` works at
-# runtime with allow_internet=false), runs the registry JUnit suite, and
-# produces both jars. dependency:go-offline hardens offline resolution.
-COPY model-registry/ /app/model-registry/
-COPY reconcile-model-release/ /app/reconcile-model-release/
-RUN mvn -B -q -f /app/model-registry/pom.xml package -DskipTests \
-    && mvn -B -q -f /app/reconcile-model-release/pom.xml package \
-    && mvn -B -q -f /app/model-registry/pom.xml dependency:go-offline \
-    && mvn -B -q -f /app/reconcile-model-release/pom.xml dependency:go-offline
+# Pre-warmed offline Maven cache for the reconcile step only (no Spring Boot deps).
+COPY maven-repo.tar.gz /tmp/maven-repo.tar.gz
+RUN mkdir -p /root/.m2/repository \
+    && tar -xzf /tmp/maven-repo.tar.gz -C /root/.m2/repository \
+    && rm -f /tmp/maven-repo.tar.gz
 
-# Keep a fixed-path copy of the H2 driver jar for command-line JDBC access.
+# Reconcile skeleton ships as source; registry ships as a prebuilt jar only.
+COPY reconcile-model-release/ /app/reconcile-model-release/
+# Prove the cache satisfies offline builds (fast, no downloads).
+RUN mvn -o -B -q -f /app/reconcile-model-release/pom.xml package \
+    && rm -rf /app/reconcile-model-release/target
+
+RUN mkdir -p /app/model-registry/target
+COPY model-registry/target/model-registry-0.1.0.jar /app/model-registry/target/model-registry-0.1.0.jar
+
 RUN mkdir -p /app/lib \
     && cp /root/.m2/repository/com/h2database/h2/2.2.224/h2-2.2.224.jar /app/lib/h2-2.2.224.jar
 
-# Policy bundle and the decision-manifest JSON Schema.
 COPY policy/promotion-policy.md /app/policy/promotion-policy.md
 COPY schemas/release-decision.schema.json /app/schemas/release-decision.schema.json
 
-# Prebuilt H2 experiment store (generated from schema.sql + seed.sql at task
-# authoring time). SQL fixtures stay in the repo for reference but are not
-# copied into the image, so agents must use JDBC against the binary store.
 COPY experiment-db/experiments.mv.db /app/experiment-db/experiments.mv.db
 RUN chmod 0666 /app/experiment-db/experiments.mv.db
 
-# Registry service launcher (also usable by the agent to restart the API) and
-# the container entrypoint that boots it before handing over to the command.
 COPY start-registry.sh /app/start-registry.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /app/start-registry.sh /usr/local/bin/entrypoint.sh

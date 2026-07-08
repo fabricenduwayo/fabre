@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Container entrypoint: bring up the registry API in the background, then hand
-# control to the requested command. A failed API start is reported but does not
-# kill the container, so a shell is still available for debugging.
+# Container entrypoint: bring up the registry API, wait for readiness, then hand
+# control to the requested command.
 set -u
 
-bash /app/start-registry.sh || echo "WARNING: model-registry API is not up" >&2
+if ! bash /app/start-registry.sh; then
+    echo "WARNING: model-registry API is not up" >&2
+fi
 
 exec "$@"

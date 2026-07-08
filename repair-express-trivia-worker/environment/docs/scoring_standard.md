@@ -13,7 +13,7 @@ the Harbor referee API.
 
 Appendix G lists authoritative amendments. Where a body control and an amendment
 conflict, the amendment governs. Appendix H (amendments H-2026-01 through
-H-2026-45) governs the stewards' review reconciliation; every amendment in it
+H-2026-51) governs the stewards' review reconciliation; every amendment in it
 applies.
 
 ### 1.3 Ledger ordering
@@ -613,9 +613,62 @@ unchanged.
 
 Extends H-2026-38, H-2026-39, and H-2026-42. During the post-floor pass, when
 a deferred ruling carries `offset_correct_player` and the intended positive
-correct transfer (after H-2026-29 and H-2026-34 caps) exceeds what solvency
-actually debited, cap the applied correct change at the collected debit
+correct transfer (after H-2026-29, H-2026-34, and H-2026-46 caps) exceeds what
+solvency actually debited, cap the applied correct change at the collected debit
 before adding it to the beneficiary. Do not apply this cap when H-2026-40
 refunds a correct offset because H-2026-34 blocked score credit. When
 H-2026-20 syncs a frozen deferred snapshot, no extra field is needed — the
 funding rule applies whenever the post-floor correct offset runs.
+
+### H-2026-46 — Deferred dual-offset score coupling
+
+Extends H-2026-38, H-2026-42, and H-2026-45. During the post-floor pass, when
+a deferred ruling carries both `offset_player` and `offset_correct_player` and
+H-2026-42 caps `score_applied` below the nominal `delta`, cap the intended
+positive debit to `offset_correct_player` at `score_applied` before H-2026-39
+solvency and H-2026-45 funding match. The correct-offset payer must not fund
+more correct credit than score points the beneficiary actually received in that
+step. When `score_applied` is **0**, skip the correct-offset debit entirely.
+
+### H-2026-47 — Primary dual-offset score coupling
+
+Extends H-2026-27, H-2026-28, H-2026-38, and H-2026-44. During the primary
+pass, when a ruling carries both `offset_player` and `offset_correct_player`,
+cap the intended positive debit to `offset_correct_player` at the **applied
+score change** for that step (after H-2026-27 and before H-2026-41 funding
+match) before H-2026-39 solvency and H-2026-44 funding match. When the applied
+score change is **0** or negative, skip the correct-offset debit entirely.
+
+### H-2026-48 — Refunded score offset blocks deferred correct credit
+
+Extends H-2026-37 and H-2026-38. During the post-floor pass, when H-2026-37
+refunds a score offset because `score_ceiling` blocked all score credit, and the
+ruling carries `offset_correct_player`, treat `correct_delta` as **0** for that
+step and skip the correct-offset debit — even when `correct_ceiling` is absent
+or would allow headroom. Do not apply this rule when H-2026-34 already zeroed
+`correct_delta` via dual ceilings.
+
+### H-2026-49 — Amend revives void-record incidents
+
+When an `issue` was void at record time under H-2026-06, H-2026-12, H-2026-24,
+H-2026-28, or H-2026-38, a later `amend` for the same incident that satisfies
+every record-time check establishes the incident's first effective entry. The
+void `issue` is not stored and must not appear in the incident map or
+ever-rescinded set. Use the amend's `ruling_seq` for primary/deferred ordering.
+
+### H-2026-50 — Deferred negative offset credit
+
+Extends H-2026-28 and H-2026-33. During the post-floor pass, when a deferred
+ruling carries `offset_player` and a negative `delta`, subtract the nominal
+`delta` from `offset_player` **before** applying the score change to `player`
+(subtracting a negative value credits the offset target). H-2026-32 solvency
+caps only positive debits. When `score_ceiling` is also present, run the
+offset credit first, then compute `score_applied` per H-2026-23.
+
+### H-2026-51 — Amend revival starts from empty prior state
+
+Extends H-2026-49 and H-2026-02. When an `amend` establishes the first
+effective entry for an incident because the original `issue` was void, do not
+inherit any field from the void `issue`. H-2026-18 player retention and
+H-2026-02 omission resets apply only when a prior effective entry existed in the
+incident map.

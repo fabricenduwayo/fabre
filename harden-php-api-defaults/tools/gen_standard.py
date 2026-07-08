@@ -345,6 +345,22 @@ AMENDMENTS_REAL = [
      "Before the case-insensitive comparison of G-2026-15, both the presented "
      "`X-Bootstrap-Secret` header value and the on-disk bootstrap secret file "
      "contents shall be trimmed of leading and trailing ASCII whitespace."),
+    ("G-2026-14", "AC-BOOTSTRAP",
+     "Bootstrap eligibility and AC-HEALTH credential verification shall consult "
+     "the on-disk token file on every request. In-process caches of whether a "
+     "token exists or of the stored credential representation are non-compliant."),
+    ("G-2026-17", "AC-BOOTSTRAP",
+     "The deployment bootstrap secret in `data/bootstrap_secret` shall be read "
+     "from disk on every bootstrap attempt. In-process caches of the secret "
+     "value are non-compliant: if the on-disk secret is replaced between "
+     "attempts, the next evaluation shall use the current file contents."),
+    ("G-2026-18", "AC-HEALTH",
+     "AC-HEALTH denial reasons are narrowed. The `invalid_token` reason applies "
+     "only when a **non-empty** bearer credential was extracted from the "
+     "`Authorization` header (a `Bearer` scheme token with at least one "
+     "non-whitespace character). If the header is absent, uses a non-`Bearer` "
+     "scheme, or presents `Bearer` with no credential, the reason shall be "
+     "`missing_credentials` (status `401` unchanged)."),
 ]
 
 AMENDMENTS_FILLER = [
@@ -468,13 +484,6 @@ def build():
     rng.shuffle(all_amends)
     for aid, target, text in all_amends:
         parts.append(f"\n### {aid} — amends {target}\n\n{text}\n")
-
-    parts.append(
-        "\n## Appendix H. Implementation checklist\n\n"
-        "Implementers should confirm that the API, for every request it serves, "
-        "produces exactly the response and audit row implied by the controls "
-        "above as amended by Appendix G.\n"
-    )
 
     text = "\n".join(parts) + "\n"
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

@@ -13,8 +13,14 @@ it from source and SQL only — do not rely on manual playthroughs.
   them into query strings.
 - Path planning on the cyclic graph (including the `E`→`C` return edge) must track
   visited nodes so search terminates with `cycle_guard` true.
-- `SwitchRuleHandler` must implement route-lock semantics consistent with the
-  `route_rules` and `lock_groups` seed rows and the requirements in `instruction.md`.
+- `SwitchRuleHandler` must implement route-lock and lock-group relay semantics
+  consistent with the `route_rules` and `lock_groups` seed rows.
+
+## Route and lock semantics
+
+Route locks and lock-group relay are defined only by the `route_rules` and
+`lock_groups` rows in `/app/sql/seed.sql`. Reconcile behavior from those rows and
+the graph topology; do not infer a complete policy from this doc alone.
 
 ## API shape (keep intact)
 

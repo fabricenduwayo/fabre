@@ -53,8 +53,19 @@ from feedback_gates import green_eval_skip_reason  # noqa: E402
 from monitor_prompt import generate_fix_brief  # noqa: E402
 from monitor_env import load_env_file  # noqa: E402
 from monitor_exclusions import load_review_exclusions, sync_review_exclusions  # noqa: E402
-from monitor_health import docker_ready, git_dirty_task_folders, health_report, local_agent_ready  # noqa: E402
-from monitor_agent import assert_cursor_sdk_only, resolve_cursor_model  # noqa: E402
+from monitor_health import (  # noqa: E402
+    docker_ready,
+    git_dirty_task_folders,
+    health_report,
+    local_agent_ready,
+)
+from monitor_agent import (  # noqa: E402
+    agent_runtime_label,
+    assert_cursor_sdk_only,
+    resolve_agent_runtime,
+    resolve_cursor_model,
+    run_agent,
+)
 from monitor_messages import build_run_report_message  # noqa: E402
 from monitor_notify import notify_event  # noqa: E402
 from monitor_oracle import should_skip_cursor_after_oracle  # noqa: E402
@@ -377,50 +388,18 @@ def build_agent_prompt(item: dict, notes: str, tasks_map: dict) -> str:
 
 
 def cleanup_cursor_bridges() -> None:
-    """Stop orphaned cursor-sdk-bridge processes from finished agent runs."""
+    """Stop orphaned cursor-sdk-bridge processes from finished local agent runs."""
     pattern = f"cursor-sdk-bridge.js.*{REPO_ROOT}"
     subprocess.run(["pkill", "-f", pattern], capture_output=True, check=False)
 
 
 def run_cursor_agent(prompt: str, *, dry_run: bool) -> tuple[str, str]:
-    """Run a fix via Cursor SDK only (Composer). No other LLM providers."""
-    model = resolve_cursor_model()
+    """Run a fix via Cursor SDK (cloud default — no macOS popup)."""
     if dry_run:
-        log(f"DRY RUN — would call cursor_sdk Agent.prompt model={model} cwd={REPO_ROOT}")
         preview = STATE_DIR / "last-prompt-preview.txt"
         preview.write_text(prompt, encoding="utf-8")
         log(f"prompt preview written to {preview}")
-        return "dry_run", "skipped"
-
-    api_key = os.environ.get("CURSOR_API_KEY", "").strip()
-    if not api_key or api_key.startswith("cursor_your"):
-        raise RuntimeError(
-            "CURSOR_API_KEY not set — copy tools/monitor/.env.example to tools/monitor/.env"
-        )
-
-    ready, reason = local_agent_ready()
-    if not ready:
-        raise RuntimeError(reason)
-
-    from cursor_sdk import Agent, AgentOptions, CursorAgentError, LocalAgentOptions
-
-    try:
-        result = Agent.prompt(
-            prompt,
-            AgentOptions(
-                api_key=api_key,
-                model=model,
-                local=LocalAgentOptions(cwd=str(REPO_ROOT)),
-            ),
-        )
-    except CursorAgentError as exc:
-        raise RuntimeError(f"Cursor agent startup failed: {exc.message}") from exc
-    finally:
-        cleanup_cursor_bridges()
-
-    if result.status == "error":
-        raise RuntimeError(f"Cursor agent run failed: {getattr(result, 'result', '')}")
-    return str(result.status), str(getattr(result, "result", ""))[:4000]
+    return run_agent(prompt, repo_root=REPO_ROOT, dry_run=dry_run, log_fn=log)
 
 
 def summarize_feedback_issue(notes: str) -> str:
@@ -469,6 +448,7 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> t
     prompt = build_agent_prompt(item, notes, tasks_map)
     log(f"triggering Composer fix for {folder}")
     agent_start = time.monotonic()
+    cloud_runtime = resolve_agent_runtime() == "cloud"
     try:
         status, summary = run_cursor_agent(prompt, dry_run=dry_run)
     except Exception as exc:
@@ -483,8 +463,35 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> t
         raise
     agent_minutes = (time.monotonic() - agent_start) / 60.0
 
-    diff_stat = git_diff_stat(REPO_ROOT, folder) if not dry_run else "(dry run)"
     parsed = parse_agent_report(summary)
+    if cloud_runtime and not dry_run:
+        from monitor_git import pull_latest
+        from monitor_oracle import oracle_reward
+        from monitor_resubmit import run_task_resubmit
+
+        pulled, pull_msg = pull_latest(REPO_ROOT)
+        log(f"git pull after cloud agent: {pull_msg}")
+        if not pulled:
+            raise RuntimeError(f"git pull failed after cloud agent: {pull_msg}")
+
+        reward = oracle_reward(folder, repo_root=REPO_ROOT)
+        log(f"oracle after cloud pull: {reward}")
+        if reward is not None:
+            parsed["oracle_reward"] = str(reward)
+        if reward is not None and reward >= 1.0:
+            ok, resubmit_msg = run_task_resubmit(folder, tasks_map, REPO_ROOT)
+            log(f"resubmit after cloud fix: {resubmit_msg}")
+            if ok:
+                parsed["resubmit_sent"] = True
+                parsed["resubmit_static_checks"] = parsed.get("resubmit_static_checks", "PASS")
+            else:
+                parsed["resubmit_sent"] = False
+                parsed["resubmit_static_checks"] = "FAIL"
+                raise RuntimeError(f"resubmit failed: {resubmit_msg}")
+        elif reward is not None:
+            raise RuntimeError(f"oracle failed after cloud fix (reward={reward})")
+
+    diff_stat = git_diff_stat(REPO_ROOT, folder) if not dry_run else "(dry run)"
     new_state = ""
     if not dry_run:
         try:
@@ -883,19 +890,20 @@ def main() -> int:
         )
         _finish_run(state)
         return 1
-    log(f"Cursor agent model: {composer_model}")
-    ready, cursor_reason = local_agent_ready()
-    if not ready and not args.dry_run:
-        log(f"Cursor preflight: {cursor_reason}")
-        _update_run_report(agent_blocked=cursor_reason)
-        notify_event(
-            "error",
-            "Snorkel monitor: Cursor not ready",
-            cursor_reason,
-            force=True,
-        )
-        _finish_run(state)
-        return 0
+    log(f"Cursor agent runtime: {agent_runtime_label()} model={composer_model}")
+    if resolve_agent_runtime() == "local":
+        ready, cursor_reason = local_agent_ready()
+        if not ready and not args.dry_run:
+            log(f"Cursor preflight: {cursor_reason}")
+            _update_run_report(agent_blocked=cursor_reason)
+            notify_event(
+                "error",
+                "Snorkel monitor: Cursor not ready",
+                cursor_reason,
+                force=True,
+            )
+            _finish_run(state)
+            return 0
 
     fixed = 0
     oracle_skipped: list[tuple[str, str]] = []

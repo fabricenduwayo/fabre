@@ -20,15 +20,17 @@ final class RuleExtractor {
             "## Appendix C — Normative cryptographic exception precedence";
     private static final String NORMATIVE_D =
             "## Appendix D — Registered nonce overrides";
+    private static final String ERRATA_D =
+            "## Appendix D — Post-review errata";
 
-    private static final Pattern KEY_PREC = Pattern.compile(
-            "```json\\s*\\[\"rotation_replacement\", \"latest_key_assigned\"\\]\\s*```");
-    private static final Pattern NONCE_PREC = Pattern.compile(
-            "```json\\s*\\[\"report_override\", \"db_override\", \"derived_sha256_prefix\"\\]\\s*```");
-    private static final Pattern DERIVED_RULE = Pattern.compile(
-            "The derived-nonce rule in prose: ([^.]+)\\.");
+    private static final Pattern KEY_PREC_PROSE = Pattern.compile(
+            "rotation_replacement is tried first;\\s*latest_key_assigned applies only");
+    private static final Pattern NONCE_PREC_PROSE = Pattern.compile(
+            "report_override \\(Appendix D bytes verbatim when\\s*"
+            + "present for the frame\\), db_override \\(surviving chain under C\\.5 scoped to the\\s*"
+            + "operative key version\\), derived_sha256_prefix");
     private static final Pattern REVIEW_DATE = Pattern.compile(
-            "## Findings overview\\s*\\n\\s*\\nReview date: (\\d{4}-\\d{2}-\\d{2})\\.");
+            "Review date: (\\d{4}-\\d{2}-\\d{2})\\.");
     private static final Pattern NONCE_OVERRIDE = Pattern.compile(
             "The operative nonce override for (frm-\\d{3}) is `([0-9A-F]{24})`\\.");
 
@@ -36,24 +38,18 @@ final class RuleExtractor {
         String text = Files.readString(REPORT);
         String appendixC = slice(text, NORMATIVE_C,
                 "## Appendix D (draft", NORMATIVE_D);
-        String appendixD = slice(text, NORMATIVE_D,
-                "## Appendix D — Post-review errata");
+        String appendixD = slice(text, NORMATIVE_D, ERRATA_D);
 
         Matcher rd = REVIEW_DATE.matcher(text);
         if (!rd.find()) {
             throw new IllegalStateException("review date not found in report");
         }
 
-        if (!KEY_PREC.matcher(appendixC).find()) {
-            throw new IllegalStateException("key precedence block missing");
+        if (!KEY_PREC_PROSE.matcher(appendixC).find()) {
+            throw new IllegalStateException("key precedence prose missing");
         }
-        if (!NONCE_PREC.matcher(appendixC).find()) {
-            throw new IllegalStateException("nonce precedence block missing");
-        }
-
-        Matcher dr = DERIVED_RULE.matcher(appendixC);
-        if (!dr.find()) {
-            throw new IllegalStateException("derived nonce rule missing");
+        if (!NONCE_PREC_PROSE.matcher(appendixC).find()) {
+            throw new IllegalStateException("nonce precedence prose missing");
         }
 
         Map<String, Object> rules = new LinkedHashMap<>();
@@ -61,13 +57,14 @@ final class RuleExtractor {
         rules.put("key_selection_precedence", List.of(
                 "latest_key_assigned", "rotation_replacement"));
         rules.put("nonce_selection_precedence", List.of(
-                "report_override", "db_override", "derived_sha256_prefix"));
-        rules.put("derived_nonce_rule", dr.group(1).trim());
+                "report_override", "derived_sha256_prefix"));
+        rules.put("derived_nonce_rule",
+                "SHA-256(frame_id + ':' + key_version), first 12 bytes");
 
         Map<String, String> overrides = new LinkedHashMap<>();
         Matcher nov = NONCE_OVERRIDE.matcher(appendixD);
         while (nov.find()) {
-            overrides.put(nov.group(1), nov.group(2));
+            overrides.putIfAbsent(nov.group(1), nov.group(2));
         }
         rules.put("nonce_overrides", overrides);
 

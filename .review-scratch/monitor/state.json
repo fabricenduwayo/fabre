@@ -2,43 +2,19 @@
   "runs": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
       "folder_name": "reproduce-java-aes-gcm-findings",
-      "feedback_hash": "db0dd52c2d9a8e5c",
-      "attempts": 1,
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "Fixed the platform oracle failure. The solution logic was fine \u2014 2 of 3 oracle runs passed with reward 1.0 locally and on platform. Run 2 failed with `EnvironmentStartTimeoutError: Environment start timed out after 900.0 seconds` during Daytona sandbox creation (environment setup took up to ~651s on run 3, and hit the 900s ceiling on run 2).\n\n## Changes\n\n**`environment/Dockerfile`**\n- Bumped `# platform-revision:` to `2026-07-08-r10`\n- Removed `sqlite3` apt package and the build-time `seed.sql` import step\n- Ship prebuilt `/app/data/forensic_audit.db` instead (faster, more reliable builds)\n\n**`environment/data/forensic_audit.db`**\n- Generated from `seed.sql` and committed as the vendored DB\n\n**`task.toml`**\n- Raised `build_timeout_sec` from `900` to `1800` for headroom on slow platform builds\n\n**Cleanup**\n- Removed stray `jobs/` and `tools/jobs/` harbor artifacts from the task folder (they were inflating the ZIP to ~17MB)\n\nOracle still passes locally at **1.0** after a forced rebuild. Resubmitted with static checks **PASS**, not sent to reviewer.\n\n```json\n{\n  \"changes_summary\": \"Diagnosed platform oracle failure as EnvironmentStartTimeoutError (900s build cap) on 1/3 Daytona runs, not broken solution logic. Optimized environment/Dockerfile by vendoring prebuilt forensic_audit.db and dropping sqlite3 apt/RUN seed step, raised task.toml build_timeout_sec to 1800, bumped platform-revision to 2026-07-08-r10, and removed stray jobs artifacts from the task folder. Oracle reward 1.0 locally; resubmitted with static checks PASS without send-to-reviewer.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Diagnosed platform oracle failure as EnvironmentStartTimeoutError (900s build cap) on 1/3 Daytona runs, not broken solution logic. Optimized environment/Dockerfile by vendoring prebuilt forensic_audit.db and dropping sqlite3 apt/RUN seed step, raised task.toml build_timeout_sec to 1800, bumped platform-revision to 2026-07-08-r10, and removed stray jobs artifacts from the task folder. Oracle reward 1.0 locally; resubmitted with static checks PASS without send-to-reviewer.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": "(no git diff detected)",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "see platform feedback in monitor log",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T082626Z.json",
-      "last_run": "2026-07-08T08:26:26.986188+00:00"
+      "feedback_hash": "7d10d3abac2a51e0",
+      "attempts": 3,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-08T21:41:01.122763+00:00"
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
-      "feedback_hash": "903f38f16f5e455e",
+      "feedback_hash": "5a53f4531f8bf4f5",
       "attempts": 1,
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "Hardened the task for the Python **HARD** gate (was TRIVIAL at 100% on both models). Summary of what changed:\n\n## Root cause\nAgents passed every test because Appendix H was fully specified in `scoring_standard.md` and the full replay never exercised **H-2026-41** (alice had enough score to fund INC-105\u2019s full +12 offset).\n\n## Hardening (real interacting logic)\n\n**New rules**\n- **H-2026-44** \u2014 Primary correct-offset funding match: beneficiary `correct` cannot exceed what `offset_correct_player` solvency actually funded.\n- **H-2026-45** \u2014 Deferred correct-offset funding match: same cap on the post-floor pass.\n\n**New rulings in `rulings.json`**\n- **INC-107** (seq 96): alice `delta: -34` \u2014 drains alice to 8 before INC-105 so funding match actually fires in the full replay.\n- **INC-108** (seq 101): dave `correct_delta: 3` with `offset_correct_player: bob` \u2014 bob has 0 correct, so H-2026-44 blocks the credit.\n\n**Tests**\n- Fixed `test_inc105_funding_match_in_full_replay` baseline (compare against replay without INC-105 only, since INC-107 is in both).\n- Added isolated tests for H-2026-44/45 and full-replay INC-108.\n- Updated `test_correct_offset_solvency_caps_debit` for combined solvency + funding match.\n- Fixed 12 ruff F841 lint errors (unused variables).\n\n**Other**\n- Oracle: **1.0**\n- `# platform-revision: 2026-07-08-r14` in Dockerfile\n- Resubmitted with updated explanations/rubrics; **not** sent to reviewer\n- Assignment state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Added H-2026-44/45 correct-offset funding-match rules to scoring_standard.md and instruction.md; implemented them in solution/replay.py and tests/helpers.py; added INC-107 (drains alice before INC-105 so primary funding match fires in full replay) and INC-108 (correct-offset funding block) to rulings.json; added/fixed pytest cases for score and correct funding match; fixed ruff F841 lint; bumped Dockerfile platform-revision to r14; updated trivia explanations and rubrics; resubmitted without send-to-reviewer.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Added H-2026-44/45 correct-offset funding-match rules to scoring_standard.md and instruction.md; implemented them in solution/replay.py and tests/helpers.py; added INC-107 (drains alice before INC-105 so primary funding match fires in full replay) and INC-108 (correct-offset funding block) to rulings.json; added/fixed pytest cases for score and correct funding match; fixed ruff F841 lint; bumped Dockerfile platform-revision to r14; updated trivia explanations and rubrics; resubmitted without send-to-reviewer.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": ".../environment/Dockerfile                         |   2 +-\n .../environment/data/rulings.json                  |   8 +-\n .../environment/docs/scoring_standard.md           |  50 +++-\n repair-express-trivia-worker/instruction.md        |  15 +-\n repair-express-trivia-worker/solution/replay.py    |  60 +++--\n repair-express-trivia-worker/tests/helpers.py      |  60 +++--\n repair-express-trivia-worker/tests/test_outputs.py | 269 ++++++++++++++++++---\n 7 files changed, 376 insertions(+), 88 deletions(-)",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "Difficulty: \u274c TRIVIAL - Requires at least HARD for python",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T081809Z.json",
-      "last_run": "2026-07-08T08:18:10.428499+00:00"
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-08T21:00:43.174491+00:00"
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
@@ -58,42 +34,50 @@
     },
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
       "folder_name": "repair-java-trailswitch-graph-rules",
-      "feedback_hash": "923cd53173201874",
-      "attempts": 1,
-      "status": "agent_finished",
-      "agent_status": "finished",
-      "agent_summary": "## Summary\n\nRevised `repair-java-trailswitch-graph-rules` to address the TRIVIAL difficulty bounce and the `behavior_in_task_description` quality failure.\n\n**Difficulty hardening**\n- Trimmed `/app/docs/trailswitch-referee-contract.md` \u2014 removed the detailed rule-evaluation cheat sheet (ascending priority, first-match, clear vs lock, conjunction). Contract now covers API shape, SQL parameterization, and cycle guarding only.\n- Added misleading comments in broken Java (`GraphPathRepository` claims ASC order but uses DESC; `SwitchRuleHandler` relays lock groups before route rules).\n- Added brief normative SQL comments in `seed.sql` instead of a `policy_expectations` table.\n\n**Instruction sufficiency**\n- Expanded `instruction.md` to name every tested control: ascending `rule_priority` with per-edge first-match, `clear` vs `lock`, AND conjunction with NULL wildcards, lock-group relay after route rules, parameterized JDBC, and `cycle_guard` on all normal finishes.\n\n**Submission**\n- Bumped `# platform-revision: 2026-07-08-r11` in the Dockerfile.\n- Updated `.review-scratch/trailswitch-explanations.txt` and `trailswitch-rubrics.txt` (removed `policy_expectations` references).\n- Oracle: **1.0**\n- Static checks: **PASS**\n- Platform state: **EVALUATION_PENDING**\n\n```json\n{\n  \"changes_summary\": \"Trimmed trailswitch-referee-contract.md to remove normative rule-evaluation cheat sheet; expanded instruction.md with explicit per-edge first-match, clear/lock, AND conjunction, lock-group relay, JDBC, and cycle_guard requirements; added seed SQL comments and misleading comments in broken GraphPathRepository/SwitchRuleHandler; bumped Dockerfile platform-revision to 2026-07-08-r11; updated submission explanations and rubrics. Oracle reward 1.0; resubmitted with static checks PASS.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
-      "agent_report": {
-        "changes_summary": "Trimmed trailswitch-referee-contract.md to remove normative rule-evaluation cheat sheet; expanded instruction.md with explicit per-edge first-match, clear/lock, AND conjunction, lock-group relay, JDBC, and cycle_guard requirements; added seed SQL comments and misleading comments in broken GraphPathRepository/SwitchRuleHandler; bumped Dockerfile platform-revision to 2026-07-08-r11; updated submission explanations and rubrics. Oracle reward 1.0; resubmitted with static checks PASS.",
-        "oracle_reward": "1.0",
-        "resubmit_static_checks": "PASS",
-        "resubmit_sent": true,
-        "platform_state_after": "EVALUATION_PENDING"
-      },
-      "git_diff_stat": "repair-java-trailswitch-graph-rules/environment/Dockerfile    |  2 +-\n .../environment/docs/trailswitch-referee-contract.md          | 11 ++---------\n repair-java-trailswitch-graph-rules/environment/sql/seed.sql  |  2 ++\n .../main/java/com/trailswitch/repo/GraphPathRepository.java   |  1 +\n .../main/java/com/trailswitch/service/SwitchRuleHandler.java  |  1 +\n repair-java-trailswitch-graph-rules/instruction.md            |  6 +++++-\n 6 files changed, 12 insertions(+), 11 deletions(-)",
-      "platform_state_after": "EVALUATION_PENDING",
-      "issue": "Difficulty: \u274c TRIVIAL - Requires at least MEDIUM",
-      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T082201Z.json",
-      "last_run": "2026-07-08T08:22:02.379546+00:00"
+      "feedback_hash": "dc708919c8a3d17f",
+      "attempts": 4,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-08T21:13:42.844252+00:00"
+    },
+    "66067373-eca1-43cf-8a0d-2911c7b737fb": {
+      "folder_name": "reconcile-spring-boot-model-registry-with-h2-experiment",
+      "feedback_hash": "7f97353287473e57",
+      "attempts": 2,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-08T20:49:20.820545+00:00"
+    },
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": {
+      "folder_name": "harden-php-api-defaults",
+      "feedback_hash": "4d37a1f55c94ef45",
+      "attempts": 2,
+      "status": "error",
+      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
+      "last_run": "2026-07-08T20:26:38.475106+00:00"
     }
   },
-  "last_check": "2026-07-08T08:29:24.061153+00:00",
+  "last_check": "2026-07-08T19:53:47.189840+00:00",
   "last_queue": {
     "fix_queue": [
-      "reconcile-spring-boot-model-registry-with-h2-experiment"
+      "harden-php-api-defaults",
+      "reconcile-spring-boot-model-registry-with-h2-experiment",
+      "repair-express-trivia-worker",
+      "repair-java-trailswitch-graph-rules",
+      "reproduce-java-aes-gcm-findings"
     ],
     "manual_ui": [],
     "skipped": [],
-    "checked_at": "2026-07-08T08:29:43.607887+00:00"
+    "checked_at": "2026-07-08T19:54:38.738219+00:00"
   },
-  "next_fix_allowed_after": "2026-07-08T08:31:26.989020+00:00",
+  "next_fix_allowed_after": "2026-07-08T08:43:38.541589+00:00",
   "last_states": {
     "66067373-eca1-43cf-8a0d-2911c7b737fb": "NEEDS_REVISION",
-    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "EVALUATION_PENDING",
-    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "EVALUATION_PENDING",
+    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
+    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "NEEDS_REVISION",
     "71323da7-976c-405b-9dcd-c24d83fa6102": "ACCEPTED",
-    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "EVALUATION_PENDING",
-    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "EVALUATION_PENDING",
+    "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "NEEDS_REVISION",
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
     "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
     "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "REVIEW_PENDING",
     "586f2352-d2c5-435f-a8dd-546725e95bc7": "OFFERED",
@@ -102,8 +86,8 @@
   },
   "daily_stats": {
     "date": "2026-07-08",
-    "fixes": 3,
-    "agent_minutes": 16.6,
+    "fixes": 4,
+    "agent_minutes": 25.5,
     "events": [
       {
         "at": "2026-07-08T02:54:46.315736+00:00",
@@ -182,6 +166,131 @@
         "type": "fix",
         "folder": "reproduce-java-aes-gcm-findings",
         "agent_minutes": 4.38479313889984
+      },
+      {
+        "at": "2026-07-08T08:38:38.538385+00:00",
+        "type": "resubmitted",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment"
+      },
+      {
+        "at": "2026-07-08T08:38:38.538475+00:00",
+        "type": "fix",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "agent_minutes": 8.875078647217014
+      },
+      {
+        "at": "2026-07-08T10:28:27.259900+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T10:48:53.750830+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T11:10:43.436325+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T11:22:09.224192+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T13:25:51.616899+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T13:46:18.120315+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T14:18:03.742422+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T14:29:22.476932+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T14:41:40.491274+00:00",
+        "type": "error",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T16:37:52.291690+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T17:20:01.364861+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T17:41:01.030831+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T18:11:58.852480+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T18:23:43.361363+00:00",
+        "type": "error",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T20:26:37.953172+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T20:49:20.274246+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T21:00:42.576383+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T21:13:42.341689+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T21:41:00.274764+00:00",
+        "type": "error",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
       }
     ]
   }

@@ -37,24 +37,29 @@ TASKS = {
             "whose body text is superseded by Appendix G amendments. The instruction "
             "names the amended controls but leaves exact header shapes, status codes, "
             "and denial reasons in /app/docs/standard.md. Sticky in-process CORS/"
-            "bootstrap caches and a silent audit-schema defect still trip agents "
-            "across randomized lifecycles."
+            "bootstrap/token/secret caches, on-disk digest and secret re-read "
+            "requirements, malformed Authorization parsing (G-2026-18), and a silent "
+            "audit-schema defect still trip agents across randomized lifecycles."
         ),
         "solution": (
             "Read /app/docs/standard.md including Appendix G, then patch config.php, "
-            "http.php, audit.php, and index.php. apply_cors() grants only exact allowlist "
-            "origins with credentials and Vary: Origin. Bootstrap returns 409 before "
-            "secret check on repeat. Token is hashed for storage with owner-only file "
-            "permissions. Audit schema is migrated idempotently on each DB open."
+            "http.php, audit.php, index.php, and start.sh. apply_cors() grants only "
+            "exact allowlist origins with credentials and Vary: Origin. Bootstrap "
+            "returns 409 before secret check on repeat and re-reads the secret file "
+            "each attempt. Token is hashed for storage with owner-only file "
+            "permissions. Health treats non-Bearer or empty Bearer as "
+            "missing_credentials. Audit schema is migrated idempotently on each DB open."
         ),
         "verification": (
             "Pytest drives curl against the live PHP server across deterministic replays "
             "and 75 randomized lifecycles. Checks include per-request CORS grants, "
-            "bootstrap ordering and on-disk eligibility after token removal, digest-based "
-            "token storage, authenticated /health with correct denial reasons, SQL NULL "
-            "origin when no Origin header is present, no debug leak, audit rows with origin "
-            "preserved, legacy history retained, and full agreement with a hidden reference "
-            "simulator."
+            "bootstrap ordering and on-disk eligibility after token removal, on-disk "
+            "secret rotation without process restart, digest-based token storage with "
+            "per-request re-read from disk, authenticated /health with correct denial "
+            "reasons including G-2026-18 malformed Authorization handling, SQL NULL "
+            "origin when no Origin header is present, no debug leak, audit rows with "
+            "origin preserved, legacy history retained, and full agreement with a hidden "
+            "reference simulator."
         ),
     },
     "aes": {

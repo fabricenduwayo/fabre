@@ -2,6 +2,7 @@ package com.trailswitch.service;
 
 import com.trailswitch.model.RouteRule;
 import com.trailswitch.repo.GraphPathRepository;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,18 +19,24 @@ public class SwitchRuleHandler {
 
     public Set<String> lockedEdges(Map<String, String> switches) {
         Set<String> locked = new HashSet<>();
-        // Relay yard holds before route rules so paired arrival legs inherit early locks.
         applyLockGroups(locked);
         List<RouteRule> rules = repository.loadRules();
-        Map<String, Boolean> edgeDecided = new java.util.HashMap<>();
+        Map<String, Boolean> edgeDecided = new HashMap<>();
         for (RouteRule rule : rules) {
             if (edgeDecided.containsKey(rule.edgeId())) {
                 continue;
             }
             if (ruleMatches(switches, rule)) {
+                if ("clear".equalsIgnoreCase(rule.ruleAction())) {
+                    locked.add(rule.edgeId());
+                    edgeDecided.put(rule.edgeId(), true);
+                    continue;
+                }
                 locked.add(rule.edgeId());
+                edgeDecided.put(rule.edgeId(), true);
+            } else {
+                edgeDecided.put(rule.edgeId(), true);
             }
-            edgeDecided.put(rule.edgeId(), true);
         }
         return locked;
     }
@@ -51,14 +58,13 @@ public class SwitchRuleHandler {
     }
 
     private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {
-        if (rule.lockSw1() != null
-                && switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
-            return true;
+        boolean matched = false;
+        if (rule.lockSw1() != null) {
+            matched = switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1());
         }
-        if (rule.lockSw2() != null
-                && switches.getOrDefault("sw2", "").equalsIgnoreCase(rule.lockSw2())) {
-            return true;
+        if (rule.lockSw2() != null) {
+            matched = matched || switches.getOrDefault("sw2", "").equalsIgnoreCase(rule.lockSw2());
         }
-        return false;
+        return matched;
     }
 }

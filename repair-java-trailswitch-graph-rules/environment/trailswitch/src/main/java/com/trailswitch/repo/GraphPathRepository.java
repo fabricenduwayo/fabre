@@ -37,7 +37,6 @@ public class GraphPathRepository {
     }
 
     public List<RouteRule> loadRules() {
-        // Repository supplies ascending rule_priority for per-edge first-match evaluation.
         return jdbc.query(
                 "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action "
                         + "FROM route_rules ORDER BY rule_priority DESC",

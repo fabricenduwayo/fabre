@@ -16,6 +16,7 @@ import pytest
 
 from helpers import (
     ALLOWED_ORIGINS,
+    SECRET_FILE,
     TOKEN_FILE,
     _State,
     audit_rows,
@@ -110,6 +111,8 @@ def scripted():
     r["boot_repeat_wrong"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": "nope"}, "{}")
     r["health_ok"] = request("GET", "/health", auth)
     r["health_wrong"] = request("GET", "/health", {"Authorization": "Bearer bad"})
+    r["health_malformed_basic"] = request("GET", "/health", {"Authorization": "Basic dXNlcjpwYXNz"})
+    r["health_malformed_empty_bearer"] = request("GET", "/health", {"Authorization": "Bearer "})
     r["cors_allowed"] = request("GET", "/health", {**auth, "Origin": ALLOWED})
     r["cors_allowed2"] = request("GET", "/health", {**auth, "Origin": ALLOWED2})
     r["cors_no_origin_after_grant"] = request("GET", "/health", auth)
@@ -204,8 +207,30 @@ def test_cors_grant_follows_current_request(scripted):
     assert header_ci(headers_none, "Access-Control-Allow-Origin") is None
 
 
+def test_health_follows_on_disk_digest(scripted):
+    """G-2026-14: AC-HEALTH re-reads the stored digest from disk on every request."""
+    import hashlib
+    import os
+
+    token1 = scripted["token"]
+    assert token1 is not None
+    token2 = "replacement-credential-for-on-disk-check"
+    assert token1 != token2
+
+    digest2 = hashlib.sha256(token2.encode()).hexdigest()
+    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
+        fh.write(digest2)
+    os.chmod(TOKEN_FILE, 0o600)
+
+    status_old, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {token1}"})
+    assert status_old == 401, "stale in-process digest cache must not keep the old bearer valid"
+
+    status_new, _, _, body = request("GET", "/health", {"Authorization": f"Bearer {token2}"})
+    assert status_new == 200 and body == {"status": "ok"}
+
+
 def test_bootstrap_eligibility_follows_token_file(scripted):
-    """AC-BOOTSTRAP: bootstrap eligibility follows the on-disk token file, not caches."""
+    """G-2026-14: bootstrap eligibility follows the on-disk token file, not caches."""
     import os
 
     secret = read_secret()
@@ -220,6 +245,21 @@ def test_bootstrap_eligibility_follows_token_file(scripted):
     )
     assert status == 201, f"expected fresh bootstrap after token removal, got {status}"
     assert body and body.get("token")
+
+
+def test_health_malformed_auth_is_missing_credentials(scripted):
+    """G-2026-18: non-Bearer or empty Bearer credentials log missing_credentials."""
+    rows = audit_rows()
+    for key in ("health_malformed_basic", "health_malformed_empty_bearer"):
+        status, _, _, _ = scripted[key]
+        assert status == 401, f"{key} -> {status}"
+    reasons = {
+        r["reason"]
+        for r in rows
+        if r["event"] == "health" and r["decision"] == "denied"
+    }
+    assert "missing_credentials" in reasons
+    assert "invalid_token" in reasons
 
 
 def test_health_requires_valid_token(scripted):
@@ -303,6 +343,39 @@ def test_audit_records_origin(scripted):
     rows = audit_rows_with_origin()
     matching = [r for r in rows if r.get("origin") == ALLOWED]
     assert matching, "no audited row recorded the allowed origin"
+
+
+def test_bootstrap_secret_follows_on_disk_file():
+    """G-2026-17: bootstrap secret validation re-reads the on-disk secret file."""
+    reset_state()
+    with open(SECRET_FILE, encoding="utf-8") as fh:
+        original = fh.read().strip()
+
+    replacement = "hd-rotated-bootstrap-secret-7c2f9a1e"
+    assert replacement != original
+
+    status, _, _, _ = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": "wrong-secret-prime-cache"},
+        "{}",
+    )
+    assert status == 403
+
+    with open(SECRET_FILE, "w", encoding="utf-8") as fh:
+        fh.write(replacement + "\n")
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": replacement},
+        "{}",
+    )
+    assert status == 201, f"expected bootstrap with rotated on-disk secret, got {status}"
+    assert body and body.get("token")
+
+    with open(SECRET_FILE, "w", encoding="utf-8") as fh:
+        fh.write(original + "\n")
 
 
 def test_randomized_lifecycles_match_reference():

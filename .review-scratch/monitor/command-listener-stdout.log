@@ -40,3 +40,7 @@
 [2026-07-08T08:09:11Z] [terminus-control] Telegram: send help for commands
 [2026-07-08T08:28:00Z] [terminus-control] command from Telegram: status (update 791742640)
 [2026-07-08T08:29:23Z] [terminus-control] command from Telegram: run (update 791742641)
+[2026-07-08T08:39:21Z] [terminus-control] command from Telegram: status (update 791742642)
+[2026-07-08T11:19:04Z] [terminus-control] WARN: Telegram poll: Telegram getUpdates failed: <urlopen error [Errno 54] Connection reset by peer>
+[2026-07-08T13:49:59Z] [terminus-control] command from Telegram: pause 3h (update 791742643)
+[2026-07-08T14:58:47Z] [terminus-control] WARN: Telegram poll: Telegram getUpdates failed: <urlopen error [Errno 54] Connection reset by peer>

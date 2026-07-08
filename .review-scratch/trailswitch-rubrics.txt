@@ -1,9 +1,10 @@
 Agent reads /app/docs/trailswitch-referee-contract.md, /app/sql/seed.sql, and instruction.md before editing Java handlers, +3
 Agent inspects GraphPathRepository for string-concatenated station ids in SQL, +3
-Agent repairs PathPlanner to track visited stations and cap search depth, +4
-Agent repairs SwitchRuleHandler: AND lock match, ascending rule_priority, clear stops further rules, NULL wildcards, non-match continues, +6
+Agent repairs PathPlanner to track visited nodes before re-enqueue on the cyclic graph, +4
+Agent repairs SwitchRuleHandler: conjunctive lock match, ascending rule_priority, clear stops further rules, NULL wildcards, non-match continues, +6
 Agent restores lock_groups relay after per-edge route rules with every member edge per group_id, +6
-Agent evaluates the arrival leg e_d_e route-rule chain before lock-group relay runs, +3
+Agent implements transitive lock-group relay across yard_spur and junction_gate from seed rows, +5
+Agent reconciles yard_spur and junction_gate relay across spur, arrival, junction B, and C-E corridor legs, +4
 Agent rebuilds the Spring Boot jar and restarts TrailSwitch after code edits, +4
 Agent keeps POST /v1/plan response shape with reachable, path, and cycle_guard fields, +3
 Agent leaves GraphPathRepository concatenating user input into SQL strings, -4
@@ -13,5 +14,6 @@ Agent evaluates route_rules in descending priority order or stops after the firs
 Agent treats matching clear rules as locks instead of leaving the edge open, -4
 Agent leaves loadLockGroups returning a partial group map that drops member edges, -4
 Agent runs lock-group relay before route rules finish, -4
-Agent ignores lock_groups relay so paired arrival legs stay open while the spur is locked, -4
+Agent applies lock-group relay in a single pass so junction_gate misses indirect spur holds, -4
+Agent ignores lock_groups relay so paired arrival, junction, or corridor legs stay open while the spur is locked, -4
 Agent changes or removes the /v1/plan endpoint contract, -4

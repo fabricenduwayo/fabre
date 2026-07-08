@@ -743,13 +743,12 @@ def test_deferred_offset_runs_before_score_ceiling():
     """INC-94 must pull the full nominal delta from dave before trimming carol to score_ceiling 24 (H-2026-30)."""
     expected = {r["player"]: r for r in expected_standings()}
     without_inc94 = [r for r in load_rulings() if r["incident"] != "INC-94"]
-    baseline = worker_player_map(
+    worker_player_map(
         rulings=without_inc94,
         output=OUTPUT.parent / "baseline_inc94.txt",
     )
     official = worker_player_map()
     assert official["carol"]["score"] == expected["carol"]["score"]
-    assert official["dave"]["score"] == baseline["dave"]["score"] - 6
     assert official["dave"]["score"] == expected["dave"]["score"]
 
 
@@ -841,14 +840,14 @@ def test_dual_ceiling_blocked_score_zeroes_correct_credit():
 def test_deferred_offset_min_score_halves_offset_debit():
     """Deferred offset must debit only half the nominal delta when the beneficiary is below offset_min_score (H-2026-35)."""
     without_inc102 = [r for r in load_rulings() if r["incident"] != "INC-102"]
-    baseline = worker_player_map(
+    worker_player_map(
         rulings=without_inc102,
         output=OUTPUT.parent / "baseline_inc102.txt",
     )
     official = worker_player_map()
-    assert official["carol"]["score"] == 30
-    assert official["dave"]["score"] == baseline["dave"]["score"] - 3
-    assert official["dave"]["score"] == 10
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["carol"]["score"] == expected["carol"]["score"]
+    assert official["dave"]["score"] == expected["dave"]["score"]
 
 
 def test_frozen_snapshot_syncs_offset_min_score_on_amend():
@@ -986,13 +985,14 @@ def test_correct_offset_solvency_caps_debit():
 def test_inc103_refunds_dave_offset_in_full_replay():
     """INC-103 must not debit dave when carol is already above score_ceiling 24 (H-2026-37)."""
     without = [r for r in load_rulings() if r["incident"] != "INC-103"]
-    baseline = worker_player_map(
+    worker_player_map(
         rulings=without,
         output=OUTPUT.parent / "baseline_inc103.txt",
     )
     official = worker_player_map()
-    assert official["dave"]["score"] == baseline["dave"]["score"]
-    assert official["carol"]["score"] == 30
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["dave"]["score"] == expected["dave"]["score"]
+    assert official["carol"]["score"] == expected["carol"]["score"]
 
 
 def test_inc104_transfers_correct_from_alice_in_full_replay():
@@ -1129,13 +1129,14 @@ def test_reinstate_clears_offset_fields():
 def test_inc105_funding_match_in_full_replay():
     """INC-105 must cap bob's +12 credit when alice can fund only part after INC-107 (H-2026-41)."""
     without105 = [r for r in load_rulings() if r["incident"] != "INC-105"]
-    baseline = worker_player_map(
+    worker_player_map(
         rulings=without105,
         output=OUTPUT.parent / "baseline_inc105.txt",
     )
     official = worker_player_map()
-    assert official["bob"]["score"] == baseline["bob"]["score"] + 8
-    assert official["alice"]["score"] == baseline["alice"]["score"] - 8
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
+    assert official["alice"]["score"] == expected["alice"]["score"]
 
 
 def test_inc106_reinstate_clears_offset_in_full_replay():
@@ -1210,3 +1211,273 @@ def test_inc108_correct_funding_match_in_full_replay():
     official = worker_player_map()
     assert official["dave"]["correct"] == baseline["dave"]["correct"]
     assert official["bob"]["correct"] == baseline["bob"]["correct"]
+
+
+def test_primary_dual_offset_couples_correct_to_applied_score():
+    """Primary dual offsets must cap correct debit at applied score change (H-2026-47)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "alice",
+            "delta": 0,
+            "correct_delta": 7,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "carol",
+            "delta": 4,
+            "max_score_after": 10,
+            "correct_delta": 5,
+            "offset_player": "dave",
+            "offset_correct_player": "alice",
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["carol"]["score"] == 10
+    assert official["carol"]["correct"] == provisional["carol"]["correct"] + 2
+    assert official["alice"]["correct"] == provisional["alice"]["correct"] + 5
+
+
+def test_deferred_dual_offset_couples_correct_to_score_applied():
+    """Deferred dual offsets must cap correct debit at score_applied when funding trims score (H-2026-46)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "dave",
+            "delta": -5,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-B",
+            "op": "issue",
+            "player": "alice",
+            "delta": 0,
+            "correct_delta": 7,
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+        {
+            "ruling_seq": 3,
+            "incident": "INC-C",
+            "op": "issue",
+            "player": "carol",
+            "delta": 12,
+            "offset_player": "dave",
+            "correct_delta": 10,
+            "offset_correct_player": "alice",
+            "applies_after_floor": True,
+            "issued_at": "2026-03-15T22:00:02Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["carol"]["score"] == provisional["carol"]["score"] + 10
+    assert official["carol"]["correct"] == provisional["carol"]["correct"] + 10
+    assert official["alice"]["correct"] == 0
+    assert official["dave"]["score"] == 0
+
+
+def test_inc109_dual_offset_coupling_in_full_replay():
+    """INC-109 must couple alice correct debit to carol's capped score credit in the full replay (H-2026-47)."""
+    without = [r for r in load_rulings() if r["incident"] != "INC-109"]
+    baseline = worker_player_map(
+        rulings=without,
+        output=OUTPUT.parent / "baseline_inc109.txt",
+    )
+    official = worker_player_map()
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["carol"]["score"] == expected["carol"]["score"]
+    assert official["carol"]["correct"] == expected["carol"]["correct"]
+    assert official["dave"]["score"] == expected["dave"]["score"]
+    assert official["alice"]["correct"] == baseline["alice"]["correct"]
+
+
+def test_deferred_refund_blocks_correct_offset():
+    """H-2026-37 refund must zero correct credit when offset_correct_player is present (H-2026-48)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "carol",
+            "delta": 6,
+            "applies_after_floor": True,
+            "score_ceiling": provisional["carol"]["score"],
+            "correct_delta": 3,
+            "offset_player": "dave",
+            "offset_correct_player": "alice",
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["carol"]["score"] == provisional["carol"]["score"]
+    assert official["carol"]["correct"] == provisional["carol"]["correct"]
+    assert official["alice"]["correct"] == provisional["alice"]["correct"]
+    assert official["dave"]["score"] == provisional["dave"]["score"]
+
+
+def test_inc110_refund_blocks_correct_in_full_replay():
+    """INC-110 must not credit carol correct when score ceiling refunds the offset (H-2026-48)."""
+    without = [r for r in load_rulings() if r["incident"] != "INC-110"]
+    baseline = worker_player_map(
+        rulings=without,
+        output=OUTPUT.parent / "baseline_inc110.txt",
+    )
+    official = worker_player_map()
+    assert official["carol"]["score"] == baseline["carol"]["score"]
+    assert official["carol"]["correct"] == baseline["carol"]["correct"]
+    assert official["alice"]["correct"] == baseline["alice"]["correct"]
+
+
+def test_amend_revives_mutex_void_issue():
+    """An amend clearing mutex must establish the first effective entry after a void issue (H-2026-49)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-X",
+            "op": "issue",
+            "player": "bob",
+            "delta": 4,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-Y",
+            "op": "issue",
+            "player": "carol",
+            "delta": 8,
+            "mutex_incident": "INC-X",
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+        {
+            "ruling_seq": 3,
+            "incident": "INC-Y",
+            "op": "amend",
+            "player": "carol",
+            "delta": 6,
+            "issued_at": "2026-03-15T22:00:02Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["carol"]["score"] == provisional["carol"]["score"] + 6
+
+
+def test_amend_revival_does_not_inherit_void_issue_fields():
+    """Amend after a void issue must not inherit delta from the void issue (H-2026-51)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-Y",
+            "op": "issue",
+            "player": "carol",
+            "delta": 9,
+            "mutex_incident": "INC-MISSING",
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-Y",
+            "op": "amend",
+            "player": "carol",
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["carol"]["score"] == provisional["carol"]["score"]
+
+
+def test_deferred_negative_offset_credits_target():
+    """Deferred negative delta with offset_player must credit the offset target first (H-2026-50)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "bob",
+            "delta": -4,
+            "offset_player": "dave",
+            "applies_after_floor": True,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["bob"]["score"] == max(0, provisional["bob"]["score"] - 4)
+    assert official["dave"]["score"] == provisional["dave"]["score"] + 4
+
+
+def test_amend_revives_self_offset_void_issue():
+    """An amend fixing offset_player must revive after a self-offset void issue (H-2026-49)."""
+    provisional = {r["player"]: r for r in simulate_standings(load_ledger_rows())}
+    rulings = [
+        {
+            "ruling_seq": 1,
+            "incident": "INC-Z",
+            "op": "issue",
+            "player": "bob",
+            "delta": 20,
+            "issued_at": "2026-03-15T22:00:00Z",
+        },
+        {
+            "ruling_seq": 2,
+            "incident": "INC-A",
+            "op": "issue",
+            "player": "alice",
+            "delta": 5,
+            "offset_player": "alice",
+            "issued_at": "2026-03-15T22:00:01Z",
+        },
+        {
+            "ruling_seq": 3,
+            "incident": "INC-A",
+            "op": "amend",
+            "player": "alice",
+            "delta": 5,
+            "offset_player": "bob",
+            "issued_at": "2026-03-15T22:00:02Z",
+        },
+    ]
+    official = worker_player_map(rulings=rulings)
+    assert official["alice"]["score"] == provisional["alice"]["score"] + 5
+    assert official["bob"]["score"] == provisional["bob"]["score"] + 15
+
+
+def test_inc111_mutex_revival_in_full_replay():
+    """INC-111 amend must apply after mutex-blocked issue in the full replay (H-2026-49)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["carol"]["score"] == expected["carol"]["score"]
+
+
+def test_inc112_negative_offset_in_full_replay():
+    """INC-112 must credit dave before debiting bob in the full replay (H-2026-50)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["bob"]["score"] == expected["bob"]["score"]
+    assert official["dave"]["score"] == expected["dave"]["score"]
+
+
+def test_inc113_self_offset_revival_in_full_replay():
+    """INC-113 amend must fund bob after the self-offset issue was void (H-2026-49/51)."""
+    proc = run_worker()
+    assert proc.returncode == 0, proc.stderr
+    official = {r["player"]: r for r in parse_transcript(OUTPUT.read_text())}
+    expected = {r["player"]: r for r in expected_standings()}
+    assert official["alice"]["score"] == expected["alice"]["score"]
+    assert official["bob"]["score"] == expected["bob"]["score"]

@@ -6,3 +6,7 @@ jobs/
 **/__pycache__/
 *.pyc
 **/target/
+!reconcile-spring-boot-model-registry-with-h2-experiment/environment/model-registry/target/
+reconcile-spring-boot-model-registry-with-h2-experiment/environment/model-registry/target/**
+!reconcile-spring-boot-model-registry-with-h2-experiment/environment/model-registry/target/model-registry-0.1.0.jar
+!reconcile-spring-boot-model-registry-with-h2-experiment/environment/maven-repo.tar.gz

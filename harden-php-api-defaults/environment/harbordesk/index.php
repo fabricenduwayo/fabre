@@ -53,9 +53,7 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     }
 
     $secret = isset($_SERVER['HTTP_X_BOOTSTRAP_SECRET']) ? $_SERVER['HTTP_X_BOOTSTRAP_SECRET'] : null;
-    $expected = is_file($config['bootstrap_secret_file'])
-        ? trim(file_get_contents($config['bootstrap_secret_file']))
-        : null;
+    $expected = read_bootstrap_secret($config);
 
     $allowed = false;
     if ($expected !== null && $secret !== null && hash_equals($expected, $secret)) {

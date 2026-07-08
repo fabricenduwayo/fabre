@@ -126,15 +126,22 @@ def health_report(repo_root: Path, state: dict | None = None) -> str:
     stb_status, stb_detail = stb_ok()
     bridges = bridge_orphan_count(repo_root)
     dirty = git_dirty_task_folders(repo_root)
-    cursor = "running" if cursor_app_running() else "NOT RUNNING"
+    cursor = "running" if cursor_app_running() else "not running"
+    runtime = os.environ.get("MONITOR_AGENT_RUNTIME", "cloud").strip().lower()
     auto_fix = os.environ.get("AUTO_AGENT_FIX", "0").strip()
     lines = [
         f"Docker: {docker}",
         f"stb: {'ok' if stb_status else 'FAIL'} ({stb_detail})",
-        f"Cursor app: {cursor}",
-        f"AUTO_AGENT_FIX: {auto_fix}",
-        f"cursor-sdk bridges: {bridges} orphan(s)",
+        f"agent runtime: {runtime}",
     ]
+    if runtime == "local":
+        lines.append(f"Cursor app: {cursor}")
+    lines.extend(
+        [
+            f"AUTO_AGENT_FIX: {auto_fix}",
+            f"cursor-sdk bridges: {bridges} orphan(s)",
+        ]
+    )
     if state:
         from monitor_policy import is_paused, pause_remaining_sec
 

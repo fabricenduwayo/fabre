@@ -5,6 +5,7 @@ import com.trailswitch.repo.GraphPathRepository;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -27,11 +28,15 @@ public class PathPlanner {
         Set<String> locked = ruleHandler.lockedEdges(switches);
         Queue<String> queue = new ArrayDeque<>();
         Map<String, String> parent = new HashMap<>();
+        Set<String> visited = new HashSet<>();
         queue.add(from);
         parent.put(from, null);
 
         while (!queue.isEmpty()) {
             String current = queue.poll();
+            if (!visited.add(current)) {
+                continue;
+            }
             if (current.equals(to)) {
                 return new PlanResult(true, rebuild(parent, to), true);
             }

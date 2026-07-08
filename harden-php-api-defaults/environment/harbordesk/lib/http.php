@@ -20,6 +20,19 @@ function admin_token_exists($config)
     return $exists;
 }
 
+function read_bootstrap_secret($config)
+{
+    static $cached = null;
+    static $loaded = false;
+    if (!$loaded) {
+        $cached = is_file($config['bootstrap_secret_file'])
+            ? trim(file_get_contents($config['bootstrap_secret_file']))
+            : null;
+        $loaded = true;
+    }
+    return $cached;
+}
+
 function apply_cors($config)
 {
     static $sticky_origin = null;

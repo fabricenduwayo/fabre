@@ -57,6 +57,20 @@ def wait_for_referee(timeout_sec: float = 20.0) -> None:
     raise RuntimeError("referee did not become ready")
 
 
+def restart_referee_process() -> None:
+    """Restart the Express referee so /v1/rulings reloads rulings.json."""
+    subprocess.run(["pkill", "-f", "node src/server.js"], check=False)
+    time.sleep(0.25)
+    with open("/tmp/referee-test.log", "ab") as log:
+        subprocess.Popen(
+            ["/app/referee/start.sh"],
+            stdout=log,
+            stderr=log,
+            start_new_session=True,
+        )
+    wait_for_referee()
+
+
 def load_ledger_rows(path: Path = LEDGER) -> list[dict]:
     rows: list[dict] = []
     with path.open(newline="") as fh:
@@ -224,15 +238,17 @@ def rulings_snapshot() -> str:
 def write_rulings(rulings: list[dict]) -> None:
     """Replace the on-disk rulings feed and reset referee ingest state."""
     RULINGS_PATH.write_text(
-        json.dumps({"rulings": rulings}, indent=2) + "\n",
+        json.dumps({"match": MATCH_ID, "rulings": rulings}, indent=2) + "\n",
         encoding="utf-8",
     )
+    restart_referee_process()
     reset_referee()
 
 
 def restore_rulings(snapshot: str) -> None:
     """Restore a prior rulings.json snapshot and reset referee ingest state."""
     RULINGS_PATH.write_text(snapshot, encoding="utf-8")
+    restart_referee_process()
     reset_referee()
 
 
@@ -534,10 +550,19 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
             if transfer > 0 and actual < transfer:
                 by_player[player]["score"] -= transfer - actual
         offset_correct = eff.get("offset_correct_player")
-        if offset_correct and offset_correct in by_player and correct_applied != 0:
-            actual = apply_correct_offset_transfer(offset_correct, correct_applied)
-            if correct_applied > 0 and actual < correct_applied:
-                by_player[player]["correct"] -= correct_applied - actual
+        if offset_correct and offset_correct in by_player:
+            if correct_applied > 0:
+                transfer = correct_applied
+                if offset and offset in by_player and applied > 0:
+                    transfer = min(transfer, applied)
+                elif offset and offset in by_player and applied <= 0:
+                    transfer = 0
+                if transfer > 0:
+                    actual = apply_correct_offset_transfer(offset_correct, transfer)
+                    if actual < correct_applied:
+                        by_player[player]["correct"] -= correct_applied - actual
+            elif correct_applied < 0:
+                apply_correct_offset_transfer(offset_correct, correct_applied)
 
     def apply_deferred(eff: dict) -> None:
         player = eff["player"]
@@ -570,6 +595,7 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
         ):
             score_applied = min(score_applied, offset_debit)
         by_player[player]["score"] += score_applied
+        score_offset_refunded = False
         if (
             ceiling is not None
             and score_applied == 0
@@ -578,10 +604,18 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
             and offset_debit > 0
         ):
             by_player[offset]["score"] += offset_debit
+            score_offset_refunded = True
         correct_before = by_player[player]["correct"]
         correct_delta = eff["correct_delta"]
         score_blocked_correct = False
         if ceiling is not None and correct_ceiling is not None and score_applied == 0:
+            correct_delta = 0
+            score_blocked_correct = True
+        elif (
+            score_offset_refunded
+            and eff.get("offset_correct_player")
+            and not score_blocked_correct
+        ):
             correct_delta = 0
             score_blocked_correct = True
         elif correct_ceiling is not None:
@@ -594,9 +628,19 @@ def reconcile_rulings(standings: list[dict], rulings: list[dict]) -> list[dict]:
             and not score_blocked_correct
             and correct_delta > 0
         ):
-            collected = apply_correct_offset_transfer(offset_correct, correct_delta)
-            if collected < correct_delta:
+            transfer = correct_delta
+            if (
+                offset
+                and offset in by_player
+                and delta > 0
+                and score_applied < delta
+            ):
+                transfer = 0 if score_applied <= 0 else min(transfer, score_applied)
+            collected = apply_correct_offset_transfer(offset_correct, transfer)
+            if collected < transfer:
                 correct_delta = collected
+            elif transfer < correct_delta:
+                correct_delta = transfer
         by_player[player]["correct"] += correct_delta
         if (
             offset_correct

@@ -111,6 +111,7 @@ def main() -> None:
         "task.toml",
         "environment/Dockerfile",
         "environment/experiment-db/experiments.mv.db",
+        "environment/model-registry/target/model-registry-0.1.0.jar",
         "solution/solve.sh",
         "solution/App.java",
         "tests/test.sh",
@@ -124,6 +125,8 @@ def main() -> None:
     presigned = request_s3_presigned_url(PROJECT_ID, assignment_id, zip_path.name)
     upload_to_s3(presigned["presigned_url"], zip_path)
     print("uploaded")
+    print("waiting 90s for S3 availability scan...")
+    time.sleep(90)
 
     feedback_response = None
     for attempt in range(1, 4):

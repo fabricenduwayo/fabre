@@ -1864,15 +1864,7 @@ Appendix cross-ref 909: readers reconciling frm-022 should start with Appendix A
 
 An earlier draft of this review circulated the following key-version ordering. It was withdrawn before sign-off and must not be used for reproduction.
 
-```json
-["latest_key_assigned", "rotation_replacement"]
-```
-
-The same draft omitted `db_override` from nonce precedence and listed only report overrides before derived nonces — that ordering is also withdrawn.
-
-```json
-["report_override", "derived_sha256_prefix"]
-```
+Draft C.1 stated that latest_key_assigned is tried before rotation_replacement. Draft C.2 listed only report_override and derived_sha256_prefix, omitting db_override entirely. Draft C.3 directed readers to order audit_events by recorded_at. Draft C.4 voided every key_rotated row sharing a rescinded key_version rather than matching the specific rotation pair. Those draft subsections are superseded by the normative Appendix C that follows Appendix B.
 
 ## Appendix A — In-scope frame dossiers
 
@@ -2294,22 +2286,21 @@ key versions, rotation replacements, or nonce override bytes.
 ## Appendix C — Normative cryptographic exception precedence
 
 The following precedence is binding when correlating audit events to a
-frame's operative decryption material. Subsections C.3 through C.5 define
-the binding voiding, ordering, and scoping semantics for SQLite
-audit_events; they supersede any narrative paragraph elsewhere in this
-review that describes ledger handling differently.
+frame's operative decryption material. Narrative paragraphs elsewhere in this
+review that describe ledger handling differently are non-normative.
 
 ### C.1 Key-version selection
 
-```json
-["rotation_replacement", "latest_key_assigned"]
-```
+Two sources compete: rotation_replacement (the replacement_key_version from
+the operative rotation under C.4) and latest_key_assigned (the operative
+assignment under C.4). rotation_replacement is tried first;
+latest_key_assigned applies only when no operative rotation exists.
 
 ### C.2 Nonce selection
 
-```json
-["report_override", "db_override", "derived_sha256_prefix"]
-```
+Three tiers apply in order: report_override (Appendix D bytes verbatim when
+present for the frame), db_override (surviving chain under C.5 scoped to the
+operative key version), derived_sha256_prefix (the truncated hash rule below).
 
 The derived-nonce rule in prose: SHA-256(frame_id + ':' + key_version), first 12 bytes.
 
@@ -2363,11 +2354,9 @@ Withdrawn draft value for frm-010: `FEEDFACECAFE000000000001`.
 
 ## Appendix D — Registered nonce overrides
 
-Five frames carry an explicit nonce override in this appendix. Every override
-listed here must be transcribed; a reader that captures only the first few will
-derive a wrong nonce for the others and fail authentication. When a frame
-section lists more than one operative override line, the last operative
-registration in that section wins.
+Explicit nonce overrides for in-scope frames appear in the subsections below.
+Withdrawn errata and superseded draft appendices that repeat the same phrasing
+with different bytes must be excluded.
 
 ### D.1 frm-003 (charlie-channel)
 

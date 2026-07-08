@@ -216,7 +216,7 @@ def simulate(state, req):
 
     if path == "/health" and method == "GET":
         token = req.get("token")
-        if token is None:
+        if token is None or token == "malformed":
             return {"status": 401, "cors": cors, "body": "error",
                     "audit": ("health", "/health", origin, "denied", "missing_credentials")}
         if token == "valid" and state.token_exists:
@@ -277,6 +277,7 @@ def make_sequence(rng):
     pre_choices = [
         {"method": "GET", "path": "/health", "token": None},
         {"method": "GET", "path": "/health", "token": "wrong"},
+        {"method": "GET", "path": "/health", "token": "malformed"},
         {"method": "POST", "path": "/admin/bootstrap", "secret": "wrong", "body": "{}"},
         {"method": "POST", "path": "/admin/bootstrap", "secret": None, "body": "{}"},
         {"method": "POST", "path": "/admin/bootstrap", "secret": "valid", "body": "{bad json"},
@@ -302,6 +303,7 @@ def make_sequence(rng):
         {"method": "GET", "path": "/health", "token": "valid"},
         {"method": "GET", "path": "/health", "token": "wrong"},
         {"method": "GET", "path": "/health", "token": None},
+        {"method": "GET", "path": "/health", "token": "malformed"},
         {"method": "OPTIONS", "path": "/health"},
         {"method": "OPTIONS", "path": "/admin/bootstrap"},
         {"method": "GET", "path": "/unknown"},
@@ -340,6 +342,8 @@ def replay_request(req, secret, token):
             headers["Authorization"] = f"Bearer {token}"
         elif tok == "wrong":
             headers["Authorization"] = "Bearer not-a-real-token"
+        elif tok == "malformed":
+            headers["Authorization"] = req.get("auth_header", "Basic not-bearer")
         return request(req["method"], req["path"], headers, None)
 
     return request(req["method"], req["path"], headers, None)

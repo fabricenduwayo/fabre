@@ -40,20 +40,26 @@ public class SwitchRuleHandler {
 
     private void applyLockGroups(Set<String> locked) {
         Map<String, Set<String>> groups = repository.loadLockGroups();
-        Set<String> relay = new HashSet<>();
-        for (Set<String> edges : groups.values()) {
-            boolean triggered = false;
-            for (String edgeId : edges) {
-                if (locked.contains(edgeId)) {
-                    triggered = true;
-                    break;
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (Set<String> edges : groups.values()) {
+                boolean triggered = false;
+                for (String edgeId : edges) {
+                    if (locked.contains(edgeId)) {
+                        triggered = true;
+                        break;
+                    }
+                }
+                if (triggered) {
+                    for (String edgeId : edges) {
+                        if (locked.add(edgeId)) {
+                            changed = true;
+                        }
+                    }
                 }
             }
-            if (triggered) {
-                relay.addAll(edges);
-            }
         }
-        locked.addAll(relay);
     }
 
     private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {

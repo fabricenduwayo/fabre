@@ -60,8 +60,6 @@ final class AuditCorrelator {
             String recordedAt,
             String effectiveAt) {}
 
-    private record NonceCandidate(String effectiveAt, String nonceHex, Integer keyVersion) {}
-
     private static List<FrameRow> loadFrames() throws Exception {
         List<FrameRow> rows = new ArrayList<>();
         try (Connection conn = DriverManager.getConnection(JDBC);
@@ -99,83 +97,12 @@ final class AuditCorrelator {
         return rows;
     }
 
-    private static java.util.Set<String> revokedNonceHex(
-            String frameId, List<AuditEvent> events) {
-        java.util.Set<String> revoked = new java.util.HashSet<>();
-        for (AuditEvent event : events) {
-            if (frameId.equals(event.frameId())
-                    && "nonce_override_revoked".equals(event.eventType())
-                    && event.nonceOverrideHex() != null) {
-                revoked.add(event.nonceOverrideHex());
-            }
-        }
-        return revoked;
-    }
-
-    private static List<NonceCandidate> dbOverrideCandidates(
-            String frameId, List<AuditEvent> events) {
-        java.util.Set<String> revoked = revokedNonceHex(frameId, events);
-        List<AuditEvent> frameEvents = events.stream()
-                .filter(e -> frameId.equals(e.frameId()))
-                .sorted(Comparator.comparing(AuditEvent::recordedAt))
-                .toList();
-        List<NonceCandidate> candidates = new ArrayList<>();
-
-        for (AuditEvent event : frameEvents) {
-            String eventType = event.eventType();
-            if ("nonce_override_revoked".equals(eventType)) {
-                continue;
-            }
-            if ("nonce_override_registered".equals(eventType)) {
-                String hex = event.nonceOverrideHex();
-                if (hex != null && !revoked.contains(hex)) {
-                    candidates.add(new NonceCandidate(
-                            event.effectiveAt(), hex, event.keyVersion()));
-                }
-            } else if ("nonce_override_amended".equals(eventType)) {
-                String supersedes = event.supersedesNonceHex();
-                if (supersedes != null) {
-                    candidates.removeIf(c -> supersedes.equals(c.nonceHex()));
-                }
-                String hex = event.nonceOverrideHex();
-                if (hex != null && !revoked.contains(hex)) {
-                    candidates.add(new NonceCandidate(
-                            event.effectiveAt(), hex, event.keyVersion()));
-                }
-            } else if ("nonce_override_replaced".equals(eventType)) {
-                String supersedes = event.supersedesNonceHex();
-                if (supersedes != null) {
-                    candidates.removeIf(c -> supersedes.equals(c.nonceHex()));
-                }
-                String hex = event.nonceOverrideHex();
-                if (hex != null && !revoked.contains(hex)) {
-                    candidates.add(new NonceCandidate(
-                            event.effectiveAt(), hex, event.keyVersion()));
-                }
-            } else if ("nonce_override_replacement_rescinded".equals(eventType)) {
-                String voided = event.supersedesNonceHex();
-                if (voided != null) {
-                    candidates.removeIf(c -> voided.equals(c.nonceHex()));
-                }
-                String restored = event.nonceOverrideHex();
-                if (restored != null && !revoked.contains(restored)) {
-                    candidates.add(new NonceCandidate(
-                            event.effectiveAt(), restored, event.keyVersion()));
-                }
-            }
-        }
-
-        return candidates.stream()
-                .filter(c -> !revoked.contains(c.nonceHex()))
-                .toList();
-    }
-
-    private static java.util.Set<Integer> rescindedAssignmentVersions(
+    private static java.util.Set<Integer> rescindedRotationFromVersions(
             String frameId, List<AuditEvent> events) {
         java.util.Set<Integer> voided = new java.util.HashSet<>();
         for (AuditEvent event : events) {
             if (frameId.equals(event.frameId())
-                    && "key_assignment_rescinded".equals(event.eventType())
+                    && "key_rotation_rescinded".equals(event.eventType())
                     && event.keyVersion() != null) {
                 voided.add(event.keyVersion());
             }
@@ -183,50 +110,22 @@ final class AuditCorrelator {
         return voided;
     }
 
-    private static java.util.Set<java.util.AbstractMap.SimpleEntry<Integer, Integer>>
-            rescindedRotationPairs(String frameId, List<AuditEvent> events) {
-        java.util.Set<java.util.AbstractMap.SimpleEntry<Integer, Integer>> voided =
-                new java.util.HashSet<>();
-        for (AuditEvent event : events) {
-            if (frameId.equals(event.frameId())
-                    && "key_rotation_rescinded".equals(event.eventType())
-                    && event.keyVersion() != null
-                    && event.replacementKeyVersion() != null) {
-                voided.add(new java.util.AbstractMap.SimpleEntry<>(
-                        event.keyVersion(), event.replacementKeyVersion()));
-            }
-        }
-        return voided;
-    }
-
-    private static boolean rotationVoided(
-            AuditEvent rotation,
-            java.util.Set<java.util.AbstractMap.SimpleEntry<Integer, Integer>> voided) {
-        for (java.util.AbstractMap.SimpleEntry<Integer, Integer> pair : voided) {
-            if (pair.getKey().equals(rotation.keyVersion())
-                    && pair.getValue().equals(rotation.replacementKeyVersion())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static boolean hasRotation(String frameId, List<AuditEvent> events) {
-        java.util.Set<java.util.AbstractMap.SimpleEntry<Integer, Integer>> voided =
-                rescindedRotationPairs(frameId, events);
+        java.util.Set<Integer> voided = rescindedRotationFromVersions(frameId, events);
         return events.stream()
                 .anyMatch(e -> frameId.equals(e.frameId())
                         && "key_rotated".equals(e.eventType())
-                        && !rotationVoided(e, voided));
+                        && e.keyVersion() != null
+                        && !voided.contains(e.keyVersion()));
     }
 
     private static int resolveKeyVersion(String frameId, List<AuditEvent> events) {
-        java.util.Set<java.util.AbstractMap.SimpleEntry<Integer, Integer>> voided =
-                rescindedRotationPairs(frameId, events);
+        java.util.Set<Integer> voided = rescindedRotationFromVersions(frameId, events);
         List<AuditEvent> rotations = events.stream()
                 .filter(e -> frameId.equals(e.frameId())
                         && "key_rotated".equals(e.eventType())
-                        && !rotationVoided(e, voided))
+                        && e.keyVersion() != null
+                        && !voided.contains(e.keyVersion()))
                 .toList();
         if (!rotations.isEmpty()) {
             AuditEvent latest = rotations.stream()
@@ -236,7 +135,6 @@ final class AuditCorrelator {
         }
         AuditEvent latestAssigned = events.stream()
                 .filter(e -> frameId.equals(e.frameId()) && "key_assigned".equals(e.eventType()))
-                .filter(e -> !rescindedAssignmentVersions(frameId, events).contains(e.keyVersion()))
                 .max(Comparator.comparing(AuditEvent::recordedAt))
                 .orElseThrow();
         return latestAssigned.keyVersion();
@@ -252,14 +150,14 @@ final class AuditCorrelator {
         if (overrides != null && overrides.containsKey(frameId)) {
             return fromHex(overrides.get(frameId));
         }
-        List<NonceCandidate> matching = dbOverrideCandidates(frameId, events).stream()
-                .filter(c -> c.keyVersion() != null && c.keyVersion() == keyVersion)
-                .toList();
-        if (!matching.isEmpty()) {
-            NonceCandidate latest = matching.stream()
-                    .max(Comparator.comparing(NonceCandidate::effectiveAt))
-                    .orElseThrow();
-            return fromHex(latest.nonceHex());
+        AuditEvent dbOverride = events.stream()
+                .filter(e -> frameId.equals(e.frameId())
+                        && "nonce_override_registered".equals(e.eventType())
+                        && e.nonceOverrideHex() != null)
+                .max(Comparator.comparing(AuditEvent::recordedAt))
+                .orElse(null);
+        if (dbOverride != null) {
+            return fromHex(dbOverride.nonceOverrideHex());
         }
         return derivedNonce(frameId, keyVersion);
     }
@@ -274,8 +172,10 @@ final class AuditCorrelator {
         if (overrides != null && overrides.containsKey(frameId)) {
             return "override";
         }
-        boolean db = dbOverrideCandidates(frameId, events).stream()
-                .anyMatch(c -> c.keyVersion() != null && c.keyVersion() == keyVersion);
+        boolean db = events.stream()
+                .anyMatch(e -> frameId.equals(e.frameId())
+                        && "nonce_override_registered".equals(e.eventType())
+                        && e.nonceOverrideHex() != null);
         return db ? "override" : "derived";
     }
 

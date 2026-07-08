@@ -2751,14 +2751,9 @@ Inconsistent application of this requirement across nodes complicates evidence c
 The following amendments are in force and **supersede** the body of the referenced controls per section 1.4. They are listed in effective-date order.
 
 
-### G-2026-10 — amends SV-BANNER
+### G-2026-13 — amends CO-ORIGIN-ALLOW
 
-The approved service banner wording is updated. This amendment does not affect API behavior.
-
-
-### G-2026-07 — amends NW-TLS-CIPHERS
-
-The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, even if an earlier request in the same long-lived process carried an allowed origin.
 
 
 ### G-2026-12 — amends AC-TOKEN-STORE
@@ -2766,24 +2761,39 @@ The approved TLS cipher suite list is updated; see Appendix C. This amendment do
 The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
 
 
-### G-2026-01 — amends CO-ORIGIN-ALLOW
-
-The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
-
-
-### G-2026-16 — amends AC-BOOTSTRAP
-
-Before the case-insensitive comparison of G-2026-15, both the presented `X-Bootstrap-Secret` header value and the on-disk bootstrap secret file contents shall be trimmed of leading and trailing ASCII whitespace.
-
-
 ### G-2026-02 — amends CO-PREFLIGHT
 
 The preflight cache lifetime in CO-PREFLIGHT is lowered from `600` to `300` seconds. The `Access-Control-Max-Age` header on an allowed-origin preflight shall therefore be `300`.
 
 
+### G-2026-10 — amends SV-BANNER
+
+The approved service banner wording is updated. This amendment does not affect API behavior.
+
+
+### G-2026-01 — amends CO-ORIGIN-ALLOW
+
+The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
+
+
+### G-2026-17 — amends AC-BOOTSTRAP
+
+The deployment bootstrap secret in `data/bootstrap_secret` shall be read from disk on every bootstrap attempt. In-process caches of the secret value are non-compliant: if the on-disk secret is replaced between attempts, the next evaluation shall use the current file contents.
+
+
 ### G-2026-08 — amends MA-PATCH-WINDOW
 
 The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
+
+
+### G-2026-06 — amends AU-LEDGER-SCOPE
+
+Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
+
+
+### G-2026-18 — amends AC-HEALTH
+
+AC-HEALTH denial reasons are narrowed. The `invalid_token` reason applies only when a **non-empty** bearer credential was extracted from the `Authorization` header (a `Bearer` scheme token with at least one non-whitespace character). If the header is absent, uses a non-`Bearer` scheme, or presents `Bearer` with no credential, the reason shall be `missing_credentials` (status `401` unchanged).
 
 
 ### G-2026-05 — amends AC-BOOTSTRAP
@@ -2794,6 +2804,11 @@ The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped
 ### G-2026-04 — amends AC-HEALTH
 
 The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
+
+
+### G-2026-07 — amends NW-TLS-CIPHERS
+
+The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
 
 
 ### G-2026-11 — amends CO-PREFLIGHT
@@ -2811,22 +2826,17 @@ The refusal status for an already-bootstrapped node is changed from `403` to `40
 Bootstrap secret validation shall compare the presented `X-Bootstrap-Secret` header to the on-disk secret using a **case-insensitive** ASCII match. Letter case in the header value must not cause an otherwise-correct secret to be rejected.
 
 
+### G-2026-14 — amends AC-BOOTSTRAP
+
+Bootstrap eligibility and AC-HEALTH credential verification shall consult the on-disk token file on every request. In-process caches of whether a token exists or of the stored credential representation are non-compliant.
+
+
+### G-2026-16 — amends AC-BOOTSTRAP
+
+Before the case-insensitive comparison of G-2026-15, both the presented `X-Bootstrap-Secret` header value and the on-disk bootstrap secret file contents shall be trimmed of leading and trailing ASCII whitespace.
+
+
 ### G-2026-09 — amends IR-CONTACT
 
 The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
-
-
-### G-2026-06 — amends AU-LEDGER-SCOPE
-
-Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
-
-
-### G-2026-13 — amends CO-ORIGIN-ALLOW
-
-Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, even if an earlier request in the same long-lived process carried an allowed origin.
-
-
-## Appendix H. Implementation checklist
-
-Implementers should confirm that the API, for every request it serves, produces exactly the response and audit row implied by the controls above as amended by Appendix G.
 

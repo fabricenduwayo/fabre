@@ -21,10 +21,12 @@ final class RuleExtractor {
     private static final String NORMATIVE_D =
             "## Appendix D — Registered nonce overrides";
 
-    private static final Pattern KEY_PREC = Pattern.compile(
-            "```json\\s*\\[\"rotation_replacement\", \"latest_key_assigned\"\\]\\s*```");
-    private static final Pattern NONCE_PREC = Pattern.compile(
-            "```json\\s*\\[\"report_override\", \"db_override\", \"derived_sha256_prefix\"\\]\\s*```");
+    private static final Pattern KEY_PREC_PROSE = Pattern.compile(
+            "rotation_replacement is tried first;\\s*latest_key_assigned applies only");
+    private static final Pattern NONCE_PREC_PROSE = Pattern.compile(
+            "report_override \\(Appendix D bytes verbatim when\\s*"
+            + "present for the frame\\), db_override \\(surviving chain under C\\.5 scoped to the\\s*"
+            + "operative key version\\), derived_sha256_prefix");
     private static final Pattern DERIVED_RULE = Pattern.compile(
             "The derived-nonce rule in prose: ([^.]+)\\.");
     private static final Pattern REVIEW_DATE = Pattern.compile(
@@ -44,11 +46,11 @@ final class RuleExtractor {
             throw new IllegalStateException("review date not found in report");
         }
 
-        if (!KEY_PREC.matcher(appendixC).find()) {
-            throw new IllegalStateException("key precedence block missing");
+        if (!KEY_PREC_PROSE.matcher(appendixC).find()) {
+            throw new IllegalStateException("key precedence prose missing");
         }
-        if (!NONCE_PREC.matcher(appendixC).find()) {
-            throw new IllegalStateException("nonce precedence block missing");
+        if (!NONCE_PREC_PROSE.matcher(appendixC).find()) {
+            throw new IllegalStateException("nonce precedence prose missing");
         }
 
         Matcher dr = DERIVED_RULE.matcher(appendixC);

@@ -32,13 +32,17 @@ if ($method === 'OPTIONS') {
 if ($path === '/health' && $method === 'GET') {
     $auth = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
     $token = null;
-    if (preg_match('/^Bearer\s+(.+)$/', $auth, $m)) {
-        $token = $m[1];
+    if (preg_match('/^Bearer\s+(\S.+)$/', $auth, $m)) {
+        $cred = trim($m[1]);
+        if ($cred !== '') {
+            $token = $cred;
+        }
     }
+
     $stored = is_file($config['token_file']) ? trim(file_get_contents($config['token_file'])) : null;
 
     if ($token === null) {
-        // AC-HEALTH + G-2026-04: missing-credential reason renamed.
+        // AC-HEALTH + G-2026-04/G-2026-18: absent or non-bearer credentials.
         audit_log($config, 'health', $path, $origin, 'denied', 'missing_credentials');
         fail($config, 401, 'unauthorized');
         exit;
