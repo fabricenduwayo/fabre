@@ -10613,3 +10613,53 @@ Changed since last run:
 Will auto-fix now: none
 [2026-07-08T01:50:20Z] no auto-fix candidates after exclusions and feedback gates
 [2026-07-08T01:50:20Z] no auto-fix candidates after exclusions and feedback gates
+[2026-07-08T02:11:24Z] === 90-minute submission check start ===
+[2026-07-08T02:11:40Z] skip fbb351b7… state=EVALUATION_PENDING folder=reproduce-java-aes-gcm-findings
+[2026-07-08T02:11:40Z] skip e7d1cac7… state=EVALUATION_PENDING folder=repair-express-trivia-worker
+[2026-07-08T02:11:40Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T02:11:40Z] skip 0c176558… state=EVALUATION_PENDING folder=harden-php-api-defaults
+[2026-07-08T02:11:40Z] skip f0e91036… state=EVALUATION_PENDING folder=repair-java-trailswitch-graph-rules
+[2026-07-08T02:11:40Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T02:11:40Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T02:11:40Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T02:11:40Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T02:11:40Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T02:11:41Z] status:
+States: ACCEPTED=1, EVALUATION_PENDING=4, OFFERED=4, REVIEW_PENDING=1
+Will auto-fix now: none
+
+Docker: up
+stb: ok (installed)
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+git: task folders clean
+[2026-07-08T02:11:41Z] no auto-fix candidates after exclusions and feedback gates
+[2026-07-08T02:53:34Z] === 90-minute submission check start ===
+[2026-07-08T02:54:01Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T02:54:01Z] skip 0c176558… excluded (manual_review_queue) folder=harden-php-api-defaults
+[2026-07-08T02:54:04Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T02:54:04Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T02:54:04Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T02:54:04Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T02:54:04Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T02:54:04Z] state change: reproduce-java-aes-gcm-findings: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-08T02:54:04Z] state change: repair-express-trivia-worker: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-08T02:54:04Z] state change: harden-php-api-defaults: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-08T02:54:04Z] state change: repair-java-trailswitch-graph-rules: EVALUATION_PENDING -> NEEDS_REVISION
+[2026-07-08T02:54:05Z] status:
+States: ACCEPTED=1, NEEDS_REVISION=4, OFFERED=4, REVIEW_PENDING=1
+Changed since last run:
+  reproduce-java-aes-gcm-findings: EVALUATION_PENDING -> NEEDS_REVISION
+  repair-express-trivia-worker: EVALUATION_PENDING -> NEEDS_REVISION
+  harden-php-api-defaults: EVALUATION_PENDING -> NEEDS_REVISION
+  repair-java-trailswitch-graph-rules: EVALUATION_PENDING -> NEEDS_REVISION
+Will auto-fix now: repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+
+Docker: up
+stb: ok (installed)
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+uncommitted task folders (1): reconcile-spring-boot-model-registry-with-h2-experiment
+[2026-07-08T02:54:05Z] fix queue (3): repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-08T02:54:05Z] skipped 1 — exclusions / green gates / already fixed
+[2026-07-08T02:54:46Z] skip repair-express-trivia-worker — oracle already 1.0 (saved Cursor tokens)

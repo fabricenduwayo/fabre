@@ -1,0 +1,170 @@
+# Completion Plan — reconcile-spring-boot-model-registry-with-h2-experiment-131
+
+- **Task type:** `single_step`
+- **Schema version:** 1
+
+## Original Task
+
+### Description
+
+With API responses and experiment records disagreeing, the Java reconciliation pipeline must decide which churn model is safe to promote. The provided Spring Boot registry reports candidate model metadata, while the H2 experiment database contains canonical validation metrics, feature-hash lineage, and calibration status. The implementation reads the Markdown policy bundle, queries H2 through JDBC, calls the local API through HTTP, and emits a deployment decision manifest that passes JSON Schema validation.
+
+Instruction sketch:
+Implement a Java command-pipeline step named `reconcile-model-release` that starts from documented promotion rules, queries the H2 experiment database with JDBC, calls the provided Spring Boot model-registry API using curl/httpie-compatible HTTP requests, reconciles conflicting model metadata, and writes `build/release-decision.json`. The verification artifact is that JSON manifest, which must conform to `schemas/release-decision.schema.json` and contain the expected promoted, rejected, and conflict-explanation fields. Do not read the H2 seed data files directly; all experiment evidence must come from SQL queries, and all registry evidence must come from the running API.
+
+Target languages: Java, SQL, Bash.
+
+External code provided: A Spring Boot model-registry API with endpoints for candidate models, deployment aliases, and registry health, plus a Maven skeleton for the Java reconciliation step.
+
+### Metadata
+
+- **OS:** linux
+- **Build timeout (s):** 600
+- **Run timeout (s):** 300
+- **Emit process rubric:** False
+
+## Components
+
+### task.toml — Generated
+
+- **Reference:** <https://www.harborframework.com/docs/tasks>
+
+**Produced files:**
+
+- `task.toml`
+
+**Needed (remaining work):**
+
+- [ ] Confirm [agent].timeout_sec (900s, raised from seed 300s) and [verifier].timeout_sec (600s) match the intended runtime, including time to boot the Spring Boot API.
+- [ ] Confirm memory_mb (6144) / cpus (2) / storage_mb (12288) are sufficient for JDK + Maven + Spring Boot + H2.
+- [ ] Confirm metadata.languages extension 'sql' should be folded back into the languages SSOT.
+
+**Acceptance criteria:**
+
+- [ ] Harbor loads the task without errors.
+- [ ] Declared [environment].os (linux) matches the files under environment/.
+- [ ] [verifier].environment_mode is 'shared' and no [verifier.environment] block is present.
+
+**Open questions:** _none_
+
+### instruction.md — Missing
+
+- **Reference:** <https://www.harborframework.com/docs/tasks>
+
+**Produced files:** _none_
+
+**Needed (remaining work):**
+
+- [ ] Write the agent-facing instruction for the `reconcile-model-release` step from the seed plan.
+- [ ] Name every relevant path: the policy bundle (policy/promotion-policy.md), the JSON Schema (schemas/release-decision.schema.json), the output manifest (build/release-decision.json), the registry API base URL (http://localhost:8080), and the H2 JDBC URL.
+- [ ] State the hard constraint: all experiment evidence must come from SQL queries against the H2 DB and all registry evidence from HTTP calls to the running API — the agent must NOT read the experiment-db seed SQL files directly.
+- [ ] Document the exact output schema (promoted, rejected, conflict-explanation keys, types, allowed values) so the manifest is unambiguous.
+- [ ] State the conflict-resolution precedence explicitly (H2 canonical for validation metrics / feature-hash lineage / calibration status; registry canonical for candidate identity / deployment aliases) — resolve the open question below before publishing.
+
+**Acceptance criteria:**
+
+- [ ] Following the instruction makes tests/test.sh exit zero.
+- [ ] Every output/input path the test file references appears in the instruction.
+- [ ] The conflict-resolution precedence and output schema are stated unambiguously.
+
+**Open questions:**
+
+- The precise conflict-resolution precedence must be stated unambiguously in the policy/instruction: H2 is canonical for validation metrics, feature-hash lineage, and calibration status; the registry API is canonical for candidate identity and deployment aliases. Confirm this split and how ties/missing records are handled.
+
+### environment/ — Partial
+
+- **Reference:** <https://www.harborframework.com/docs/tasks>
+
+**Produced files:**
+
+- `environment/.dockerignore`
+- `environment/Dockerfile`
+- `environment/experiment-db/schema.sql`
+- `environment/experiment-db/seed.sql`
+- `environment/model-registry/README.md` — code_project: model_registry_api
+- `environment/model-registry/pom.xml` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/AliasController.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/CandidateModel.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/HealthController.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/ModelController.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/ModelRegistryApplication.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/RegistryData.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/java/com/example/registry/RegistryStore.java` — code_project: model_registry_api
+- `environment/model-registry/src/main/resources/application.properties` — code_project: model_registry_api
+- `environment/model-registry/src/main/resources/registry-models.json` — code_project: model_registry_api
+- `environment/model-registry/src/test/java/com/example/registry/RegistryApiTests.java` — code_project: model_registry_api
+- `environment/policy/promotion-policy.md`
+- `environment/reconcile-model-release/README.md` — code_project: reconcile_step_skeleton
+- `environment/reconcile-model-release/pom.xml` — code_project: reconcile_step_skeleton
+- `environment/reconcile-model-release/src/main/java/com/example/reconcile/App.java` — code_project: reconcile_step_skeleton
+- `environment/schemas/release-decision.schema.json`
+
+**Needed (remaining work):**
+
+- [ ] Confirm the Dockerfile pre-fetches all Maven dependencies for both code projects at build time (mvn dependency:go-offline) and pre-builds the Spring Boot jar, since allow_internet=false at task runtime.
+- [ ] Confirm the H2 experiment database is initialized at build time from experiment-db/schema.sql + seed.sql (H2 RunScript) into the .mv.db at the pinned h2_jdbc_url location.
+- [ ] Confirm the Spring Boot registry API auto-starts as a background service on port 8080 at container start (with a healthcheck) so both the agent and the shared verifier can reach it.
+- [ ] Confirm the seed data intentionally encodes the promotable/failed-metric/uncalibrated/lineage-conflict models the tests rely on, and that the registry JSON conflicts with H2 for the intended models.
+- [ ] Resolve the H2 connection open question (embedded file vs. TCP, access mode, credentials) and reflect it in the JDBC URL and Dockerfile.
+
+**Acceptance criteria:**
+
+- [ ] docker build succeeds against environment/Dockerfile within the build timeout.
+- [ ] Both Maven projects build offline (no network) inside the built container.
+- [ ] The Spring Boot API answers GET /health on port 8080 after container start.
+- [ ] The agent can query the H2 DB via the pinned JDBC URL and gets the seeded evidence.
+- [ ] tests/test.sh runs inside the built container without environment errors.
+
+**Open questions:**
+
+- Exact H2 connection details are unspecified: embedded file mode vs. TCP server, access mode (read-only?), and any username/password. The pinned h2_jdbc_url assumes an embedded file DB with no credentials — confirm and reflect in the instruction and Dockerfile.
+
+### tests/ — Generated
+
+- **Reference:** <https://www.harborframework.com/docs/tasks>
+
+**Produced files:**
+
+- `tests/conftest.py`
+- `tests/helpers.py`
+- `tests/test.sh`
+- `tests/test_outputs.py`
+
+**Needed (remaining work):**
+
+- [ ] Confirm every functional criterion in scaffold_plan.tests.functional_criteria has a matching pytest test.
+- [ ] Add edge cases: manifest missing/empty, promoted model also appearing in rejected, empty conflict list when conflicts exist, and a model that passes metrics but is uncalibrated (must not be promoted).
+- [ ] Confirm tests/test.sh writes /logs/verifier/reward.{txt,json} (exactly 1 or 0) on every code path including early exits.
+- [ ] Confirm tests verify the decision against evidence (schema conformance + policy-consistency of the manifest, ideally recomputed from the live H2 DB and API) rather than a single hardcoded expected id the agent could copy from the shared-mode test files.
+- [ ] Resolve the promotion-threshold open question, then replace any provisional/deferred (skip/xfail) assertion for promoted_model_is_policy_safe with a binding assertion consistent with the authored policy and seed data.
+
+**Acceptance criteria:**
+
+- [ ] Tests fail on a naive 'trust the registry API' solution that ignores the H2 canonical evidence.
+- [ ] Tests pass on a correct reconciliation that promotes the policy-safe model.
+- [ ] Verifier applies a binary 0/1 reward only.
+- [ ] Verifier runs identical logic for the oracle and the agent (no oracle/agent conditional branches).
+
+**Open questions:**
+
+- The seed does not specify the concrete promotion thresholds (metric floors, calibration gate details) nor the resulting canonical promote/reject decision. The promotion-policy.md fixture, the H2 seed data, and the verifier's expected decision must be authored consistently so exactly the intended model is promotable. Prefer recomputation/invariant checks over a single hardcoded expected id where feasible to limit answer leakage in shared verifier mode.
+
+### solution — Missing
+
+- **Reference:** <https://www.harborframework.com/docs/tasks>
+
+**Produced files:** _none_
+
+**Needed (remaining work):**
+
+- [ ] Write solution/solve.sh that completes the reconcile-model-release step: read policy/promotion-policy.md, query the H2 experiment DB via JDBC, call the registry API over HTTP, reconcile conflicting metadata, and write build/release-decision.json.
+- [ ] Implement generically against the policy and live evidence — do not hardcode fixture-specific model ids, row counts, or the expected decision.
+- [ ] Show the full derivation (read inputs, query DB, call API, apply policy, write manifest); do not echo a literal manifest.
+- [ ] Ensure the produced manifest validates against schemas/release-decision.schema.json.
+
+**Acceptance criteria:**
+
+- [ ] Running solve.sh in the built container makes tests/test.sh exit zero.
+- [ ] solve.sh shows the full derivation and would produce a different (correct) decision if the H2 seed data or registry metadata changed.
+
+**Open questions:** _none_

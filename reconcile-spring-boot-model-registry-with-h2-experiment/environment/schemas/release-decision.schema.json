@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Release Decision Manifest",
+  "description": "Schema for build/release-decision.json describing the promotion decision, rejected models, and API-vs-DB metadata conflicts.",
+  "type": "object",
+  "required": ["promoted", "rejected", "conflicts"],
+  "properties": {
+    "promoted": {
+      "description": "The model id chosen for promotion, or null when nothing was promoted.",
+      "type": ["string", "null"]
+    },
+    "rejected": {
+      "description": "One entry per non-promoted model.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model", "reasons"],
+        "properties": {
+          "model": {
+            "description": "The model id.",
+            "type": "string"
+          },
+          "reasons": {
+            "description": "Human-readable reasons the model was not promoted.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "description": "One entry per API-vs-DB metadata discrepancy.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model", "field", "api_value", "db_value", "canonical_source"],
+        "properties": {
+          "model": {
+            "description": "The model id.",
+            "type": "string"
+          },
+          "field": {
+            "description": "The field that disagreed, e.g. \"auc\" or \"feature_hash\".",
+            "type": "string"
+          },
+          "api_value": {
+            "description": "The value reported by the registry API (any JSON type)."
+          },
+          "db_value": {
+            "description": "The canonical value from the H2 experiment DB (any JSON type)."
+          },
+          "canonical_source": {
+            "description": "Which source was treated as canonical for this field.",
+            "type": "string",
+            "enum": ["h2", "registry"]
+          }
+        }
+      }
+    }
+  }
+}

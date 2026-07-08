@@ -1,0 +1,292 @@
+schema_version: 1
+task_type: single_step
+task_name: reconcile-spring-boot-model-registry-with-h2-experiment-131
+decisions:
+- Raised [agent].timeout_sec from seed run_seconds=300 to the 900s floor (Scaffold
+  hard floor); recorded here per the task.toml mapping rule.
+- Extended metadata.languages with 'sql' (not present in languages.yaml SSOT) because
+  the seed names SQL as a target language for the H2/JDBC evidence queries; fold back
+  into the SSOT at handoff.
+- "Chose shared verifier mode: the manifest output path build/release-decision.json\
+  \ is fixed by the seed, and a co-located verifier can validate the manifest against\
+  \ the live H2 DB and running Spring Boot API rather than requiring separate-mode\
+  \ artifact transfer. Recorded the leakage tradeoff in open_questions (tests) \u2014\
+  \ TestAgent should prefer recomputation/invariant checks over a single hardcoded\
+  \ expected decision."
+- 'Modeled the environment as a single container (multi_container=false): the Spring
+  Boot registry API runs as a background service inside the agent container and is
+  reached over http://localhost; no second container is required.'
+- "Shipped the Spring Boot model-registry as a fully-working code_project (no intentional\
+  \ bugs) whose bundled candidate metadata intentionally CONFLICTS with the H2 canonical\
+  \ metrics \u2014 the conflict is the task's reconciliation challenge, not a bug\
+  \ to fix."
+- 'Shipped the Java reconciliation step as a Maven *skeleton* code_project (ships_tests=false,
+  no logic): it provides pom.xml + package layout + a compiling entrypoint stub so
+  the agent can build offline, but the reconciliation implementation is the agent''s
+  solution and is NOT synthesized.'
+- Because allow_internet=false at task runtime, the Dockerfile must pre-fetch all
+  Maven dependencies into the local repo at image BUILD time (mvn dependency:go-offline)
+  so both code projects build offline; recorded as an environment note.
+- H2 experiment database is initialized at image build time from experiment-db/schema.sql
+  + seed.sql (via the H2 RunScript tool); the agent must obtain all experiment evidence
+  through JDBC/SQL and must not read the seed SQL files directly.
+repositories: []
+environment:
+  multi_container: false
+  files_to_write:
+  - path: environment/policy/promotion-policy.md
+    purpose: The Markdown promotion-policy bundle the reconciliation step reads to
+      decide which model is safe to promote.
+    content_hint: 'Documents the promotion rules: minimum validation-metric thresholds
+      (e.g. AUC/accuracy floors), the requirement that a model be calibrated (calibration
+      status from H2) before promotion, the feature-hash lineage consistency rule,
+      and the conflict-resolution precedence (H2 is canonical for validation metrics,
+      feature-hash lineage, and calibration status; the registry API is canonical
+      for candidate identity and deployment aliases). Must be human-readable prose/tables,
+      not machine config.'
+  - path: environment/schemas/release-decision.schema.json
+    purpose: JSON Schema the produced build/release-decision.json manifest must validate
+      against.
+    content_hint: 'A JSON Schema (draft 2020-12 or draft-07) requiring at least: a
+      ''promoted'' field (the model chosen for promotion, or null), a ''rejected''
+      array (models not promoted with reasons), and a ''conflict-explanation''/''conflicts''
+      field enumerating each API-vs-DB metadata discrepancy with both values and the
+      canonical source used. Types and required keys must be explicit so the verifier
+      can validate conformance.'
+  - path: environment/experiment-db/schema.sql
+    purpose: DDL for the H2 experiment database the agent queries via JDBC.
+    content_hint: 'CREATE TABLE statements for: models (model id/name/version), validation_metrics
+      (canonical metric values per model), feature_hash_lineage (feature-hash per
+      model/version), calibration_status (calibrated boolean/status per model). Keys
+      should let the reconciliation join metrics+lineage+calibration per model.'
+  - path: environment/experiment-db/seed.sql
+    purpose: INSERT statements seeding the H2 experiment database with canonical evidence.
+    content_hint: 'Rows for several candidate churn models such that: at least one
+      model clearly passes all policy gates (promotable), at least one fails a metric
+      threshold, at least one is uncalibrated (must not be promoted despite good metrics),
+      and at least one has a feature-hash lineage that disagrees with the registry''s
+      candidate metadata (a conflict). Values must intentionally conflict with the
+      registry API''s bundled metadata for some models.'
+  repositories_used: []
+  code_projects:
+  - id: model_registry_api
+    path: environment/model-registry
+    languages:
+    - java
+    framework: spring-boot
+    purpose: The provided Spring Boot model-registry service the agent calls over
+      HTTP. It reports candidate model metadata, deployment aliases, and registry
+      health; its bundled metadata intentionally conflicts with the H2 canonical evidence
+      so the reconciliation step has something to reconcile.
+    description: 'A Spring Boot (Java) REST API exposing: a health endpoint, a candidate-models
+      endpoint returning per-model metadata (id, name, version, reported metrics,
+      feature-hash), a single-model lookup endpoint, and a deployment-aliases endpoint
+      mapping alias->model. Candidate metadata is loaded at startup from a bundled
+      JSON resource. Some models'' reported metrics and feature-hashes deliberately
+      DISAGREE with the H2 canonical values, so a naive ''trust the API'' implementation
+      produces a wrong promotion decision. The service is fully implemented and correct
+      for its own contract (it is not buggy); the disagreement with H2 is by design.'
+    acceptance:
+    - GET /health returns 200 with a JSON status body.
+    - GET /models/candidates returns 200 with a JSON array of candidate model metadata
+      objects.
+    - GET /models/{id} returns 200 with that model's metadata and 404 for an unknown
+      id.
+    - GET /aliases returns 200 with a JSON mapping of deployment alias to model id.
+    - The bundled candidate metadata conflicts with environment/experiment-db seed
+      data for at least one model (differing metric and/or feature-hash).
+    boundary_constraints:
+    - Implement all endpoints fully and correctly for the service's own contract;
+      plant NO intentional bugs.
+    - "The metadata conflicts with H2 must be authored intentionally to match the\
+      \ discrepancies described in seed.sql \u2014 do not silently make the API agree\
+      \ with H2."
+    - Bake no secrets or hidden ground-truth 'correct decision' into the API responses.
+    ships_tests: true
+    runtime:
+      entrypoint: java -jar target/model-registry-0.1.0.jar --server.port=8080
+      port: 8080
+      deps:
+      - language: java
+        spec: org.springframework.boot:spring-boot-starter-web:3.2.5
+      test_commands:
+      - language: java
+        command: mvn -q -o -f /app/model-registry/pom.xml test
+      api_endpoints:
+      - method: GET
+        path: /health
+        success_status: 200
+      - method: GET
+        path: /models/candidates
+        success_status: 200
+      - method: GET
+        path: /models/{id}
+        success_status: 200
+      - method: GET
+        path: /aliases
+        success_status: 200
+      persistence:
+        type: in_memory
+        description: Candidate model metadata and aliases loaded from a bundled JSON
+          resource at startup; no runtime writes.
+    seed_data:
+    - kind: json
+      path: src/main/resources/registry-models.json
+      notes: Candidate model metadata + aliases served by the API; intentionally conflicts
+        with the H2 canonical metrics/lineage for a subset of models.
+    intentional_bugs: []
+    components: []
+  - id: reconcile_step_skeleton
+    path: environment/reconcile-model-release
+    languages:
+    - java
+    framework: null
+    purpose: The provided Maven skeleton for the Java command-pipeline step `reconcile-model-release`
+      that the agent completes. Gives the agent a buildable starting point (pom.xml,
+      package layout, entrypoint stub) with the H2 JDBC, JSON, and JSON-Schema dependencies
+      already declared so it can build offline.
+    description: "A Maven Java project skeleton for a CLI step named reconcile-model-release.\
+      \ Ships pom.xml (declaring H2 JDBC driver, a JSON library, a JSON-Schema validator,\
+      \ using the JDK built-in HTTP client), a src/main/java package layout, and a\
+      \ main-class entrypoint stub that compiles and prints a 'not yet implemented'\
+      \ message. It deliberately does NOT read the policy, query H2, call the registry\
+      \ API, or write the decision manifest \u2014 implementing that reconciliation\
+      \ logic is the agent's job."
+    acceptance:
+    - mvn -q -o -f environment/reconcile-model-release/pom.xml compile succeeds offline.
+    - A documented main-class entrypoint exists and compiles.
+    - Running the skeleton does NOT produce a valid build/release-decision.json (the
+      logic is unimplemented).
+    boundary_constraints:
+    - "Ship ONLY the skeleton \u2014 do NOT implement the reconciliation logic (reading\
+      \ policy, JDBC queries, HTTP calls, manifest writing); that is the agent's solution."
+    - Declare H2 JDBC, JSON, and JSON-Schema-validator dependencies in pom.xml so
+      the agent can build without network access.
+    - Do not embed the H2 seed data or any hardcoded 'correct' promotion decision
+      in the skeleton.
+    ships_tests: false
+    runtime:
+      entrypoint: java -jar target/reconcile-model-release-0.1.0.jar
+      deps:
+      - language: java
+        spec: com.h2database:h2:2.2.224
+      - language: java
+        spec: com.fasterxml.jackson.core:jackson-databind:2.17.1
+      - language: java
+        spec: com.networknt:json-schema-validator:1.4.0
+      test_commands: []
+      cli_verbs:
+      - name: reconcile-model-release
+        args: ''
+        description: 'Intended (agent-implemented) behavior: read the promotion policy,
+          query the H2 experiment DB via JDBC, call the registry API over HTTP, reconcile
+          conflicting metadata, and write build/release-decision.json.'
+    seed_data: []
+    intentional_bugs: []
+    components: []
+  notes: "Base image with JDK 17 + Maven. CRITICAL: allow_internet=false at task runtime,\
+    \ so the Dockerfile must pre-fetch all Maven dependencies for BOTH code projects\
+    \ into the local Maven repo at image build (e.g. mvn -f <pom> dependency:go-offline)\
+    \ and pre-build the Spring Boot jar, so the agent can build/run offline. Initialize\
+    \ the H2 database at build time from environment/experiment-db/schema.sql + seed.sql\
+    \ using the H2 RunScript tool (java -cp h2.jar org.h2.tools.RunScript ...), producing\
+    \ an .mv.db the agent connects to via JDBC. Start the Spring Boot registry API\
+    \ as a background service (on port 8080) at container start via an entrypoint\
+    \ script, with a healthcheck, so both the agent and the (shared) verifier can\
+    \ reach it over http://localhost:8080. The experiment-db SQL seed files remain\
+    \ on disk but the instruction forbids reading them directly \u2014 all experiment\
+    \ evidence must come through JDBC/SQL queries."
+verifier:
+  mode: shared
+  mode_rationale: Output path build/release-decision.json is fixed by the seed and
+    the verifier benefits from co-location with the live H2 DB + running Spring Boot
+    API to validate the manifest against real evidence; no proprietary grader or toolchain/OS
+    mismatch justifies separate mode.
+  build: null
+  artifacts_required: []
+tests:
+  functional_criteria:
+  - id: manifest_exists_and_valid_json
+    description: After the reconciliation step runs, build/release-decision.json exists
+      at the documented path and parses as valid JSON.
+    maps_to_plan_clause: writes `build/release-decision.json`
+  - id: manifest_conforms_to_schema
+    description: The produced manifest validates against schemas/release-decision.schema.json
+      (all required keys present with the correct types).
+    maps_to_plan_clause: must conform to `schemas/release-decision.schema.json`
+  - id: required_decision_fields_present
+    description: The manifest contains the expected promoted, rejected, and conflict-explanation
+      fields with sensible shapes (promoted is a model identifier or null; rejected
+      is a list; conflict-explanation enumerates discrepancies).
+    maps_to_plan_clause: contain the expected promoted, rejected, and conflict-explanation
+      fields
+  - id: promoted_model_is_policy_safe
+    description: The promoted model satisfies every promotion gate in the policy when
+      evaluated against the H2 canonical evidence (metrics above threshold, calibrated,
+      lineage consistent). No model that violates a gate appears as promoted.
+    maps_to_plan_clause: decide which churn model is safe to promote
+  - id: rejected_models_have_valid_reasons
+    description: Every model in the rejected list violates at least one documented
+      policy gate (metric below threshold, uncalibrated, or lineage/metadata conflict),
+      and no promotable model is rejected.
+    maps_to_plan_clause: reconciles conflicting model metadata
+  - id: uncalibrated_model_not_promoted
+    description: A model that is uncalibrated per the H2 calibration_status table
+      is never promoted, even if its validation metrics pass the thresholds.
+    maps_to_plan_clause: calibration status
+  - id: conflicts_reconciled_with_canonical_source
+    description: For each model where the registry API metadata disagrees with the
+      H2 canonical evidence, the manifest's conflict-explanation records the discrepancy
+      and the decision uses H2 as canonical for validation metrics, feature-hash lineage,
+      and calibration status.
+    maps_to_plan_clause: API responses and experiment records disagreeing ... canonical
+      validation metrics, feature-hash lineage, and calibration status
+  fixtures_consumed:
+  - environment/schemas/release-decision.schema.json
+  process_rubric:
+    requested: false
+    rationale: seed.metadata.emit_process_rubric is false; binary functional criteria
+      over the produced manifest are sufficient to grade the task.
+thresholds:
+- name: spring_boot_api_port
+  value: 8080
+  rationale: Port the registry API listens on; env starts it here and the instruction/agent
+    target http://localhost:8080.
+- name: api_base_url
+  value: http://localhost:8080
+  rationale: Base URL the reconciliation step uses for HTTP calls; pinned so env and
+    instruction agree.
+- name: h2_jdbc_url
+  value: jdbc:h2:file:/app/experiment-db/experiments
+  rationale: JDBC URL for the pre-seeded H2 experiment database the agent queries;
+    pinned so the DB build location and the agent's connection string agree. Exact
+    access-mode/credentials flagged as an open question.
+- name: output_manifest_path
+  value: build/release-decision.json
+  rationale: Fixed by the seed; the agent writes here and the verifier reads here.
+- name: schema_path
+  value: schemas/release-decision.schema.json
+  rationale: Location of the JSON Schema the manifest validates against; shared by
+    env fixture, instruction, and verifier.
+- name: policy_path
+  value: policy/promotion-policy.md
+  rationale: Location of the Markdown promotion-policy bundle the reconciliation step
+    reads.
+open_questions:
+- question: The seed does not specify the concrete promotion thresholds (metric floors,
+    calibration gate details) nor the resulting canonical promote/reject decision.
+    The promotion-policy.md fixture, the H2 seed data, and the verifier's expected
+    decision must be authored consistently so exactly the intended model is promotable.
+    Prefer recomputation/invariant checks over a single hardcoded expected id where
+    feasible to limit answer leakage in shared verifier mode.
+  affects: tests
+- question: "Exact H2 connection details are unspecified: embedded file mode vs. TCP\
+    \ server, access mode (read-only?), and any username/password. The pinned h2_jdbc_url\
+    \ assumes an embedded file DB with no credentials \u2014 confirm and reflect in\
+    \ the instruction and Dockerfile."
+  affects: environment
+- question: 'The precise conflict-resolution precedence must be stated unambiguously
+    in the policy/instruction: H2 is canonical for validation metrics, feature-hash
+    lineage, and calibration status; the registry API is canonical for candidate identity
+    and deployment aliases. Confirm this split and how ties/missing records are handled.'
+  affects: instruction_md

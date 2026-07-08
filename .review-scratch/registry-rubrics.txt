@@ -1,0 +1,18 @@
+reconcile-spring-boot-model-registry-with-h2-experiment — flat rubric (non-milestone)
+(paste into platform test_rubrics; scores restricted to +1/+2/+3/+5 and -1/-2/-3/-5)
+
+Agent reads /app/policy/promotion-policy.md before implementing the reconciliation step, +2
+Agent discovers the experiment-db schema through JDBC/SQL (INFORMATION_SCHEMA or the H2 tool jar) instead of guessing table shapes, +3
+Agent pulls the candidate set from the live registry API and the metrics, lineage, and calibration evidence from H2, keeping each source canonical for its own fields, +3
+Agent joins feature-hash lineage on model id and the registry-reported version rather than any row for the model id, +5
+Agent rejects candidates with incomplete H2 evidence as missing_canonical_evidence and ignores experiment-store models that are not registry candidates, +3
+Agent implements the tie-break (highest canonical AUC, then lexicographically smallest id) and labels qualifying losers lost_tiebreak, +3
+Agent records every API-vs-DB disagreement on an H2-canonical field with both values and canonical_source h2, +3
+Agent supports the optional JDBC-URL and output-path CLI arguments with the documented defaults, +2
+Agent builds offline with mvn -o and produces the manifest by running the jar, +2
+Agent hand-writes or manually edits /app/build/release-decision.json instead of generating it with the jar, -5
+Agent evaluates promotion gates against registry API metrics instead of the H2 canonical values, -5
+Agent joins lineage on model id only or compares against a non-matching version's hash, -3
+Agent hardcodes model ids, metric values, or the final decision inside the Java step, -5
+Agent modifies the model-registry service or its bundled data to force the sources to agree, -5
+Agent promotes an uncalibrated candidate or one without canonical evidence, -3
