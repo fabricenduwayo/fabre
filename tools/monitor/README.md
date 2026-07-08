@@ -38,6 +38,22 @@ Cloud flow: agent fixes on GitHub → monitor `git pull` → local oracle → re
 
 Set `MONITOR_AGENT_RUNTIME=local` only if you want the desktop bridge (requires Cursor.app + macOS Allow once).
 
+## Cursor GitHub for cloud agents
+
+Cloud agents **do not** use `GITHUB_TOKEN` from `.env`. They use **Cursor's GitHub App**
+to clone and push. If you see:
+
+`Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre`
+
+do this once:
+
+1. Open [Cursor Dashboard → Integrations](https://cursor.com/dashboard?tab=integrations)
+2. Connect **GitHub** (same account that owns `fabricenduwayo/fabre`)
+3. Install the Cursor GitHub App and grant access to the **fabre** repository
+4. Retry: `./terminus-control.sh run`
+
+`GITHUB_TOKEN` in `.env` is only for local `git pull` / `git push` after the cloud agent finishes.
+
 ## macOS privacy prompt
 
 If you see **"python3.13 would like to access data from other apps"**:

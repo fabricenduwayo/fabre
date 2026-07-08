@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -106,8 +107,56 @@ def resolve_github_branch(repo_root: Path) -> str:
     return proc.stdout.strip()
 
 
-def cloud_prompt(prompt: str) -> str:
-    return prompt.rstrip() + "\n" + CLOUD_PROMPT_SUFFIX
+def resolve_github_starting_ref(repo_root: Path) -> str:
+    """Branch name or commit SHA for CloudRepository.starting_ref."""
+    override = os.environ.get("CLOUD_STARTING_REF", "").strip()
+    if override:
+        return override
+    use_sha = os.environ.get("CLOUD_USE_COMMIT_SHA", "1").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    branch = resolve_github_branch(repo_root)
+    if not use_sha:
+        return branch
+    proc = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", branch],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode == 0 and proc.stdout.strip():
+        return proc.stdout.strip()
+    return branch
+
+
+def _cloud_branch_validation_hint(repo_url: str, ref: str) -> str:
+    slug = repo_url.rstrip("/").removeprefix("https://github.com/")
+    return (
+        f"Cursor Cloud could not verify ref {ref!r} on {slug}. "
+        "Cloud agents use Cursor's GitHub App (not GITHUB_TOKEN in .env). "
+        "In Cursor: Dashboard → Integrations → GitHub → connect and grant "
+        f"access to {slug.split('/')[-1]}. Then retry. "
+        "See tools/monitor/README.md#cursor-github-for-cloud-agents."
+    )
+
+
+def _is_branch_validation_error(message: str) -> bool:
+    lower = message.lower()
+    return (
+        "failed to verify existence of branch" in lower
+        or "failed to determine repository default branch" in lower
+    )
+
+
+def cloud_prompt(prompt: str, *, branch: str) -> str:
+    return (
+        prompt.rstrip()
+        + "\n"
+        + CLOUD_PROMPT_SUFFIX.replace("the configured branch", f"branch `{branch}`")
+    )
 
 
 def run_agent(
@@ -185,33 +234,59 @@ def _run_cloud_agent(
 
     repo_url = resolve_github_repo_url(repo_root)
     branch = resolve_github_branch(repo_root)
+    starting_ref = resolve_github_starting_ref(repo_root)
     work_on_branch = os.environ.get("CLOUD_WORK_ON_BRANCH", "1").strip().lower() in {
         "1",
         "true",
         "yes",
         "on",
     }
+    max_retries = int(os.environ.get("CLOUD_AGENT_RETRIES", "3"))
+    retry_sec = int(os.environ.get("CLOUD_AGENT_RETRY_SEC", "45"))
 
-    try:
-        result = Agent.prompt(
-            cloud_prompt(prompt),
-            AgentOptions(
-                api_key=api_key,
-                model=model,
-                cloud=CloudAgentOptions(
-                    repos=[CloudRepository(url=repo_url, starting_ref=branch)],
-                    work_on_current_branch=work_on_branch,
-                    auto_create_pr=False,
-                    skip_reviewer_request=True,
-                ),
-            ),
-        )
-    except CursorAgentError as exc:
-        raise RuntimeError(f"Cursor cloud agent failed: {exc.message}") from exc
+    last_exc: CursorAgentError | None = None
+    refs_to_try = [starting_ref]
+    if starting_ref != branch:
+        refs_to_try.append(branch)
 
-    if result.status == "error":
-        raise RuntimeError(f"Cursor cloud agent run failed: {getattr(result, 'result', '')}")
-    return str(result.status), str(getattr(result, "result", ""))[:4000]
+    for attempt in range(1, max_retries + 1):
+        for ref in refs_to_try:
+            try:
+                result = Agent.prompt(
+                    cloud_prompt(prompt, branch=branch),
+                    AgentOptions(
+                        api_key=api_key,
+                        model=model,
+                        cloud=CloudAgentOptions(
+                            repos=[CloudRepository(url=repo_url, starting_ref=ref)],
+                            work_on_current_branch=work_on_branch,
+                            auto_create_pr=False,
+                            skip_reviewer_request=True,
+                        ),
+                    ),
+                )
+            except CursorAgentError as exc:
+                last_exc = exc
+                if _is_branch_validation_error(exc.message) and attempt < max_retries:
+                    time.sleep(retry_sec)
+                    continue
+                if _is_branch_validation_error(exc.message):
+                    raise RuntimeError(
+                        _cloud_branch_validation_hint(repo_url, ref)
+                    ) from exc
+                raise RuntimeError(f"Cursor cloud agent failed: {exc.message}") from exc
+            else:
+                if result.status == "error":
+                    raise RuntimeError(
+                        f"Cursor cloud agent run failed: {getattr(result, 'result', '')}"
+                    )
+                return str(result.status), str(getattr(result, "result", ""))[:4000]
+
+    if last_exc is not None:
+        if _is_branch_validation_error(last_exc.message):
+            raise RuntimeError(_cloud_branch_validation_hint(repo_url, starting_ref)) from last_exc
+        raise RuntimeError(f"Cursor cloud agent failed: {last_exc.message}") from last_exc
+    raise RuntimeError("Cursor cloud agent failed after retries")
 
 
 def _cleanup_local_bridges(repo_root: Path) -> None:
