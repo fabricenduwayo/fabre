@@ -1,9 +1,9 @@
 {
-  "telegram_update_offset": 791742640,
+  "telegram_update_offset": 791742642,
   "last_command": {
-    "command": "run",
-    "at": "2026-07-08T04:05:24.058661+00:00",
-    "reply": "OK: [2026-07-08T04:05:22Z] === done \u2014 triggered 0 fix(es) ===",
+    "command": "status",
+    "at": "2026-07-08T08:28:01.749628+00:00",
+    "reply": "hourly monitor: scheduled (every 90 minutes)\nremote commands: running\nDocker: up\nstb: ok (installed)\ncursor-sdk bridges: 0 orphan(s)\npaused: no\ngit: task folders clean\nfix queue: repair-express-trivia",
     "source": "telegram"
   }
 }

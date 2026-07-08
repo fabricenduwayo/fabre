@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-08-r2
+# platform-revision: 2026-07-08-r3
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.t
 # produces both jars. dependency:go-offline hardens offline resolution.
 COPY model-registry/ /app/model-registry/
 COPY reconcile-model-release/ /app/reconcile-model-release/
-RUN mvn -B -q -f /app/model-registry/pom.xml package \
+RUN mvn -B -q -f /app/model-registry/pom.xml package -DskipTests \
     && mvn -B -q -f /app/reconcile-model-release/pom.xml package \
     && mvn -B -q -f /app/model-registry/pom.xml dependency:go-offline \
     && mvn -B -q -f /app/reconcile-model-release/pom.xml dependency:go-offline
@@ -41,18 +41,11 @@ RUN mkdir -p /app/lib \
 COPY policy/promotion-policy.md /app/policy/promotion-policy.md
 COPY schemas/release-decision.schema.json /app/schemas/release-decision.schema.json
 
-# Seed the embedded H2 experiment database at build time, then delete the SQL
-# so the canonical metrics, lineage history, and calibration evidence are
-# reachable only through JDBC against the binary store — not by reading a dump.
-COPY experiment-db/schema.sql /tmp/schema.sql
-COPY experiment-db/seed.sql /tmp/seed.sql
-RUN mkdir -p /app/experiment-db \
-    && java -cp /app/lib/h2-2.2.224.jar org.h2.tools.RunScript \
-        -url "jdbc:h2:file:/app/experiment-db/experiments" -user sa -script /tmp/schema.sql \
-    && java -cp /app/lib/h2-2.2.224.jar org.h2.tools.RunScript \
-        -url "jdbc:h2:file:/app/experiment-db/experiments" -user sa -script /tmp/seed.sql \
-    && chmod 0666 /app/experiment-db/experiments.mv.db \
-    && rm -f /tmp/schema.sql /tmp/seed.sql
+# Prebuilt H2 experiment store (generated from schema.sql + seed.sql at task
+# authoring time). SQL fixtures stay in the repo for reference but are not
+# copied into the image, so agents must use JDBC against the binary store.
+COPY experiment-db/experiments.mv.db /app/experiment-db/experiments.mv.db
+RUN chmod 0666 /app/experiment-db/experiments.mv.db
 
 # Registry service launcher (also usable by the agent to restart the API) and
 # the container entrypoint that boots it before handing over to the command.

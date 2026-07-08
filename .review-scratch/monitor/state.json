@@ -2,11 +2,23 @@
   "runs": {
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
       "folder_name": "reproduce-java-aes-gcm-findings",
-      "feedback_hash": "936f695108e1a073",
-      "attempts": 3,
-      "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-02T17:33:02.572476+00:00"
+      "feedback_hash": "db0dd52c2d9a8e5c",
+      "attempts": 1,
+      "status": "agent_finished",
+      "agent_status": "finished",
+      "agent_summary": "Fixed the platform oracle failure. The solution logic was fine \u2014 2 of 3 oracle runs passed with reward 1.0 locally and on platform. Run 2 failed with `EnvironmentStartTimeoutError: Environment start timed out after 900.0 seconds` during Daytona sandbox creation (environment setup took up to ~651s on run 3, and hit the 900s ceiling on run 2).\n\n## Changes\n\n**`environment/Dockerfile`**\n- Bumped `# platform-revision:` to `2026-07-08-r10`\n- Removed `sqlite3` apt package and the build-time `seed.sql` import step\n- Ship prebuilt `/app/data/forensic_audit.db` instead (faster, more reliable builds)\n\n**`environment/data/forensic_audit.db`**\n- Generated from `seed.sql` and committed as the vendored DB\n\n**`task.toml`**\n- Raised `build_timeout_sec` from `900` to `1800` for headroom on slow platform builds\n\n**Cleanup**\n- Removed stray `jobs/` and `tools/jobs/` harbor artifacts from the task folder (they were inflating the ZIP to ~17MB)\n\nOracle still passes locally at **1.0** after a forced rebuild. Resubmitted with static checks **PASS**, not sent to reviewer.\n\n```json\n{\n  \"changes_summary\": \"Diagnosed platform oracle failure as EnvironmentStartTimeoutError (900s build cap) on 1/3 Daytona runs, not broken solution logic. Optimized environment/Dockerfile by vendoring prebuilt forensic_audit.db and dropping sqlite3 apt/RUN seed step, raised task.toml build_timeout_sec to 1800, bumped platform-revision to 2026-07-08-r10, and removed stray jobs artifacts from the task folder. Oracle reward 1.0 locally; resubmitted with static checks PASS without send-to-reviewer.\",\n  \"oracle_reward\": \"1.0\",\n  \"resubmit_static_checks\": \"PASS\",\n  \"resubmit_sent\": true,\n  \"platform_state_after\": \"EVALUATION_PENDING\"\n}\n```",
+      "agent_report": {
+        "changes_summary": "Diagnosed platform oracle failure as EnvironmentStartTimeoutError (900s build cap) on 1/3 Daytona runs, not broken solution logic. Optimized environment/Dockerfile by vendoring prebuilt forensic_audit.db and dropping sqlite3 apt/RUN seed step, raised task.toml build_timeout_sec to 1800, bumped platform-revision to 2026-07-08-r10, and removed stray jobs artifacts from the task folder. Oracle reward 1.0 locally; resubmitted with static checks PASS without send-to-reviewer.",
+        "oracle_reward": "1.0",
+        "resubmit_static_checks": "PASS",
+        "resubmit_sent": true,
+        "platform_state_after": "EVALUATION_PENDING"
+      },
+      "git_diff_stat": "(no git diff detected)",
+      "platform_state_after": "EVALUATION_PENDING",
+      "issue": "see platform feedback in monitor log",
+      "report_path": "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/monitor/run-report-20260708T082626Z.json",
+      "last_run": "2026-07-08T08:26:26.986188+00:00"
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
@@ -65,25 +77,23 @@
       "last_run": "2026-07-08T08:22:02.379546+00:00"
     }
   },
-  "last_check": "2026-07-08T08:09:12.352325+00:00",
+  "last_check": "2026-07-08T08:29:24.061153+00:00",
   "last_queue": {
     "fix_queue": [
-      "repair-express-trivia-worker",
-      "repair-java-trailswitch-graph-rules",
-      "reproduce-java-aes-gcm-findings"
+      "reconcile-spring-boot-model-registry-with-h2-experiment"
     ],
     "manual_ui": [],
     "skipped": [],
-    "checked_at": "2026-07-08T08:09:41.953776+00:00"
+    "checked_at": "2026-07-08T08:29:43.607887+00:00"
   },
-  "next_fix_allowed_after": "2026-07-02T03:52:07.892176+00:00",
+  "next_fix_allowed_after": "2026-07-08T08:31:26.989020+00:00",
   "last_states": {
-    "66067373-eca1-43cf-8a0d-2911c7b737fb": "EVALUATION_PENDING",
-    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "NEEDS_REVISION",
-    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "NEEDS_REVISION",
+    "66067373-eca1-43cf-8a0d-2911c7b737fb": "NEEDS_REVISION",
+    "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": "EVALUATION_PENDING",
+    "e7d1cac7-538c-4f65-ba21-eb38d47c5242": "EVALUATION_PENDING",
     "71323da7-976c-405b-9dcd-c24d83fa6102": "ACCEPTED",
     "0c176558-e5c1-444a-804b-f4b4cc3cbd29": "EVALUATION_PENDING",
-    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "NEEDS_REVISION",
+    "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": "EVALUATION_PENDING",
     "cffe5127-8ab7-4219-8455-d80e8216af6d": "OFFERED",
     "5ee796af-bc2f-4a6a-b2e5-fb4b97ef3456": "REVIEW_PENDING",
     "586f2352-d2c5-435f-a8dd-546725e95bc7": "OFFERED",
@@ -92,8 +102,8 @@
   },
   "daily_stats": {
     "date": "2026-07-08",
-    "fixes": 2,
-    "agent_minutes": 12.2,
+    "fixes": 3,
+    "agent_minutes": 16.6,
     "events": [
       {
         "at": "2026-07-08T02:54:46.315736+00:00",
@@ -161,6 +171,17 @@
         "type": "fix",
         "folder": "repair-java-trailswitch-graph-rules",
         "agent_minutes": 3.8396806382001767
+      },
+      {
+        "at": "2026-07-08T08:26:26.986141+00:00",
+        "type": "resubmitted",
+        "folder": "reproduce-java-aes-gcm-findings"
+      },
+      {
+        "at": "2026-07-08T08:26:26.986172+00:00",
+        "type": "fix",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "agent_minutes": 4.38479313889984
       }
     ]
   }

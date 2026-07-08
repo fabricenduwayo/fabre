@@ -9028,3 +9028,5 @@
 [2026-07-08T08:09:11Z] [terminus-control] command listener started (poll every 20s)
 [2026-07-08T08:09:11Z] [terminus-control] repo: /Users/fabrice-mac-mini/Documents/snorkel-ai
 [2026-07-08T08:09:11Z] [terminus-control] Telegram: send help for commands
+[2026-07-08T08:28:00Z] [terminus-control] command from Telegram: status (update 791742640)
+[2026-07-08T08:29:23Z] [terminus-control] command from Telegram: run (update 791742641)
