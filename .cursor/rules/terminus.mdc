@@ -92,6 +92,8 @@ After any task edit, rule change, tool/script update, or platform submit/resubmi
 * Stage everything in this repo (`git add -A`): task folders, `.cursor/rules/`, `tools/`, `.review-scratch/`, docs, root scripts — the whole project.
 * Respect `.gitignore` only (e.g. `.env`, `.venv/`, `jobs/`). Never force-add secrets.
 * One commit per submission or coherent change batch; message: `terminus: <short summary>` (e.g. `terminus: add signalbox task and submit`).
+* Author must be **Fabrice Nduwayo** only — never add `Co-authored-by:`, `Made-with: Cursor`, or any Cursor/cursoragent attribution. Use `git -c user.name="Fabrice Nduwayo" -c user.email="fabrice.nduwayo12@gmail.com" commit -m "..."` when committing from scripts.
+* Run `scripts/install-git-hooks.sh` once per clone so `.githooks/prepare-commit-msg` strips any Cursor trailer Cursor injects.
 * Push to the current branch immediately after a successful commit (`git push` or `git push -u origin HEAD` if needed).
 * If commit or push fails, fix and retry before moving on.
 * Do not amend or force-push unless I explicitly ask.

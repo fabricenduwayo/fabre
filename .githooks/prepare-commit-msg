@@ -1,0 +1,27 @@
+#!/bin/sh
+# Strip Cursor co-author trailers from every commit in this repo.
+# Cursor IDE and cloud agents inject these server-side; this hook removes them locally.
+
+MSG_FILE="$1"
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+  exit 0
+fi
+
+case "$(uname -s)" in
+  Darwin)
+    sed -i '' \
+      -e '/^Co-authored-by:.*[Cc]ursor/d' \
+      -e '/^Co-authored-by:.*cursoragent@cursor\.com/d' \
+      -e '/^Made-with:.*[Cc]ursor/d' \
+      "$MSG_FILE"
+    ;;
+  *)
+    sed -i \
+      -e '/^Co-authored-by:.*[Cc]ursor/d' \
+      -e '/^Co-authored-by:.*cursoragent@cursor\.com/d' \
+      -e '/^Made-with:.*[Cc]ursor/d' \
+      "$MSG_FILE"
+    ;;
+esac
+
+exit 0

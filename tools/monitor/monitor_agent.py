@@ -25,7 +25,8 @@ You are a Cursor Cloud Agent working on a GitHub clone (not the user's Mac).
 3. `git add` your changes, `git commit`, and `git push` to the configured branch.
 4. Do NOT run harbor, docker, stb, or platform resubmit — the local monitor runs
    oracle and resubmit after your push.
-5. End with a short summary of files changed and what you fixed.
+5. Do NOT add Co-authored-by, Made-with, or any Cursor attribution to commits.
+6. End with a short summary of files changed and what you fixed.
 """
 
 
