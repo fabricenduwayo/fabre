@@ -1,9 +1,9 @@
 {
-  "telegram_update_offset": 791742635,
+  "telegram_update_offset": 791742640,
   "last_command": {
-    "command": "queue",
-    "at": "2026-07-08T02:50:29.951098+00:00",
-    "reply": "Fix queue: none",
+    "command": "run",
+    "at": "2026-07-08T04:05:24.058661+00:00",
+    "reply": "OK: [2026-07-08T04:05:22Z] === done \u2014 triggered 0 fix(es) ===",
     "source": "telegram"
   }
 }

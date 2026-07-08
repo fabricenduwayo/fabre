@@ -216,6 +216,8 @@ def run_monitor_now(
         args.append("--dry-run")
     if force:
         args.append("--force")
+        force_cap = os.environ.get("MAX_FIXES_PER_FORCE_RUN", "8")
+        args.extend(["--max-fixes", force_cap])
     if folder:
         args.extend(["--folder", folder])
 

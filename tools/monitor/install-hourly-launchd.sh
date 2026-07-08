@@ -45,6 +45,15 @@ VENV_SITE="$("$VENV/bin/python" -c 'import site; print(site.getsitepackages()[0]
   echo "cursor_sdk missing in venv — pip install -r $MONITOR_DIR/requirements.txt" >&2
   exit 1
 }
+"$VENV/bin/python" -c "
+import sys
+sys.path.insert(0, '$MONITOR_DIR')
+from monitor_agent import resolve_cursor_model
+print('Cursor model:', resolve_cursor_model())
+" 2>/dev/null || {
+  echo "monitor_agent model check failed — fix CURSOR_COMPOSER_MODEL / MONITOR_MODEL in .env" >&2
+  exit 1
+}
 
 sed \
   -e "s|__REPO_ROOT__|$REPO_ROOT|g" \

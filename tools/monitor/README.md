@@ -1,7 +1,10 @@
 # Snorkel submission monitor
 
 Polls Terminus submissions **every 90 minutes**. Sends Telegram alerts, then
-optionally auto-fixes `NEEDS_REVISION` tasks via Composer (only when enabled).
+optionally auto-fixes `NEEDS_REVISION` tasks via **Cursor Composer only** (when enabled).
+
+Auto-fix uses `cursor_sdk` (`Agent.prompt`) with a `composer-*` model. The monitor
+does not call OpenAI, Anthropic, or any other LLM API directly.
 
 All config: **`tools/monitor/.env`**. State: **`.review-scratch/monitor/`**.
 
@@ -19,8 +22,9 @@ cp .env.example .env    # if needed — fill CURSOR_API_KEY + Telegram
 
 ```bash
 AUTO_AGENT_FIX=0          # scheduled runs = scan + notify only
-ORACLE_PRECHECK=1         # run harbor oracle before Cursor; skip agent if already 1.0
-MAX_FIXES_PER_RUN=1
+ORACLE_PRECHECK=1         # run harbor oracle before Cursor; skip agent only when gates are green
+MAX_FIXES_PER_RUN=1       # scheduled runs fix at most 1 task per cycle
+MAX_FIXES_PER_FORCE_RUN=8 # Telegram `run` fixes up to 8 tasks per cycle
 MAX_FIXES_PER_DAY=8
 MAX_AGENT_MINUTES_PER_DAY=180
 ```
@@ -56,7 +60,8 @@ Set `AUTO_AGENT_FIX=1` for fully unattended agent fixes on schedule.
 
 ## Notifications
 
-- **Digest mode** (`NOTIFY_DIGEST=1`) — one Telegram message per run
+- **Run report** — one structured Telegram message per scan/fix cycle (platform states, per-task issues, queue, run outcome, health)
+- **Immediate alerts** — fix started, resubmitted, errors, state changes (ACCEPTED / reviewer return)
 - **Quiet hours** (`NOTIFY_QUIET_HOURS=1`) — suppress routine alerts overnight
 - **Priority only** (`NOTIFY_PRIORITY_ONLY=1`) — errors/resubmits only
 - **Daily summary** — once per UTC day at `NOTIFY_DAILY_SUMMARY_HOUR_UTC` (default 23)
@@ -64,7 +69,11 @@ Set `AUTO_AGENT_FIX=1` for fully unattended agent fixes on schedule.
 ## What gets auto-fixed
 
 Only `NEEDS_REVISION` with failing eval gates, local folder on disk, not excluded,
-under attempt cap, not green-gate UI-only, oracle precheck not already passing.
+under attempt cap, not green-gate UI-only.
+
+Oracle precheck skips Cursor only when eval gates are already green (UI-only work).
+If platform feedback shows difficulty/solvability/instruction failures, the agent runs
+even when local harbor oracle already passes.
 
 ## Manual
 

@@ -41,7 +41,7 @@
       "last_run": "2026-07-02T17:21:29.370067+00:00"
     }
   },
-  "last_check": "2026-07-08T02:53:34.573346+00:00",
+  "last_check": "2026-07-08T06:42:49.561671+00:00",
   "last_queue": {
     "fix_queue": [
       "repair-express-trivia-worker",
@@ -56,7 +56,7 @@
         "reason": "manual_review_queue"
       }
     ],
-    "checked_at": "2026-07-08T02:54:04.404141+00:00"
+    "checked_at": "2026-07-08T06:43:32.620923+00:00"
   },
   "next_fix_allowed_after": "2026-07-02T03:52:07.892176+00:00",
   "last_states": {
@@ -80,6 +80,46 @@
         "at": "2026-07-08T02:54:46.315736+00:00",
         "type": "oracle_skip",
         "folder": "repair-express-trivia-worker"
+      },
+      {
+        "at": "2026-07-08T03:00:00.108060+00:00",
+        "type": "oracle_skip",
+        "folder": "repair-java-trailswitch-graph-rules"
+      },
+      {
+        "at": "2026-07-08T03:00:13.467288+00:00",
+        "type": "oracle_skip",
+        "folder": "reproduce-java-aes-gcm-findings"
+      },
+      {
+        "at": "2026-07-08T03:56:55.570168+00:00",
+        "type": "oracle_skip",
+        "folder": "repair-express-trivia-worker"
+      },
+      {
+        "at": "2026-07-08T03:57:09.515089+00:00",
+        "type": "oracle_skip",
+        "folder": "repair-java-trailswitch-graph-rules"
+      },
+      {
+        "at": "2026-07-08T03:57:20.566710+00:00",
+        "type": "oracle_skip",
+        "folder": "reproduce-java-aes-gcm-findings"
+      },
+      {
+        "at": "2026-07-08T04:04:57.565774+00:00",
+        "type": "oracle_skip",
+        "folder": "repair-express-trivia-worker"
+      },
+      {
+        "at": "2026-07-08T04:05:11.639383+00:00",
+        "type": "oracle_skip",
+        "folder": "repair-java-trailswitch-graph-rules"
+      },
+      {
+        "at": "2026-07-08T04:05:22.982513+00:00",
+        "type": "oracle_skip",
+        "folder": "reproduce-java-aes-gcm-findings"
       }
     ]
   }

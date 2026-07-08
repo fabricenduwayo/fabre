@@ -21,6 +21,20 @@ def extract_difficulty_line(notes: str) -> str | None:
     return None
 
 
+def summarize_issue_line(notes: str) -> str:
+    """Short issue line from platform feedback for status messages."""
+    line = extract_difficulty_line(notes)
+    if line:
+        return line
+    for raw in notes.splitlines():
+        text = raw.strip()
+        if "Instruction Sufficiency:" in text and "FAIL" in text:
+            return text[:200]
+        if text.startswith("Difficulty:"):
+            return text[:200]
+    return "see platform feedback"
+
+
 def state_change_alerts(changes: list[str]) -> list[str]:
     alerts: list[str] = []
     for change in changes:
