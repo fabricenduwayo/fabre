@@ -43,9 +43,64 @@ def _git_commit_env() -> list[str]:
     ]
 
 
+def _has_local_changes(repo_root: Path) -> bool:
+    proc = subprocess.run(
+        ["git", "-C", str(repo_root), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return proc.returncode == 0 and bool(proc.stdout.strip())
+
+
+def _stash_local_changes(repo_root: Path) -> tuple[bool, str]:
+    """Stash dirty worktree so pull --rebase can run (e.g. monitor log files)."""
+    proc = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo_root),
+            "stash",
+            "push",
+            "-u",
+            "-m",
+            "monitor: pre-pull stash",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    out = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
+    if proc.returncode != 0:
+        return False, out[-400:] if out else "git stash failed"
+    if "No local changes to save" in out:
+        return False, "nothing to stash"
+    return True, out[-200:] if out else "stashed"
+
+
+def _pop_stash(repo_root: Path) -> tuple[bool, str]:
+    proc = subprocess.run(
+        ["git", "-C", str(repo_root), "stash", "pop"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    out = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
+    if proc.returncode != 0:
+        return False, out[-400:] if out else "git stash pop failed"
+    return True, out[-200:] if out else "stash popped"
+
+
 def pull_latest(repo_root: Path, *, branch: str | None = None) -> tuple[bool, str]:
     """Pull latest from GitHub after a cloud agent push."""
     branch = branch or resolve_github_branch(repo_root)
+    stashed = False
+    if _has_local_changes(repo_root):
+        ok, stash_msg = _stash_local_changes(repo_root)
+        if not ok and stash_msg != "nothing to stash":
+            return False, f"pre-pull stash failed: {stash_msg}"
+        stashed = ok
+
     token = _github_token()
     if token:
         url = _auth_repo_url(resolve_github_repo_url(repo_root) + ".git", token)
@@ -64,7 +119,16 @@ def pull_latest(repo_root: Path, *, branch: str | None = None) -> tuple[bool, st
         )
     out = ((proc.stdout or "") + "\n" + (proc.stderr or "")).strip()
     if proc.returncode != 0:
+        if stashed:
+            _pop_stash(repo_root)
         return False, out[-800:] if out else "git pull failed"
+
+    if stashed:
+        popped, pop_msg = _pop_stash(repo_root)
+        if not popped:
+            return False, f"pulled but stash pop failed: {pop_msg}"
+        out = f"{out}\n{pop_msg}".strip()
+
     return True, out[-400:] if out else "pulled"
 
 

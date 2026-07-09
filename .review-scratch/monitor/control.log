@@ -9034,3 +9034,15 @@
 [2026-07-08T11:19:04Z] [terminus-control] WARN: Telegram poll: Telegram getUpdates failed: <urlopen error [Errno 54] Connection reset by peer>
 [2026-07-08T13:49:59Z] [terminus-control] command from Telegram: pause 3h (update 791742643)
 [2026-07-08T14:58:47Z] [terminus-control] WARN: Telegram poll: Telegram getUpdates failed: <urlopen error [Errno 54] Connection reset by peer>
+[2026-07-08T23:42:48Z] [terminus-control] command listener started (poll every 20s)
+[2026-07-08T23:42:48Z] [terminus-control] repo: /Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-08T23:42:48Z] [terminus-control] Telegram: send help for commands
+[2026-07-08T23:47:36Z] [terminus-control] command listener started (poll every 20s)
+[2026-07-08T23:47:36Z] [terminus-control] repo: /Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-08T23:47:36Z] [terminus-control] Telegram: send help for commands
+[2026-07-08T23:56:30Z] [terminus-control] command from Telegram: /start (update 791742644)
+[2026-07-08T23:56:51Z] [terminus-control] command from Telegram: status (update 791742645)
+[2026-07-09T00:11:46Z] [terminus-control] [2026-07-09T00:07:57Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-09T00:11:46Z] [terminus-control] command listener started (poll every 20s)
+[2026-07-09T00:11:46Z] [terminus-control] repo: /Users/fabrice-mac-mini/Documents/snorkel-ai
+[2026-07-09T00:11:46Z] [terminus-control] Telegram: send help for commands

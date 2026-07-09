@@ -2,6 +2,7 @@
 .venv/
 tools/monitor/.env
 tools/monitor/.venv/
+.review-scratch/monitor/
 jobs/
 **/__pycache__/
 *.pyc

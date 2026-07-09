@@ -847,3 +847,77 @@ uncommitted task folders (5): harden-php-api-defaults, reconcile-spring-boot-mod
 [2026-07-08T21:41:00Z] ERROR on reproduce-java-aes-gcm-findings: Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out
 [2026-07-08T21:41:01Z] next queued task on next run: harden-php-api-defaults
 [2026-07-08T21:41:01Z] === done — triggered 0 fix(es) ===
+[2026-07-08T23:11:04Z] === 90-minute submission check start ===
+[2026-07-08T23:11:54Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T23:12:04Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T23:12:04Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T23:12:04Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T23:12:04Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T23:12:04Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T23:12:05Z] status:
+States: ACCEPTED=1, NEEDS_REVISION=5, OFFERED=4, REVIEW_PENDING=1
+Fix queue: harden-php-api-defaults, reconcile-spring-boot-model-registry-with-h2-experiment, repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+
+Docker: up
+stb: ok (installed)
+agent runtime: cloud
+AUTO_AGENT_FIX: 1
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+git: task folders clean
+[2026-07-08T23:12:05Z] fix queue (5): harden-php-api-defaults, reconcile-spring-boot-model-registry-with-h2-experiment, repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-08T23:12:05Z] Cursor agent runtime: cursor-cloud model=composer-2.5
+[2026-07-08T23:12:05Z] fixing harden-php-api-defaults (0c176558…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-08T23:12:06Z] triggering Composer fix for harden-php-api-defaults
+[2026-07-08T23:12:09Z] ERROR on harden-php-api-defaults: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:12:09Z] fixing reconcile-spring-boot-model-registry-with-h2-experiment (66067373…) — see platform feedback in monitor log
+[2026-07-08T23:12:10Z] triggering Composer fix for reconcile-spring-boot-model-registry-with-h2-experiment
+[2026-07-08T23:12:11Z] ERROR on reconcile-spring-boot-model-registry-with-h2-experiment: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:12:12Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ✅ HARD
+[2026-07-08T23:12:12Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-08T23:12:15Z] ERROR on repair-express-trivia-worker: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:12:15Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-08T23:12:15Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-08T23:12:20Z] ERROR on repair-java-trailswitch-graph-rules: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:12:20Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ EASY - Requires at least MEDIUM
+[2026-07-08T23:12:21Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-08T23:12:22Z] ERROR on reproduce-java-aes-gcm-findings: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:12:23Z] next queued task on next run: harden-php-api-defaults
+[2026-07-08T23:12:23Z] === done — triggered 0 fix(es) ===
+[2026-07-08T23:47:36Z] === 90-minute submission check start ===
+[2026-07-08T23:48:30Z] skip 71323da7… state=ACCEPTED folder=reproduce-java-tls-waiver-findings
+[2026-07-08T23:48:42Z] skip cffe5127… state=OFFERED folder=?
+[2026-07-08T23:48:42Z] skip 5ee796af… state=REVIEW_PENDING folder=repair-cpp-setup-auditor
+[2026-07-08T23:48:42Z] skip 586f2352… state=OFFERED folder=?
+[2026-07-08T23:48:42Z] skip c1f49663… state=OFFERED folder=?
+[2026-07-08T23:48:42Z] skip 8e261009… state=OFFERED folder=?
+[2026-07-08T23:48:43Z] status:
+States: ACCEPTED=1, NEEDS_REVISION=5, OFFERED=4, REVIEW_PENDING=1
+Fix queue: harden-php-api-defaults, reconcile-spring-boot-model-registry-with-h2-experiment, repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+
+Docker: up
+stb: ok (installed)
+agent runtime: cloud
+AUTO_AGENT_FIX: 1
+cursor-sdk bridges: 0 orphan(s)
+paused: no
+git: task folders clean
+[2026-07-08T23:48:43Z] fix queue (5): harden-php-api-defaults, reconcile-spring-boot-model-registry-with-h2-experiment, repair-express-trivia-worker, repair-java-trailswitch-graph-rules, reproduce-java-aes-gcm-findings
+[2026-07-08T23:48:43Z] Cursor agent runtime: cursor-cloud model=composer-2.5
+[2026-07-08T23:48:43Z] fixing harden-php-api-defaults (0c176558…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-08T23:48:43Z] triggering Composer fix for harden-php-api-defaults
+[2026-07-08T23:48:46Z] ERROR on harden-php-api-defaults: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:48:46Z] fixing reconcile-spring-boot-model-registry-with-h2-experiment (66067373…) — see platform feedback in monitor log
+[2026-07-08T23:48:47Z] triggering Composer fix for reconcile-spring-boot-model-registry-with-h2-experiment
+[2026-07-08T23:48:48Z] ERROR on reconcile-spring-boot-model-registry-with-h2-experiment: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:48:49Z] fixing repair-express-trivia-worker (e7d1cac7…) — Difficulty: ✅ HARD
+[2026-07-08T23:48:49Z] triggering Composer fix for repair-express-trivia-worker
+[2026-07-08T23:48:50Z] ERROR on repair-express-trivia-worker: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:48:51Z] fixing repair-java-trailswitch-graph-rules (f0e91036…) — Difficulty: ❌ TRIVIAL - Requires at least MEDIUM
+[2026-07-08T23:48:51Z] triggering Composer fix for repair-java-trailswitch-graph-rules
+[2026-07-08T23:48:53Z] ERROR on repair-java-trailswitch-graph-rules: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:48:53Z] fixing reproduce-java-aes-gcm-findings (fbb351b7…) — Difficulty: ❌ EASY - Requires at least MEDIUM
+[2026-07-08T23:48:53Z] triggering Composer fix for reproduce-java-aes-gcm-findings
+[2026-07-08T23:48:55Z] ERROR on reproduce-java-aes-gcm-findings: Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.
+[2026-07-08T23:48:55Z] next queued task on next run: harden-php-api-defaults
+[2026-07-08T23:48:55Z] === done — triggered 0 fix(es) ===

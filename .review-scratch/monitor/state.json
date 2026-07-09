@@ -3,18 +3,18 @@
     "fbb351b7-0c45-4402-9b19-08d2cd8fddf8": {
       "folder_name": "reproduce-java-aes-gcm-findings",
       "feedback_hash": "7d10d3abac2a51e0",
-      "attempts": 3,
+      "attempts": 5,
       "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-08T21:41:01.122763+00:00"
+      "error": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.",
+      "last_run": "2026-07-08T23:48:55.890436+00:00"
     },
     "e7d1cac7-538c-4f65-ba21-eb38d47c5242": {
       "folder_name": "repair-express-trivia-worker",
       "feedback_hash": "5a53f4531f8bf4f5",
-      "attempts": 1,
+      "attempts": 4,
       "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-08T21:00:43.174491+00:00"
+      "error": "git pull failed after cloud agent: error: cannot pull with rebase: You have unstaged changes.\nerror: please commit or stash them.",
+      "last_run": "2026-07-09T00:07:57.096728+00:00"
     },
     "3a48c644-09b8-4357-9466-403cb2674a1c": {
       "folder_name": "repair-flask-signalbox-configs",
@@ -35,29 +35,29 @@
     "f0e91036-8b36-4f80-9e35-52e7ce33dd3e": {
       "folder_name": "repair-java-trailswitch-graph-rules",
       "feedback_hash": "dc708919c8a3d17f",
-      "attempts": 4,
+      "attempts": 6,
       "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-08T21:13:42.844252+00:00"
+      "error": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct.",
+      "last_run": "2026-07-08T23:48:53.548857+00:00"
     },
     "66067373-eca1-43cf-8a0d-2911c7b737fb": {
       "folder_name": "reconcile-spring-boot-model-registry-with-h2-experiment",
       "feedback_hash": "7f97353287473e57",
-      "attempts": 2,
+      "attempts": 5,
       "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-08T20:49:20.820545+00:00"
+      "error": "git pull failed after cloud agent: error: cannot pull with rebase: You have unstaged changes.\nerror: please commit or stash them.",
+      "last_run": "2026-07-09T00:05:59.847859+00:00"
     },
     "0c176558-e5c1-444a-804b-f4b4cc3cbd29": {
       "folder_name": "harden-php-api-defaults",
       "feedback_hash": "4d37a1f55c94ef45",
-      "attempts": 2,
+      "attempts": 5,
       "status": "error",
-      "error": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out",
-      "last_run": "2026-07-08T20:26:38.475106+00:00"
+      "error": "git pull failed after cloud agent: error: cannot pull with rebase: You have unstaged changes.\nerror: please commit or stash them.",
+      "last_run": "2026-07-09T00:01:37.460316+00:00"
     }
   },
-  "last_check": "2026-07-08T19:53:47.189840+00:00",
+  "last_check": "2026-07-08T23:55:57.085505+00:00",
   "last_queue": {
     "fix_queue": [
       "harden-php-api-defaults",
@@ -68,7 +68,7 @@
     ],
     "manual_ui": [],
     "skipped": [],
-    "checked_at": "2026-07-08T19:54:38.738219+00:00"
+    "checked_at": "2026-07-08T23:56:52.787464+00:00"
   },
   "next_fix_allowed_after": "2026-07-08T08:43:38.541589+00:00",
   "last_states": {
@@ -291,7 +291,68 @@
         "type": "error",
         "folder": "reproduce-java-aes-gcm-findings",
         "detail": "Cursor agent startup failed: Bridge request timed out: ReadTimeout: timed out"
+      },
+      {
+        "at": "2026-07-08T23:12:09.536027+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:12:11.936697+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:12:15.167859+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:12:20.160341+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:12:22.607310+00:00",
+        "type": "error",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:48:46.341179+00:00",
+        "type": "error",
+        "folder": "harden-php-api-defaults",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:48:48.693540+00:00",
+        "type": "error",
+        "folder": "reconcile-spring-boot-model-registry-with-h2-experiment",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:48:50.919333+00:00",
+        "type": "error",
+        "folder": "repair-express-trivia-worker",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:48:53.152129+00:00",
+        "type": "error",
+        "folder": "repair-java-trailswitch-graph-rules",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
+      },
+      {
+        "at": "2026-07-08T23:48:55.509065+00:00",
+        "type": "error",
+        "folder": "reproduce-java-aes-gcm-findings",
+        "detail": "Cursor cloud agent failed: [validation_error] Failed to verify existence of branch 'main' in repository fabricenduwayo/fabre. Please ensure the branch name is correct."
       }
     ]
-  }
+  },
+  "last_daily_summary_date": "2026-07-08"
 }
