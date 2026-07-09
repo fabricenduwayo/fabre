@@ -623,12 +623,14 @@ funding rule applies whenever the post-floor correct offset runs.
 ### H-2026-46 — Deferred dual-offset score coupling
 
 Extends H-2026-38, H-2026-42, and H-2026-45. During the post-floor pass, when
-a deferred ruling carries both `offset_player` and `offset_correct_player` and
-H-2026-42 caps `score_applied` below the nominal `delta`, cap the intended
-positive debit to `offset_correct_player` at `score_applied` before H-2026-39
-solvency and H-2026-45 funding match. The correct-offset payer must not fund
-more correct credit than score points the beneficiary actually received in that
-step. When `score_applied` is **0**, skip the correct-offset debit entirely.
+a deferred ruling carries both `offset_player` and `offset_correct_player`, cap
+the intended positive debit to `offset_correct_player` at `score_applied` (after
+H-2026-42 funding match and any `score_ceiling` headroom, not the nominal
+`delta` or the applied `correct_delta`) before H-2026-39 solvency and H-2026-45
+funding match. When H-2026-42 trims `score_applied` below the nominal `delta`,
+the correct-offset payer must not fund more correct credit than score points the
+beneficiary actually received in that step. When `score_applied` is **0** or
+negative, skip the correct-offset debit entirely.
 
 ### H-2026-47 — Primary dual-offset score coupling
 

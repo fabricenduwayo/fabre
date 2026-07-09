@@ -18,13 +18,14 @@ from provisional standings; H-2026-34/H-2026-40 block deferred correct credit wh
 ceilings zero score credit; H-2026-37/H-2026-48 refund a score offset and skip deferred
 correct credit; H-2026-41/H-2026-42 and H-2026-44/H-2026-45 funding-match caps trim
 beneficiary credit to what offset solvency collected; and when both `offset_player` and
-`offset_correct_player` share a ruling, H-2026-47 caps the primary correct-offset debit
-at the score points actually credited to `player` that step after H-2026-27 `max_score_after`
-(not the nominal `delta` or `correct_delta`) — even though H-2026-27 applies `correct_delta`
-before the score cap — and trim the beneficiary's `correct` when that coupled debit ends
-below the applied correct change (H-2026-44); H-2026-46 does the parallel coupling at
-deferred `score_applied` after H-2026-42, and either debit is skipped when that capped
-score credit is zero. Re-rank with TR-TIEBREAK. Use the
+`offset_correct_player` share a ruling, use the same post-cap score credit for both offsets
+(H-2026-28 debits `offset_player`, H-2026-47 caps the primary correct-offset debit at that
+applied score change after H-2026-27 `max_score_after`, not the nominal `delta` or
+`correct_delta`) — even though H-2026-27 applies `correct_delta` before the score cap —
+then trim the beneficiary's `correct` when the coupled debit ends below the applied
+correct change (H-2026-44); H-2026-46 does the parallel coupling at deferred
+`score_applied` after H-2026-42, and skip either correct-offset debit when that capped
+score credit is zero or negative. Re-rank with TR-TIEBREAK. Use the
 live rulings API — do not read `/app/data/rulings.json` directly.
 
 Write the section 4 transcript to `--output`: line 1 `STANDINGS match-night-2026-03-15`,
