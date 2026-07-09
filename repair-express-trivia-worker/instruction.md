@@ -21,8 +21,7 @@ beneficiary credit to what offset solvency collected; and when both `offset_play
 `offset_correct_player` share a ruling, H-2026-47 caps the primary correct-offset debit
 at the applied score change after H-2026-27 `max_score_after` (not the nominal `delta` or
 `correct_delta`), H-2026-46 does the same at deferred `score_applied` after H-2026-42,
-and either debit is skipped when that capped score credit is zero. Re-rank with TR-TIEBREAK.
-Use the
+and either debit is skipped when that capped score credit is zero. Re-rank with TR-TIEBREAK. Use the
 live rulings API — do not read `/app/data/rulings.json` directly.
 
 Write the section 4 transcript to `--output`: line 1 `STANDINGS match-night-2026-03-15`,
