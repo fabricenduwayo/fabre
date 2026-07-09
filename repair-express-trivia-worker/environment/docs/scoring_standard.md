@@ -632,12 +632,16 @@ step. When `score_applied` is **0**, skip the correct-offset debit entirely.
 
 ### H-2026-47 — Primary dual-offset score coupling
 
-Extends H-2026-27, H-2026-28, H-2026-38, and H-2026-44. During the primary
-pass, when a ruling carries both `offset_player` and `offset_correct_player`,
-cap the intended positive debit to `offset_correct_player` at the **applied
-score change** for that step (after H-2026-27 and before H-2026-41 funding
-match) before H-2026-39 solvency and H-2026-44 funding match. When the applied
-score change is **0** or negative, skip the correct-offset debit entirely.
+Extends H-2026-27, H-2026-28, H-2026-38, H-2026-39, and H-2026-44. During the primary
+pass, when a ruling carries both `offset_player` and `offset_correct_player`, after
+applying `delta`, `correct_delta`, and any H-2026-27 `max_score_after` cap, cap the
+intended positive debit to `offset_correct_player` at the **applied score change** to
+`player` in that step (not the nominal `delta` or the applied `correct_delta`) before
+H-2026-39 solvency and H-2026-44 funding match. Because H-2026-27 applies
+`correct_delta` before the score cap, reduce the beneficiary's `correct` by any excess
+already credited when the coupled debit is below the step's applied correct change.
+When the applied score change is **0** or negative, skip the correct-offset debit
+entirely.
 
 ### H-2026-48 — Refunded score offset blocks deferred correct credit
 
