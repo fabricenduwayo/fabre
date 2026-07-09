@@ -10,8 +10,8 @@ Bring the running service into conformance so that, for every request, the API
 returns exactly the status, headers, and body the Standard as amended requires
 and records exactly the audit row it implies. Reconcile the full Standard at
 `/app/docs/standard.md`, including at least CO-ORIGIN-ALLOW (incl. Vary),
-CO-PREFLIGHT (G-2026-11), AC-BOOTSTRAP (G-2026-03/05/15/16/17), AC-HEALTH
-(G-2026-04/18), AC-TOKEN-STORE (G-2026-12 digest), AU-LEDGER-SCOPE (G-2026-06),
+CO-PREFLIGHT (G-2026-11), AC-BOOTSTRAP (G-2026-03/05/15/16), AC-HEALTH
+(G-2026-04), AC-TOKEN-STORE (G-2026-12 digest), AU-LEDGER-SCOPE (G-2026-06),
 and EH-NO-DISCLOSE. Keep the existing routes (`GET /health`,
 `POST /admin/bootstrap`) and their JSON shapes. The ledger already holds
 historical rows that reconciliation must preserve; note that the on-disk ledger is

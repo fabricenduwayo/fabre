@@ -9,6 +9,18 @@ $config = require __DIR__ . '/config.php';
 require __DIR__ . '/lib/audit.php';
 require __DIR__ . '/lib/http.php';
 
+function stored_token_digest($config)
+{
+    if (!is_file($config['token_file'])) {
+        return null;
+    }
+    $stored = trim(file_get_contents($config['token_file']));
+    if (!preg_match('/^[0-9a-f]{64}$/', $stored)) {
+        return null;
+    }
+    return $stored;
+}
+
 if (!empty($config['debug'])) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);
@@ -39,7 +51,7 @@ if ($path === '/health' && $method === 'GET') {
         }
     }
 
-    $stored = is_file($config['token_file']) ? trim(file_get_contents($config['token_file'])) : null;
+    $stored = stored_token_digest($config);
 
     if ($token === null) {
         // AC-HEALTH + G-2026-04/G-2026-18: absent or non-bearer credentials.

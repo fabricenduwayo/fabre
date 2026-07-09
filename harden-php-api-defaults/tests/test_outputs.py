@@ -65,6 +65,10 @@ def _assert_response(exp, status, headers, raw, parsed):
     else:
         assert acao is None, f"unexpected ACAO {acao!r}"
         assert cred is None, f"unexpected Allow-Credentials {cred!r}"
+        vary = header_ci(headers, "Vary")
+        assert vary is None or "origin" not in vary.lower(), (
+            f"disallowed or absent origin must not emit Vary: Origin, got {vary!r}"
+        )
 
     body = exp["body"]
     if body == "ok":
@@ -283,12 +287,14 @@ def test_cors_exact_allowlist(scripted):
 
 
 def test_cors_rejects_untrusted_and_inexact(scripted):
-    """Disallowed origins and exact-match traps receive no grant."""
+    """Disallowed origins and exact-match traps receive no grant or Vary."""
     for key in ("cors_evil", "cors_trailing_slash"):
         _, headers, _, _ = scripted[key]
         acao = header_ci(headers, "Access-Control-Allow-Origin")
         assert acao is None, f"{key} leaked ACAO {acao!r}"
         assert header_ci(headers, "Access-Control-Allow-Credentials") is None
+        vary = header_ci(headers, "Vary")
+        assert vary is None or "origin" not in vary.lower(), f"{key} leaked Vary {vary!r}"
 
 
 def test_cors_absent_origin_emits_no_headers(scripted):
@@ -376,6 +382,54 @@ def test_bootstrap_secret_follows_on_disk_file():
 
     with open(SECRET_FILE, "w", encoding="utf-8") as fh:
         fh.write(original + "\n")
+
+
+def test_corrupt_token_file_blocks_rebootstrap():
+    """G-2026-19: a malformed on-disk digest blocks health and re-bootstrap."""
+    reset_state()
+    secret = read_secret()
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    token = body["token"]
+
+    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
+        fh.write("not-a-valid-digest\n")
+
+    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {token}"})
+    assert status == 401, "malformed digest must deny the presented bearer"
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 409, f"existing token file must block bootstrap, got {status}"
+    assert not (body and "token" in body)
+
+
+def test_empty_token_file_still_blocks_bootstrap():
+    """G-2026-19: an empty token file still counts as already bootstrapped."""
+    reset_state()
+    secret = read_secret()
+
+    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
+        fh.write("\n")
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 409, f"empty token file must block bootstrap, got {status}"
+    assert not (body and "token" in body)
 
 
 def test_randomized_lifecycles_match_reference():

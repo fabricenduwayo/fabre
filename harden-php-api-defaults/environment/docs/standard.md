@@ -2751,14 +2751,24 @@ Inconsistent application of this requirement across nodes complicates evidence c
 The following amendments are in force and **supersede** the body of the referenced controls per section 1.4. They are listed in effective-date order.
 
 
+### G-2026-18 — amends AC-HEALTH
+
+AC-HEALTH denial reasons are narrowed. The `invalid_token` reason applies only when a **non-empty** bearer credential was extracted from the `Authorization` header (a `Bearer` scheme token with at least one non-whitespace character). If the header is absent, uses a non-`Bearer` scheme, or presents `Bearer` with no credential, the reason shall be `missing_credentials` (status `401` unchanged).
+
+
+### G-2026-19 — amends AC-BOOTSTRAP
+
+Bootstrap eligibility under AC-BOOTSTRAP is determined solely by whether the administrative token file exists on disk. AC-HEALTH credential verification, however, shall treat the on-disk representation as absent unless the token file contains a valid 64-character lowercase hexadecimal SHA-256 digest. An empty, whitespace-only, or otherwise malformed file therefore retains already-bootstrapped refusal while denying every presented bearer credential with reason `invalid_token`.
+
+
 ### G-2026-13 — amends CO-ORIGIN-ALLOW
 
 Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, even if an earlier request in the same long-lived process carried an allowed origin.
 
 
-### G-2026-12 — amends AC-TOKEN-STORE
+### G-2026-20 — amends CO-ORIGIN-ALLOW
 
-The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
+When a request carries an `Origin` header that is not on the allowlist, the response shall include none of the CO-ORIGIN-ALLOW grant headers and shall not include `Vary: Origin`.
 
 
 ### G-2026-02 — amends CO-PREFLIGHT
@@ -2766,49 +2776,9 @@ The on-disk administrative token representation shall be the lowercase hexadecim
 The preflight cache lifetime in CO-PREFLIGHT is lowered from `600` to `300` seconds. The `Access-Control-Max-Age` header on an allowed-origin preflight shall therefore be `300`.
 
 
-### G-2026-10 — amends SV-BANNER
+### G-2026-09 — amends IR-CONTACT
 
-The approved service banner wording is updated. This amendment does not affect API behavior.
-
-
-### G-2026-01 — amends CO-ORIGIN-ALLOW
-
-The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
-
-
-### G-2026-17 — amends AC-BOOTSTRAP
-
-The deployment bootstrap secret in `data/bootstrap_secret` shall be read from disk on every bootstrap attempt. In-process caches of the secret value are non-compliant: if the on-disk secret is replaced between attempts, the next evaluation shall use the current file contents.
-
-
-### G-2026-08 — amends MA-PATCH-WINDOW
-
-The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
-
-
-### G-2026-06 — amends AU-LEDGER-SCOPE
-
-Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
-
-
-### G-2026-18 — amends AC-HEALTH
-
-AC-HEALTH denial reasons are narrowed. The `invalid_token` reason applies only when a **non-empty** bearer credential was extracted from the `Authorization` header (a `Bearer` scheme token with at least one non-whitespace character). If the header is absent, uses a non-`Bearer` scheme, or presents `Bearer` with no credential, the reason shall be `missing_credentials` (status `401` unchanged).
-
-
-### G-2026-05 — amends AC-BOOTSTRAP
-
-The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong**. Secret validation is reached only when no token yet exists.
-
-
-### G-2026-04 — amends AC-HEALTH
-
-The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
-
-
-### G-2026-07 — amends NW-TLS-CIPHERS
-
-The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
+The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
 
 
 ### G-2026-11 — amends CO-PREFLIGHT
@@ -2816,14 +2786,54 @@ The approved TLS cipher suite list is updated; see Appendix C. This amendment do
 The method, header, and max-age hint headers in CO-PREFLIGHT (`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and `Access-Control-Max-Age`) shall be emitted **only** on an `OPTIONS` preflight for an allowed origin. Non-preflight responses (including credentialed `GET` or `POST`) shall carry at most the grant headers of CO-ORIGIN-ALLOW and shall not include those preflight hints.
 
 
+### G-2026-12 — amends AC-TOKEN-STORE
+
+The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
+
+
+### G-2026-01 — amends CO-ORIGIN-ALLOW
+
+The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
+
+
+### G-2026-06 — amends AU-LEDGER-SCOPE
+
+Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
+
+
 ### G-2026-03 — amends AC-BOOTSTRAP
 
 The refusal status for an already-bootstrapped node is changed from `403` to `409` (Conflict). The decision remains `denied` and the reason remains `already_bootstrapped`; only the HTTP status changes.
 
 
+### G-2026-08 — amends MA-PATCH-WINDOW
+
+The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
+
+
+### G-2026-10 — amends SV-BANNER
+
+The approved service banner wording is updated. This amendment does not affect API behavior.
+
+
+### G-2026-04 — amends AC-HEALTH
+
+The denial reason for a health request that presents no bearer credential is renamed from `missing_token` to `missing_credentials`. The status (`401`) and the `invalid_token` reason for a present-but-wrong credential are unchanged.
+
+
 ### G-2026-15 — amends AC-BOOTSTRAP
 
 Bootstrap secret validation shall compare the presented `X-Bootstrap-Secret` header to the on-disk secret using a **case-insensitive** ASCII match. Letter case in the header value must not cause an otherwise-correct secret to be rejected.
+
+
+### G-2026-17 — amends AC-BOOTSTRAP
+
+The deployment bootstrap secret in `data/bootstrap_secret` shall be read from disk on every bootstrap attempt. In-process caches of the secret value are non-compliant: if the on-disk secret is replaced between attempts, the next evaluation shall use the current file contents.
+
+
+### G-2026-05 — amends AC-BOOTSTRAP
+
+The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong**. Secret validation is reached only when no token yet exists.
 
 
 ### G-2026-14 — amends AC-BOOTSTRAP
@@ -2836,7 +2846,7 @@ Bootstrap eligibility and AC-HEALTH credential verification shall consult the on
 Before the case-insensitive comparison of G-2026-15, both the presented `X-Bootstrap-Secret` header value and the on-disk bootstrap secret file contents shall be trimmed of leading and trailing ASCII whitespace.
 
 
-### G-2026-09 — amends IR-CONTACT
+### G-2026-07 — amends NW-TLS-CIPHERS
 
-The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
+The approved TLS cipher suite list is updated; see Appendix C. This amendment does not affect API behavior.
 

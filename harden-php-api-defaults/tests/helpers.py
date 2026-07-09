@@ -175,10 +175,19 @@ def audit_rows_with_origin():
 # Reference simulator: resolved-policy expected outcome for one request.
 # ---------------------------------------------------------------------------
 class _State:
-    """Tracks whether an administrative token currently exists."""
+    """Tracks whether an administrative token file exists and holds a valid digest."""
 
     def __init__(self):
-        self.token_exists = False
+        self.token_file_exists = False
+        self.stored_digest_valid = False
+
+
+def _valid_stored_digest(raw):
+    """True when raw is a 64-char lowercase hex SHA-256 digest."""
+    if raw is None:
+        return False
+    value = raw.strip()
+    return len(value) == 64 and all(ch in "0123456789abcdef" for ch in value)
 
 
 def expected_cors(origin, preflight):
@@ -219,7 +228,7 @@ def simulate(state, req):
         if token is None or token == "malformed":
             return {"status": 401, "cors": cors, "body": "error",
                     "audit": ("health", "/health", origin, "denied", "missing_credentials")}
-        if token == "valid" and state.token_exists:
+        if token == "valid" and state.token_file_exists and state.stored_digest_valid:
             return {"status": 200, "cors": cors, "body": "ok",
                     "audit": ("health", "/health", origin, "accepted", None)}
         return {"status": 401, "cors": cors, "body": "error",
@@ -231,13 +240,14 @@ def simulate(state, req):
             return {"status": 400, "cors": cors, "body": "error",
                     "audit": ("bootstrap", "/admin/bootstrap", origin, "denied", "malformed_request")}
         # G-2026-05: already-bootstrapped takes precedence over secret validation.
-        if state.token_exists:
+        if state.token_file_exists:
             return {"status": 409, "cors": cors, "body": "error",
                     "audit": ("bootstrap", "/admin/bootstrap", origin, "denied", "already_bootstrapped")}
         if req.get("secret") != "valid":
             return {"status": 403, "cors": cors, "body": "error",
                     "audit": ("bootstrap", "/admin/bootstrap", origin, "denied", "invalid_secret")}
-        state.token_exists = True
+        state.token_file_exists = True
+        state.stored_digest_valid = True
         return {"status": 201, "cors": cors, "body": "token",
                 "audit": ("bootstrap", "/admin/bootstrap", origin, "accepted", None)}
 

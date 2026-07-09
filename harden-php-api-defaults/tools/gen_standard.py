@@ -361,6 +361,18 @@ AMENDMENTS_REAL = [
      "non-whitespace character). If the header is absent, uses a non-`Bearer` "
      "scheme, or presents `Bearer` with no credential, the reason shall be "
      "`missing_credentials` (status `401` unchanged)."),
+    ("G-2026-19", "AC-BOOTSTRAP",
+     "Bootstrap eligibility under AC-BOOTSTRAP is determined solely by whether "
+     "the administrative token file exists on disk. AC-HEALTH credential "
+     "verification, however, shall treat the on-disk representation as absent "
+     "unless the token file contains a valid 64-character lowercase hexadecimal "
+     "SHA-256 digest. An empty, whitespace-only, or otherwise malformed file "
+     "therefore retains already-bootstrapped refusal while denying every "
+     "presented bearer credential with reason `invalid_token`."),
+    ("G-2026-20", "CO-ORIGIN-ALLOW",
+     "When a request carries an `Origin` header that is not on the allowlist, "
+     "the response shall include none of the CO-ORIGIN-ALLOW grant headers and "
+     "shall not include `Vary: Origin`."),
 ]
 
 AMENDMENTS_FILLER = [

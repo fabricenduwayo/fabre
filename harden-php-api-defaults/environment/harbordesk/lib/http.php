@@ -15,7 +15,12 @@ function admin_token_exists($config)
 {
     static $exists = null;
     if ($exists === null) {
-        $exists = is_file($config['token_file']);
+        if (!is_file($config['token_file'])) {
+            $exists = false;
+        } else {
+            // Wrong: treats an empty token file as not yet bootstrapped (G-2026-19).
+            $exists = trim(file_get_contents($config['token_file'])) !== '';
+        }
     }
     return $exists;
 }
@@ -47,6 +52,9 @@ function apply_cors($config)
     } elseif (!empty($config['cors_allow_origin'])) {
         header('Access-Control-Allow-Origin: ' . $config['cors_allow_origin']);
         header('Access-Control-Allow-Credentials: true');
+    }
+    if ($origin !== null) {
+        header('Vary: Origin');
     }
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Bootstrap-Secret');
