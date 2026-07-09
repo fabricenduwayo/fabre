@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-08-r7
+# platform-revision: 2026-07-09-r8
 
 WORKDIR /app
 
@@ -28,9 +28,6 @@ RUN mkdir -p /root/.m2/repository \
 
 # Reconcile skeleton ships as source; registry ships as a prebuilt jar only.
 COPY reconcile-model-release/ /app/reconcile-model-release/
-# Prove the cache satisfies offline builds (fast, no downloads).
-RUN mvn -o -B -q -f /app/reconcile-model-release/pom.xml package \
-    && rm -rf /app/reconcile-model-release/target
 
 RUN mkdir -p /app/model-registry/target
 COPY model-registry/target/model-registry-0.1.0.jar /app/model-registry/target/model-registry-0.1.0.jar

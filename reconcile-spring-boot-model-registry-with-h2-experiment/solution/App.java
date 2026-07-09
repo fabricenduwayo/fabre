@@ -235,7 +235,7 @@ public final class App {
                 .GET()
                 .build();
         Exception last = null;
-        for (int attempt = 0; attempt < 90; attempt++) {
+        for (int attempt = 0; attempt < 60; attempt++) {
             try {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {

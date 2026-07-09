@@ -43,7 +43,7 @@ def registry() -> list[dict]:
     (or was stopped), bring it back with the same launcher script the agent
     uses, then wait for readiness.
     """
-    if not wait_for_api(30):
+    if not wait_for_api(45):
         subprocess.run(
             ["bash", "/app/start-registry.sh"],
             capture_output=True,
