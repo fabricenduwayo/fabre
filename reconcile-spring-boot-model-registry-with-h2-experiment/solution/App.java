@@ -235,7 +235,7 @@ public final class App {
                 .GET()
                 .build();
         Exception last = null;
-        for (int attempt = 0; attempt < 60; attempt++) {
+        for (int attempt = 0; attempt < 120; attempt++) {
             try {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() == 200) {
@@ -248,7 +248,7 @@ public final class App {
             } catch (Exception e) {
                 last = e;
             }
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         }
         throw new IllegalStateException("registry API never served /models/candidates", last);
     }

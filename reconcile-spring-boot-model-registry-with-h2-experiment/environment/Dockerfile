@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-09-r8
+# platform-revision: 2026-07-09-r9
 
 WORKDIR /app
 
@@ -24,6 +24,8 @@ RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.t
 COPY maven-repo.tar.gz /tmp/maven-repo.tar.gz
 RUN mkdir -p /root/.m2/repository \
     && tar -xzf /tmp/maven-repo.tar.gz -C /root/.m2/repository \
+    && find /root/.m2/repository -name '._*' -delete \
+    && find /root/.m2/repository -name '.DS_Store' -delete \
     && rm -f /tmp/maven-repo.tar.gz
 
 # Reconcile skeleton ships as source; registry ships as a prebuilt jar only.
@@ -39,7 +41,8 @@ COPY policy/promotion-policy.md /app/policy/promotion-policy.md
 COPY schemas/release-decision.schema.json /app/schemas/release-decision.schema.json
 
 COPY experiment-db/experiments.mv.db /app/experiment-db/experiments.mv.db
-RUN chmod 0666 /app/experiment-db/experiments.mv.db
+RUN chmod 0666 /app/experiment-db/experiments.mv.db \
+    && mkdir -p /app/build
 
 COPY start-registry.sh /app/start-registry.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

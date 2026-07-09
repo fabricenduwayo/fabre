@@ -43,14 +43,14 @@ def registry() -> list[dict]:
     (or was stopped), bring it back with the same launcher script the agent
     uses, then wait for readiness.
     """
-    if not wait_for_api(45):
+    if not wait_for_api(60):
         subprocess.run(
             ["bash", "/app/start-registry.sh"],
             capture_output=True,
             text=True,
-            timeout=240,
+            timeout=360,
         )
-        assert wait_for_api(120), "registry API never became ready on port 8080"
+        assert wait_for_api(180), "registry API never became ready on port 8080"
     candidates = http_get_json(CANDIDATES_URL)
     assert isinstance(candidates, list) and candidates, (
         "registry API returned no candidate models"

@@ -21,13 +21,13 @@ fi
 # The entrypoint or an earlier launcher may already be warming the jar. Wait for
 # readiness instead of spawning a duplicate that loses the port bind.
 if registry_running; then
-    for _ in $(seq 1 180); do
+    for _ in $(seq 1 300); do
         if health_up; then
             exit 0
         fi
         sleep 1
     done
-    echo "model-registry process is running but /health never answered within 180s; see /var/log/model-registry.log" >&2
+    echo "model-registry process is running but /health never answered within 300s; see /var/log/model-registry.log" >&2
     tail -n 40 /var/log/model-registry.log >&2 || true
     exit 1
 fi
@@ -40,13 +40,13 @@ nohup java \
     -jar "${REGISTRY_JAR}" \
     --server.port=8080 >>/var/log/model-registry.log 2>&1 &
 
-for _ in $(seq 1 180); do
+for _ in $(seq 1 300); do
     if health_up; then
         exit 0
     fi
     sleep 1
 done
 
-echo "model-registry API did not become healthy within 180s; see /var/log/model-registry.log" >&2
+echo "model-registry API did not become healthy within 300s; see /var/log/model-registry.log" >&2
 tail -n 40 /var/log/model-registry.log >&2 || true
 exit 1
