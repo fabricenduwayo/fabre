@@ -11,6 +11,7 @@ Agent reconciles the audit schema idempotently whenever the database is opened r
 Agent removes stale in-process caches so CORS grants, bootstrap eligibility, bootstrap-secret validation, and AC-HEALTH digest verification follow each request and on-disk state, +3
 Agent re-reads the bootstrap secret from disk on every bootstrap attempt rather than caching it in-process, +3
 Agent logs health denials for non-Bearer or empty Bearer Authorization headers as missing_credentials per G-2026-18, +2
+Agent treats an existing token file as already bootstrapped even when its on-disk digest is empty or malformed, while denying health with invalid_token, +2
 Agent preserves the existing GET /health and POST /admin/bootstrap routes and their JSON response shapes, +1
 Agent hardcodes HTTP responses without reading or reconciling against the Standard document, -5
 Agent persists the raw bearer token in recoverable plaintext on disk, -5

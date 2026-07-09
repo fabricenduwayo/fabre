@@ -1,5 +1,6 @@
 <?php
 
+// Ledger schema is reconciled at image build time; runtime writes use the layout below.
 function audit_db($config)
 {
     $db = new SQLite3($config['audit_db']);

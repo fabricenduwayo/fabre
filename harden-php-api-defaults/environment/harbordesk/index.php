@@ -26,11 +26,11 @@ if ($method === 'OPTIONS') {
 if ($path === '/health' && $method === 'GET') {
     $auth = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
     $token = null;
-    if (preg_match('/^Bearer\s+(.+)$/', $auth, $m)) {
+    if (preg_match('/^Bearer\s+(.*)$/', $auth, $m)) {
         $token = $m[1];
     }
     $stored = read_admin_token($config);
-    if ($token !== null && $stored !== null && hash_equals($stored, $token)) {
+    if ($token !== null && $token !== '' && $stored !== null && hash_equals($stored, $token)) {
         audit_log($config, 'health', $path, $origin, 'accepted', null);
         send_json($config, 200, ['status' => 'ok']);
     } elseif ($token === null) {

@@ -49,9 +49,6 @@ function apply_cors($config)
     if ($sticky_origin !== null) {
         header('Access-Control-Allow-Origin: ' . $sticky_origin);
         header('Access-Control-Allow-Credentials: true');
-    } elseif (!empty($config['cors_allow_origin'])) {
-        header('Access-Control-Allow-Origin: ' . $config['cors_allow_origin']);
-        header('Access-Control-Allow-Credentials: true');
     }
     if ($origin !== null) {
         header('Vary: Origin');

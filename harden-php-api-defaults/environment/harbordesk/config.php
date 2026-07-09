@@ -2,7 +2,6 @@
 
 return [
     'debug' => true,
-    'cors_allow_origin' => '*',
     'allowed_origins' => ['https://harbordesk.internal'],
     'preflight_max_age' => 600,
     'token_file' => '/app/harbordesk/data/admin_token',
