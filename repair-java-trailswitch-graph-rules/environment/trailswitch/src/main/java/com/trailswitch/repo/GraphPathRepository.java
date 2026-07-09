@@ -21,10 +21,10 @@ public class GraphPathRepository {
 
     public List<EdgeRow> loadOutgoing(String stationId) {
         String sql =
-                "SELECT edge_id, from_station, to_station, requires_sw1, requires_sw2 "
-                        + "FROM edges WHERE from_station = '"
-                        + stationId
-                        + "'";
+                String.format(
+                        "SELECT edge_id, from_station, to_station, requires_sw1, requires_sw2 "
+                                + "FROM edges WHERE from_station = '%s'",
+                        stationId);
         return jdbc.query(
                 sql,
                 (rs, rowNum) ->
@@ -39,7 +39,7 @@ public class GraphPathRepository {
     public List<RouteRule> loadRules() {
         return jdbc.query(
                 "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action "
-                        + "FROM route_rules ORDER BY rule_priority DESC",
+                        + "FROM route_rules ORDER BY rule_priority ASC, rule_id DESC",
                 (rs, rowNum) ->
                         new RouteRule(
                                 rs.getString("rule_id"),

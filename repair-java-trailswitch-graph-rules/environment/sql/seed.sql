@@ -17,6 +17,7 @@ INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2
 INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action) VALUES
     ('r_warn_d', 'e_b_d', 5, 'south', 'south', 'lock'),
     ('r_release_d', 'e_b_d', 7, 'south', 'north', 'clear'),
+    ('r_shadow_d', 'e_b_d', 7, 'south', 'north', 'lock'),
     ('r_platform_d', 'e_b_d', 8, NULL, 'north', 'lock'),
     ('r_hold_d', 'e_b_d', 10, 'north', 'north', 'lock'),
     ('r_release_de', 'e_d_e', 6, 'south', 'north', 'clear'),

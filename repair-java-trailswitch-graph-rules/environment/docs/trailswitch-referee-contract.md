@@ -9,10 +9,6 @@ it from source and SQL only — do not rely on manual playthroughs.
 - `stations`, `edges`, `route_rules`, and `lock_groups` define the railway graph and
   lock semantics. Authoritative rows live in `/app/sql/schema.sql` and
   `/app/sql/seed.sql`.
-- `GraphPathRepository` must bind station ids as SQL parameters — do not concatenate
-  them into query strings.
-- Path planning on the cyclic graph (including the `E`→`C` return edge) must track
-  visited nodes so search terminates with `cycle_guard` true.
 - `SwitchRuleHandler` must implement route-lock and lock-group relay semantics
   consistent with the `route_rules` and `lock_groups` seed rows.
 

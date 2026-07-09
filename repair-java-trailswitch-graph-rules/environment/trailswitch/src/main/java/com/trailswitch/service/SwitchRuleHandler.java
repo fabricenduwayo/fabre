@@ -2,7 +2,6 @@ package com.trailswitch.service;
 
 import com.trailswitch.model.RouteRule;
 import com.trailswitch.repo.GraphPathRepository;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,21 +20,14 @@ public class SwitchRuleHandler {
         Set<String> locked = new HashSet<>();
         applyLockGroups(locked);
         List<RouteRule> rules = repository.loadRules();
-        Map<String, Boolean> edgeDecided = new HashMap<>();
         for (RouteRule rule : rules) {
-            if (edgeDecided.containsKey(rule.edgeId())) {
+            if (!ruleMatches(switches, rule)) {
                 continue;
             }
-            if (ruleMatches(switches, rule)) {
-                if ("clear".equalsIgnoreCase(rule.ruleAction())) {
-                    locked.add(rule.edgeId());
-                    edgeDecided.put(rule.edgeId(), true);
-                    continue;
-                }
-                locked.add(rule.edgeId());
-                edgeDecided.put(rule.edgeId(), true);
+            if ("clear".equalsIgnoreCase(rule.ruleAction())) {
+                locked.remove(rule.edgeId());
             } else {
-                edgeDecided.put(rule.edgeId(), true);
+                locked.add(rule.edgeId());
             }
         }
         return locked;
@@ -58,13 +50,14 @@ public class SwitchRuleHandler {
     }
 
     private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {
-        boolean matched = false;
-        if (rule.lockSw1() != null) {
-            matched = switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1());
+        if (rule.lockSw1() != null
+                && !switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
+            return false;
         }
-        if (rule.lockSw2() != null) {
-            matched = matched || switches.getOrDefault("sw2", "").equalsIgnoreCase(rule.lockSw2());
+        if (rule.lockSw2() != null
+                && !switches.getOrDefault("sw2", "").equalsIgnoreCase(rule.lockSw2())) {
+            return false;
         }
-        return matched;
+        return rule.lockSw1() != null || rule.lockSw2() != null;
     }
 }

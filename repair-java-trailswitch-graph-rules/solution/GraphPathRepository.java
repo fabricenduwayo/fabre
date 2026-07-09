@@ -36,7 +36,7 @@ public class GraphPathRepository {
     public List<RouteRule> loadRules() {
         return jdbc.query(
                 "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action "
-                        + "FROM route_rules ORDER BY rule_priority ASC",
+                        + "FROM route_rules ORDER BY rule_priority ASC, rule_id ASC",
                 (rs, rowNum) ->
                         new RouteRule(
                                 rs.getString("rule_id"),
