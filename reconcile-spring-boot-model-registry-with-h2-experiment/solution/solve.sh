@@ -7,9 +7,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Registry normally starts from the container entrypoint. Give an in-flight boot
-# a short grace period, then run the shared launcher (it waits on an existing
-# process instead of spawning a duplicate on port 8080).
-for _ in $(seq 1 60); do
+# a grace period, then run the shared launcher (it waits on an existing process
+# instead of spawning a duplicate on port 8080).
+for _ in $(seq 1 90); do
     if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
         break
     fi

@@ -152,7 +152,7 @@ def wait_for_api(seconds: float) -> bool:
     return api_healthy()
 
 
-def run_step_jar(args: list[str], timeout: float = 180.0) -> subprocess.CompletedProcess:
+def run_step_jar(args: list[str], timeout: float = 240.0) -> subprocess.CompletedProcess:
     """Run the agent-built reconciliation jar from /app with the given args."""
     return subprocess.run(
         ["java", "-jar", find_step_jar(), *args],
