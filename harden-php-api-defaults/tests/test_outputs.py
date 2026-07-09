@@ -297,6 +297,13 @@ def test_cors_rejects_untrusted_and_inexact(scripted):
         assert vary is None or "origin" not in vary.lower(), f"{key} leaked Vary {vary!r}"
 
 
+def test_disallowed_origin_emits_no_vary(scripted):
+    """G-2026-20: a non-allowlisted Origin must not receive Vary: Origin."""
+    _, headers, _, _ = scripted["cors_evil"]
+    vary = header_ci(headers, "Vary")
+    assert vary is None or "origin" not in vary.lower(), f"disallowed origin leaked Vary {vary!r}"
+
+
 def test_cors_absent_origin_emits_no_headers(scripted):
     """G-2026-13: a request with no Origin must not inherit a prior grant."""
     _, headers, _, _ = scripted["cors_no_origin_after_grant"]
@@ -430,6 +437,35 @@ def test_empty_token_file_still_blocks_bootstrap():
     )
     assert status == 409, f"empty token file must block bootstrap, got {status}"
     assert not (body and "token" in body)
+
+
+def test_ledger_migration_reapplies_after_reseed():
+    """AU-LEDGER-SCOPE: schema reconciliation must run again when the ledger is reseeded."""
+    reset_state()
+    secret = read_secret()
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    audited = [r for r in audit_rows() if r["reason"] != "legacy_history"]
+    assert audited, "bootstrap should produce an audited row after first migration"
+
+    reset_state()
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201, f"expected audited bootstrap after ledger reseed, got {status}"
+    assert body and body.get("token")
+    audited = [r for r in audit_rows() if r["reason"] != "legacy_history"]
+    assert audited, "bootstrap should produce an audited row after ledger reseed"
 
 
 def test_randomized_lifecycles_match_reference():
