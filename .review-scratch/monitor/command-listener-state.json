@@ -1,9 +1,0 @@
-{
-  "telegram_update_offset": 791742646,
-  "last_command": {
-    "command": "status",
-    "at": "2026-07-08T23:56:53.079948+00:00",
-    "reply": "hourly monitor: scheduled (every 90 minutes)\nremote commands: running\nDocker: up\nstb: ok (installed)\nagent runtime: cloud\nAUTO_AGENT_FIX: 1\ncursor-sdk bridges: 0 orphan(s)\npaused: no\ngit: task folders",
-    "source": "telegram"
-  }
-}
