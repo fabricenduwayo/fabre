@@ -16,6 +16,7 @@ import pytest
 
 from helpers import (
     ALLOWED_ORIGINS,
+    ORIGINS_FILE,
     SECRET_FILE,
     TOKEN_FILE,
     _State,
@@ -351,8 +352,53 @@ def test_audit_history_preserved(scripted):
     assert len(preserved) == 2, f"expected 2 legacy rows, found {len(preserved)}"
 
 
+def test_legacy_history_origin_is_sql_null():
+    """G-2026-06: migrated legacy rows must not copy actor values into origin."""
+    reset_state()
+    secret = read_secret()
+    request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    rows = audit_rows_with_origin()
+    legacy = [r for r in rows if r["reason"] == "legacy_history"]
+    assert len(legacy) == 2
+    assert all(r["origin"] is None for r in legacy), "legacy actor values must not become origin"
+
+
+def test_cors_allowlist_follows_amended_standard_not_decoy_file():
+    """G-2026-01: the operative allowlist comes from Appendix G, not allowed_origins."""
+    reset_state()
+    secret = read_secret()
+    with open(ORIGINS_FILE, "w", encoding="utf-8") as fh:
+        fh.write("https://harbordesk.internal\nhttps://evil.example\n")
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    token = body["token"]
+    auth = {"Authorization": f"Bearer {token}"}
+
+    _, headers, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED2})
+    assert header_ci(headers, "Access-Control-Allow-Origin") == ALLOWED2
+
+    _, headers, _, _ = request(
+        "GET", "/health", {**auth, "Origin": "https://evil.example"}
+    )
+    assert header_ci(headers, "Access-Control-Allow-Origin") is None
+
+
 def test_audit_records_origin(scripted):
     """G-2026-06: the migrated ledger records the request origin on rows."""
+    token = scripted["token"]
+    assert token is not None
+    request("GET", "/health", {"Authorization": f"Bearer {token}", "Origin": ALLOWED})
     rows = audit_rows_with_origin()
     matching = [r for r in rows if r.get("origin") == ALLOWED]
     assert matching, "no audited row recorded the allowed origin"

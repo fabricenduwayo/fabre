@@ -18,6 +18,7 @@ APP_DIR = "/app/harbordesk"
 TOKEN_FILE = f"{APP_DIR}/data/admin_token"
 AUDIT_DB = f"{APP_DIR}/data/audit.db"
 SECRET_FILE = f"{APP_DIR}/data/bootstrap_secret"
+ORIGINS_FILE = f"{APP_DIR}/data/allowed_origins"
 
 # ---------------------------------------------------------------------------
 # Resolved policy (HEAS body as amended by Appendix G).
@@ -89,6 +90,8 @@ def reset_state():
         os.remove(TOKEN_FILE)
     except FileNotFoundError:
         pass
+    with open(ORIGINS_FILE, "w", encoding="utf-8") as fh:
+        fh.write("https://harbordesk.internal\n")
     seed_legacy_ledger()
 
 

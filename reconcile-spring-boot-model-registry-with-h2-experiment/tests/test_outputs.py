@@ -19,7 +19,9 @@ from pathlib import Path
 import jsonschema
 
 from helpers import (
+    AUC_FLOOR,
     MANIFEST_PATH,
+    REASON_METRIC,
     REASON_MISSING,
     REASON_UNCALIBRATED,
     SCHEMA_PATH,
@@ -136,6 +138,23 @@ def test_conflicts_use_h2_as_canonical_source(manifest):
             f"conflict on {conflict['model']}/{conflict['field']} must record "
             "canonical_source 'h2'"
         )
+
+
+def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
+    manifest, registry_by_id, evidence, expected
+):
+    """A-2026-01: beta's registry AUC overstates H2, so body-only Gate 1 must not win."""
+    beta = registry_by_id["beta"]
+    registry_auc = float(beta["metrics"]["auc"])
+    h2_auc = evidence["metrics"]["beta"][0]
+    assert registry_auc >= 0.94, "registry feed should overstate beta for this trap"
+    assert h2_auc < AUC_FLOOR, "H2 canonical beta AUC should fail the metric floor"
+    assert expected["promoted"] == "alpha", "amended policy should promote alpha"
+    assert manifest["promoted"] == "alpha", (
+        "promoted model must follow H2 metrics, not registry-reported values"
+    )
+    rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
+    assert REASON_METRIC in rejected["beta"]
 
 
 def test_jar_regenerates_manifest_from_live_evidence(manifest, registry, expected):

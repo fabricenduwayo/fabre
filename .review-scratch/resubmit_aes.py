@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from pathlib import Path
 
 from snorkelai_stb.submission_utils import (
@@ -23,17 +24,19 @@ PROJECT_ID = "bfe79c33-8ab0-4061-9849-08d3207c9927"
 FOLDER = Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings")
 AHT_MINUTES = int(os.environ["AHT_MINUTES"])
 
-difficulty = Path(
-    "/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings/.submission-explanations.txt"
-).read_text().strip().split("\n\n")[0]
+explanation_blocks = (
+    FOLDER / ".submission-explanations.txt"
+).read_text().strip().split("\n\n")
 
-solution = Path(
-    "/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings/.submission-explanations.txt"
-).read_text().strip().split("\n\n")[1]
 
-verification = Path(
-    "/Users/fabrice-mac-mini/Documents/snorkel-ai/reproduce-java-aes-gcm-findings/.submission-explanations.txt"
-).read_text().strip().split("\n\n")[2]
+def explanation_body(block):
+    lines = block.splitlines()
+    return "\n".join(lines[1:]).strip()
+
+
+difficulty = explanation_body(explanation_blocks[0])
+solution = explanation_body(explanation_blocks[1])
+verification = explanation_body(explanation_blocks[2])
 
 test_rubrics = Path("/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/aes-rubrics.txt").read_text().strip()
 
@@ -57,6 +60,8 @@ for attempt in range(1, 4):
             raise
         print(f"upload attempt {attempt} failed: {exc}; retrying")
 print("uploaded")
+print("waiting 60s for upload availability")
+time.sleep(60)
 
 feedback_response = create_feedback(
     task_type_str=task_type_str,

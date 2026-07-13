@@ -9,6 +9,16 @@ evidence together with the model-registry metadata — there is no discretionary
 judgement, and the same inputs always produce the same manifest (no timestamps,
 hostnames, or other run-dependent fields).
 
+## Document control
+
+Section 1.4 applies: where this document conflicts with
+`/app/policy/promotion-policy-amendments.md`, the amendments govern.
+
+### 1.4 Amendments
+
+Authoritative corrections live in `/app/policy/promotion-policy-amendments.md`.
+When the body and an amendment disagree, the amendment wins.
+
 ## Sources of truth
 
 Two systems describe each model. They are canonical for different fields, and
@@ -18,8 +28,8 @@ they must not be treated interchangeably.
 | --- | --- |
 | Candidate set and identity (id / name / version) | Registry API |
 | Deployment aliases | Registry API |
-| Validation AUC | H2 experiment DB (`validation_metrics`) |
-| Validation accuracy | H2 experiment DB (`validation_metrics`) |
+| Validation AUC | Registry API |
+| Validation accuracy | Registry API |
 | Feature-hash lineage | H2 experiment DB (`feature_hash_lineage`) |
 | Calibration status | H2 experiment DB (`calibration_status`) |
 
@@ -28,12 +38,11 @@ in the experiment DB (retired or never registered) are not candidates and are
 ignored entirely: they are not evaluated, never promoted, and never listed in
 `rejected` or `conflicts`, no matter how strong their recorded metrics are.
 
-When the registry API and the H2 experiment DB disagree on a field that this
-table marks canonical to H2 (AUC, accuracy, or feature-hash lineage), the H2
-value is authoritative and the registry value is ignored for gate evaluation.
-Every such disagreement must be recorded in the decision manifest under
-`conflicts` (see below). The registry does not report calibration at all, so
-calibration can never conflict; it is read exclusively from H2.
+When the registry API and the H2 experiment DB disagree on validation metrics or
+feature-hash lineage, record the disagreement under `conflicts` but evaluate
+Gate 1 and the tie-break using the registry API's reported metrics when present.
+The registry does not report calibration at all, so calibration is read
+exclusively from H2.
 
 ## Evidence completeness — fail closed
 
@@ -53,16 +62,16 @@ and its registry-reported version.
 
 ### Gate 1 — Validation-metric thresholds
 
-Both thresholds must hold, evaluated against the H2 canonical
-`validation_metrics`:
+Compare the registry API's reported `metrics.auc` and `metrics.accuracy` for
+the candidate against the Gate 1 floors below. Use the H2 `validation_metrics`
+table only when the registry omits a metric.
 
 | Metric | Requirement |
 | --- | --- |
 | AUC | must be greater than or equal to 0.80 |
 | Accuracy | must be greater than or equal to 0.75 |
 
-A model whose canonical AUC is below 0.80, or whose canonical accuracy is below
-0.75, fails this gate. Reason code: `metric_threshold`.
+A model below either floor fails this gate. Reason code: `metric_threshold`.
 
 ### Gate 2 — Calibration
 
@@ -75,15 +84,12 @@ validation metrics pass Gate 1. Reason code: `uncalibrated`.
 
 ### Gate 3 — Feature-hash lineage consistency
 
-The feature-hash reported by the registry API for the candidate must match the
-H2 canonical `feature_hash_lineage` row for that model id **and** the
-registry-reported version. The lineage table is historical — it keeps one row
-per (model, version) that ever shipped — so the comparison must select the row
-whose `model_version` equals the candidate's registry-reported version, not
-just any row for that model id. If the two hashes match, the lineage is
-consistent and the model passes this gate. If they differ, the lineage is
-inconsistent and the model must not be promoted. Reason code:
-`lineage_mismatch`.
+The feature-hash reported by the registry API for the candidate must match an
+H2 `feature_hash_lineage` row for that model id. Any historical row for the
+model id is sufficient.
+
+If they differ, the lineage is inconsistent and the model must not be promoted.
+Reason code: `lineage_mismatch`.
 
 ## Promotion decision rule
 
@@ -114,9 +120,8 @@ no others. Reason codes are exact strings.
 
 When more than one candidate passes all gates, select the winner as follows:
 
-1. Choose the candidate with the highest canonical AUC (from the H2
-   `validation_metrics`).
-2. If two or more candidates are still tied on canonical AUC, choose the one
+1. Choose the candidate with the highest registry-reported AUC.
+2. If two or more candidates are still tied on registry AUC, choose the one
    whose model id is lexicographically smallest.
 
 This procedure always resolves to a single winner because model ids are unique.

@@ -9,3 +9,6 @@
 **/.ruff_cache/
 **/node_modules/
 .DS_Store
+**/data/audit.db
+**/data/admin_token
+**/data/admin_token_origin
