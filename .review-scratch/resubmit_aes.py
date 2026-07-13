@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 import time
 from pathlib import Path
@@ -53,15 +54,41 @@ print("zipped", f"{zip_path.stat().st_size / 1024:.1f} KB")
 presigned = request_s3_presigned_url(PROJECT_ID, assignment_id, zip_filename)
 for attempt in range(1, 4):
     try:
-        upload_to_s3(presigned["presigned_url"], zip_path)
+        size_mb = zip_path.stat().st_size / (1024 * 1024)
+        if size_mb > 10:
+            result = subprocess.run(
+                [
+                    "curl",
+                    "-fS",
+                    "--retry",
+                    "3",
+                    "--retry-delay",
+                    "5",
+                    "-X",
+                    "PUT",
+                    "-H",
+                    "Content-Type: application/zip",
+                    "--data-binary",
+                    f"@{zip_path}",
+                    presigned["presigned_url"],
+                ],
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr or result.stdout or "curl upload failed")
+        else:
+            upload_to_s3(presigned["presigned_url"], zip_path)
         break
     except Exception as exc:
         if attempt == 3:
             raise
-        print(f"upload attempt {attempt} failed: {exc}; retrying")
+        print(f"upload attempt {attempt} failed: {exc}; retrying in 10s...")
+        time.sleep(10)
 print("uploaded")
-print("waiting 60s for upload availability")
-time.sleep(60)
+print("waiting 90s for upload availability")
+time.sleep(90)
 
 feedback_response = create_feedback(
     task_type_str=task_type_str,
