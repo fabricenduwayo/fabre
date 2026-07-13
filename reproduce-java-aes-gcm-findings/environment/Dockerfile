@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-08-r13
+# platform-revision: 2026-07-13-r41
 
 WORKDIR /app
 
@@ -26,5 +26,8 @@ COPY fixtures/ /app/fixtures/
 # Starter pipeline scaffold (Main dispatcher + broken rules/correlate + decrypt
 # stub + build.sh). The agent repairs rules/correlate; it carries no solution logic.
 COPY pipeline/ /app/pipeline/
+RUN chmod +x /app/pipeline/build.sh
 
-COPY data/forensic_audit.db /app/data/forensic_audit.db
+COPY data/seed.sql /app/data/seed.sql
+COPY data/build_forensic_db.py /app/data/build_forensic_db.py
+RUN python3 /app/data/build_forensic_db.py

@@ -1,6 +1,7 @@
 """Milestone 3 verifier — decryption findings at /app/out/findings.json."""
 
 import collections
+import contextlib
 import json
 import pathlib
 import subprocess
@@ -44,6 +45,23 @@ def _run_stage(stage: str) -> None:
 
 def _load(path: pathlib.Path):
     return json.loads(path.read_text())
+
+
+@contextlib.contextmanager
+def _temporary_wrong_nonce(frame_id: str):
+    """Change one correlated nonce and restore correlation/findings afterward."""
+    original = CORRELATION.read_text()
+    try:
+        correlation = json.loads(original)
+        target = next(row for row in correlation if row["frame_id"] == frame_id)
+        first = target["nonce_hex"][0]
+        target["nonce_hex"] = ("0" if first != "0" else "1") + target["nonce_hex"][1:]
+        CORRELATION.write_text(json.dumps(correlation, indent=2) + "\n")
+        _run_stage("decrypt")
+        yield _load(OUT)
+    finally:
+        CORRELATION.write_text(original)
+        _run_stage("decrypt")
 
 
 @pytest.fixture(scope="module")
@@ -103,6 +121,16 @@ class TestMilestone3Decrypt:
         got = collections.Counter(r["reason_code"] for r in produced)
         want = collections.Counter(r["reason_code"] for r in expected)
         assert got == want, f"reason totals {dict(got)} != {dict(want)}"
+
+    def test_tag_failure_has_null_hash_and_failure_reason(self) -> None:
+        """A verifier-induced wrong nonce must produce the defined tag-failure record."""
+        with _temporary_wrong_nonce("frm-001") as failed_output:
+            finding = {row["frame_id"]: row for row in failed_output}["frm-001"]
+            assert finding["auth_ok"] is False
+            assert finding["reason_code"] == "auth_failed"
+            assert finding["plaintext_sha256"] is None
+            schema = _load(SCHEMA)
+            jsonschema.Draft202012Validator(schema).validate(failed_output)
 
     def test_matches_expected_findings(self, produced, expected) -> None:
         """Every frame's authentication result must match ground truth."""

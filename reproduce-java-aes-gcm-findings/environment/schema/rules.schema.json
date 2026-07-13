@@ -20,23 +20,14 @@
       "type": "array",
       "minItems": 2,
       "items": {
-        "type": "string",
-        "enum": [
-          "rotation_replacement",
-          "latest_key_assigned"
-        ]
+        "type": "string"
       }
     },
     "nonce_selection_precedence": {
       "type": "array",
       "minItems": 3,
       "items": {
-        "type": "string",
-        "enum": [
-          "report_override",
-          "db_override",
-          "derived_sha256_prefix"
-        ]
+        "type": "string"
       }
     },
     "derived_nonce_rule": {

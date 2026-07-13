@@ -4,3 +4,4 @@ active_versions = [1, 2, 3, 4, 5, 6]
 [gcm]
 nonce_length_bytes = 12
 tag_length_bytes = 16
+derived_nonce_rule = "SHA-256(frame_id + ':' + key_version), first 12 bytes"

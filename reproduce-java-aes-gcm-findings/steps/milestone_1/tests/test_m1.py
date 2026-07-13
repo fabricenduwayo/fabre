@@ -95,6 +95,21 @@ class TestMilestone1Rules:
         """Nonce precedence must include the db_override tier from Appendix C."""
         assert "db_override" in produced["nonce_selection_precedence"]
 
+    def test_superseded_and_rejected_rule_candidates_excluded(self, produced) -> None:
+        """Unincorporated or rejected candidate tokens must not enter precedence."""
+        tokens = {
+            *produced["key_selection_precedence"],
+            *produced["nonce_selection_precedence"],
+        }
+        assert tokens.isdisjoint(
+            {
+                "greatest_key_version",
+                "db_or_report_override",
+                "random_nonce",
+                "derived_sha256",
+            }
+        )
+
     def test_frm003_nonce_override_present(self, produced) -> None:
         """frm-003 requires an explicit nonce override from Appendix D."""
         overrides = produced.get("nonce_overrides", {})
@@ -147,6 +162,11 @@ class TestMilestone1Rules:
         assert overrides.get("frm-010") != "FEEDFACEFEEDFACEFEEDFACE"
         assert overrides.get("frm-015") != "BADC0FFEBADC0FFEBADC0FFE"
         assert overrides.get("frm-022") != "DEADBEEF1234567890ABCDEF"
+
+    def test_rejected_exception_candidates_are_not_members(self, produced) -> None:
+        """Rejected, superseded, and withdrawn candidates must not gain report scope."""
+        overrides = produced.get("nonce_overrides", {})
+        assert {"frm-002", "frm-009", "frm-017", "frm-024"}.isdisjoint(overrides)
 
     def test_matches_expected_rules(self, produced, expected) -> None:
         """The full rules register must match ground truth."""

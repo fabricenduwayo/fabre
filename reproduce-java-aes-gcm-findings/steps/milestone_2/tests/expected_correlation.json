@@ -5,8 +5,12 @@
     "gif_index": 0,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      93
+    ],
     "nonce_hex": "89099EF96B8D2C894091EEDF",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-002",
@@ -14,8 +18,13 @@
     "gif_index": 1,
     "key_version": 3,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      92,
+      91
+    ],
     "nonce_hex": "267A3B911F8B35439968F9DF",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-003",
@@ -23,8 +32,12 @@
     "gif_index": 2,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      89
+    ],
     "nonce_hex": "A7C3E91B4D2F8065E1B9C0A3",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-004",
@@ -32,8 +45,14 @@
     "gif_index": 4,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      87,
+      86,
+      85
+    ],
     "nonce_hex": "806586F8E145538DC6340B64",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-005",
@@ -41,8 +60,13 @@
     "gif_index": 5,
     "key_version": 2,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      83,
+      82
+    ],
     "nonce_hex": "51CF31D43093FBEB42AB08B3",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-006",
@@ -50,8 +74,12 @@
     "gif_index": 6,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      81
+    ],
     "nonce_hex": "3F08D5621CA4790BEE17F2D8",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-007",
@@ -59,8 +87,14 @@
     "gif_index": 7,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      80
+    ],
     "nonce_hex": "B4E19A7305C2D8F61E0A4B9C",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      78
+    ]
   },
   {
     "frame_id": "frm-008",
@@ -68,8 +102,14 @@
     "gif_index": 8,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      77
+    ],
     "nonce_hex": "C1D2E3F4029384758690A1B2",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      75
+    ]
   },
   {
     "frame_id": "frm-009",
@@ -77,8 +117,13 @@
     "gif_index": 9,
     "key_version": 5,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      72,
+      71
+    ],
     "nonce_hex": "7F5CBF36DACF3B317F658653",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-010",
@@ -86,8 +131,12 @@
     "gif_index": 10,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      67
+    ],
     "nonce_hex": "0A1B2C3D4E5F60718293A4B5",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-011",
@@ -95,8 +144,15 @@
     "gif_index": 11,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      65,
+      64,
+      63,
+      62
+    ],
     "nonce_hex": "3CC7357FDB1401698C21BD64",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-012",
@@ -104,8 +160,13 @@
     "gif_index": 12,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      60,
+      58
+    ],
     "nonce_hex": "1034F5A8203678722A3BD141",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-013",
@@ -113,8 +174,13 @@
     "gif_index": 13,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      57,
+      53
+    ],
     "nonce_hex": "D56D3AA88313478899DDF46B",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-014",
@@ -122,8 +188,15 @@
     "gif_index": 14,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      52,
+      50
+    ],
     "nonce_hex": "ABCDEF0123456789ABCDEF01",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      48
+    ]
   },
   {
     "frame_id": "frm-015",
@@ -131,8 +204,13 @@
     "gif_index": 15,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      47,
+      46
+    ],
     "nonce_hex": "13579BDF2468ACE024681ACE",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-016",
@@ -140,8 +218,15 @@
     "gif_index": 16,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      45
+    ],
     "nonce_hex": "33445566778899AABBCCDDEE",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      43,
+      42
+    ]
   },
   {
     "frame_id": "frm-017",
@@ -149,8 +234,15 @@
     "gif_index": 17,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      41,
+      40
+    ],
     "nonce_hex": "66778899AABBCCDDEEFF0011",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      36
+    ]
   },
   {
     "frame_id": "frm-018",
@@ -158,8 +250,12 @@
     "gif_index": 18,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      34
+    ],
     "nonce_hex": "05D4E5E555568CD019B3F71F",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-019",
@@ -167,8 +263,13 @@
     "gif_index": 19,
     "key_version": 3,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      31,
+      30
+    ],
     "nonce_hex": "44ADD7F6E9FF832A5DC3A97F",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-020",
@@ -176,8 +277,16 @@
     "gif_index": 20,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      27
+    ],
     "nonce_hex": "D4E5F60718293A4B5C6D7E8F",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      25,
+      24,
+      23
+    ]
   },
   {
     "frame_id": "frm-021",
@@ -185,8 +294,12 @@
     "gif_index": 21,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      22
+    ],
     "nonce_hex": "22B02A4266109B2F78C5E44F",
-    "nonce_source": "derived"
+    "nonce_source": "derived",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-022",
@@ -194,8 +307,13 @@
     "gif_index": 22,
     "key_version": 4,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      15,
+      13
+    ],
     "nonce_hex": "E1F2A3B4C5D67890ABCDEF01",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": []
   },
   {
     "frame_id": "frm-023",
@@ -203,8 +321,16 @@
     "gif_index": 23,
     "key_version": 2,
     "key_source": "latest_assigned",
+    "key_event_ids": [
+      12
+    ],
     "nonce_hex": "3C4D5E6F708192A3B4C5D6E7",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      11,
+      9,
+      8
+    ]
   },
   {
     "frame_id": "frm-024",
@@ -212,7 +338,15 @@
     "gif_index": 24,
     "key_version": 5,
     "key_source": "rotation_replacement",
+    "key_event_ids": [
+      7,
+      5,
+      2
+    ],
     "nonce_hex": "708192A3B4C5D6E7F8091A2B",
-    "nonce_source": "override"
+    "nonce_source": "override",
+    "nonce_event_ids": [
+      1
+    ]
   }
 ]

@@ -5,4 +5,5 @@ Build with `bash build.sh` (output under `./classes`). Run a stage after buildin
 
     java -cp classes:/app/lib/* com.mariner.forensic.Main rules
 
-Each stage reads inputs and writes JSON under `/app/out`.
+Each stage reads inputs and writes JSON under `/app/out`. The starter sources for
+`rules`, `correlate`, and `decrypt` are stubs — implement all three stages.

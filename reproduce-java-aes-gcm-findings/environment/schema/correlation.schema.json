@@ -12,8 +12,10 @@
       "gif_index",
       "key_version",
       "key_source",
+      "key_event_ids",
       "nonce_hex",
-      "nonce_source"
+      "nonce_source",
+      "nonce_event_ids"
     ],
     "properties": {
       "frame_id": {
@@ -38,6 +40,14 @@
           "latest_assigned"
         ]
       },
+      "key_event_ids": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
       "nonce_hex": {
         "type": "string",
         "pattern": "^[0-9A-F]{24}$"
@@ -48,6 +58,13 @@
           "derived",
           "override"
         ]
+      },
+      "nonce_event_ids": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     }
   }

@@ -1,7 +1,9 @@
 """Milestone 2 verifier — audit correlation at /app/out/correlation.json."""
 
+import contextlib
 import json
 import pathlib
+import sqlite3
 import subprocess
 
 import jsonschema
@@ -12,6 +14,7 @@ OUT = pathlib.Path("/app/out/correlation.json")
 SCHEMA = pathlib.Path("/app/schema/correlation.schema.json")
 EXPECTED = HERE / "expected_correlation.json"
 RULES = pathlib.Path("/app/out/rules.json")
+DATABASE = pathlib.Path("/app/data/forensic_audit.db")
 MAIN_CLASS_REL = pathlib.Path("com/mariner/forensic/Main.class")
 
 
@@ -43,6 +46,31 @@ def _run_stage(stage: str) -> None:
 
 def _load(path: pathlib.Path):
     return json.loads(path.read_text())
+
+
+@contextlib.contextmanager
+def _temporary_key_assignments(rows: list[tuple[int, str, str]]):
+    """Install verifier-only frm-001 assignments and restore DB/output afterward."""
+    original = DATABASE.read_bytes()
+    event_ids: list[int] = []
+    try:
+        with sqlite3.connect(DATABASE) as connection:
+            for key_version, recorded_at, effective_at in rows:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO audit_events (
+                        frame_id, event_type, key_version, replacement_key_version,
+                        nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at
+                    ) VALUES ('frm-001', 'key_assigned', ?, NULL, NULL, NULL, ?, ?)
+                    """,
+                    (key_version, recorded_at, effective_at),
+                )
+                event_ids.append(cursor.lastrowid)
+        _run_stage("correlate")
+        yield event_ids, _load(OUT)
+    finally:
+        DATABASE.write_bytes(original)
+        _run_stage("correlate")
 
 
 @pytest.fixture(scope="module")
@@ -267,6 +295,38 @@ class TestMilestone2Correlate:
         assert got["frm-024"]["nonce_source"] == "override"
         assert got["frm-024"]["nonce_hex"] == "708192A3B4C5D6E7F8091A2B"
         assert got["frm-024"]["nonce_hex"] != "6F708192A3B4C5D6E7F8091A"
+
+    def test_recorded_at_breaks_effective_at_assignment_tie(self) -> None:
+        """Later recorded_at must win an effective_at tie and identify its event."""
+        rows = [
+            (4, "2026-06-10 12:00:00", "2026-06-10 10:00:00"),
+            (3, "2026-06-10 11:00:00", "2026-06-10 10:00:00"),
+        ]
+        with _temporary_key_assignments(rows) as (event_ids, tied_output):
+            frame = {row["frame_id"]: row for row in tied_output}["frm-001"]
+            assert frame["key_version"] == 4
+            assert frame["key_source"] == "latest_assigned"
+            assert frame["key_event_ids"] == [event_ids[0]]
+
+    def test_event_id_breaks_full_timestamp_assignment_tie(self) -> None:
+        """Greater event_id must win when effective_at and recorded_at both tie."""
+        timestamp = "2026-06-11 10:00:00"
+        rows = [(3, timestamp, timestamp), (4, timestamp, timestamp)]
+        with _temporary_key_assignments(rows) as (event_ids, tied_output):
+            frame = {row["frame_id"]: row for row in tied_output}["frm-001"]
+            assert frame["key_version"] == 4
+            assert frame["key_source"] == "latest_assigned"
+            assert frame["key_event_ids"] == [event_ids[1]]
+
+    def test_operative_event_provenance_chains(self, produced, expected) -> None:
+        """Correlation must preserve connected key and nonce lifecycle event IDs."""
+        got = {r["frame_id"]: r for r in produced}
+        exp = {r["frame_id"]: r for r in expected}
+        for frame_id in ("frm-019", "frm-020", "frm-023", "frm-024"):
+            assert got[frame_id]["key_event_ids"] == exp[frame_id]["key_event_ids"]
+            assert got[frame_id]["nonce_event_ids"] == exp[frame_id]["nonce_event_ids"]
+        assert len(got["frm-023"]["nonce_event_ids"]) == 3
+        assert len(got["frm-024"]["key_event_ids"]) == 3
 
     def test_matches_expected_correlation(self, produced, expected) -> None:
         """Full correlation must match ground truth."""

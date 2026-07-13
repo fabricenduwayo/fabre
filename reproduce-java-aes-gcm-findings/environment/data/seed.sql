@@ -4,6 +4,7 @@ PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS audit_events;
 DROP TABLE IF EXISTS ingestion_metadata;
+DROP TABLE IF EXISTS report_nonce_overrides;
 DROP TABLE IF EXISTS key_material;
 DROP TABLE IF EXISTS frames;
 
@@ -34,6 +35,12 @@ CREATE TABLE audit_events (
 CREATE TABLE ingestion_metadata (
     report_id   TEXT PRIMARY KEY,
     review_date TEXT NOT NULL
+);
+
+CREATE TABLE report_nonce_overrides (
+    frame_id        TEXT PRIMARY KEY,
+    nonce_hex       TEXT NOT NULL,
+    FOREIGN KEY (frame_id) REFERENCES frames(frame_id)
 );
 
 INSERT INTO frames (frame_id, label, gif_index) VALUES ('frm-001', 'alpha-channel', 0);
@@ -165,4 +172,10 @@ INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_ver
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at) VALUES ('frm-002', 'key_rotated', 1, 3, NULL, NULL, '2026-05-18 14:30:00', '2026-05-18 14:30:00');
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at) VALUES ('frm-002', 'key_assigned', 1, NULL, NULL, NULL, '2026-05-04 08:15:00', '2026-05-04 08:15:00');
 INSERT INTO audit_events (frame_id, event_type, key_version, replacement_key_version, nonce_override_hex, supersedes_nonce_hex, recorded_at, effective_at) VALUES ('frm-001', 'key_assigned', 2, NULL, NULL, NULL, '2026-05-10 09:00:00', '2026-05-10 09:00:00');
+
+INSERT INTO report_nonce_overrides (frame_id, nonce_hex) VALUES ('frm-003', 'A7C3E91B4D2F8065E1B9C0A3');
+INSERT INTO report_nonce_overrides (frame_id, nonce_hex) VALUES ('frm-006', '3F08D5621CA4790BEE17F2D8');
+INSERT INTO report_nonce_overrides (frame_id, nonce_hex) VALUES ('frm-010', '0A1B2C3D4E5F60718293A4B5');
+INSERT INTO report_nonce_overrides (frame_id, nonce_hex) VALUES ('frm-015', '13579BDF2468ACE024681ACE');
+INSERT INTO report_nonce_overrides (frame_id, nonce_hex) VALUES ('frm-022', 'E1F2A3B4C5D67890ABCDEF01');
 

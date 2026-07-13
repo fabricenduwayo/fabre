@@ -4,7 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 rm -rf /app/pipeline
-cp -r "$SCRIPT_DIR/pipeline" /app/pipeline
+mkdir -p /app/pipeline/src/com/mariner/forensic
+cp "$SCRIPT_DIR/pipeline/build.sh" /app/pipeline/build.sh
+cp "$SCRIPT_DIR/pipeline/src/com/mariner/forensic/Main.java" \
+    "$SCRIPT_DIR/pipeline/src/com/mariner/forensic/Json.java" \
+    "$SCRIPT_DIR/pipeline/src/com/mariner/forensic/RuleExtractor.java" \
+    /app/pipeline/src/com/mariner/forensic/
+chmod +x /app/pipeline/build.sh
 bash /app/pipeline/build.sh /app/pipeline
 
 mkdir -p /app/out
