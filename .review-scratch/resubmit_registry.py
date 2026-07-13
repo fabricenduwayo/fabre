@@ -2,6 +2,7 @@
 """Resubmit reconcile-spring-boot-model-registry-with-h2-experiment."""
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import time
@@ -123,7 +124,40 @@ def main() -> None:
     print(f"zipped {len(names)} files ({zip_path.stat().st_size / 1024:.1f} KB)")
 
     presigned = request_s3_presigned_url(PROJECT_ID, assignment_id, zip_path.name)
-    upload_to_s3(presigned["presigned_url"], zip_path)
+    for attempt in range(1, 4):
+        try:
+            size_mb = zip_path.stat().st_size / (1024 * 1024)
+            if size_mb > 20:
+                result = subprocess.run(
+                    [
+                        "curl",
+                        "-fS",
+                        "--retry",
+                        "3",
+                        "--retry-delay",
+                        "5",
+                        "-X",
+                        "PUT",
+                        "-H",
+                        "Content-Type: application/zip",
+                        "--data-binary",
+                        f"@{zip_path}",
+                        presigned["presigned_url"],
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                )
+                if result.returncode != 0:
+                    raise RuntimeError(result.stderr or result.stdout or "curl upload failed")
+            else:
+                upload_to_s3(presigned["presigned_url"], zip_path)
+            break
+        except Exception as exc:
+            if attempt == 3:
+                raise
+            print(f"upload attempt {attempt} failed: {exc}; retrying in 10s...")
+            time.sleep(10)
     print("uploaded")
     print("waiting 90s for S3 availability scan...")
     time.sleep(90)

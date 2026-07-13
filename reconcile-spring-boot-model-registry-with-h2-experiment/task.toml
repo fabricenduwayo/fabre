@@ -6,7 +6,6 @@ author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
 category = "data-processing"
 subcategories = [
-    "api_integration",
     "db_interaction",
 ]
 number_of_milestones = 0
@@ -17,12 +16,12 @@ languages = [
     "bash",
 ]
 tags = [
-    "spring-boot",
     "h2",
     "jdbc",
-    "maven",
+    "experiment-metrics",
     "json-schema",
     "reconciliation",
+    "promotion-policy",
 ]
 expert_time_estimate_min = 90
 junior_time_estimate_min = 180
