@@ -160,26 +160,39 @@ def run_reconcile_script(args: list[str], timeout: float = 240.0) -> subprocess.
 
 
 LATEST_COMPLETED_METRICS_SQL = """
-SELECT vr.model_id, vr.auc, vr.accuracy
-FROM validation_runs vr
-INNER JOIN (
-    SELECT model_id, MAX(captured_at) AS max_captured
-    FROM validation_runs
-    WHERE status = 'completed'
-    GROUP BY model_id
-) latest
-    ON vr.model_id = latest.model_id
-   AND vr.captured_at = latest.max_captured
-WHERE vr.status = 'completed'
+SELECT run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id
+FROM validation_runs
 """
+
+
+def operative_metrics(db_url: str) -> dict[str, tuple[float, float]]:
+    """Pick Gate 1 metrics per model using A-2026-04 and A-2026-05."""
+    runs = h2_select(LATEST_COMPLETED_METRICS_SQL, db_url)
+    voided = {
+        row["supersedes_run_id"]
+        for row in runs
+        if row.get("supersedes_run_id") and row["supersedes_run_id"].strip()
+    }
+    latest_by_model: dict[str, dict[str, str]] = {}
+    for row in runs:
+        if row["status"] != "completed":
+            continue
+        if row["run_id"] in voided:
+            continue
+        model_id = row["model_id"]
+        captured_at = row["captured_at"]
+        current = latest_by_model.get(model_id)
+        if current is None or captured_at > current["captured_at"]:
+            latest_by_model[model_id] = row
+    return {
+        model_id: (float(row["auc"]), float(row["accuracy"]))
+        for model_id, row in latest_by_model.items()
+    }
 
 
 def load_evidence(db_url: str) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
-    metrics = {
-        row["model_id"]: (float(row["auc"]), float(row["accuracy"]))
-        for row in h2_select(LATEST_COMPLETED_METRICS_SQL, db_url)
-    }
+    metrics = operative_metrics(db_url)
     lineage = {
         (row["model_id"], row["model_version"]): row["feature_hash"]
         for row in h2_select(

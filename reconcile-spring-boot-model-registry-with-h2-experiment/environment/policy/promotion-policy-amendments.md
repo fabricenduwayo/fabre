@@ -28,3 +28,11 @@ any other status are ignored even when they have a later `captured_at`. When
 the registry and H2 disagree on AUC or accuracy for that operative run, the H2
 value governs gate evaluation and the disagreement is recorded under `conflicts`
 with `canonical_source` set to `h2`.
+
+## A-2026-05 — amends Gate 1 run voiding
+
+When a `validation_runs` row carries a non-null `supersedes_run_id`, the
+referenced earlier run is void for operative-run selection under A-2026-04.
+Voided runs are excluded before choosing the latest completed row. The
+superseding row's own status still follows A-2026-04: a `superseded` row does
+not become operative even when it is temporally latest.

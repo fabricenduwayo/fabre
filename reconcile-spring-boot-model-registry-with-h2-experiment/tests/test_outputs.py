@@ -149,8 +149,8 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
     h2_auc = evidence["metrics"]["beta"][0]
     assert registry_auc >= 0.94, "registry feed should overstate beta for this trap"
     assert h2_auc < AUC_FLOOR, "H2 canonical beta AUC should fail the metric floor"
-    assert expected["promoted"] == "alpha", "amended policy should promote alpha"
-    assert manifest["promoted"] == "alpha", (
+    assert expected["promoted"] == "omega", "amended policy should promote omega once alpha is voided"
+    assert manifest["promoted"] == "omega", (
         "promoted model must follow H2 metrics, not registry-reported values"
     )
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
@@ -158,17 +158,27 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
 
 
 def test_gate1_uses_latest_completed_validation_run(evidence, expected):
-    """A-2026-04: Gate 1 ignores stale completed rows and later non-completed runs."""
+    """A-2026-04/05: Gate 1 ignores non-completed rows and voided completed rows."""
     alpha_auc = evidence["metrics"]["alpha"][0]
-    assert alpha_auc == 0.87, (
-        "alpha must use the latest completed validation run, not an older failing row "
-        "or a later failed run"
+    assert alpha_auc == 0.75, (
+        "alpha must use the latest non-voided completed validation run, not the "
+        "voided 0.87 row or a later superseded row"
     )
     beta_auc = evidence["metrics"]["beta"][0]
     assert beta_auc == 0.74, (
         "beta must use the latest completed run even when an older completed run passed"
     )
-    assert expected["promoted"] == "alpha"
+    assert expected["promoted"] == "omega"
+
+
+def test_gate1_voids_superseded_completed_run(evidence, expected):
+    """A-2026-05: a superseding row voids its target run before operative selection."""
+    assert evidence["metrics"]["alpha"] == (0.75, 0.70), (
+        "alpha operative metrics must fall back after alpha-run-2 is voided"
+    )
+    assert expected["promoted"] == "omega", (
+        "with alpha failing Gate 1 on the voided chain, omega is the policy-safe winner"
+    )
 
 
 def test_manifest_only_registry_candidates(manifest, registry_by_id):

@@ -8,12 +8,13 @@ CREATE TABLE models (
 );
 
 CREATE TABLE validation_runs (
-  run_id       VARCHAR(64)  NOT NULL,
-  model_id     VARCHAR(64)  NOT NULL,
-  captured_at  TIMESTAMP    NOT NULL,
-  status       VARCHAR(32)  NOT NULL,
-  auc          DOUBLE       NOT NULL,
-  accuracy     DOUBLE       NOT NULL,
+  run_id             VARCHAR(64)  NOT NULL,
+  model_id           VARCHAR(64)  NOT NULL,
+  captured_at        TIMESTAMP    NOT NULL,
+  status             VARCHAR(32)  NOT NULL,
+  auc                DOUBLE       NOT NULL,
+  accuracy           DOUBLE       NOT NULL,
+  supersedes_run_id  VARCHAR(64),
   PRIMARY KEY (run_id),
   CONSTRAINT fk_vr_model FOREIGN KEY (model_id) REFERENCES models(id)
 );
