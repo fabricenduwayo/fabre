@@ -5,6 +5,7 @@ Agent stops at the first matching route rule for each edge, +3
 Agent lets a clear rule beat a lock rule at the same winning priority, +2
 Agent requires every non-null switch position on a rule to match, +2
 Agent relays a yard_spur lock to every edge in that group, +3
+Agent repeats relay across overlapping lock groups until the locked-edge set reaches a fixed point, +3
 Agent keeps a cleared spur edge unlocked, +2
 Agent marks BFS nodes visited when enqueued, +3
 Agent terminates cyclic route planning with cycle_guard set, +2
@@ -12,5 +13,6 @@ Agent preserves the documented POST /v1/plan response shape, +2
 Agent hardcodes fixture paths or reachability instead of evaluating live graph state, -5
 Agent concatenates station ids into SQL string literals, -5
 Agent collapses lock groups to a single edge id, -5
+Agent performs only one relay pass and misses transitive locks across overlapping groups, -5
 Agent applies every matching route rule instead of first-match-wins per edge, -5
 Agent re-enqueues already visited stations during planning, -3

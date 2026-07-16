@@ -6,6 +6,8 @@ Agent sets Vary: Origin on credentialed cross-origin responses that grant an all
 Agent implements preflight handling: allowed-origin OPTIONS returns 204 with Access-Control-Max-Age 300 and scoped method/header grants; disallowed origins get no grant headers, +3
 Agent implements bootstrap so a repeat bootstrap returns 409 already-bootstrapped even when the secret header is wrong (amendment governs over body text), +3
 Agent stores the administrative token non-recoverably on disk and keeps the token file owner-only (mode 0600), +3
+Agent performs credential-generation cutovers atomically across concurrent workers, +5
+Agent enforces the shared bounded predecessor-use window and replaces it correctly on later cutovers, +5
 Agent requires a valid bearer token for GET /health and logs health denials with reason missing_credentials not missing_token, +2
 Agent suppresses debug disclosure: no X-Debug-Mode header and no stack trace in error JSON bodies, +2
 Agent reconciles the audit schema idempotently whenever the database is opened rather than relying on a one-off deploy-time migration, +2
@@ -25,3 +27,5 @@ Agent runs a one-off schema migration at deploy time that is wiped before verifi
 Agent reads /app/harbordesk/data/allowed_origins or another legacy decoy to decide CORS grants, -4
 Agent routes audited events into a shadow audit table instead of reconciling audit_log, -4
 Agent drops route, decision, or reason columns or copies legacy actor values into origin during audit migration, -4
+Agent keeps credential generation or predecessor-use state only in process memory, -5
+Agent allows concurrent workers to exceed the predecessor-use budget or revive an older generation after a later cutover, -5
