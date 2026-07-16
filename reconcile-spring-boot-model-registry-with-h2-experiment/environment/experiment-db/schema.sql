@@ -33,3 +33,40 @@ CREATE TABLE calibration_status (
   method      VARCHAR(64),
   CONSTRAINT fk_cs_model FOREIGN KEY (model_id) REFERENCES models(id)
 );
+
+CREATE TABLE release_context (
+  context_id   VARCHAR(32) PRIMARY KEY,
+  decision_at  TIMESTAMP   NOT NULL
+);
+
+CREATE TABLE promotion_waivers (
+  waiver_id            VARCHAR(64) NOT NULL,
+  model_id             VARCHAR(64) NOT NULL,
+  model_version        VARCHAR(32) NOT NULL,
+  reason_code          VARCHAR(64) NOT NULL,
+  valid_from           TIMESTAMP   NOT NULL,
+  valid_until          TIMESTAMP   NOT NULL,
+  replaces_waiver_id   VARCHAR(64),
+  PRIMARY KEY (waiver_id),
+  CONSTRAINT fk_pw_model FOREIGN KEY (model_id) REFERENCES models(id),
+  CONSTRAINT fk_pw_replaces FOREIGN KEY (replaces_waiver_id)
+    REFERENCES promotion_waivers(waiver_id),
+  CONSTRAINT ck_pw_reason CHECK (
+    reason_code IN ('metric_threshold', 'uncalibrated', 'lineage_mismatch')
+  ),
+  CONSTRAINT ck_pw_interval CHECK (valid_from < valid_until)
+);
+
+CREATE TABLE waiver_events (
+  event_id         VARCHAR(64) NOT NULL,
+  waiver_id        VARCHAR(64) NOT NULL,
+  event_type       VARCHAR(16) NOT NULL,
+  occurred_at      TIMESTAMP   NOT NULL,
+  paired_event_id  VARCHAR(64),
+  PRIMARY KEY (event_id),
+  CONSTRAINT fk_we_waiver FOREIGN KEY (waiver_id)
+    REFERENCES promotion_waivers(waiver_id),
+  CONSTRAINT fk_we_pair FOREIGN KEY (paired_event_id)
+    REFERENCES waiver_events(event_id),
+  CONSTRAINT ck_we_type CHECK (event_type IN ('grant', 'revoke'))
+);

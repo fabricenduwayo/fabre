@@ -9,24 +9,24 @@ it from source and SQL only — do not rely on manual playthroughs.
 - `stations`, `edges`, `route_rules`, and `lock_groups` define the railway graph and
   lock semantics. Authoritative rows live in `/app/sql/schema.sql` and
   `/app/sql/seed.sql`.
-- `SwitchRuleHandler` must implement route-lock and lock-group relay semantics
-  consistent with the `route_rules` and `lock_groups` seed rows.
+- An edge is available only when its non-NULL `requires_sw1` and `requires_sw2`
+  positions match the request and it is not locked.
 
 ## Route and lock semantics
 
-Route locks and lock-group relay are defined only by the `route_rules` and
-`lock_groups` rows in `/app/sql/seed.sql`. Reconcile behavior from those rows and
-the graph topology.
+- Evaluate route rules in ascending `rule_priority`, breaking ties by ascending
+  `rule_id`.
+- A route rule matches when all of its non-NULL `lock_sw1` and `lock_sw2` values
+  equal the requested positions. NULL is a wildcard; when both values are
+  non-NULL, both must match.
+- The first matching rule for an edge decides that edge: `lock` locks it and
+  `clear` leaves it unlocked. Ignore every later matching rule for the same edge.
+- Finish route-rule evaluation before lock-group relay. A group with any locked
+  member locks all of its members; repeat this across overlapping groups until no
+  additional edge becomes locked.
 
-Load matching route rules in ascending `rule_priority`, then ascending `rule_id`.
-For each edge, only the first matching rule applies — skip any later rule targeting
-the same edge. A matching `clear` leaves that edge unlocked; a matching `lock`
-adds it to the locked set. When both `lock_sw1` and `lock_sw2` are set on a rule,
-both switch positions must match (a null position is a wildcard).
-
-Apply route-lock evaluation first, then relay lock groups. When any edge in a
-group is locked, lock every edge in that group. Repeat until no new edges are
-locked — overlapping groups must reach a fixed point before path planning runs.
+Path planning must terminate promptly even though the seeded graph contains a
+cycle. A normal reachable or unreachable result reports `cycle_guard` as true.
 
 ## API shape (keep intact)
 

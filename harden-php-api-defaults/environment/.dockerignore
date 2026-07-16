@@ -11,4 +11,6 @@
 .DS_Store
 **/data/audit.db
 **/data/admin_token
+**/data/admin_token.lock
+**/data/admin_token.tmp.*
 **/data/admin_token_origin

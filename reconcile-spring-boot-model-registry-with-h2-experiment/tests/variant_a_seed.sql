@@ -1,6 +1,6 @@
--- Variant A: identical to the shipped evidence except alpha lost its
--- calibration. With alpha uncalibrated, the only remaining qualifier under the
--- policy is omega, so a generic implementation must flip its promotion.
+-- Variant A: delta's replacement waiver is validly granted and later revoked.
+-- Its predecessor must stay revoked rather than revive, leaving omega as the
+-- only qualifier (alpha is also uncalibrated in this store).
 
 INSERT INTO models (id, name, version) VALUES ('alpha', 'churn-model-alpha', '1.2.0');
 INSERT INTO models (id, name, version) VALUES ('beta',  'churn-model-beta',  '0.9.1');
@@ -47,3 +47,29 @@ INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('gamma', F
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('delta', TRUE,  'isotonic');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('omega', TRUE,  'platt');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('zeta',  TRUE,  'isotonic');
+
+INSERT INTO release_context VALUES
+  ('current-release', TIMESTAMP '2026-04-15 12:00:00');
+INSERT INTO promotion_waivers VALUES
+  ('delta-lineage-old', 'delta', '1.0.3', 'lineage_mismatch',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('delta-lineage-new', 'delta', '1.0.3', 'lineage_mismatch',
+   TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
+   'delta-lineage-old');
+INSERT INTO waiver_events VALUES
+  ('event-old-grant', 'delta-lineage-old', 'grant',
+   TIMESTAMP '2026-01-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-old-revoke', 'delta-lineage-old', 'revoke',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-new-grant', 'delta-lineage-new', 'grant',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+UPDATE waiver_events SET paired_event_id = 'event-new-grant'
+  WHERE event_id = 'event-old-revoke';
+UPDATE waiver_events SET paired_event_id = 'event-old-revoke'
+  WHERE event_id = 'event-new-grant';
+INSERT INTO waiver_events VALUES
+  ('event-new-revoke', 'delta-lineage-new', 'revoke',
+   TIMESTAMP '2026-04-10 10:00:00', NULL);

@@ -33,6 +33,7 @@ def build_run_report_message(
     fixed: int,
     oracle_skipped: list[tuple[str, str]],
     agent_blocked: str = "",
+    dry_run: bool = False,
     errors: list[str] | None = None,
     remaining_queue: list[dict] | None = None,
     repo_root,
@@ -98,7 +99,10 @@ def build_run_report_message(
             lines.append(f"     {issue}")
 
     lines.extend(["", "THIS RUN"])
-    lines.append(f"  Cursor fixes completed: {fixed} / {len(fix_queue)} queued")
+    if dry_run:
+        lines.append(f"  Dry-run scan only (no Cursor agent). Queue: {len(fix_queue)} task(s)")
+    else:
+        lines.append(f"  Cursor fixes completed: {fixed} / {len(fix_queue)} queued")
 
     if oracle_skipped:
         lines.append("  Skipped (oracle precheck):")

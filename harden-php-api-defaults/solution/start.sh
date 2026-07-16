@@ -1,4 +1,4 @@
 #!/bin/sh
-# HarborDesk Edge API launcher: serve every request through the front controller.
 cd /app/harbordesk || exit 1
-exec php -S 127.0.0.1:8080 index.php
+export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-4}"
+exec php -d expose_php=0 -d default_mimetype= -S 127.0.0.1:8080 index.php

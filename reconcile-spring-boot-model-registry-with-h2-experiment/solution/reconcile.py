@@ -12,6 +12,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 DEFAULT_DB_URL = "jdbc:h2:file:/app/experiment-db/experiments"
@@ -90,6 +91,97 @@ def fetch_candidates() -> list[dict]:
     raise RuntimeError("registry API never served /models/candidates") from last_error
 
 
+def parse_timestamp(value: str) -> datetime:
+    return datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+
+
+def active_waivers(db_url: str) -> list[dict]:
+    contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
+    if len(contexts) != 1:
+        raise RuntimeError("release_context must contain exactly one decision")
+    decision_at = parse_timestamp(contexts[0]["decision_at"])
+
+    waivers = {
+        row["waiver_id"]: row
+        for row in h2_select(
+            """
+            SELECT waiver_id, model_id, model_version, reason_code,
+                   valid_from, valid_until, replaces_waiver_id
+            FROM promotion_waivers
+            """,
+            db_url,
+        )
+    }
+    events = {
+        row["event_id"]: row
+        for row in h2_select(
+            """
+            SELECT event_id, waiver_id, event_type, occurred_at, paired_event_id
+            FROM waiver_events
+            """,
+            db_url,
+        )
+        if parse_timestamp(row["occurred_at"]) <= decision_at
+    }
+
+    valid_events: list[dict] = []
+    for event in events.values():
+        waiver = waivers[event["waiver_id"]]
+        paired_id = event.get("paired_event_id", "").strip()
+        if not paired_id:
+            if event["event_type"] == "revoke" or not waiver.get(
+                "replaces_waiver_id", ""
+            ).strip():
+                valid_events.append(event)
+            continue
+
+        mate = events.get(paired_id)
+        if mate is None or mate.get("paired_event_id", "").strip() != event["event_id"]:
+            continue
+        if event["occurred_at"] != mate["occurred_at"]:
+            continue
+        pair = {event["event_type"]: event, mate["event_type"]: mate}
+        if set(pair) != {"grant", "revoke"}:
+            continue
+        successor = waivers[pair["grant"]["waiver_id"]]
+        predecessor = waivers[pair["revoke"]["waiver_id"]]
+        if successor.get("replaces_waiver_id", "").strip() != predecessor["waiver_id"]:
+            continue
+        identity = ("model_id", "model_version", "reason_code")
+        if any(successor[key] != predecessor[key] for key in identity):
+            continue
+        valid_events.append(event)
+
+    latest: dict[str, dict] = {}
+    for event in valid_events:
+        current = latest.get(event["waiver_id"])
+        event_key = (parse_timestamp(event["occurred_at"]), event["event_id"])
+        if current is None or event_key > (
+            parse_timestamp(current["occurred_at"]),
+            current["event_id"],
+        ):
+            latest[event["waiver_id"]] = event
+
+    active: list[dict] = []
+    for waiver_id, event in latest.items():
+        waiver = waivers[waiver_id]
+        if event["event_type"] != "grant":
+            continue
+        if not (
+            parse_timestamp(waiver["valid_from"])
+            <= decision_at
+            < parse_timestamp(waiver["valid_until"])
+        ):
+            continue
+        active.append(
+            {
+                **waiver,
+                "grant_at": parse_timestamp(event["occurred_at"]),
+            }
+        )
+    return active
+
+
 def load_evidence(db_url: str) -> dict:
     runs = h2_select(
         "SELECT run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id FROM validation_runs",
@@ -125,12 +217,20 @@ def load_evidence(db_url: str) -> dict:
         row["model_id"]: row["calibrated"].strip().upper() in ("TRUE", "1", "T")
         for row in h2_select("SELECT model_id, calibrated FROM calibration_status", db_url)
     }
-    return {"metrics": metrics, "lineage": lineage, "calibrated": calibrated}
+    return {
+        "metrics": metrics,
+        "lineage": lineage,
+        "calibrated": calibrated,
+        "active_waivers": active_waivers(db_url),
+    }
 
 
-def build_manifest(candidates: list[dict], evidence: dict, auc_floor: float, accuracy_floor: float) -> dict:
+def build_manifest(
+    candidates: list[dict], evidence: dict, auc_floor: float, accuracy_floor: float
+) -> dict:
     reasons: dict[str, list[str]] = {}
     conflicts: list[dict] = []
+    applied_waivers: list[dict] = []
 
     for candidate in candidates:
         model_id = candidate["id"]
@@ -187,6 +287,32 @@ def build_manifest(candidates: list[dict], evidence: dict, auc_floor: float, acc
                 fails.append(REASON_UNCALIBRATED)
             if canonical_hash != registry_hash:
                 fails.append(REASON_LINEAGE)
+
+            remaining: list[str] = []
+            for reason in fails:
+                matching = [
+                    waiver
+                    for waiver in evidence["active_waivers"]
+                    if waiver["model_id"] == model_id
+                    and waiver["model_version"] == version
+                    and waiver["reason_code"] == reason
+                ]
+                if not matching:
+                    remaining.append(reason)
+                    continue
+                selected = max(
+                    matching,
+                    key=lambda waiver: (waiver["grant_at"], waiver["waiver_id"]),
+                )
+                applied_waivers.append(
+                    {
+                        "waiver_id": selected["waiver_id"],
+                        "model": model_id,
+                        "model_version": version,
+                        "reason": reason,
+                    }
+                )
+            fails = remaining
         reasons[model_id] = fails
 
     qualifiers = [mid for mid, fails in reasons.items() if not fails]
@@ -203,9 +329,13 @@ def build_manifest(candidates: list[dict], evidence: dict, auc_floor: float, acc
         rejected.append({"model": model_id, "reasons": reasons[model_id]})
 
     conflicts.sort(key=lambda row: (row["model"], row["field"]))
+    applied_waivers.sort(
+        key=lambda row: (row["model"], row["reason"], row["waiver_id"])
+    )
     manifest = {
         "promoted": promoted,
         "rejected": rejected,
+        "applied_waivers": applied_waivers,
         "conflicts": conflicts,
     }
     return manifest

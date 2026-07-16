@@ -8,15 +8,17 @@ reference implementation.
 
 ## Difficulty
 
-`hard`, set from measured accuracy over 5 runs per frontier model: Claude Opus
-4.8 passes 0/5 (0%). The earlier edition scored EASY (Opus 80% / GPT-5.5 100%)
-because the instructions over-specified the fixes; this edition derives all
-behaviour from the long-context Standard, plants long-lived-process state bugs
-(sticky CORS, cached bootstrap/token reads) and a silent audit-ledger schema
-defect that must be migrated at runtime while preserving history, and replays 45
-randomized lifecycles against the hidden reference. The challenge is genuine
-engineering, not a long list of edge cases. Oracle passes (1.0) and no-op fails
-(0.0); the clean image builds offline.
+The latest measured edition is `trivial`: Claude Opus 4.8 and GPT-5.5 both
+passed 5/5. Those agents were given amendment ids, exact outcomes, and the
+ledger migration shape in the prompt, so most replaced the four small PHP files
+directly. This revision is not yet difficulty-measured and keeps the measured
+label until new platform runs exist.
+
+The revised Standard adds a deployment-generation credential cutover with a
+shared two-use predecessor overlap. Rotation, concurrent health requests, later
+cutovers, live secret/generation reads, and the reseedable audit migration now
+interact in one long-lived multi-worker service. The verifier replays 45
+randomized lifecycles and a concurrent cutover case against the real API.
 
 ## Layout
 

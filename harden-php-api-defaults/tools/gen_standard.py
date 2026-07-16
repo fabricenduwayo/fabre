@@ -240,6 +240,28 @@ Verification of the presented token shall use a constant-time comparison against
 - 2023-05: initial publication.
 """
 
+NORMATIVE["AC-CREDENTIAL-CUTOVER"] = """### AC-CREDENTIAL-CUTOVER — Deployment generation cutover
+
+**Domain:** Access Control  **Severity:** Critical  **Applies to:** credential-bearing API nodes
+
+**Rationale.** Operators need to replace an administrative credential without restarting the edge process or creating an unbounded overlap in which old credentials remain valid.
+
+**Requirement.** The deployment publishes its current unsigned decimal credential generation in `data/credential_generation`. A first successful AC-BOOTSTRAP binds the minted credential to that generation. While the published generation has not advanced, the node remains already bootstrapped. When the published generation is greater than the stored current generation, a secret-authorized AC-BOOTSTRAP performs a cutover: it mints and returns a new current credential for the published generation and retains only the displaced current credential as the predecessor. A published generation equal to or below the stored generation does not authorize a cutover.
+
+AC-HEALTH accepts the current credential. During cutover it also accepts the predecessor for a bounded overlap, consuming one allowance for each accepted predecessor request. Current-credential, missing-credential, and invalid-credential requests do not consume that allowance. A later cutover immediately replaces any earlier predecessor and its unused allowance. Generation, current credential, predecessor credential, and remaining allowance form one state transition: concurrent bootstrap and health requests must not observe a partial update or consume the same allowance twice.
+
+The generation input and credential state shall be consulted on every relevant request. Persisted credential material remains subject to AC-TOKEN-STORE; raw bearer values must not be stored.
+
+**Implementation guidance.** Use one cross-process critical section for each read/modify/write transition and publish the resulting state atomically.
+
+**Verification.** Assessors advance the generation while the service remains running, perform repeated and overlapping health checks with both credentials, and perform another cutover before the earlier overlap is exhausted.
+
+**References.** Governing Security Policy GSP-2024 §4.8; Edge Operations Runbook ROB-7
+
+**Revision history.**
+- 2026-02: initial publication.
+"""
+
 NORMATIVE["EH-NO-DISCLOSE"] = """### EH-NO-DISCLOSE — No internal disclosure in responses
 
 **Domain:** Error Handling and Disclosure  **Severity:** High  **Applies to:** all HarborDesk API deployments
@@ -373,6 +395,23 @@ AMENDMENTS_REAL = [
      "When a request carries an `Origin` header that is not on the allowlist, "
      "the response shall include none of the CO-ORIGIN-ALLOW grant headers and "
      "shall not include `Vary: Origin`."),
+    ("G-2026-21", "AC-CREDENTIAL-CUTOVER",
+     "The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted "
+     "predecessor health requests per cutover**, shared across all workers. The "
+     "third and later presentation of that predecessor is denied as "
+     "`invalid_token`. A successful initial bootstrap or cutover returns `201` "
+     "with the existing `token` JSON shape. When a token state already exists and "
+     "the published generation has not advanced, AC-BOOTSTRAP keeps the amended "
+     "`409` / `already_bootstrapped` outcome before secret validation. Once the "
+     "generation advances, secret validation is required and a successful request "
+     "performs the cutover. This amendment supersedes G-2026-12 and G-2026-19 "
+     "only as to the physical shape recognized as valid: "
+     "`/app/harbordesk/data/admin_token` may be an implementation-defined state "
+     "envelope rather than a bare digest, but every credential in it must still "
+     "be represented only by a 64-character lowercase SHA-256 digest and the file "
+     "must remain mode `0600`. A malformed envelope retains G-2026-19's split "
+     "behavior: it blocks bootstrap at an unadvanced generation and verifies no "
+     "health credential."),
 ]
 
 AMENDMENTS_FILLER = [
@@ -424,6 +463,8 @@ def build():
         ("Allowed origin", "An origin that is byte-for-byte a member of the allowlist as amended by Appendix G."),
         ("Bootstrap secret", "The shared secret in `data/bootstrap_secret` proving authority to mint the administrative token."),
         ("Administrative token", "The single credential minted by AC-BOOTSTRAP and verified by AC-HEALTH."),
+        ("Credential generation", "The monotonically increasing deployment value in `data/credential_generation` that authorizes an administrative credential cutover."),
+        ("Predecessor credential", "The displaced current credential retained for the bounded AC-CREDENTIAL-CUTOVER overlap."),
         ("Decision", "The audited outcome of a request, one of `accepted` or `denied`."),
         ("Reason", "The audited denial reason, where applicable, as defined by the relevant control as amended."),
         ("Audited request", "A `GET /health` or `POST /admin/bootstrap` request, recorded per AU-LEDGER-SCOPE."),
@@ -433,7 +474,7 @@ def build():
         parts.append(f"\n**{t}.** {d} {para(RATIONALE, rng.randint(1,2))}\n")
 
     normative_by_domain = {
-        "Access Control": ["AC-BOOTSTRAP", "AC-TOKEN-STORE", "AC-HEALTH"],
+        "Access Control": ["AC-BOOTSTRAP", "AC-TOKEN-STORE", "AC-HEALTH", "AC-CREDENTIAL-CUTOVER"],
         "Cross-Origin Controls": ["CO-ORIGIN-ALLOW", "CO-PREFLIGHT"],
         "Error Handling and Disclosure": ["EH-NO-DISCLOSE"],
         "Audit and Accountability": ["AU-LEDGER-SCOPE"],

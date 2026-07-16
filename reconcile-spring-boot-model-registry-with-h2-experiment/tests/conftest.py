@@ -87,11 +87,11 @@ def _build_variant_db(seed_name: str) -> str:
 
 @pytest.fixture(scope="session")
 def variant_a_db_url() -> str:
-    """Variant store where the shipped winner lost its calibration."""
+    """Variant store where a replacement waiver is later revoked."""
     return _build_variant_db("variant_a_seed.sql")
 
 
 @pytest.fixture(scope="session")
 def variant_b_db_url() -> str:
-    """Variant store where delta's current-version lineage was corrected."""
+    """Variant store with a valid grant and malformed replacement pair."""
     return _build_variant_db("variant_b_seed.sql")

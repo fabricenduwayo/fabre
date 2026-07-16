@@ -3,15 +3,15 @@ version = "2.0"
 [metadata]
 author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
-difficulty = "hard"
+difficulty = "medium"
 category = "security"
 subcategories = ["long_context", "db_interaction"]
 number_of_milestones = 0
 codebase_size = "minimal"
 languages = ["php", "bash", "sql"]
 tags = ["security", "php", "sqlite", "cors", "hardening"]
-expert_time_estimate_min = 120
-junior_time_estimate_min = 240
+expert_time_estimate_min = 180
+junior_time_estimate_min = 360
 
 [verifier]
 timeout_sec = 300.0

@@ -25,6 +25,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 # --- Pinned locations (stated in instruction.md / the policy bundle) --------
@@ -190,6 +191,94 @@ def operative_metrics(db_url: str) -> dict[str, tuple[float, float]]:
     }
 
 
+def parse_timestamp(value: str) -> datetime:
+    """Parse an H2 timestamp into an orderable Python value."""
+    return datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+
+
+def active_waivers(db_url: str) -> list[dict]:
+    """Evaluate the A-2026-06 waiver event lifecycle as of decision_at."""
+    contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
+    assert len(contexts) == 1, "release_context must contain exactly one decision"
+    decision_at = parse_timestamp(contexts[0]["decision_at"])
+    waivers = {
+        row["waiver_id"]: row
+        for row in h2_select(
+            """
+            SELECT waiver_id, model_id, model_version, reason_code,
+                   valid_from, valid_until, replaces_waiver_id
+            FROM promotion_waivers
+            """,
+            db_url,
+        )
+    }
+    events = {
+        row["event_id"]: row
+        for row in h2_select(
+            """
+            SELECT event_id, waiver_id, event_type, occurred_at, paired_event_id
+            FROM waiver_events
+            """,
+            db_url,
+        )
+        if parse_timestamp(row["occurred_at"]) <= decision_at
+    }
+
+    valid_events: list[dict] = []
+    for event in events.values():
+        waiver = waivers[event["waiver_id"]]
+        paired_id = event.get("paired_event_id", "").strip()
+        if not paired_id:
+            if event["event_type"] == "revoke" or not waiver.get(
+                "replaces_waiver_id", ""
+            ).strip():
+                valid_events.append(event)
+            continue
+        mate = events.get(paired_id)
+        if mate is None or mate.get("paired_event_id", "").strip() != event["event_id"]:
+            continue
+        if event["occurred_at"] != mate["occurred_at"]:
+            continue
+        pair = {event["event_type"]: event, mate["event_type"]: mate}
+        if set(pair) != {"grant", "revoke"}:
+            continue
+        successor = waivers[pair["grant"]["waiver_id"]]
+        predecessor = waivers[pair["revoke"]["waiver_id"]]
+        if successor.get("replaces_waiver_id", "").strip() != predecessor["waiver_id"]:
+            continue
+        if any(
+            successor[key] != predecessor[key]
+            for key in ("model_id", "model_version", "reason_code")
+        ):
+            continue
+        valid_events.append(event)
+
+    latest: dict[str, dict] = {}
+    for event in valid_events:
+        current = latest.get(event["waiver_id"])
+        key = (parse_timestamp(event["occurred_at"]), event["event_id"])
+        if current is None or key > (
+            parse_timestamp(current["occurred_at"]),
+            current["event_id"],
+        ):
+            latest[event["waiver_id"]] = event
+
+    result: list[dict] = []
+    for waiver_id, event in latest.items():
+        waiver = waivers[waiver_id]
+        if event["event_type"] != "grant":
+            continue
+        if (
+            parse_timestamp(waiver["valid_from"])
+            <= decision_at
+            < parse_timestamp(waiver["valid_until"])
+        ):
+            result.append(
+                {**waiver, "grant_at": parse_timestamp(event["occurred_at"])}
+            )
+    return result
+
+
 def load_evidence(db_url: str) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
     metrics = operative_metrics(db_url)
@@ -204,11 +293,18 @@ def load_evidence(db_url: str) -> dict:
         for row in h2_select("SELECT model_id, calibrated FROM calibration_status", db_url)
     }
     assert metrics, f"no validation_metrics rows returned from {db_url}"
-    return {"metrics": metrics, "lineage": lineage, "calibrated": calibrated}
+    return {
+        "metrics": metrics,
+        "lineage": lineage,
+        "calibrated": calibrated,
+        "active_waivers": active_waivers(db_url),
+    }
 
 
-def evaluate_candidate(candidate: dict, evidence: dict) -> list[str]:
-    """Return the policy reason codes a candidate accrues (empty == qualifies).
+def evaluate_candidate_with_waivers(
+    candidate: dict, evidence: dict
+) -> tuple[list[str], list[tuple[str, str, str, str]]]:
+    """Return effective reasons and selected suppressing governance waivers.
 
     Mirrors the promotion policy: incomplete canonical evidence fails closed
     with ``missing_canonical_evidence`` and skips gate evaluation; otherwise
@@ -220,7 +316,7 @@ def evaluate_candidate(candidate: dict, evidence: dict) -> list[str]:
     calibrated = evidence["calibrated"].get(model_id)
     lineage_hash = evidence["lineage"].get((model_id, version))
     if metrics is None or calibrated is None or lineage_hash is None:
-        return [REASON_MISSING]
+        return [REASON_MISSING], []
 
     reasons: list[str] = []
     auc, accuracy = metrics
@@ -230,12 +326,41 @@ def evaluate_candidate(candidate: dict, evidence: dict) -> list[str]:
         reasons.append(REASON_UNCALIBRATED)
     if candidate.get("featureHash") != lineage_hash:
         reasons.append(REASON_LINEAGE)
-    return reasons
+
+    remaining: list[str] = []
+    applied: list[tuple[str, str, str, str]] = []
+    for reason in reasons:
+        matching = [
+            waiver
+            for waiver in evidence["active_waivers"]
+            if waiver["model_id"] == model_id
+            and waiver["model_version"] == version
+            and waiver["reason_code"] == reason
+        ]
+        if not matching:
+            remaining.append(reason)
+            continue
+        selected = max(
+            matching, key=lambda waiver: (waiver["grant_at"], waiver["waiver_id"])
+        )
+        applied.append((selected["waiver_id"], model_id, version, reason))
+    return remaining, applied
+
+
+def evaluate_candidate(candidate: dict, evidence: dict) -> list[str]:
+    """Return effective policy reason codes after governance waivers."""
+    return evaluate_candidate_with_waivers(candidate, evidence)[0]
 
 
 def expected_decision(candidates: list[dict], evidence: dict) -> dict:
     """Recompute the canonical decision for a candidate list and evidence set."""
-    reasons = {c["id"]: evaluate_candidate(c, evidence) for c in candidates}
+    evaluated = {
+        c["id"]: evaluate_candidate_with_waivers(c, evidence) for c in candidates
+    }
+    reasons = {mid: result[0] for mid, result in evaluated.items()}
+    applied_waivers = {
+        waiver for result in evaluated.values() for waiver in result[1]
+    }
     qualifiers = [mid for mid, fails in reasons.items() if not fails]
     ranked = sorted(qualifiers, key=lambda mid: (-evidence["metrics"][mid][0], mid))
     promoted = ranked[0] if ranked else None
@@ -262,6 +387,7 @@ def expected_decision(candidates: list[dict], evidence: dict) -> dict:
         "promoted": promoted,
         "reasons": {mid: frozenset(codes) for mid, codes in reasons.items()},
         "rejected": {mid for mid in reasons if mid != promoted},
+        "applied_waivers": applied_waivers,
         "conflicts": conflicts,
     }
 
@@ -287,7 +413,16 @@ def semantic_decision(manifest: dict) -> tuple:
         else:
             values = (str(conflict["api_value"]), str(conflict["db_value"]))
         conflicts[(conflict["model"], field)] = (*values, conflict["canonical_source"])
-    return (manifest["promoted"], rejected, conflicts)
+    applied = {
+        (
+            row["waiver_id"],
+            row["model"],
+            row["model_version"],
+            row["reason"],
+        )
+        for row in manifest["applied_waivers"]
+    }
+    return (manifest["promoted"], rejected, applied, conflicts)
 
 
 def assert_manifest_matches_expected(manifest: dict, candidates: list[dict], expected: dict) -> None:
@@ -309,6 +444,21 @@ def assert_manifest_matches_expected(manifest: dict, candidates: list[dict], exp
         assert codes == expected["reasons"][mid], (
             f"reason codes for {mid}: manifest {sorted(codes)} != policy {sorted(expected['reasons'][mid])}"
         )
+
+    applied = [
+        (
+            row["waiver_id"],
+            row["model"],
+            row["model_version"],
+            row["reason"],
+        )
+        for row in manifest["applied_waivers"]
+    ]
+    assert len(applied) == len(set(applied)), "an applied waiver is reported twice"
+    assert set(applied) == expected["applied_waivers"], (
+        f"applied waivers {sorted(applied)} != expected "
+        f"{sorted(expected['applied_waivers'])}"
+    )
 
     reported: dict[tuple[str, str], tuple] = {}
     for conflict in manifest["conflicts"]:

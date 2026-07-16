@@ -1,624 +1,351 @@
-"""Behavioral verifier for the hardened, standard-reconciled HarborDesk API.
+"""Behavioral verifier for the amended HarborDesk API and credential lifecycle."""
 
-Two layers:
-  * deterministic tests pin each individual control and Appendix G amendment;
-  * a randomized property test replays many varied request lifecycles and checks
-    every response and the resulting audit ledger against the hidden reference
-    implementation of the resolved policy (helpers.simulate).
-
-The reference (helpers.py) is mounted at verification time only; the agent must
-derive the same behavior from the Standard.
-"""
-
+import os
 import random
-
-import pytest
+import sqlite3
+import stat
+from concurrent.futures import ThreadPoolExecutor
 
 from helpers import (
     ALLOWED_ORIGINS,
+    AUDIT_DB,
+    INITIAL_GENERATION,
     ORIGINS_FILE,
+    PREDECESSOR_USES,
     SECRET_FILE,
     TOKEN_FILE,
-    _State,
+    State,
     audit_rows,
-    audit_rows_with_origin,
+    bootstrap,
     header_ci,
+    health,
     make_sequence,
     read_secret,
-    replay_request,
+    replay,
     request,
     reset_state,
+    set_generation,
     shadow_audit_rows,
     simulate,
 )
 
-RANDOM_CASES = 100
-SEED = 91237  # fixed seed for reproducibility
-
 ALLOWED = ALLOWED_ORIGINS[0]
-ALLOWED2 = ALLOWED_ORIGINS[1]
-JSON = {"Content-Type": "application/json"}
+ALLOWED_2 = ALLOWED_ORIGINS[1]
+SEED = 73619
+RANDOM_CASES = 45
 
 
-def _assert_response(exp, status, headers, raw, parsed):
-    """Assert one captured response matches the reference expectation."""
-    assert status == exp["status"], f"status {status} != {exp['status']}"
+def bootstrap_ok(secret=None, origin=None):
+    """Mint a token and assert the stable bootstrap response shape."""
+    response = bootstrap(secret or read_secret(), origin=origin)
+    assert response[0] == 201
+    assert response[3] and isinstance(response[3].get("token"), str)
+    return response[3]["token"]
 
-    # No internal disclosure, ever (EH-NO-DISCLOSE).
-    assert header_ci(headers, "X-Debug-Mode") is None
 
-    acao = header_ci(headers, "Access-Control-Allow-Origin")
-    cred = header_ci(headers, "Access-Control-Allow-Credentials")
-    if exp["cors"]:
-        assert acao == exp["cors"]["Access-Control-Allow-Origin"]
-        assert acao != "*"
-        assert cred == "true"
-        vary = header_ci(headers, "Vary")
-        assert vary is not None and "origin" in vary.lower()
-        if "Access-Control-Max-Age" in exp["cors"]:
-            assert header_ci(headers, "Access-Control-Max-Age") == exp["cors"]["Access-Control-Max-Age"]
-            assert header_ci(headers, "Access-Control-Allow-Methods") == exp["cors"]["Access-Control-Allow-Methods"]
-            assert header_ci(headers, "Access-Control-Allow-Headers") == exp["cors"]["Access-Control-Allow-Headers"]
+def assert_cors(headers, origin=None, preflight=False):
+    """Assert the resolved CORS grant for one response."""
+    if origin in ALLOWED_ORIGINS:
+        assert header_ci(headers, "Access-Control-Allow-Origin") == origin
+        assert header_ci(headers, "Access-Control-Allow-Credentials") == "true"
+        assert "origin" in header_ci(headers, "Vary").lower()
+        if preflight:
+            assert header_ci(headers, "Access-Control-Allow-Methods") == (
+                "GET, POST, OPTIONS"
+            )
+            assert header_ci(headers, "Access-Control-Allow-Headers") == (
+                "Authorization, Content-Type, X-Bootstrap-Secret"
+            )
+            assert header_ci(headers, "Access-Control-Max-Age") == "300"
         else:
-            # G-2026-11: preflight hints must not leak onto non-preflight responses.
             assert header_ci(headers, "Access-Control-Allow-Methods") is None
             assert header_ci(headers, "Access-Control-Allow-Headers") is None
             assert header_ci(headers, "Access-Control-Max-Age") is None
     else:
-        assert acao is None, f"unexpected ACAO {acao!r}"
-        assert cred is None, f"unexpected Allow-Credentials {cred!r}"
-        vary = header_ci(headers, "Vary")
-        assert vary is None or "origin" not in vary.lower(), (
-            f"disallowed or absent origin must not emit Vary: Origin, got {vary!r}"
-        )
-
-    body = exp["body"]
-    if body == "ok":
-        assert parsed == {"status": "ok"}
-    elif body == "token":
-        assert parsed and isinstance(parsed.get("token"), str) and parsed["token"]
-    elif body == "error":
-        assert parsed is not None and "trace" not in parsed
-    elif body == "empty":
-        assert raw == ""
-
-
-# ---------------------------------------------------------------------------
-# Deterministic scripted replay shared by the targeted tests.
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="session")
-def scripted():
-    """Reset state, replay a fixed sequence, and return captured responses."""
-    reset_state()
-    secret = read_secret()
-    mixed_secret = secret.swapcase()
-    if mixed_secret == secret:
-        mixed_secret = secret.upper()
-
-    r = {}
-
-    r["health_noauth"] = request("GET", "/health")
-    r["boot_wrong"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": "nope"}, "{}")
-    r["boot_nosecret"] = request("POST", "/admin/bootstrap", JSON, "{}")
-    r["boot_malformed"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": secret}, "{bad json")
-    r["boot_ok"] = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": f"  {mixed_secret}  "},
-        "{}",
-    )
-
-    status, _, _, body = r["boot_ok"]
-    token = body["token"] if (status == 201 and body) else None
-    r["token"] = token
-    auth = {"Authorization": f"Bearer {token}"} if token else {}
-
-    r["boot_repeat_ok"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": secret}, "{}")
-    r["boot_repeat_wrong"] = request("POST", "/admin/bootstrap", {**JSON, "X-Bootstrap-Secret": "nope"}, "{}")
-    r["health_ok"] = request("GET", "/health", auth)
-    r["health_wrong"] = request("GET", "/health", {"Authorization": "Bearer bad"})
-    r["health_malformed_basic"] = request("GET", "/health", {"Authorization": "Basic dXNlcjpwYXNz"})
-    r["health_malformed_empty_bearer"] = request("GET", "/health", {"Authorization": "Bearer "})
-    r["cors_allowed"] = request("GET", "/health", {**auth, "Origin": ALLOWED})
-    r["cors_allowed2"] = request("GET", "/health", {**auth, "Origin": ALLOWED2})
-    r["cors_no_origin_after_grant"] = request("GET", "/health", auth)
-    r["cors_evil"] = request("GET", "/health", {**auth, "Origin": "https://evil.example"})
-    r["cors_trailing_slash"] = request("GET", "/health", {**auth, "Origin": ALLOWED + "/"})
-    r["preflight_allowed"] = request("OPTIONS", "/admin/bootstrap", {"Origin": ALLOWED})
-    r["preflight_evil"] = request("OPTIONS", "/admin/bootstrap", {"Origin": "https://evil.example"})
-    r["unknown"] = request("GET", "/nope")
-    return r
-
-
-def test_routing_health_reachable(scripted):
-    """The launcher serves the front controller, so /health is routed (not 404)."""
-    assert scripted["health_noauth"][0] == 401
-
-
-def test_bootstrap_requires_secret(scripted):
-    """Bootstrap is refused (no token) with a wrong or absent secret."""
-    for key in ("boot_wrong", "boot_nosecret"):
-        status, _, _, body = scripted[key]
-        assert status == 403, f"{key} -> {status}"
-        assert not (body and "token" in body)
-
-
-def test_bootstrap_succeeds_with_secret(scripted):
-    """G-2026-15/G-2026-16: bootstrap accepts alternate ASCII case and trimmed whitespace."""
-    status, _, _, body = scripted["boot_ok"]
-    assert status == 201
-    assert body and isinstance(body.get("token"), str) and body["token"]
-
-
-def test_bootstrap_already_bootstrapped_is_409(scripted):
-    """G-2026-03: a repeat bootstrap is refused with 409 (not 403)."""
-    status, _, _, body = scripted["boot_repeat_ok"]
-    assert status == 409, f"repeat -> {status}"
-    assert not (body and "token" in body)
-
-
-def test_bootstrap_already_precedes_secret_check(scripted):
-    """G-2026-05: an existing token yields 409 even with a wrong secret."""
-    status, _, _, _ = scripted["boot_repeat_wrong"]
-    assert status == 409, f"repeat-wrong-secret -> {status}"
-
-
-def test_token_file_not_world_readable(scripted):
-    """AC-TOKEN-STORE: the token file is mode 0600."""
-    import os
-    import stat
-
-    assert scripted["token"] is not None
-    mode = stat.S_IMODE(os.stat(TOKEN_FILE).st_mode)
-    assert mode == 0o600, f"token file mode {oct(mode)}"
-
-
-def test_token_stored_non_recoverable(scripted):
-    """AC-TOKEN-STORE: the raw bearer token is not recoverable from the file."""
-    token = scripted["token"]
-    assert token is not None
-    with open(TOKEN_FILE, encoding="utf-8") as fh:
-        stored = fh.read().strip()
-    assert stored and token not in stored
-
-
-def test_audit_origin_null_without_header(scripted):
-    """G-2026-06: requests without an Origin header store SQL NULL in origin."""
-    token = scripted["token"]
-    assert token is not None
-    rows_before = audit_rows_with_origin()
-    request("GET", "/health", {"Authorization": f"Bearer {token}"})
-    rows_after = audit_rows_with_origin()
-    assert len(rows_after) == len(rows_before) + 1
-    row = rows_after[-1]
-    assert row["event"] == "health" and row["decision"] == "accepted"
-    assert row["origin"] is None
-
-
-def test_cors_grant_follows_current_request(scripted):
-    """CO-ORIGIN-ALLOW: each request's Origin header governs the credentialed grant."""
-    token = scripted["token"]
-    assert token is not None
-    auth = {"Authorization": f"Bearer {token}"}
-
-    _, headers_a, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED})
-    assert header_ci(headers_a, "Access-Control-Allow-Origin") == ALLOWED
-
-    _, headers_b, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED2})
-    assert header_ci(headers_b, "Access-Control-Allow-Origin") == ALLOWED2
-
-    _, headers_none, _, _ = request(
-        "GET", "/health", {**auth, "Origin": "https://evil.example"}
-    )
-    assert header_ci(headers_none, "Access-Control-Allow-Origin") is None
-
-
-def test_health_follows_on_disk_digest(scripted):
-    """G-2026-14: AC-HEALTH re-reads the stored digest from disk on every request."""
-    import hashlib
-    import os
-
-    token1 = scripted["token"]
-    assert token1 is not None
-    token2 = "replacement-credential-for-on-disk-check"
-    assert token1 != token2
-
-    digest2 = hashlib.sha256(token2.encode()).hexdigest()
-    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
-        fh.write(digest2)
-    os.chmod(TOKEN_FILE, 0o600)
-
-    status_old, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {token1}"})
-    assert status_old == 401, "stale in-process digest cache must not keep the old bearer valid"
-
-    status_new, _, _, body = request("GET", "/health", {"Authorization": f"Bearer {token2}"})
-    assert status_new == 200 and body == {"status": "ok"}
-
-
-def test_bootstrap_eligibility_follows_token_file(scripted):
-    """G-2026-14: bootstrap eligibility follows the on-disk token file, not caches."""
-    import os
-
-    secret = read_secret()
-    assert scripted["token"] is not None
-    os.remove(TOKEN_FILE)
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201, f"expected fresh bootstrap after token removal, got {status}"
-    assert body and body.get("token")
-
-
-def test_health_malformed_auth_is_missing_credentials(scripted):
-    """G-2026-18: non-Bearer or empty Bearer credentials log missing_credentials."""
-    rows = audit_rows()
-    for key in ("health_malformed_basic", "health_malformed_empty_bearer"):
-        status, _, _, _ = scripted[key]
-        assert status == 401, f"{key} -> {status}"
-    reasons = {
-        r["reason"]
-        for r in rows
-        if r["event"] == "health" and r["decision"] == "denied"
-    }
-    assert "missing_credentials" in reasons
-    assert "invalid_token" in reasons
-
-
-def test_health_requires_valid_token(scripted):
-    """AC-HEALTH: ok only for the bootstrapped token; others refused."""
-    assert scripted["health_noauth"][0] == 401
-    assert scripted["health_wrong"][0] == 401
-    status, _, _, body = scripted["health_ok"]
-    assert status == 200 and body == {"status": "ok"}
-
-
-def test_cors_exact_allowlist(scripted):
-    """CO-ORIGIN-ALLOW + G-2026-01: both internal origins get an exact grant."""
-    for key, origin in (("cors_allowed", ALLOWED), ("cors_allowed2", ALLOWED2)):
-        _, headers, _, _ = scripted[key]
-        assert header_ci(headers, "Access-Control-Allow-Origin") == origin
-        assert header_ci(headers, "Access-Control-Allow-Credentials") == "true"
-        vary = header_ci(headers, "Vary")
-        assert vary is not None and "origin" in vary.lower()
-        assert header_ci(headers, "Access-Control-Allow-Methods") is None
-        assert header_ci(headers, "Access-Control-Allow-Headers") is None
-
-
-def test_cors_rejects_untrusted_and_inexact(scripted):
-    """Disallowed origins and exact-match traps receive no grant or Vary."""
-    for key in ("cors_evil", "cors_trailing_slash"):
-        _, headers, _, _ = scripted[key]
-        acao = header_ci(headers, "Access-Control-Allow-Origin")
-        assert acao is None, f"{key} leaked ACAO {acao!r}"
+        assert header_ci(headers, "Access-Control-Allow-Origin") is None
         assert header_ci(headers, "Access-Control-Allow-Credentials") is None
         vary = header_ci(headers, "Vary")
-        assert vary is None or "origin" not in vary.lower(), f"{key} leaked Vary {vary!r}"
+        assert vary is None or "origin" not in vary.lower()
+        assert header_ci(headers, "Access-Control-Allow-Methods") is None
+        assert header_ci(headers, "Access-Control-Allow-Headers") is None
+        assert header_ci(headers, "Access-Control-Max-Age") is None
 
 
-def test_disallowed_origin_emits_no_vary(scripted):
-    """G-2026-20: a non-allowlisted Origin must not receive Vary: Origin."""
-    _, headers, _, _ = scripted["cors_evil"]
-    vary = header_ci(headers, "Vary")
-    assert vary is None or "origin" not in vary.lower(), f"disallowed origin leaked Vary {vary!r}"
-
-
-def test_cors_absent_origin_emits_no_headers(scripted):
-    """G-2026-13: a request with no Origin must not inherit a prior grant."""
-    _, headers, _, _ = scripted["cors_no_origin_after_grant"]
-    assert header_ci(headers, "Access-Control-Allow-Origin") is None
-    assert header_ci(headers, "Access-Control-Allow-Credentials") is None
-    assert header_ci(headers, "Access-Control-Allow-Methods") is None
-    assert header_ci(headers, "Access-Control-Allow-Headers") is None
-    assert header_ci(headers, "Access-Control-Max-Age") is None
-
-
-def test_preflight_scoped_and_max_age(scripted):
-    """CO-PREFLIGHT + G-2026-02: allowed preflight is 204 with Max-Age 300."""
-    status, headers, _, _ = scripted["preflight_allowed"]
-    assert status == 204
-    assert header_ci(headers, "Access-Control-Allow-Origin") == ALLOWED
-    assert header_ci(headers, "Access-Control-Max-Age") == "300"
-    assert header_ci(headers, "Access-Control-Allow-Methods") == "GET, POST, OPTIONS"
-
-    status, headers, _, _ = scripted["preflight_evil"]
-    assert status == 204
-    assert header_ci(headers, "Access-Control-Allow-Origin") is None
-    assert header_ci(headers, "Access-Control-Max-Age") is None
-
-
-def test_no_debug_details_leak(scripted):
-    """EH-NO-DISCLOSE: malformed input is a generic 400, no trace/header."""
-    status, headers, _, body = scripted["boot_malformed"]
-    assert status == 400
-    assert body is not None and "trace" not in body
+def assert_expected(expected, actual):
+    """Compare one real response with the resolved reference response."""
+    status, headers, raw, parsed = actual
+    assert status == expected["status"]
     assert header_ci(headers, "X-Debug-Mode") is None
+    assert_cors(headers, expected["cors"].get("Access-Control-Allow-Origin"), status == 204)
+    if expected["body"] == "empty":
+        assert raw == ""
+    elif expected["body"] == "ok":
+        assert parsed == {"status": "ok"}
+    elif expected["body"] == "token":
+        assert parsed and isinstance(parsed.get("token"), str)
+    else:
+        assert parsed and set(parsed) == {"error"}
 
 
-def test_health_missing_reason_renamed(scripted):
-    """G-2026-04: a no-credential health denial is logged 'missing_credentials'."""
+def test_cors_preflight_and_no_disclosure():
+    """Amended CORS is request-scoped and errors disclose no debug details."""
+    reset_state()
+    token = bootstrap_ok()
+    for origin in ALLOWED_ORIGINS:
+        status, headers, _, body = health(token, origin)
+        assert status == 200 and body == {"status": "ok"}
+        assert_cors(headers, origin)
+
+    _, evil_headers, _, _ = health(token, "https://evil.example")
+    assert_cors(evil_headers, "https://evil.example")
+    _, absent_headers, _, _ = health(token)
+    assert_cors(absent_headers)
+
+    status, headers, raw, _ = request(
+        "OPTIONS", "/anything", {"Origin": ALLOWED_2}
+    )
+    assert status == 204 and raw == ""
+    assert_cors(headers, ALLOWED_2, preflight=True)
+    status, headers, raw, _ = request(
+        "OPTIONS", "/anything", {"Origin": "https://evil.example"}
+    )
+    assert status == 204 and raw == ""
+    assert_cors(headers, "https://evil.example", preflight=True)
+
+    status, headers, _, body = bootstrap(read_secret(), body="{bad json")
+    assert status == 400 and body == {"error": "bad request"}
+    assert header_ci(headers, "X-Debug-Mode") is None
+    assert "trace" not in body
+
+
+def test_bootstrap_order_secret_normalization_and_repeat():
+    """Bootstrap normalizes the live secret and checks active state before it."""
+    reset_state()
+    secret = read_secret()
+    assert bootstrap("wrong")[0] == 403
+    mixed = f"  {secret.swapcase()}  "
+    token = bootstrap_ok(mixed)
+    assert token
+    assert bootstrap("wrong")[0] == 409
+    rows = [row for row in audit_rows() if row["reason"] != "legacy_history"]
+    assert [row["reason"] for row in rows] == [
+        "invalid_secret",
+        None,
+        "already_bootstrapped",
+    ]
+
+
+def test_secret_and_generation_are_live_deployment_inputs():
+    """Secret replacement and generation advance take effect without restart."""
+    reset_state()
+    original = read_secret()
+    first = bootstrap_ok(original)
+    replacement = "hd-rotated-secret-4B9a"
+    with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+        handle.write(replacement + "\n")
+    set_generation(INITIAL_GENERATION + 4)
+    assert bootstrap(original)[0] == 403
+    second = bootstrap_ok(replacement.swapcase())
+    assert second != first
+    assert health(second)[0] == 200
+    with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+        handle.write(original + "\n")
+
+
+def test_token_state_is_nonrecoverable_and_owner_only():
+    """Persisted current and predecessor state contains no raw bearer token."""
+    reset_state()
+    first = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    second = bootstrap_ok()
+    with open(TOKEN_FILE, encoding="utf-8") as handle:
+        stored = handle.read()
+    assert first not in stored
+    assert second not in stored
+    assert stat.S_IMODE(os.stat(TOKEN_FILE).st_mode) == 0o600
+
+
+def test_health_reasons_and_origin_audit():
+    """Health classifies credentials precisely and audits request origin or NULL."""
+    reset_state()
+    token = bootstrap_ok()
+    assert health(authorization="Basic dXNlcjpwYXNz")[0] == 401
+    assert health(authorization="Bearer ")[0] == 401
+    assert health("wrong", ALLOWED)[0] == 401
+    assert health(token, ALLOWED_2)[0] == 200
+    rows = [
+        row
+        for row in audit_rows()
+        if row["event"] == "health" and row["reason"] != "legacy_history"
+    ]
+    assert [(row["decision"], row["reason"]) for row in rows] == [
+        ("denied", "missing_credentials"),
+        ("denied", "missing_credentials"),
+        ("denied", "invalid_token"),
+        ("accepted", None),
+    ]
+    assert rows[0]["origin"] is None
+    assert rows[-1]["origin"] == ALLOWED_2
+
+
+def test_legacy_ledger_reconciles_in_place_and_ignores_shadow():
+    """Each audited write preserves legacy ids and appends only to audit_log."""
+    reset_state()
+    shadow_before = shadow_audit_rows()
+    bootstrap_ok(origin=ALLOWED)
     rows = audit_rows()
-    reasons = {r["reason"] for r in rows if r["event"] == "health" and r["decision"] == "denied"}
-    assert "missing_credentials" in reasons
-    assert "missing_token" not in reasons
-
-
-def test_audit_history_preserved(scripted):
-    """AU-LEDGER-SCOPE: legacy historical rows survive the schema migration."""
-    rows = audit_rows()
-    preserved = [r for r in rows if r["reason"] == "legacy_history"]
-    assert len(preserved) == 2, f"expected 2 legacy rows, found {len(preserved)}"
-
-
-def test_legacy_history_origin_is_sql_null():
-    """G-2026-06: migrated legacy rows must not copy actor values into origin."""
-    reset_state()
-    secret = read_secret()
-    request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    rows = audit_rows_with_origin()
-    legacy = [r for r in rows if r["reason"] == "legacy_history"]
-    assert len(legacy) == 2
-    assert all(r["origin"] is None for r in legacy), "legacy actor values must not become origin"
-
-
-def test_cors_allowlist_follows_amended_standard_not_decoy_file():
-    """G-2026-01: the operative allowlist comes from Appendix G, not allowed_origins."""
-    reset_state()
-    secret = read_secret()
-    with open(ORIGINS_FILE, "w", encoding="utf-8") as fh:
-        fh.write("https://harbordesk.internal\nhttps://evil.example\n")
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    token = body["token"]
-    auth = {"Authorization": f"Bearer {token}"}
-
-    _, headers, _, _ = request("GET", "/health", {**auth, "Origin": ALLOWED2})
-    assert header_ci(headers, "Access-Control-Allow-Origin") == ALLOWED2
-
-    _, headers, _, _ = request(
-        "GET", "/health", {**auth, "Origin": "https://evil.example"}
-    )
-    assert header_ci(headers, "Access-Control-Allow-Origin") is None
-
-
-def test_audit_records_origin(scripted):
-    """G-2026-06: the migrated ledger records the request origin on rows."""
-    token = scripted["token"]
-    assert token is not None
-    request("GET", "/health", {"Authorization": f"Bearer {token}", "Origin": ALLOWED})
-    rows = audit_rows_with_origin()
-    matching = [r for r in rows if r.get("origin") == ALLOWED]
-    assert matching, "no audited row recorded the allowed origin"
-
-
-def test_bootstrap_secret_follows_on_disk_file():
-    """G-2026-17: bootstrap secret validation re-reads the on-disk secret file."""
-    reset_state()
-    with open(SECRET_FILE, encoding="utf-8") as fh:
-        original = fh.read().strip()
-
-    replacement = "hd-rotated-bootstrap-secret-7c2f9a1e"
-    assert replacement != original
-
-    status, _, _, _ = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": "wrong-secret-prime-cache"},
-        "{}",
-    )
-    assert status == 403
-
-    with open(SECRET_FILE, "w", encoding="utf-8") as fh:
-        fh.write(replacement + "\n")
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": replacement},
-        "{}",
-    )
-    assert status == 201, f"expected bootstrap with rotated on-disk secret, got {status}"
-    assert body and body.get("token")
-
-    with open(SECRET_FILE, "w", encoding="utf-8") as fh:
-        fh.write(original + "\n")
-
-
-def test_corrupt_token_file_blocks_rebootstrap():
-    """G-2026-19: a malformed on-disk digest blocks health and re-bootstrap."""
-    reset_state()
-    secret = read_secret()
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    token = body["token"]
-
-    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
-        fh.write("not-a-valid-digest\n")
-
-    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {token}"})
-    assert status == 401, "malformed digest must deny the presented bearer"
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 409, f"existing token file must block bootstrap, got {status}"
-    assert not (body and "token" in body)
-
-
-def test_empty_token_file_still_blocks_bootstrap():
-    """G-2026-19: an empty token file still counts as already bootstrapped."""
-    reset_state()
-    secret = read_secret()
-
-    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
-        fh.write("\n")
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 409, f"empty token file must block bootstrap, got {status}"
-    assert not (body and "token" in body)
-
-
-def test_shadow_ledger_receives_no_new_writes():
-    """AU-LEDGER-SCOPE: shadow ledger tables must not absorb audited writes."""
-    reset_state()
-    secret = read_secret()
-    before = shadow_audit_rows()
-    assert before, "expected a seeded shadow ledger row in audit.db"
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    token = body["token"]
-
-    request("GET", "/health", {"Authorization": f"Bearer {token}", "Origin": ALLOWED})
-    after = shadow_audit_rows()
-    assert len(after) == len(before), "shadow ledger must not grow during audited requests"
-    assert [r for r in audit_rows() if r["reason"] != "legacy_history"], (
-        "audit_log must still receive new rows"
-    )
-
-
-def test_legacy_row_ids_preserved():
-    """AU-LEDGER-SCOPE: migration must preserve historical row ids."""
-    reset_state()
-    secret = read_secret()
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    history = [r for r in audit_rows() if r["reason"] == "legacy_history"]
+    history = [row for row in rows if row["reason"] == "legacy_history"]
     assert {row["id"] for row in history} == {1, 2}
+    assert all(row["origin"] is None for row in history)
+    assert len(rows) == 3
+    assert shadow_audit_rows() == shadow_before
+    conn = sqlite3.connect(AUDIT_DB)
+    try:
+        columns = [row[1] for row in conn.execute("PRAGMA table_info(audit_log)")]
+    finally:
+        conn.close()
+    assert "origin" in columns and "actor" not in columns
 
 
-def test_health_follows_rotated_on_disk_digest():
-    """G-2026-14: health must re-read the token digest after on-disk rotation."""
+def test_ledger_reconciliation_repeats_after_live_reseed():
+    """A legacy reseed during service life is migrated before the next write."""
     reset_state()
-    secret = read_secret()
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    old_token = body["token"]
-
-    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {old_token}"})
-    assert status == 200
-
-    import hashlib
-
-    new_token = "rotated-" + old_token[:8]
-    digest = hashlib.sha256(new_token.encode("utf-8")).hexdigest()
-    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
-        fh.write(digest + "\n")
-
-    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {old_token}"})
-    assert status == 401, "stale bearer must fail after digest rotation on disk"
-
-    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {new_token}"})
-    assert status == 200, "new bearer must succeed after digest rotation on disk"
-
-
-def test_ledger_migration_reapplies_after_reseed():
-    """AU-LEDGER-SCOPE: schema reconciliation must run again when the ledger is reseeded."""
+    bootstrap_ok()
     reset_state()
-    secret = read_secret()
+    bootstrap_ok()
+    rows = audit_rows()
+    assert {row["id"] for row in rows if row["reason"] == "legacy_history"} == {1, 2}
+    assert len([row for row in rows if row["reason"] != "legacy_history"]) == 1
 
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201 and body and body.get("token")
-    audited = [r for r in audit_rows() if r["reason"] != "legacy_history"]
-    assert audited, "bootstrap should produce an audited row after first migration"
 
+def test_generation_advance_requires_secret_before_cutover():
+    """An advance opens rotation but does not bypass current secret validation."""
     reset_state()
-
-    status, _, _, body = request(
-        "POST",
-        "/admin/bootstrap",
-        {**JSON, "X-Bootstrap-Secret": secret},
-        "{}",
-    )
-    assert status == 201, f"expected audited bootstrap after ledger reseed, got {status}"
-    assert body and body.get("token")
-    audited = [r for r in audit_rows() if r["reason"] != "legacy_history"]
-    assert audited, "bootstrap should produce an audited row after ledger reseed"
+    old = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 3)
+    assert bootstrap("wrong")[0] == 403
+    assert health(old)[0] == 200
+    new = bootstrap_ok()
+    assert new != old
+    assert health(new)[0] == 200
 
 
-def test_randomized_lifecycles_match_reference():
-    """Replay many randomized lifecycles; every response and ledger row must
-    match the resolved-policy reference (helpers.simulate)."""
+def test_predecessor_has_exact_shared_two_use_overlap():
+    """Only two accepted predecessor health calls survive one cutover."""
+    reset_state()
+    old = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    current = bootstrap_ok()
+    assert health(current)[0] == 200
+    assert health(old)[0] == 200
+    assert health(current)[0] == 200
+    assert health(old)[0] == 200
+    assert health(old)[0] == 401
+    assert health(current)[0] == 200
+
+
+def test_invalid_health_does_not_consume_predecessor_overlap():
+    """Missing and wrong credentials leave both predecessor allowances intact."""
+    reset_state()
+    old = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    bootstrap_ok()
+    for _ in range(4):
+        assert health("wrong")[0] == 401
+        assert health()[0] == 401
+    assert [health(old)[0] for _ in range(3)] == [200, 200, 401]
+
+
+def test_later_cutover_replaces_unspent_predecessor():
+    """A second cutover discards the older predecessor and resets overlap."""
+    reset_state()
+    oldest = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    middle = bootstrap_ok()
+    assert health(oldest)[0] == 200
+    set_generation(INITIAL_GENERATION + 8)
+    newest = bootstrap_ok()
+    assert health(oldest)[0] == 401
+    assert [health(middle)[0] for _ in range(3)] == [200, 200, 401]
+    assert health(newest)[0] == 200
+
+
+def test_predecessor_budget_is_atomic_across_workers():
+    """Concurrent predecessor calls collectively receive exactly two accepts."""
+    reset_state()
+    old = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    bootstrap_ok()
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        statuses = list(pool.map(lambda _: health(old)[0], range(10)))
+    assert statuses.count(200) == PREDECESSOR_USES
+    assert statuses.count(401) == 10 - PREDECESSOR_USES
+    lifecycle_rows = [
+        row
+        for row in audit_rows()
+        if row["event"] == "health" and row["reason"] != "legacy_history"
+    ]
+    assert sum(row["decision"] == "accepted" for row in lifecycle_rows) == 2
+    assert len(lifecycle_rows) == 10
+
+
+def test_corrupt_existing_state_blocks_bootstrap_and_health():
+    """An existing malformed credential state remains bootstrapped but unusable."""
+    reset_state()
+    with open(TOKEN_FILE, "w", encoding="utf-8") as handle:
+        handle.write("not-valid-credential-state\n")
+    os.chmod(TOKEN_FILE, 0o600)
+    assert bootstrap(read_secret())[0] == 409
+    assert health("anything")[0] == 401
+
+
+def test_decoy_origin_file_never_changes_policy():
+    """The legacy origins input cannot add grants or remove amended origins."""
+    reset_state()
+    with open(ORIGINS_FILE, "w", encoding="utf-8") as handle:
+        handle.write("https://evil.example\n")
+    token = bootstrap_ok()
+    assert_cors(health(token, ALLOWED_2)[1], ALLOWED_2)
+    assert_cors(health(token, "https://evil.example")[1], "https://evil.example")
+
+
+def test_randomized_lifecycles_match_resolved_policy():
+    """Varied cutovers match the hidden response and ledger state machine."""
     rng = random.Random(SEED)
     secret = read_secret()
-
     for case in range(RANDOM_CASES):
         reset_state()
-        state = _State()
-        token = None
+        state = State()
+        tokens = {}
         expected_audit = []
-
-        seq = make_sequence(rng)
-        for i, req in enumerate(seq):
-            exp = simulate(state, req)
-            status, headers, raw, parsed = replay_request(req, secret, token)
+        for index, operation in enumerate(make_sequence(rng)):
+            expected = simulate(state, operation)
+            if operation["kind"] == "advance":
+                set_generation(operation["generation"])
+                continue
+            actual = replay(operation, secret, tokens)
             try:
-                _assert_response(exp, status, headers, raw, parsed)
-            except AssertionError as err:
-                raise AssertionError(f"case {case} req {i} {req}: {err}") from err
-            if exp["body"] == "token" and parsed:
-                token = parsed["token"]
-            if exp["audit"] is not None:
-                expected_audit.append(exp["audit"])
+                assert_expected(expected, actual)
+            except AssertionError as error:
+                raise AssertionError(
+                    f"case {case} operation {index} {operation}: {error}"
+                ) from error
+            if expected["body"] == "token":
+                tokens[operation["mint"]] = actual[3]["token"]
+            if expected["audit"] is not None:
+                expected_audit.append(expected["audit"])
 
-        rows = audit_rows_with_origin()
-        history = [r for r in rows if r["reason"] == "legacy_history"]
-        assert len(history) == 2, f"case {case}: legacy history not preserved"
-
-        audited = [r for r in rows if r["reason"] != "legacy_history"]
-        assert len(audited) == len(expected_audit), (
-            f"case {case}: {len(audited)} audited rows != {len(expected_audit)} expected"
-        )
-        for got, exp in zip(audited, expected_audit):
-            ev, route, origin, decision, reason = exp
-            assert got["event"] == ev and got["route"] == route, f"case {case}: {got} vs {exp}"
-            assert got["decision"] == decision and got["reason"] == reason, f"case {case}: {got} vs {exp}"
-            assert got["origin"] == origin, f"case {case}: origin {got['origin']!r} vs {origin!r}"
+        rows = audit_rows()
+        history = [row for row in rows if row["reason"] == "legacy_history"]
+        assert len(history) == 2
+        actual_audit = [row for row in rows if row["reason"] != "legacy_history"]
+        assert len(actual_audit) == len(expected_audit), f"case {case}"
+        for row, expected_row in zip(actual_audit, expected_audit):
+            event, route, origin, decision, reason = expected_row
+            assert (
+                row["event"],
+                row["route"],
+                row["origin"],
+                row["decision"],
+                row["reason"],
+            ) == (event, route, origin, decision, reason)

@@ -575,7 +575,7 @@ def process_one(item: dict, state: dict, tasks_map: dict, *, dry_run: bool) -> t
     }
     save_state(state)
     log(f"done {folder} agent_status={status} state_after={new_state}")
-    return True, ""
+    return (not dry_run), ""
 
 
 def detect_state_changes(state: dict, all_subs: list[dict]) -> list[str]:
@@ -703,6 +703,8 @@ def _finish_run(state: dict) -> None:
 
 
 def main() -> int:
+    load_env_file()
+
     parser = argparse.ArgumentParser(description="Snorkel submission monitor (every 90 minutes)")
     parser.add_argument("--dry-run", action="store_true", help="Check only; do not call Cursor")
     parser.add_argument(
@@ -729,7 +731,6 @@ def main() -> int:
         if args.max_fixes <= scheduled_cap:
             args.max_fixes = max(args.max_fixes, force_cap)
 
-    load_env_file()
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     lock = _acquire_run_lock()
     if lock is None:
@@ -955,6 +956,7 @@ def main() -> int:
         oracle_skipped=oracle_skipped,
         errors=run_errors,
         remaining_queue=remaining_queue,
+        dry_run=args.dry_run,
     )
     _finish_run(state)
     return 0

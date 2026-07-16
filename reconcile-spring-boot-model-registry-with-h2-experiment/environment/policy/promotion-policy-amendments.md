@@ -36,3 +36,31 @@ referenced earlier run is void for operative-run selection under A-2026-04.
 Voided runs are excluded before choosing the latest completed row. The
 superseding row's own status still follows A-2026-04: a `superseded` row does
 not become operative even when it is temporally latest.
+
+## A-2026-06 — governance waiver lifecycle
+
+Promotion waivers are version- and reason-scoped. Evaluate `promotion_waivers`
+and `waiver_events` as of the single `release_context.decision_at`; future
+events do not exist for this decision. A waiver is active only when its latest
+valid event at or before that time is a `grant`, and the decision time is in
+its half-open `[valid_from, valid_until)` interval.
+
+An unpaired `grant` is valid only for a waiver with no `replaces_waiver_id`;
+an unpaired `revoke` is valid for any waiver. A paired event is valid only as
+part of one reciprocal two-event replacement transaction: one event revokes
+the predecessor, the other grants the successor, both name each other in
+`paired_event_id`, both have the same `occurred_at`, the successor names the
+predecessor in `replaces_waiver_id`, and both waivers have the same model id,
+model version, and reason code. Ignore both sides of every malformed pair.
+Order valid events by `occurred_at`, then lexicographically by `event_id`.
+Revoking an active replacement later does not revive its revoked predecessor.
+
+After evaluating the ordinary policy gates, an active waiver suppresses only
+the matching raw `metric_threshold`, `uncalibrated`, or `lineage_mismatch`
+failure for the same candidate id and version. It cannot suppress
+`missing_canonical_evidence` or `lost_tiebreak`. If multiple active waivers
+cover one raw failure, select the one with the latest grant event, breaking a
+tie by lexicographically greatest waiver id. Add each selected, suppressing
+grant to `applied_waivers` with `waiver_id`, `model`, `model_version`, and
+`reason`; do not report inactive, malformed, expired, future, or irrelevant
+waivers.

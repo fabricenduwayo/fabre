@@ -1,8 +1,8 @@
 Difficulty Explanation
-Agents must repair a Spring Boot route referee where JDBC lookups, per-edge first-match route rules, clear-vs-lock precedence, and yard lock-group relay all interact. The broken repository leaks station ids into SQL, collapses lock groups, and sorts rules incorrectly, while the handler applies every matching rule instead of first-match-wins and the planner re-enqueues visited nodes on cyclic graphs.
+Agents must repair a Spring Boot route referee where parameterized JDBC lookups, per-edge first-match rules, clear-vs-lock decisions, overlapping lock groups, and cyclic graph traversal interact. The precedence contract is now explicit, but applying it still requires coordinating repository ordering, per-edge state, post-rule fixed-point relay, and cycle-safe path construction across three broken classes.
 
 Solution Explanation
-Fix GraphPathRepository to parameterize station lookups, load full lock groups, and sort rules by ascending priority then rule id. In SwitchRuleHandler, stop at the first matching rule per edge, let a clear leave the edge unlocked, then relay locks across yard_spur. In PathPlanner, mark nodes visited when enqueued so cyclic planning terminates with cycle_guard true.
+Fix GraphPathRepository to parameterize station lookups, retain every member of each lock group, and sort rules by ascending priority then rule id. In SwitchRuleHandler, require all non-NULL positions to match, stop after the first matching rule per edge, and propagate locks through overlapping groups only after route decisions until stable. In PathPlanner, discover each station once so the cyclic graph terminates with a stable path and cycle_guard true.
 
 Verification Explanation
-Tests call the live POST /v1/plan API for health, junction and scenic reachability, north-spur blocks, platform wildcard locks, clear-before-lock precedence, yard relay open and blocked cases, cycle-guard timing, parameterized SQL source checks, and two-position lock conjunction.
+Tests exercise the live health and planning endpoints across direct, scenic, blocked, clearance, wildcard, conjunction, and overlapping-group lineups. They also verify fixed-point relay in both open and locked states, prompt cycle termination with cycle_guard true, empty unreachable paths, exact seeded routes, and parameterized station lookup source.

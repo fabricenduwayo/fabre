@@ -1,7 +1,6 @@
--- Variant B: identical to the shipped evidence except delta's lineage history
--- was corrected so the registry-reported hash matches version 1.0.3 (the old
--- 1.0.2 row still disagrees). A version-keyed lineage join must now qualify
--- delta, whose canonical AUC (0.90) wins the tie-break.
+-- Variant B: gamma has a valid ordinary calibration waiver. Beta's attempted
+-- replacement is reciprocal but not simultaneous, so it must be ignored.
+-- Gamma therefore qualifies and beats omega by canonical AUC.
 
 INSERT INTO models (id, name, version) VALUES ('alpha', 'churn-model-alpha', '1.2.0');
 INSERT INTO models (id, name, version) VALUES ('beta',  'churn-model-beta',  '0.9.1');
@@ -37,8 +36,8 @@ INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES 
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('beta',  '0.9.1', 'fh_beta_44a');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('gamma', '1.9.0', 'fh_gamma_55e');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('gamma', '2.0.0', 'fh_gamma_7d2');
-INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('delta', '1.0.2', 'fh_delta_31c');
-INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('delta', '1.0.3', 'fh_delta_9f4');
+INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('delta', '1.0.2', 'fh_delta_9f4');
+INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('delta', '1.0.3', 'fh_delta_5e8');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('omega', '1.4.2', 'fh_omega_2b7');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('zeta',  '0.3.1', 'fh_zeta_a19');
 
@@ -48,3 +47,32 @@ INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('gamma', F
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('delta', TRUE,  'isotonic');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('omega', TRUE,  'platt');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('zeta',  TRUE,  'isotonic');
+
+INSERT INTO release_context VALUES
+  ('current-release', TIMESTAMP '2026-04-15 12:00:00');
+INSERT INTO promotion_waivers VALUES
+  ('gamma-calibration', 'gamma', '2.0.0', 'uncalibrated',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-old', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-new', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
+   'beta-metric-old');
+INSERT INTO waiver_events VALUES
+  ('event-gamma-grant', 'gamma-calibration', 'grant',
+   TIMESTAMP '2026-01-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-old-grant', 'beta-metric-old', 'grant',
+   TIMESTAMP '2026-01-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-old-revoke', 'beta-metric-old', 'revoke',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-new-grant', 'beta-metric-new', 'grant',
+   TIMESTAMP '2026-04-02 10:00:00', NULL);
+UPDATE waiver_events SET paired_event_id = 'event-beta-new-grant'
+  WHERE event_id = 'event-beta-old-revoke';
+UPDATE waiver_events SET paired_event_id = 'event-beta-old-revoke'
+  WHERE event_id = 'event-beta-new-grant';

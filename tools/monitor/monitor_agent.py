@@ -112,13 +112,22 @@ def resolve_github_starting_ref(repo_root: Path) -> str:
     override = os.environ.get("CLOUD_STARTING_REF", "").strip()
     if override:
         return override
-    use_sha = os.environ.get("CLOUD_USE_COMMIT_SHA", "1").strip().lower() in {
+    branch = resolve_github_branch(repo_root)
+    work_on_branch = os.environ.get("CLOUD_WORK_ON_BRANCH", "1").strip().lower() in {
         "1",
         "true",
         "yes",
         "on",
     }
-    branch = resolve_github_branch(repo_root)
+    # Cursor Cloud rejects commit SHA when work_on_current_branch=True (validation_error).
+    if work_on_branch:
+        return branch
+    use_sha = os.environ.get("CLOUD_USE_COMMIT_SHA", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
     if not use_sha:
         return branch
     proc = subprocess.run(
@@ -223,6 +232,36 @@ def _run_local_agent(
     return str(result.status), str(getattr(result, "result", ""))[:4000]
 
 
+def _format_cloud_error(exc: "CursorAgentError") -> str:
+    """Turn CursorAgentError into a human-readable message."""
+    parts = [exc.message]
+    for detail in getattr(exc, "details", []) or []:
+        if not isinstance(detail, dict):
+            continue
+        debug = detail.get("debug") or {}
+        msg = debug.get("message") if isinstance(debug, dict) else None
+        if msg and msg not in parts[0]:
+            parts.append(msg)
+        raw = detail.get("value")
+        if isinstance(raw, str) and raw.startswith("Git"):
+            import base64
+
+            try:
+                decoded = base64.b64decode(raw[3:]).decode("utf-8", errors="replace")
+                if decoded and decoded not in parts[0]:
+                    parts.append(decoded)
+            except Exception:
+                pass
+    hint = ""
+    lower = parts[0].lower()
+    if "validation_error" in lower and "invalid_argument" in lower:
+        hint = (
+            " Hint: use branch name for starting_ref when CLOUD_WORK_ON_BRANCH=1 "
+            "(not commit SHA)."
+        )
+    return " — ".join(dict.fromkeys(p for p in parts if p)) + hint
+
+
 def _run_cloud_agent(
     prompt: str,
     *,
@@ -274,7 +313,7 @@ def _run_cloud_agent(
                     raise RuntimeError(
                         _cloud_branch_validation_hint(repo_url, ref)
                     ) from exc
-                raise RuntimeError(f"Cursor cloud agent failed: {exc.message}") from exc
+                raise RuntimeError(f"Cursor cloud agent failed: {_format_cloud_error(exc)}") from exc
             else:
                 if result.status == "error":
                     raise RuntimeError(
@@ -285,7 +324,7 @@ def _run_cloud_agent(
     if last_exc is not None:
         if _is_branch_validation_error(last_exc.message):
             raise RuntimeError(_cloud_branch_validation_hint(repo_url, starting_ref)) from last_exc
-        raise RuntimeError(f"Cursor cloud agent failed: {last_exc.message}") from last_exc
+        raise RuntimeError(f"Cursor cloud agent failed: {_format_cloud_error(last_exc)}") from last_exc
     raise RuntimeError("Cursor cloud agent failed after retries")
 
 

@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Release Decision Manifest",
-  "description": "Schema for build/release-decision.json describing the promotion decision, rejected models, and API-vs-DB metadata conflicts.",
+  "description": "Schema for build/release-decision.json describing the promotion decision, rejected models, applied governance waivers, and API-vs-DB metadata conflicts.",
   "type": "object",
-  "required": ["promoted", "rejected", "conflicts"],
+  "required": ["promoted", "rejected", "applied_waivers", "conflicts"],
   "properties": {
     "promoted": {
       "description": "The model id chosen for promotion, or null when nothing was promoted.",
@@ -25,10 +25,45 @@
             "type": "array",
             "minItems": 1,
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "metric_threshold",
+                "uncalibrated",
+                "lineage_mismatch",
+                "missing_canonical_evidence",
+                "lost_tiebreak"
+              ]
             }
           }
         }
+      }
+    },
+    "applied_waivers": {
+      "description": "Active governance grants that suppressed a raw gate failure.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["waiver_id", "model", "model_version", "reason"],
+        "properties": {
+          "waiver_id": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "metric_threshold",
+              "uncalibrated",
+              "lineage_mismatch"
+            ]
+          }
+        },
+        "additionalProperties": false
       }
     },
     "conflicts": {

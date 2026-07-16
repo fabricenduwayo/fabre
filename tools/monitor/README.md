@@ -12,6 +12,13 @@ All config: **`tools/monitor/.env`**. State: **`.review-scratch/monitor/`**.
 
 ```bash
 cd /Users/fabrice-mac-mini/Documents/snorkel-ai/tools/monitor
+cp secrets.env.example secrets.env   # fill CURSOR_API_KEY + Telegram
+./setup-clean.sh                     # stop, reset state, install launchd, test notify
+```
+
+Or manual:
+
+```bash
 cp .env.example .env    # if needed — fill CURSOR_API_KEY + Telegram
 ./install-hourly-launchd.sh
 ./install-command-listener.sh

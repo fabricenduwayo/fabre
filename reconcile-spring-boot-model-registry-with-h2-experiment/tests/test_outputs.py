@@ -94,7 +94,7 @@ def test_rejected_models_carry_exact_reason_codes(manifest, registry, expected):
 
 
 def test_uncalibrated_candidates_never_promoted(manifest, evidence, registry_by_id):
-    """A candidate that is uncalibrated per H2 is never promoted and is rejected as such."""
+    """An uncalibrated candidate without a live matching waiver is rejected as such."""
     uncalibrated = {
         model_id
         for model_id in registry_by_id
@@ -149,8 +149,10 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
     h2_auc = evidence["metrics"]["beta"][0]
     assert registry_auc >= 0.94, "registry feed should overstate beta for this trap"
     assert h2_auc < AUC_FLOOR, "H2 canonical beta AUC should fail the metric floor"
-    assert expected["promoted"] == "omega", "amended policy should promote omega once alpha is voided"
-    assert manifest["promoted"] == "omega", (
+    assert expected["promoted"] == "delta", (
+        "delta's governed lineage waiver should make it the canonical-AUC winner"
+    )
+    assert manifest["promoted"] == "delta", (
         "promoted model must follow H2 metrics, not registry-reported values"
     )
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
@@ -168,7 +170,7 @@ def test_gate1_uses_latest_completed_validation_run(evidence, expected):
     assert beta_auc == 0.74, (
         "beta must use the latest completed run even when an older completed run passed"
     )
-    assert expected["promoted"] == "omega"
+    assert expected["promoted"] == "delta"
 
 
 def test_gate1_voids_superseded_completed_run(evidence, expected):
@@ -176,8 +178,36 @@ def test_gate1_voids_superseded_completed_run(evidence, expected):
     assert evidence["metrics"]["alpha"] == (0.75, 0.70), (
         "alpha operative metrics must fall back after alpha-run-2 is voided"
     )
-    assert expected["promoted"] == "omega", (
-        "with alpha failing Gate 1 on the voided chain, omega is the policy-safe winner"
+    assert expected["promoted"] == "delta", (
+        "with alpha failing Gate 1, delta's valid waiver makes it the safe winner"
+    )
+
+
+def test_shipped_waiver_lifecycle(manifest, evidence, expected):
+    """A-2026-06 applies only delta's latest valid replacement grant."""
+    active_ids = {waiver["waiver_id"] for waiver in evidence["active_waivers"]}
+    assert "delta-lineage-new" in active_ids
+    assert "delta-lineage-alt" in active_ids
+    assert "delta-lineage-old" not in active_ids
+    assert "beta-metric-new" not in active_ids, (
+        "beta's non-simultaneous replacement transaction must be ignored"
+    )
+    assert "gamma-calibration" not in active_ids, (
+        "gamma's later ordinary revoke must deactivate its grant"
+    )
+    assert "alpha-metric-future" not in active_ids, (
+        "events after release_context.decision_at must not count"
+    )
+    expected_applied = {
+        ("delta-lineage-new", "delta", "1.0.3", "lineage_mismatch")
+    }
+    assert expected["applied_waivers"] == expected_applied
+    reported = {
+        (row["waiver_id"], row["model"], row["model_version"], row["reason"])
+        for row in manifest["applied_waivers"]
+    }
+    assert reported == expected_applied, (
+        "only the latest grant that actually suppresses delta's raw failure is reportable"
     )
 
 
@@ -227,8 +257,8 @@ def test_script_regenerates_manifest_from_live_evidence(manifest, registry, expe
         MANIFEST_PATH.write_bytes(original_bytes)
 
 
-def test_script_generalizes_to_recalibrated_evidence(registry, variant_a_db_url):
-    """Pointed at a store where the winner lost calibration, the script promotes accordingly."""
+def test_script_generalizes_without_predecessor_revival(registry, variant_a_db_url):
+    """Revoking a replacement does not revive its predecessor in a variant store."""
     variant_expected = expected_decision(registry, load_evidence(variant_a_db_url))
     with tempfile.TemporaryDirectory() as tmp:
         out_path = Path(tmp) / "variant-a.json"
@@ -243,8 +273,8 @@ def test_script_generalizes_to_recalibrated_evidence(registry, variant_a_db_url)
     assert_manifest_matches_expected(variant_manifest, registry, variant_expected)
 
 
-def test_script_generalizes_to_corrected_lineage(registry, variant_b_db_url):
-    """Pointed at a store with delta's lineage corrected, the script re-runs the tie-break."""
+def test_script_generalizes_with_malformed_replacement(registry, variant_b_db_url):
+    """A valid simple grant applies while a malformed replacement pair is ignored."""
     variant_expected = expected_decision(registry, load_evidence(variant_b_db_url))
     with tempfile.TemporaryDirectory() as tmp:
         out_path = Path(tmp) / "variant-b.json"

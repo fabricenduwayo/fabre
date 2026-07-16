@@ -51,3 +51,88 @@ INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('gamma', F
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('delta', TRUE,  'isotonic');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('omega', TRUE,  'platt');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('zeta',  TRUE,  'isotonic');
+
+INSERT INTO release_context (context_id, decision_at)
+  VALUES ('current-release', TIMESTAMP '2026-04-15 12:00:00');
+
+-- delta has a valid replacement transaction plus an older overlapping grant.
+-- The replacement is the latest applicable lineage waiver at decision time.
+INSERT INTO promotion_waivers VALUES
+  ('delta-lineage-old', 'delta', '1.0.3', 'lineage_mismatch',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('delta-lineage-new', 'delta', '1.0.3', 'lineage_mismatch',
+   TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
+   'delta-lineage-old');
+INSERT INTO promotion_waivers VALUES
+  ('delta-lineage-alt', 'delta', '1.0.3', 'lineage_mismatch',
+   TIMESTAMP '2026-03-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+
+-- beta's predecessor is expired and its attempted replacement pair is
+-- malformed because the two sides occurred at different times.
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-old', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-new', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
+   'beta-metric-old');
+
+-- gamma is revoked; omega's live waiver is irrelevant because its metric gate
+-- passes; alpha's grant occurs after the decision time.
+INSERT INTO promotion_waivers VALUES
+  ('gamma-calibration', 'gamma', '2.0.0', 'uncalibrated',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('omega-metric', 'omega', '1.4.2', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('alpha-metric-future', 'alpha', '1.2.0', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+
+INSERT INTO waiver_events VALUES
+  ('event-delta-old-grant', 'delta-lineage-old', 'grant',
+   TIMESTAMP '2026-01-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-delta-alt-grant', 'delta-lineage-alt', 'grant',
+   TIMESTAMP '2026-03-25 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-delta-old-revoke', 'delta-lineage-old', 'revoke',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-delta-new-grant', 'delta-lineage-new', 'grant',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+UPDATE waiver_events SET paired_event_id = 'event-delta-new-grant'
+  WHERE event_id = 'event-delta-old-revoke';
+UPDATE waiver_events SET paired_event_id = 'event-delta-old-revoke'
+  WHERE event_id = 'event-delta-new-grant';
+INSERT INTO waiver_events VALUES
+  ('event-delta-new-future-revoke', 'delta-lineage-new', 'revoke',
+   TIMESTAMP '2026-05-01 10:00:00', NULL);
+
+INSERT INTO waiver_events VALUES
+  ('event-beta-old-grant', 'beta-metric-old', 'grant',
+   TIMESTAMP '2026-01-02 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-old-revoke', 'beta-metric-old', 'revoke',
+   TIMESTAMP '2026-04-01 10:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-new-grant', 'beta-metric-new', 'grant',
+   TIMESTAMP '2026-04-02 10:00:00', NULL);
+UPDATE waiver_events SET paired_event_id = 'event-beta-new-grant'
+  WHERE event_id = 'event-beta-old-revoke';
+UPDATE waiver_events SET paired_event_id = 'event-beta-old-revoke'
+  WHERE event_id = 'event-beta-new-grant';
+
+INSERT INTO waiver_events VALUES
+  ('event-gamma-grant', 'gamma-calibration', 'grant',
+   TIMESTAMP '2026-01-02 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-gamma-revoke', 'gamma-calibration', 'revoke',
+   TIMESTAMP '2026-04-10 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-omega-grant', 'omega-metric', 'grant',
+   TIMESTAMP '2026-01-02 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-alpha-future-grant', 'alpha-metric-future', 'grant',
+   TIMESTAMP '2026-04-20 09:00:00', NULL);
