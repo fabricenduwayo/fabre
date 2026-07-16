@@ -1,5 +1,6 @@
 Agent reads the HarborDesk Edge API Hardening Standard including Appendix G amendments before changing application code, +3
 Agent fixes the broken audit ledger so new rows are written on each request without losing existing historical rows, +4
+Agent routes audited writes to audit_log rather than a shadow audit table, +3
 Agent implements exact-origin CORS: only allowlisted origins get Access-Control-Allow-Origin and Access-Control-Allow-Credentials, never a wildcard, +3
 Agent sets Vary: Origin on credentialed cross-origin responses that grant an allowed origin, +3
 Agent implements preflight handling: allowed-origin OPTIONS returns 204 with Access-Control-Max-Age 300 and scoped method/header grants; disallowed origins get no grant headers, +3
@@ -22,4 +23,5 @@ Agent leaves static PHP caches that reuse a prior request's Origin, bootstrap st
 Agent returns 403 instead of 409 for bootstrap when the service is already bootstrapped, -3
 Agent runs a one-off schema migration at deploy time that is wiped before verification instead of per-open idempotent reconciliation, -3
 Agent reads /app/harbordesk/data/allowed_origins or another legacy decoy to decide CORS grants, -4
+Agent routes audited events into a shadow audit table instead of reconciling audit_log, -4
 Agent drops route, decision, or reason columns or copies legacy actor values into origin during audit migration, -4

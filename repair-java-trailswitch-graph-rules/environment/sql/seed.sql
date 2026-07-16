@@ -26,7 +26,4 @@ INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, ru
 
 INSERT INTO lock_groups (group_id, edge_id) VALUES
     ('yard_spur', 'e_b_d'),
-    ('yard_spur', 'e_d_e'),
-    ('yard_spur', 'e_c_b'),
-    ('junction_gate', 'e_c_b'),
-    ('junction_gate', 'e_c_e');
+    ('yard_spur', 'e_d_e');

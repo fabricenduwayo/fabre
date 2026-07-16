@@ -10,10 +10,11 @@ model-registry/**
 !model-registry/target/
 model-registry/target/**
 !model-registry/target/model-registry-0.1.0.jar
+maven-repo.tar.gz
+maven-repo/
 **/*.mv.db
 !experiment-db/experiments.mv.db
 **/*.trace.db
 *.log
-maven-repo/
 solution/
 tests/

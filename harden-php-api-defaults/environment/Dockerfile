@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-13-r45
+# platform-revision: 2026-07-15-r49
 
 WORKDIR /app
 
@@ -28,5 +28,6 @@ COPY docs/ /app/docs/
 # defect is reproducible and a naive rebuild that discards history is caught.
 RUN chmod +x /app/harbordesk/start.sh \
     && chmod 600 /app/harbordesk/data/bootstrap_secret \
+    && rm -f /app/harbordesk/data/audit.db \
     && sqlite3 /app/harbordesk/data/audit.db \
         "CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, actor TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:00:00+00:00', 'health', '/health', 'svc-legacy', 'accepted', 'legacy_history'); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:05:00+00:00', 'bootstrap', '/admin/bootstrap', 'svc-legacy', 'denied', 'legacy_history');"

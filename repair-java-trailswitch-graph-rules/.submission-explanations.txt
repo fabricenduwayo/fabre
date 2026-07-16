@@ -1,0 +1,8 @@
+Difficulty Explanation
+Agents must repair a Spring Boot route referee where JDBC lookups, per-edge first-match route rules, clear-vs-lock precedence, and yard lock-group relay all interact. The broken repository leaks station ids into SQL, collapses lock groups, and sorts rules incorrectly, while the handler applies every matching rule instead of first-match-wins and the planner re-enqueues visited nodes on cyclic graphs.
+
+Solution Explanation
+Fix GraphPathRepository to parameterize station lookups, load full lock groups, and sort rules by ascending priority then rule id. In SwitchRuleHandler, stop at the first matching rule per edge, let a clear leave the edge unlocked, then relay locks across yard_spur. In PathPlanner, mark nodes visited when enqueued so cyclic planning terminates with cycle_guard true.
+
+Verification Explanation
+Tests call the live POST /v1/plan API for health, junction and scenic reachability, north-spur blocks, platform wildcard locks, clear-before-lock precedence, yard relay open and blocked cases, cycle-guard timing, parameterized SQL source checks, and two-position lock conjunction.

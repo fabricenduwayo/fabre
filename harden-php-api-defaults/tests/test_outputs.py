@@ -31,7 +31,7 @@ from helpers import (
     simulate,
 )
 
-RANDOM_CASES = 75
+RANDOM_CASES = 100
 SEED = 91237  # fixed seed for reproducibility
 
 ALLOWED = ALLOWED_ORIGINS[0]

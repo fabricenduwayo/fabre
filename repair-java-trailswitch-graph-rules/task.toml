@@ -4,12 +4,12 @@ version = "2.0"
 author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
-category = "games"
-subcategories = ["api_integration", "db_interaction", "tool_specific"]
+category = "data-processing"
+subcategories = ["api_integration", "db_interaction"]
 number_of_milestones = 0
 codebase_size = "small"
 languages = ["java", "sql", "bash"]
-tags = ["java", "spring-boot", "postgresql", "graph", "jdbc", "api"]
+tags = ["spring-boot", "postgresql", "graph", "jdbc", "rules-engine", "routing"]
 expert_time_estimate_min = 90
 junior_time_estimate_min = 180
 

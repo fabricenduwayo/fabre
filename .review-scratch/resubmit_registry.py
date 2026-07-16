@@ -62,11 +62,18 @@ def build_zip(dest: Path) -> list[str]:
             for path in sorted(src.rglob("*")):
                 if path.is_dir() or path.is_symlink():
                     continue
+                rel = path.relative_to(FOLDER)
                 if path.name in {".DS_Store", ".snorkel_config"}:
                     continue
-                if "__pycache__" in path.parts or ".pytest_cache" in path.parts:
+                if "__pycache__" in rel.parts or ".pytest_cache" in rel.parts:
                     continue
-                zf.write(path, path.relative_to(FOLDER).as_posix())
+                if rel.parts[:2] == ("environment", "model-registry"):
+                    if rel.name != "model-registry-0.1.0.jar":
+                        continue
+                if "target" in rel.parts and rel.parts[0] == "environment":
+                    if rel.name != "model-registry-0.1.0.jar":
+                        continue
+                zf.write(path, rel.as_posix())
     return zipfile.ZipFile(dest).namelist()
 
 
@@ -112,9 +119,11 @@ def main() -> None:
         "task.toml",
         "environment/Dockerfile",
         "environment/experiment-db/experiments.mv.db",
+        "environment/h2-2.2.224.jar",
         "environment/model-registry/target/model-registry-0.1.0.jar",
+        "environment/reconcile-model-release/reconcile.py",
         "solution/solve.sh",
-        "solution/App.java",
+        "solution/reconcile.py",
         "tests/test.sh",
         "tests/test_outputs.py",
     }

@@ -16,7 +16,13 @@ it from source and SQL only — do not rely on manual playthroughs.
 
 Route locks and lock-group relay are defined only by the `route_rules` and
 `lock_groups` rows in `/app/sql/seed.sql`. Reconcile behavior from those rows and
-the graph topology; do not infer a complete policy from this doc alone.
+the graph topology.
+
+Rules evaluate in ascending `rule_priority` then `rule_id`. For each edge, the
+first matching rule decides — later rules for that edge are skipped. A matching
+`clear` leaves the edge unlocked; a matching `lock` blocks it. Non-null lock
+positions on a rule must all match (NULL is a wildcard). Lock-group relay runs
+after route-lock evaluation.
 
 ## API shape (keep intact)
 

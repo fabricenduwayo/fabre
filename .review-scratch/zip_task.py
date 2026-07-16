@@ -9,6 +9,7 @@ SKIP_FILE_NAMES = {
     ".rubric-for-ui.txt",
     ".snorkel_config",
     "README.md",
+    ".DS_Store",
 }
 SKIP_DIR_NAMES = {
     "jobs",
@@ -19,6 +20,7 @@ SKIP_DIR_NAMES = {
     "__pycache__",
     ".pytest_cache",
     ".mypy_cache",
+    "target",
 }
 
 

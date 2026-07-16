@@ -2,7 +2,7 @@
 
 These fixtures load the agent-produced manifest, read the canonical evidence
 from the live H2 experiment store and registry API, and build the variant H2
-databases the agent's jar is rerun against. The pure helpers live in
+databases the agent's reconcile script is rerun against. The pure helpers live in
 ``helpers.py``.
 """
 

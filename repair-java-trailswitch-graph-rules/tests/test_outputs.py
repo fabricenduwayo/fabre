@@ -86,34 +86,6 @@ def test_scenic_spur_relay_open_after_clearance():
     assert result["path"] == ["B", "D", "E"]
 
 
-def test_spur_hold_relay_blocks_junction_approach():
-    """A yard spur hold must relay-lock the junction B leg in the yard_spur group."""
-    result = plan("C", "B", {"sw1": "north", "sw2": "north"})
-    assert result["reachable"] is False
-    assert result["path"] == []
-
-
-def test_junction_approach_open_after_spur_clearance():
-    """Clearance on the spur must relay-open the junction B leg for C to B runs."""
-    result = plan("C", "B", {"sw1": "south", "sw2": "north"})
-    assert result["reachable"] is True
-    assert result["path"] == ["C", "B"]
-
-
-def test_junction_gate_relay_blocks_ce_leg():
-    """A spur warn hold must relay through junction_gate and block the C to E corridor."""
-    result = plan("C", "E", {"sw1": "south", "sw2": "south"})
-    assert result["reachable"] is False
-    assert result["path"] == []
-
-
-def test_ce_leg_open_when_gate_rule_and_relay_clear():
-    """When the gate rule and yard relay both stay open, C can reach E on the direct leg."""
-    result = plan("C", "E", {"sw1": "north", "sw2": "south"})
-    assert result["reachable"] is True
-    assert result["path"] == ["C", "E"]
-
-
 def test_cycle_guard_finishes_quickly():
     """Planning on the cyclic seed graph must finish without exhaustive re-enqueue loops."""
     start = time.time()

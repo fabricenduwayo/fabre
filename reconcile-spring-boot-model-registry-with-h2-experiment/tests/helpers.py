@@ -9,10 +9,10 @@ canonical sources the reconciliation step must reconcile:
   identity.
 
 Nothing here hardcodes a winning model id; the expected decision falls out of
-whichever database the jar is pointed at, evaluated against the documented
-policy gates. The same machinery grades the shipped experiment store and the
-verifier-built variant stores, which keeps a hardcoded manifest or a
-fixture-tuned jar from passing.
+whichever database the reconcile script is pointed at, evaluated against the
+documented policy gates. The same machinery grades the shipped experiment store
+and the verifier-built variant stores, which keeps a hardcoded manifest or a
+fixture-tuned shortcut from passing.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ API_BASE_URL = "http://localhost:8080"
 HEALTH_URL = f"{API_BASE_URL}/health"
 CANDIDATES_URL = f"{API_BASE_URL}/models/candidates"
 MAIN_DB_URL = "jdbc:h2:file:/app/experiment-db/experiments"
-STEP_JAR = APP / "reconcile-model-release" / "target" / "reconcile-model-release-0.1.0.jar"
+STEP_SCRIPT = APP / "reconcile-model-release" / "reconcile.py"
 H2_JAR = APP / "lib" / "h2-2.2.224.jar"
 TESTS_DIR = Path(__file__).resolve().parent
 
@@ -65,17 +65,13 @@ def find_h2_jar() -> str:
     return sorted(jars)[-1]
 
 
-def find_step_jar() -> str:
-    """Locate the agent-built reconcile-model-release fat jar."""
-    if STEP_JAR.is_file():
-        return str(STEP_JAR)
-    matches = glob.glob(str(STEP_JAR.parent / "reconcile-model-release*.jar"))
-    jars = [m for m in matches if not m.endswith(("-sources.jar", "-javadoc.jar"))]
-    assert jars, (
-        f"reconcile-model-release jar not found at {STEP_JAR} — "
-        "build it with: mvn -o -f /app/reconcile-model-release/pom.xml package"
+def find_reconcile_script() -> str:
+    """Locate the agent-built reconcile-model-release Python entrypoint."""
+    assert STEP_SCRIPT.is_file(), (
+        f"reconcile script not found at {STEP_SCRIPT} — "
+        "implement /app/reconcile-model-release/reconcile.py"
     )
-    return sorted(jars)[-1]
+    return str(STEP_SCRIPT)
 
 
 def run_h2_script(db_url: str, script_path: Path) -> None:
@@ -152,10 +148,10 @@ def wait_for_api(seconds: float) -> bool:
     return api_healthy()
 
 
-def run_step_jar(args: list[str], timeout: float = 240.0) -> subprocess.CompletedProcess:
-    """Run the agent-built reconciliation jar from /app with the given args."""
+def run_reconcile_script(args: list[str], timeout: float = 240.0) -> subprocess.CompletedProcess:
+    """Run the agent-built reconciliation script from /app with the given args."""
     return subprocess.run(
-        ["java", "-jar", find_step_jar(), *args],
+        ["python3", find_reconcile_script(), *args],
         cwd=str(APP),
         capture_output=True,
         text=True,
