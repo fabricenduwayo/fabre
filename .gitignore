@@ -1,6 +1,7 @@
 .DS_Store
 .venv/
 tools/monitor/.env
+tools/monitor/secrets.env
 tools/monitor/.venv/
 .review-scratch/monitor/
 jobs/
