@@ -17,6 +17,12 @@ REPO_JAVA = Path(
 def ensure_service() -> None:
     """Start PostgreSQL and TrailSwitch if the verifier runs before the agent."""
     subprocess.run(["bash", "/app/sql/init_db.sh"], check=True)
+    try:
+        resp = requests.get(f"{API}/health", timeout=2)
+        if resp.json().get("status") == "ok":
+            return
+    except Exception:
+        pass
     subprocess.run(["bash", "/app/trailswitch/start.sh"], check=True)
     deadline = time.time() + 30.0
     while time.time() < deadline:
