@@ -1,8 +1,8 @@
 Difficulty Explanation
-Agents must repair a Spring Boot route referee where parameterized JDBC lookups, per-edge first-match rules, clear-vs-lock decisions, overlapping lock groups, and cyclic graph traversal interact. The precedence contract is now explicit, but applying it still requires coordinating repository ordering, per-edge state, post-rule fixed-point relay, and cycle-safe path construction across three broken classes.
+Agents must finish a railway dispatch game referee where bound board lookups, per-edge first-match rules, clear-vs-lock decisions, overlapping lock groups, and cyclic route scoring interact. The precedence contract is explicit, but applying it still requires coordinating row ordering, per-edge state, post-rule fixed-point relay, and cycle-safe journey construction.
 
 Solution Explanation
-Fix GraphPathRepository to parameterize station lookups, retain every member of each lock group, and sort rules by ascending priority then rule id. In SwitchRuleHandler, require all non-NULL positions to match, stop after the first matching rule per edge, and propagate locks through overlapping groups only after route decisions until stable. In PathPlanner, discover each station once so the cyclic graph terminates with a stable path and cycle_guard true.
+Bind station lookups, retain every member of each lock group, and sort rules by ascending priority then rule id. Require all non-NULL positions to match, stop after the first matching rule per edge, and propagate locks through overlapping groups only after route decisions until stable. Discover each station once so the cyclic board terminates with a stable journey and cycle_guard true.
 
 Verification Explanation
 Tests exercise the live health and planning endpoints across direct, scenic, blocked, clearance, wildcard, conjunction, and overlapping-group lineups. They also verify fixed-point relay in both open and locked states, prompt cycle termination with cycle_guard true, empty unreachable paths, exact seeded routes, and parameterized station lookup source.
