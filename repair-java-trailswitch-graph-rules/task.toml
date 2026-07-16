@@ -4,12 +4,12 @@ version = "2.0"
 author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
-category = "data-processing"
+category = "security"
 subcategories = ["api_integration", "db_interaction"]
 number_of_milestones = 0
 codebase_size = "minimal"
 languages = ["java", "sql", "bash"]
-tags = ["postgresql", "graph-routing", "route-rules", "lock-groups", "jdbc", "api"]
+tags = ["sql-injection", "postgresql", "route-locks", "graph-routing", "jdbc", "api"]
 expert_time_estimate_min = 90
 junior_time_estimate_min = 180
 
