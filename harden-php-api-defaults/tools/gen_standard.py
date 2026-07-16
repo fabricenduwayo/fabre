@@ -337,9 +337,17 @@ AMENDMENTS_REAL = [
      "column, which is why current writes fail. Reconciliation shall move the "
      "ledger to a layout that records the request `origin` for every audited row "
      "(including denials) and no longer requires `actor`, while carrying every "
-     "pre-existing historical row forward unchanged. When a request carries no "
-     "`Origin` header, the stored `origin` value for that audited row shall be "
-     "SQL `NULL`, not an empty string."),
+     "pre-existing historical row forward unchanged with the same row ids. When "
+     "migrating legacy rows that predate the `origin` column, the stored "
+     "`origin` value shall be SQL `NULL`; legacy `actor` values must not be "
+     "copied into `origin`. When a request carries no `Origin` header, the "
+     "stored `origin` value for that audited row shall be SQL `NULL`, not an "
+     "empty string."),
+    ("G-2026-22", "AU-LEDGER-SCOPE",
+     "All audited append operations shall target `audit_log` only. Other SQLite "
+     "tables in the same database, including legacy shadow ledgers, shall "
+     "neither receive new audit rows nor supply rows during reconciliation or "
+     "migration."),
     ("G-2026-11", "CO-PREFLIGHT",
      "The method, header, and max-age hint headers in CO-PREFLIGHT "
      "(`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and "
