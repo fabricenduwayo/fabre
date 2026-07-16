@@ -10,7 +10,7 @@ subcategories = [
     "api_integration",
 ]
 number_of_milestones = 0
-codebase_size = "minimal"
+codebase_size = "small"
 languages = [
     "java",
     "sql",
