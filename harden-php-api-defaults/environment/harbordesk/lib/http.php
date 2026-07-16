@@ -18,7 +18,6 @@ function admin_token_exists($config)
         if (!is_file($config['token_file'])) {
             $exists = false;
         } else {
-            // Wrong: treats an empty token file as not yet bootstrapped (G-2026-19).
             $exists = trim(file_get_contents($config['token_file'])) !== '';
         }
     }

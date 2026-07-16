@@ -1,6 +1,5 @@
 <?php
 
-// Ledger schema is reconciled at image build time; runtime writes use the layout below.
 function audit_db($config)
 {
     $db = new SQLite3($config['audit_db']);
@@ -15,6 +14,31 @@ function audit_db($config)
         decision TEXT NOT NULL,
         reason TEXT
     )');
+
+    $cols = [];
+    $res = $db->query('PRAGMA table_info(audit_log)');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $cols[] = $row['name'];
+    }
+
+    if (in_array('actor', $cols, true) && !in_array('origin', $cols, true)) {
+        $db->exec('ALTER TABLE audit_log RENAME TO audit_log_legacy');
+        $db->exec('CREATE TABLE audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts TEXT NOT NULL,
+            event TEXT NOT NULL,
+            route TEXT NOT NULL,
+            origin TEXT,
+            decision TEXT NOT NULL,
+            reason TEXT
+        )');
+        $db->exec(
+            'INSERT INTO audit_log (id, ts, event, route, origin, decision, reason)
+             SELECT id, ts, event, route, actor, decision, reason FROM audit_log_legacy'
+        );
+        $db->exec('DROP TABLE audit_log_legacy');
+    }
+
     return $db;
 }
 
