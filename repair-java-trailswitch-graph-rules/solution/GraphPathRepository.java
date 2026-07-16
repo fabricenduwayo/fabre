@@ -37,7 +37,8 @@ public class GraphPathRepository {
     public List<RouteRule> loadRules() {
         return jdbc.query(
                 "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action, "
-                        + "match_relay_id, match_relay_state "
+                        + "match_relay_id, match_relay_state, count_relay_id, min_transition_count, "
+                        + "requires_visited_station "
                         + "FROM route_rules ORDER BY rule_priority ASC, rule_id ASC",
                 (rs, rowNum) ->
                         new RouteRule(
@@ -48,18 +49,31 @@ public class GraphPathRepository {
                                 rs.getString("lock_sw2"),
                                 rs.getString("rule_action"),
                                 rs.getString("match_relay_id"),
-                                rs.getString("match_relay_state")));
+                                rs.getString("match_relay_state"),
+                                rs.getString("count_relay_id"),
+                                (Integer) rs.getObject("min_transition_count"),
+                                rs.getString("requires_visited_station")));
     }
 
-    public Map<String, Set<String>> loadLockGroups() {
+    public Map<String, LockGroupSpec> loadLockGroups() {
         List<LockGroupRow> rows =
                 jdbc.query(
-                        "SELECT group_id, edge_id FROM lock_groups ORDER BY group_id, edge_id",
+                        "SELECT group_id, edge_id, arm_relay_id, arm_relay_state "
+                        + "FROM lock_groups ORDER BY group_id, edge_id",
                         (rs, rowNum) ->
-                                new LockGroupRow(rs.getString("group_id"), rs.getString("edge_id")));
-        Map<String, Set<String>> groups = new HashMap<>();
+                                new LockGroupRow(
+                                        rs.getString("group_id"),
+                                        rs.getString("edge_id"),
+                                        rs.getString("arm_relay_id"),
+                                        rs.getString("arm_relay_state")));
+        Map<String, LockGroupSpec> groups = new HashMap<>();
         for (LockGroupRow row : rows) {
-            groups.computeIfAbsent(row.groupId(), ignored -> new HashSet<>()).add(row.edgeId());
+            groups.computeIfAbsent(
+                    row.groupId(),
+                    ignored ->
+                            new LockGroupSpec(
+                                    new HashSet<>(), row.armRelayId(), row.armRelayState()));
+            groups.get(row.groupId()).edges().add(row.edgeId());
         }
         return groups;
     }
@@ -78,7 +92,8 @@ public class GraphPathRepository {
 
     public List<RelayTransition> loadRelayTransitions(String edgeId) {
         return jdbc.query(
-                "SELECT edge_id, transition_order, relay_id, from_state, to_state "
+                "SELECT edge_id, transition_order, relay_id, from_state, to_state, "
+                        + "requires_relay_id, requires_relay_state "
                         + "FROM edge_relay_transitions WHERE edge_id = ? "
                         + "ORDER BY transition_order ASC, relay_id ASC",
                 (rs, rowNum) ->
@@ -87,11 +102,15 @@ public class GraphPathRepository {
                                 rs.getInt("transition_order"),
                                 rs.getString("relay_id"),
                                 rs.getString("from_state"),
-                                rs.getString("to_state")),
+                                rs.getString("to_state"),
+                                rs.getString("requires_relay_id"),
+                                rs.getString("requires_relay_state")),
                 edgeId);
     }
 
     public List<String> listStations() {
         return jdbc.query("SELECT station_id FROM stations ORDER BY station_id", (rs, rowNum) -> rs.getString(1));
     }
+
+    public record LockGroupSpec(Set<String> edges, String armRelayId, String armRelayState) {}
 }

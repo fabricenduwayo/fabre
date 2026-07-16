@@ -276,10 +276,23 @@ public final class Reconciler {
                         """,
                         dbUrl);
         Set<String> voided = new HashSet<>();
+        Map<String, String> supersedesByRun = new HashMap<>();
         for (Map<String, String> row : runs) {
             String supersedes = row.getOrDefault("supersedes_run_id", "").strip();
             if (!supersedes.isEmpty()) {
                 voided.add(supersedes);
+                supersedesByRun.put(row.get("run_id"), supersedes);
+            }
+        }
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (Map.Entry<String, String> entry : supersedesByRun.entrySet()) {
+                if (voided.contains(entry.getKey())
+                        && !entry.getValue().isEmpty()
+                        && voided.add(entry.getValue())) {
+                    changed = true;
+                }
             }
         }
         Map<String, Map<String, String>> latestByModel = new HashMap<>();
@@ -298,6 +311,7 @@ public final class Reconciler {
             }
         }
         Map<String, double[]> metrics = new HashMap<>();
+        Map<String, String> metricCapturedAt = new HashMap<>();
         for (Map.Entry<String, Map<String, String>> entry : latestByModel.entrySet()) {
             Map<String, String> row = entry.getValue();
             metrics.put(
@@ -306,6 +320,7 @@ public final class Reconciler {
                         Double.parseDouble(row.get("auc")),
                         Double.parseDouble(row.get("accuracy"))
                     });
+            metricCapturedAt.put(entry.getKey(), row.get("captured_at"));
         }
         Map<LineageKey, String> lineage = new HashMap<>();
         for (Map<String, String> row :
@@ -355,7 +370,7 @@ public final class Reconciler {
             }
             calibrated.put(entry.getKey(), effective);
         }
-        return new Evidence(metrics, lineage, calibrated, activeWaivers(dbUrl));
+        return new Evidence(metrics, metricCapturedAt, lineage, calibrated, activeWaivers(dbUrl));
     }
 
     private static ObjectNode buildManifest(
@@ -409,6 +424,7 @@ public final class Reconciler {
                 }
 
                 List<String> remaining = new ArrayList<>();
+                String operativeCapturedAt = evidence.metricCapturedAt.get(modelId);
                 for (String reason : fails) {
                     List<ActiveWaiver> matching = new ArrayList<>();
                     for (ActiveWaiver waiver : evidence.activeWaivers) {
@@ -428,6 +444,12 @@ public final class Reconciler {
                                             Comparator.comparing((ActiveWaiver w) -> w.grantAt)
                                                     .thenComparing(w -> w.waiverId))
                                     .orElseThrow();
+                    if (operativeCapturedAt != null
+                            && !selected.grantAt.isBefore(
+                                    parseTimestamp(operativeCapturedAt))) {
+                        remaining.add(reason);
+                        continue;
+                    }
                     ObjectNode applied = JSON.createObjectNode();
                     applied.put("waiver_id", selected.waiverId);
                     applied.put("model", modelId);
@@ -520,6 +542,7 @@ public final class Reconciler {
 
     private record Evidence(
             Map<String, double[]> metrics,
+            Map<String, String> metricCapturedAt,
             Map<LineageKey, String> lineage,
             Map<String, Boolean> calibrated,
             List<ActiveWaiver> activeWaivers) {}

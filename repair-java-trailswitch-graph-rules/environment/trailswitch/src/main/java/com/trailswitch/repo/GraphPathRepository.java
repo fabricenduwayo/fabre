@@ -39,7 +39,8 @@ public class GraphPathRepository {
     public List<RouteRule> loadRules() {
         return jdbc.query(
                 "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action, "
-                        + "match_relay_id, match_relay_state "
+                        + "match_relay_id, match_relay_state, count_relay_id, min_transition_count, "
+                        + "requires_visited_station "
                         + "FROM route_rules ORDER BY rule_priority ASC, rule_id DESC",
                 (rs, rowNum) ->
                         new RouteRule(
@@ -50,15 +51,23 @@ public class GraphPathRepository {
                                 rs.getString("lock_sw2"),
                                 rs.getString("rule_action"),
                                 rs.getString("match_relay_id"),
-                                rs.getString("match_relay_state")));
+                                rs.getString("match_relay_state"),
+                                rs.getString("count_relay_id"),
+                                (Integer) rs.getObject("min_transition_count"),
+                                rs.getString("requires_visited_station")));
     }
 
     public Map<String, Set<String>> loadLockGroups() {
         List<LockGroupRow> rows =
                 jdbc.query(
-                        "SELECT group_id, edge_id FROM lock_groups ORDER BY group_id, edge_id",
+                        "SELECT group_id, edge_id, arm_relay_id, arm_relay_state "
+                        + "FROM lock_groups ORDER BY group_id, edge_id",
                         (rs, rowNum) ->
-                                new LockGroupRow(rs.getString("group_id"), rs.getString("edge_id")));
+                                new LockGroupRow(
+                                        rs.getString("group_id"),
+                                        rs.getString("edge_id"),
+                                        rs.getString("arm_relay_id"),
+                                        rs.getString("arm_relay_state")));
         Map<String, Set<String>> groups = new HashMap<>();
         for (LockGroupRow row : rows) {
             groups.put(row.groupId(), new HashSet<>(Set.of(row.edgeId())));

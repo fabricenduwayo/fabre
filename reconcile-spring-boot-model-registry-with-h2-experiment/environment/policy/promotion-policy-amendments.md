@@ -73,3 +73,24 @@ from the snapshot flag, apply every event with `occurred_at` at or before
 decision time in ascending `occurred_at` order (tie-break by lexicographic
 `event_id`), and let each `calibrate` or `uncalibrate` event overwrite the
 effective flag. When no events exist for a model, the snapshot stands.
+
+## A-2026-08 — amends Gate 1 transitive voiding
+
+Extends A-2026-05. After collecting every run voided because another row's
+`supersedes_run_id` references it, also void any run whose `run_id` equals a
+voided run's `supersedes_run_id`, repeating until the void set stops growing.
+Only then apply A-2026-04 to choose the operative completed row.
+
+## A-2026-09 — amends Gate 2 same-timestamp ordering
+
+When two or more `calibration_events` for the same model share the same
+`occurred_at`, apply them in ascending lexicographic `event_id` order within
+that timestamp before continuing to later timestamps.
+
+## A-2026-10 — amends A-2026-06 waiver suppression timing
+
+An active waiver may suppress a raw gate failure only when its grant event's
+`occurred_at` is strictly before the operative validation run's `captured_at`
+from A-2026-04 through A-2026-08. Waivers granted on or after that instant
+cannot suppress failures derived from that operative run and must not appear in
+`applied_waivers` for it.

@@ -8,4 +8,7 @@ public record RouteRule(
         String lockSw2,
         String ruleAction,
         String matchRelayId,
-        String matchRelayState) {}
+        String matchRelayState,
+        String countRelayId,
+        Integer minTransitionCount,
+        String requiresVisitedStation) {}

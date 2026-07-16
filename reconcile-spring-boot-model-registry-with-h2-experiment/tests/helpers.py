@@ -167,14 +167,26 @@ FROM validation_runs
 """
 
 
-def operative_metrics(db_url: str) -> dict[str, tuple[float, float]]:
-    """Pick Gate 1 metrics per model using A-2026-04 and A-2026-05."""
+def operative_metrics(db_url: str) -> dict[str, tuple[float, float, str]]:
+    """Pick Gate 1 metrics per model using A-2026-04, A-2026-05, and A-2026-08."""
     runs = h2_select(LATEST_COMPLETED_METRICS_SQL, db_url)
-    voided = {
-        row["supersedes_run_id"]
+    supersedes_by_run = {
+        row["run_id"]: row.get("supersedes_run_id", "").strip()
         for row in runs
-        if row.get("supersedes_run_id") and row["supersedes_run_id"].strip()
+        if row.get("supersedes_run_id", "").strip()
     }
+    voided = {
+        row["supersedes_run_id"].strip()
+        for row in runs
+        if row.get("supersedes_run_id", "").strip()
+    }
+    changed = True
+    while changed:
+        changed = False
+        for run_id, supersedes in supersedes_by_run.items():
+            if run_id in voided and supersedes and supersedes not in voided:
+                voided.add(supersedes)
+                changed = True
     latest_by_model: dict[str, dict[str, str]] = {}
     for row in runs:
         if row["status"] != "completed":
@@ -187,7 +199,7 @@ def operative_metrics(db_url: str) -> dict[str, tuple[float, float]]:
         if current is None or captured_at > current["captured_at"]:
             latest_by_model[model_id] = row
     return {
-        model_id: (float(row["auc"]), float(row["accuracy"]))
+        model_id: (float(row["auc"]), float(row["accuracy"]), row["captured_at"])
         for model_id, row in latest_by_model.items()
     }
 
@@ -323,8 +335,15 @@ def load_evidence(db_url: str) -> dict:
     }
     calibrated = effective_calibration(db_url)
     assert metrics, f"no validation_metrics rows returned from {db_url}"
+    metric_values = {
+        model_id: (values[0], values[1]) for model_id, values in metrics.items()
+    }
+    metric_captured_at = {
+        model_id: values[2] for model_id, values in metrics.items()
+    }
     return {
-        "metrics": metrics,
+        "metrics": metric_values,
+        "metric_captured_at": metric_captured_at,
         "lineage": lineage,
         "calibrated": calibrated,
         "active_waivers": active_waivers(db_url),
@@ -359,6 +378,7 @@ def evaluate_candidate_with_waivers(
 
     remaining: list[str] = []
     applied: list[tuple[str, str, str, str]] = []
+    operative_at = evidence.get("metric_captured_at", {}).get(model_id)
     for reason in reasons:
         matching = [
             waiver
@@ -373,6 +393,11 @@ def evaluate_candidate_with_waivers(
         selected = max(
             matching, key=lambda waiver: (waiver["grant_at"], waiver["waiver_id"])
         )
+        if operative_at is not None and selected["grant_at"] >= parse_timestamp(
+            operative_at
+        ):
+            remaining.append(reason)
+            continue
         applied.append((selected["waiver_id"], model_id, version, reason))
     return remaining, applied
 

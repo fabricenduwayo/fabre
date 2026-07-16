@@ -1,3 +1,4 @@
 package com.trailswitch.model;
 
-public record LockGroupRow(String groupId, String edgeId) {}
+public record LockGroupRow(
+        String groupId, String edgeId, String armRelayId, String armRelayState) {}

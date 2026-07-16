@@ -15,9 +15,11 @@ INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accurac
 INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id)
   VALUES ('alpha-run-fail', 'alpha', TIMESTAMP '2026-03-01 09:00:00', 'failed', 0.99, 0.99, NULL);
 INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id)
-  VALUES ('alpha-run-2', 'alpha', TIMESTAMP '2026-03-20 10:00:00', 'completed', 0.87, 0.82, NULL);
+  VALUES ('alpha-run-2', 'alpha', TIMESTAMP '2026-03-20 10:00:00', 'completed', 0.87, 0.82, 'alpha-run-1');
 INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id)
   VALUES ('alpha-run-void', 'alpha', TIMESTAMP '2026-03-22 11:00:00', 'superseded', 0.91, 0.88, 'alpha-run-2');
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id)
+  VALUES ('alpha-run-3', 'alpha', TIMESTAMP '2026-03-25 10:00:00', 'completed', 0.83, 0.78, NULL);
 
 -- beta: an older passing completed run is stale; latest completed still fails Gate 1
 INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy, supersedes_run_id)
@@ -58,6 +60,12 @@ INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
   VALUES ('delta-cal-1', 'delta', 'calibrate', TIMESTAMP '2026-02-15 08:00:00');
 INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
   VALUES ('delta-uncal-1', 'delta', 'uncalibrate', TIMESTAMP '2026-04-14 09:00:00');
+
+-- omega: same-timestamp calibration pair; event_id order decides the survivor
+INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
+  VALUES ('omega-cal-a', 'omega', 'uncalibrate', TIMESTAMP '2026-04-12 08:00:00');
+INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
+  VALUES ('omega-cal-z', 'omega', 'calibrate', TIMESTAMP '2026-04-12 08:00:00');
 
 INSERT INTO release_context (context_id, decision_at)
   VALUES ('current-release', TIMESTAMP '2026-04-15 12:00:00');

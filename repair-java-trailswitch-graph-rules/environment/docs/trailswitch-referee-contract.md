@@ -10,7 +10,7 @@ it from source and SQL only — do not rely on manual playthroughs.
   `edge_relay_transitions` define the railway graph, relay state, and lock semantics.
   Authoritative rows live in `/app/sql/schema.sql` and `/app/sql/seed.sql`.
 - An edge is available only when its non-NULL `requires_sw1` and `requires_sw2`
-  positions match the request and it is not locked under the current relay snapshot.
+  positions match the request and it is not locked under the current search context.
 
 ## Relay semantics
 
@@ -18,28 +18,33 @@ it from source and SQL only — do not rely on manual playthroughs.
 - `edge_relay_transitions` defines ordered relay changes that fire only after an
   authorized edge traversal. Apply transitions only once the edge is active and
   unlocked; copy the relay snapshot before applying changes for that edge.
-- A route rule may optionally require a relay id and state via `match_relay_id` and
-  `match_relay_state`. NULL switch columns remain wildcards.
+- A transition may list `requires_relay_id` and `requires_relay_state`; it fires only
+  when that predicate matches the snapshot being updated.
+- Increment a per-relay transition counter whenever a transition actually fires.
 
 ## Route and lock semantics
 
 - Evaluate route rules in ascending `rule_priority`, breaking ties by ascending
   `rule_id`.
 - A route rule matches when all of its non-NULL `lock_sw1` and `lock_sw2` values
-  equal the requested positions and any relay predicate matches the current relay
-  snapshot. NULL switch columns are wildcards; when both switch values are non-NULL,
-  both must match.
+  equal the requested positions, any relay predicate matches the current relay
+  snapshot, any `requires_visited_station` appears in the path visited so far,
+  and any `count_relay_id` / `min_transition_count` threshold is met. NULL switch
+  columns are wildcards; when both switch values are non-NULL, both must match.
 - The first matching rule for an edge decides that edge: `lock` locks it and
   `clear` leaves it unlocked. Ignore every later matching rule for the same edge.
 - Finish route-rule evaluation before lock-group relay. A group with any locked
   member locks all of its members; repeat this across overlapping groups until no
   additional edge becomes locked.
+- A lock group may arm only when optional `arm_relay_id` / `arm_relay_state` match
+  the current relay snapshot; disarmed groups do not participate in relay.
 - Recompute route decisions and lock-group closure independently for every search
-  state `(station, relay snapshot)`.
+  state, including relay snapshot, transition counters, and visited stations.
 
 ## Path planning
 
-- Search over `(station, relay snapshot)` pairs, not stations alone.
+- Search over `(station, relay snapshot, transition counters, visited stations)`,
+  not stations alone.
 - Prefer the shortest authorized path by edge count; break ties by ascending
   `edge_id` on the first differing edge.
 - Returned paths list every station visit, including repeats when a release circuit

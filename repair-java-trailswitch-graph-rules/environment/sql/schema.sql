@@ -14,7 +14,7 @@ CREATE TABLE edges (
 
 CREATE TABLE relay_latches (
     relay_id TEXT PRIMARY KEY,
-    relay_state TEXT NOT NULL CHECK (relay_state IN ('held', 'released'))
+    relay_state TEXT NOT NULL CHECK (relay_state IN ('held', 'released', 'sealed', 'open'))
 );
 
 CREATE TABLE edge_relay_transitions (
@@ -23,9 +23,15 @@ CREATE TABLE edge_relay_transitions (
     relay_id TEXT NOT NULL REFERENCES relay_latches(relay_id),
     from_state TEXT NOT NULL,
     to_state TEXT NOT NULL,
+    requires_relay_id TEXT REFERENCES relay_latches(relay_id),
+    requires_relay_state TEXT,
     PRIMARY KEY (edge_id, transition_order, relay_id),
-    CHECK (from_state IN ('held', 'released')),
-    CHECK (to_state IN ('held', 'released'))
+    CHECK (from_state IN ('held', 'released', 'sealed', 'open')),
+    CHECK (to_state IN ('held', 'released', 'sealed', 'open')),
+    CONSTRAINT edge_relay_requires_pair CHECK (
+        (requires_relay_id IS NULL AND requires_relay_state IS NULL)
+        OR (requires_relay_id IS NOT NULL AND requires_relay_state IS NOT NULL)
+    )
 );
 
 CREATE TABLE route_rules (
@@ -37,16 +43,29 @@ CREATE TABLE route_rules (
     rule_action TEXT NOT NULL DEFAULT 'lock',
     match_relay_id TEXT REFERENCES relay_latches(relay_id),
     match_relay_state TEXT,
+    count_relay_id TEXT REFERENCES relay_latches(relay_id),
+    min_transition_count INTEGER,
+    requires_visited_station TEXT REFERENCES stations(station_id),
     CONSTRAINT route_rule_relay_pair CHECK (
         (match_relay_id IS NULL AND match_relay_state IS NULL)
         OR (match_relay_id IS NOT NULL AND match_relay_state IS NOT NULL)
+    ),
+    CONSTRAINT route_rule_count_pair CHECK (
+        (count_relay_id IS NULL AND min_transition_count IS NULL)
+        OR (count_relay_id IS NOT NULL AND min_transition_count IS NOT NULL)
     )
 );
 
 CREATE TABLE lock_groups (
     group_id TEXT NOT NULL,
     edge_id TEXT NOT NULL REFERENCES edges(edge_id),
-    PRIMARY KEY (group_id, edge_id)
+    arm_relay_id TEXT REFERENCES relay_latches(relay_id),
+    arm_relay_state TEXT,
+    PRIMARY KEY (group_id, edge_id),
+    CONSTRAINT lock_group_arm_pair CHECK (
+        (arm_relay_id IS NULL AND arm_relay_state IS NULL)
+        OR (arm_relay_id IS NOT NULL AND arm_relay_state IS NOT NULL)
+    )
 );
 
 GRANT SELECT ON stations, edges, relay_latches, edge_relay_transitions, route_rules, lock_groups TO trailswitch;

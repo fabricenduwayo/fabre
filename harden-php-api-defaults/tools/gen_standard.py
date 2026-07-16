@@ -364,8 +364,8 @@ AMENDMENTS_REAL = [
      "Cross-origin grant and preflight hint headers apply only to the current "
      "request. When a request carries no `Origin` header, the response shall "
      "include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, "
-     "even if an earlier request in the same long-lived process carried an "
-     "allowed origin."),
+     "including `Vary: Origin`, even if an earlier request in the same "
+     "long-lived process carried an allowed origin."),
     ("G-2026-15", "AC-BOOTSTRAP",
      "Bootstrap secret validation shall compare the presented "
      "`X-Bootstrap-Secret` header to the on-disk secret using a "
@@ -419,7 +419,16 @@ AMENDMENTS_REAL = [
      "be represented only by a 64-character lowercase SHA-256 digest and the file "
      "must remain mode `0600`. A malformed envelope retains G-2026-19's split "
      "behavior: it blocks bootstrap at an unadvanced generation and verifies no "
-     "health credential."),
+     "health credential. The envelope itself must be stored solely in "
+     "`/app/harbordesk/data/admin_token`; auxiliary credential-state files are "
+     "non-compliant."),
+    ("G-2026-23", "AC-TOKEN-STORE",
+     "All mutable credential and cutover state—current and predecessor digests, "
+     "generation binding, and predecessor-overlap counters—shall be persisted "
+     "only in `/app/harbordesk/data/admin_token`. Sidecar state files such as "
+     "`admin_token.state` or `token_state.json` are non-compliant. "
+     "`/app/harbordesk/data/admin_token.lock` is permitted for concurrency "
+     "coordination only and is not credential state."),
 ]
 
 AMENDMENTS_FILLER = [

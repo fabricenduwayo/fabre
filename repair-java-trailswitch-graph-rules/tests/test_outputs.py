@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from helpers import REPO_JAVA, ensure_service, plan, set_relay_state
+from helpers import REPO_JAVA, ensure_service, plan, reset_relays, set_relay_state
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -14,11 +14,11 @@ def service_ready():
 
 
 @pytest.fixture(autouse=True)
-def reset_yard_release():
-    """Reset the approach-release relay before and after each test."""
-    set_relay_state("held")
+def reset_relay_latches():
+    """Reset relay latches before and after each test."""
+    reset_relays()
     yield
-    set_relay_state("held")
+    reset_relays()
 
 
 def test_health_endpoint():
@@ -54,7 +54,7 @@ def test_release_cycle_opens_relayed_yard_route():
 
 def test_database_relay_snapshot_changes_authorization():
     """A released database snapshot permits the yard route without the circuit."""
-    set_relay_state("released")
+    set_relay_state("yard_release", "released")
     result = plan("A", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["A", "C", "B", "D", "E"]
@@ -95,12 +95,27 @@ def test_initial_closure_blocks_inside_yard():
     assert result["path"] == []
 
 
-def test_lock_group_relay_clears_when_spur_opens():
-    """South/north can depart staging toward arrival when relayed locks clear."""
-    set_relay_state("released")
+def test_premature_yard_exit_blocked_without_circuit():
+    """Released latch alone cannot open staging departure without a qualifying visit."""
+    set_relay_state("yard_release", "released")
     result = plan("D", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is False
+    assert result["path"] == []
+
+
+def test_lock_group_relay_clears_when_spur_opens():
+    """South/north can depart staging toward arrival after a qualifying yard visit."""
+    set_relay_state("yard_release", "released")
+    result = plan("B", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
-    assert result["path"] == ["D", "E"]
+    assert result["path"] == ["B", "D", "E"]
+
+
+def test_yard_spur_requires_release_circuit_from_north_yard():
+    """North yard cannot reach arrival without the scenic circuit while the yard relay is held."""
+    result = plan("B", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is False
+    assert result["path"] == []
 
 
 def test_spur_hold_relay_blocks_staging_departure():
@@ -112,7 +127,7 @@ def test_spur_hold_relay_blocks_staging_departure():
 
 def test_scenic_spur_relay_open_after_clearance():
     """South/north can run B to E through staging after relayed locks clear."""
-    set_relay_state("released")
+    set_relay_state("yard_release", "released")
     result = plan("B", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["B", "D", "E"]
@@ -123,10 +138,25 @@ def test_overlapping_lock_groups_relay_to_recirc():
     blocked = plan("E", "C", {"sw1": "south", "sw2": "south"})
     assert blocked["reachable"] is False
     assert blocked["path"] == []
-    set_relay_state("released")
+    set_relay_state("yard_release", "released")
     open_line = plan("E", "C", {"sw1": "south", "sw2": "north"})
     assert open_line["reachable"] is True
     assert open_line["path"] == ["E", "C"]
+
+
+def test_armed_recirc_group_inactive_when_relay_released():
+    """Recirc lock groups disarm once the yard release relay is posted."""
+    set_relay_state("yard_release", "released")
+    result = plan("E", "C", {"sw1": "south", "sw2": "south"})
+    assert result["reachable"] is True
+    assert result["path"] == ["E", "C"]
+
+
+def test_conditional_spur_transition_requires_posted_release():
+    """The spur seal opens only after the yard release relay is posted on entry."""
+    result = plan("A", "D", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["A", "C", "F", "C", "B", "D"]
 
 
 def test_lock_positions_require_conjunction():

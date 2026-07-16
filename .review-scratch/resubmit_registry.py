@@ -119,7 +119,7 @@ def main() -> None:
         "task.toml",
         "environment/Dockerfile",
         "environment/experiment-db/experiments.mv.db",
-        "environment/h2-2.2.224.jar",
+        "environment/lib/h2-2.2.224.jar",
         "environment/model-registry/target/model-registry-0.1.0.jar",
         "environment/reconcile-model-release/build.sh",
         "environment/reconcile-model-release/src/com/snorkel/registry/Main.java",

@@ -5,4 +5,6 @@ public record RelayTransition(
         int transitionOrder,
         String relayId,
         String fromState,
-        String toState) {}
+        String toState,
+        String requiresRelayId,
+        String requiresRelayState) {}

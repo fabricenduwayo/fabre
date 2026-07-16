@@ -2703,12 +2703,17 @@ The incident-response on-call rotation contact list is revised. This amendment d
 
 ### G-2026-13 — amends CO-ORIGIN-ALLOW
 
-Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, even if an earlier request in the same long-lived process carried an allowed origin.
+Cross-origin grant and preflight hint headers apply only to the current request. When a request carries no `Origin` header, the response shall include none of the headers defined by CO-ORIGIN-ALLOW or CO-PREFLIGHT, including `Vary: Origin`, even if an earlier request in the same long-lived process carried an allowed origin.
 
 
 ### G-2026-21 — amends AC-CREDENTIAL-CUTOVER
 
-The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted predecessor health requests per cutover**, shared across all workers. The third and later presentation of that predecessor is denied as `invalid_token`. A successful initial bootstrap or cutover returns `201` with the existing `token` JSON shape. When a token state already exists and the published generation has not advanced, AC-BOOTSTRAP keeps the amended `409` / `already_bootstrapped` outcome before secret validation. Once the generation advances, secret validation is required and a successful request performs the cutover. This amendment supersedes G-2026-12 and G-2026-19 only as to the physical shape recognized as valid: `/app/harbordesk/data/admin_token` may be an implementation-defined state envelope rather than a bare digest, but every credential in it must still be represented only by a 64-character lowercase SHA-256 digest and the file must remain mode `0600`. A malformed envelope retains G-2026-19's split behavior: it blocks bootstrap at an unadvanced generation and verifies no health credential.
+The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted predecessor health requests per cutover**, shared across all workers. The third and later presentation of that predecessor is denied as `invalid_token`. A successful initial bootstrap or cutover returns `201` with the existing `token` JSON shape. When a token state already exists and the published generation has not advanced, AC-BOOTSTRAP keeps the amended `409` / `already_bootstrapped` outcome before secret validation. Once the generation advances, secret validation is required and a successful request performs the cutover. This amendment supersedes G-2026-12 and G-2026-19 only as to the physical shape recognized as valid: `/app/harbordesk/data/admin_token` may be an implementation-defined state envelope rather than a bare digest, but every credential in it must still be represented only by a 64-character lowercase SHA-256 digest and the file must remain mode `0600`. A malformed envelope retains G-2026-19's split behavior: it blocks bootstrap at an unadvanced generation and verifies no health credential. The envelope itself must be stored solely in `/app/harbordesk/data/admin_token`; auxiliary credential-state files are non-compliant.
+
+
+### G-2026-23 — amends AC-TOKEN-STORE
+
+All mutable credential and cutover state—current and predecessor digests, generation binding, and predecessor-overlap counters—shall be persisted only in `/app/harbordesk/data/admin_token`. Sidecar state files such as `admin_token.state` or `token_state.json` are non-compliant. `/app/harbordesk/data/admin_token.lock` is permitted for concurrency coordination only and is not credential state.
 
 
 ### G-2026-19 — amends AC-BOOTSTRAP

@@ -81,6 +81,9 @@ def test_promoted_model_is_policy_safe(manifest, registry_by_id, evidence, expec
     assert promoted == expected["promoted"], (
         f"promoted {promoted!r}; the policy makes {expected['promoted']!r} the safe choice"
     )
+    assert promoted != "alpha", (
+        "alpha must not win when the voided 0.87 validation run is treated as operative"
+    )
     if promoted is not None:
         failures = evaluate_candidate(registry_by_id[promoted], evidence)
         assert failures == [], (
@@ -160,17 +163,28 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
 
 
 def test_gate1_uses_latest_completed_validation_run(evidence, expected):
-    """A-2026-04/05: Gate 1 ignores non-completed rows and voided completed rows."""
+    """A-2026-04/05/08: Gate 1 ignores non-completed rows and transitive voids."""
     alpha_auc = evidence["metrics"]["alpha"][0]
-    assert alpha_auc == 0.75, (
-        "alpha must use the latest non-voided completed validation run, not the "
-        "voided 0.87 row or a later superseded row"
+    assert alpha_auc == 0.83, (
+        "alpha must use the surviving completed run after transitive voiding, not the "
+        "voided 0.87 row or the recursively voided 0.75 row"
     )
     beta_auc = evidence["metrics"]["beta"][0]
     assert beta_auc == 0.74, (
         "beta must use the latest completed run even when an older completed run passed"
     )
     assert expected["promoted"] == "omega"
+
+
+def test_gate1_transitive_void_preserves_later_survivor(evidence, expected):
+    """A-2026-08: voiding a superseding run also voids runs it superseded."""
+    assert evidence["metrics"]["alpha"] == (0.83, 0.78), (
+        "alpha operative metrics must come from alpha-run-3 after alpha-run-2 and "
+        "alpha-run-1 are voided transitively"
+    )
+    assert expected["promoted"] == "omega", (
+        "promoting alpha would mean the voided high-water 0.87 run was used instead"
+    )
 
 
 def test_calibration_events_override_stale_snapshot(manifest, evidence, expected):
@@ -187,17 +201,26 @@ def test_calibration_events_override_stale_snapshot(manifest, evidence, expected
 
 
 def test_gate1_voids_superseded_completed_run(evidence, expected):
-    """A-2026-05: a superseding row voids its target run before operative selection."""
-    assert evidence["metrics"]["alpha"] == (0.75, 0.70), (
-        "alpha operative metrics must fall back after alpha-run-2 is voided"
+    """A-2026-05/08: supersession voiding falls back to the next surviving completed run."""
+    assert evidence["metrics"]["alpha"] == (0.83, 0.78), (
+        "alpha operative metrics must come from alpha-run-3 after void propagation"
     )
     assert expected["promoted"] == "omega", (
-        "with alpha failing Gate 1, omega is the sole qualifier once delta is uncalibrated"
+        "with alpha losing the tie-break, omega is the sole qualifier once delta is uncalibrated"
     )
+
+
+def test_omega_same_timestamp_calibration_replay(evidence, expected):
+    """A-2026-09: same-timestamp calibration events tie-break by event_id order."""
+    assert evidence["calibrated"]["omega"] is True, (
+        "omega must stay calibrated when omega-cal-a then omega-cal-z replay at the "
+        "same occurred_at"
+    )
+    assert expected["promoted"] == "omega"
 
 
 def test_shipped_waiver_lifecycle(manifest, evidence, expected):
-    """A-2026-06 applies only delta's latest valid replacement grant."""
+    """A-2026-06/10: only grants before the operative run may suppress failures."""
     active_ids = {waiver["waiver_id"] for waiver in evidence["active_waivers"]}
     assert "delta-lineage-new" in active_ids
     assert "delta-lineage-alt" in active_ids
@@ -211,16 +234,16 @@ def test_shipped_waiver_lifecycle(manifest, evidence, expected):
     assert "alpha-metric-future" not in active_ids, (
         "events after release_context.decision_at must not count"
     )
-    expected_applied = {
-        ("delta-lineage-new", "delta", "1.0.3", "lineage_mismatch")
-    }
-    assert expected["applied_waivers"] == expected_applied
+    assert expected["applied_waivers"] == set(), (
+        "delta's lineage grants occur after its operative validation run and must not "
+        "appear in applied_waivers"
+    )
     reported = {
         (row["waiver_id"], row["model"], row["model_version"], row["reason"])
         for row in manifest["applied_waivers"]
     }
-    assert reported == expected_applied, (
-        "only the latest grant that actually suppresses delta's raw failure is reportable"
+    assert reported == set(), (
+        "waivers granted on or after the operative run captured_at must not be reported"
     )
 
 
