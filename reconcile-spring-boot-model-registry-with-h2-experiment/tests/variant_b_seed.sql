@@ -48,6 +48,11 @@ INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('delta', T
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('omega', TRUE,  'platt');
 INSERT INTO calibration_status (model_id, calibrated, method) VALUES ('zeta',  TRUE,  'isotonic');
 
+INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
+  VALUES ('delta-cal-1', 'delta', 'calibrate', TIMESTAMP '2026-02-15 08:00:00');
+INSERT INTO calibration_events (event_id, model_id, event_type, occurred_at)
+  VALUES ('delta-uncal-1', 'delta', 'uncalibrate', TIMESTAMP '2026-04-14 09:00:00');
+
 INSERT INTO release_context VALUES
   ('current-release', TIMESTAMP '2026-04-15 12:00:00');
 INSERT INTO promotion_waivers VALUES

@@ -64,3 +64,12 @@ tie by lexicographically greatest waiver id. Add each selected, suppressing
 grant to `applied_waivers` with `waiver_id`, `model`, `model_version`, and
 `reason`; do not report inactive, malformed, expired, future, or irrelevant
 waivers.
+
+## A-2026-07 — amends Gate 2 calibration source
+
+The `calibration_status` table is a dashboard snapshot only. Gate 2 replays
+`calibration_events` per model id through `release_context.decision_at`: start
+from the snapshot flag, apply every event with `occurred_at` at or before
+decision time in ascending `occurred_at` order (tie-break by lexicographic
+`event_id`), and let each `calibrate` or `uncalibrate` event overwrite the
+effective flag. When no events exist for a model, the snapshot stands.

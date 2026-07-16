@@ -317,10 +317,43 @@ public final class Reconciler {
                     row.get("feature_hash"));
         }
         Map<String, Boolean> calibrated = new HashMap<>();
+        List<Map<String, String>> contexts =
+                h2Select("SELECT context_id, decision_at FROM release_context", dbUrl);
+        if (contexts.size() != 1) {
+            throw new IllegalStateException("release_context must contain exactly one decision");
+        }
+        Instant decisionAt = parseTimestamp(contexts.get(0).get("decision_at"));
+        Map<String, Boolean> snapshot = new HashMap<>();
         for (Map<String, String> row :
                 h2Select("SELECT model_id, calibrated FROM calibration_status", dbUrl)) {
             String flag = row.get("calibrated").strip().toUpperCase();
-            calibrated.put(row.get("model_id"), flag.equals("TRUE") || flag.equals("1") || flag.equals("T"));
+            snapshot.put(
+                    row.get("model_id"),
+                    flag.equals("TRUE") || flag.equals("1") || flag.equals("T"));
+        }
+        Map<String, List<Map<String, String>>> eventsByModel = new HashMap<>();
+        for (Map<String, String> row :
+                h2Select(
+                        "SELECT event_id, model_id, event_type, occurred_at FROM calibration_events",
+                        dbUrl)) {
+            if (parseTimestamp(row.get("occurred_at")).isAfter(decisionAt)) {
+                continue;
+            }
+            eventsByModel.computeIfAbsent(row.get("model_id"), ignored -> new ArrayList<>())
+                    .add(row);
+        }
+        for (Map.Entry<String, Boolean> entry : snapshot.entrySet()) {
+            boolean effective = entry.getValue();
+            List<Map<String, String>> events =
+                    new ArrayList<>(eventsByModel.getOrDefault(entry.getKey(), List.of()));
+            events.sort(
+                    Comparator.comparing((Map<String, String> row) ->
+                                    parseTimestamp(row.get("occurred_at")))
+                            .thenComparing(row -> row.get("event_id")));
+            for (Map<String, String> event : events) {
+                effective = "calibrate".equals(event.get("event_type"));
+            }
+            calibrated.put(entry.getKey(), effective);
         }
         return new Evidence(metrics, lineage, calibrated, activeWaivers(dbUrl));
     }

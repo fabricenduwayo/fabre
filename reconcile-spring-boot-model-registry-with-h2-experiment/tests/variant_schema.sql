@@ -34,6 +34,16 @@ CREATE TABLE calibration_status (
   CONSTRAINT fk_cs_model FOREIGN KEY (model_id) REFERENCES models(id)
 );
 
+CREATE TABLE calibration_events (
+  event_id     VARCHAR(64) NOT NULL,
+  model_id     VARCHAR(64) NOT NULL,
+  event_type   VARCHAR(16) NOT NULL,
+  occurred_at  TIMESTAMP   NOT NULL,
+  PRIMARY KEY (event_id),
+  CONSTRAINT fk_ce_model FOREIGN KEY (model_id) REFERENCES models(id),
+  CONSTRAINT ck_ce_type CHECK (event_type IN ('calibrate', 'uncalibrate'))
+);
+
 CREATE TABLE release_context (
   context_id   VARCHAR(32) PRIMARY KEY,
   decision_at  TIMESTAMP   NOT NULL

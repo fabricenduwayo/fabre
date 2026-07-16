@@ -280,6 +280,38 @@ def active_waivers(db_url: str) -> list[dict]:
     return result
 
 
+def effective_calibration(db_url: str) -> dict[str, bool]:
+    """Replay A-2026-07 calibration_events through release_context.decision_at."""
+    contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
+    assert len(contexts) == 1, "release_context must contain exactly one decision"
+    decision_at = parse_timestamp(contexts[0]["decision_at"])
+
+    snapshot = {
+        row["model_id"]: row["calibrated"].strip().upper() in ("TRUE", "1", "T")
+        for row in h2_select("SELECT model_id, calibrated FROM calibration_status", db_url)
+    }
+    events_by_model: dict[str, list[dict[str, str]]] = {}
+    for row in h2_select(
+        "SELECT event_id, model_id, event_type, occurred_at FROM calibration_events",
+        db_url,
+    ):
+        if parse_timestamp(row["occurred_at"]) > decision_at:
+            continue
+        events_by_model.setdefault(row["model_id"], []).append(row)
+
+    calibrated: dict[str, bool] = {}
+    for model_id, flag in snapshot.items():
+        effective = flag
+        ordered = sorted(
+            events_by_model.get(model_id, []),
+            key=lambda row: (parse_timestamp(row["occurred_at"]), row["event_id"]),
+        )
+        for event in ordered:
+            effective = event["event_type"] == "calibrate"
+        calibrated[model_id] = effective
+    return calibrated
+
+
 def load_evidence(db_url: str) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
     metrics = operative_metrics(db_url)
@@ -289,10 +321,7 @@ def load_evidence(db_url: str) -> dict:
             "SELECT model_id, model_version, feature_hash FROM feature_hash_lineage", db_url
         )
     }
-    calibrated = {
-        row["model_id"]: row["calibrated"].strip().upper() in ("TRUE", "1", "T")
-        for row in h2_select("SELECT model_id, calibrated FROM calibration_status", db_url)
-    }
+    calibrated = effective_calibration(db_url)
     assert metrics, f"no validation_metrics rows returned from {db_url}"
     return {
         "metrics": metrics,

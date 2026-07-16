@@ -1,6 +1,6 @@
 DIFFICULTY
 
-Agents must reconcile a long amended hardening standard against live PHP, SQLite, and multi-worker credential state. The instruction now names the amended CORS, bootstrap, health, token, cutover, and ledger outcomes without a step-by-step walkthrough, but agents still have to derive full behavior from Appendix G and wire in-place ledger migration, NULL-origin legacy rows, shadow-table isolation, request-scoped grants, and atomic predecessor overlap.
+Agents must reconcile a long amended hardening standard against live PHP, SQLite, and multi-worker credential state. The instruction names the amended CORS, bootstrap, health, token, cutover, and ledger outcomes agents must implement, but full behavior still comes from Appendix G plus in-place ledger migration with SQL NULL legacy origins, shadow-table isolation, per-request disk reads, and atomic predecessor overlap.
 
 SOLUTION
 
@@ -8,4 +8,4 @@ The oracle replaces the stale PHP configuration, HTTP helpers, ledger writer, fr
 
 VERIFICATION
 
-Pytest drives the real HTTP service. Focused tests cover amended CORS and disclosure behavior, live secret and generation inputs, nonrecoverable token state, legacy ledger migration with NULL origins and shadow-table isolation, cutover ordering, two-use predecessor overlap, non-consuming requests, later cutover replacement, corrupt state, and ten concurrent predecessor calls. Forty-five seeded randomized multi-generation lifecycles compare every response and resulting audit row with a hidden state-machine reference. The oracle must receive reward 1.0; no-op must fail.
+Pytest drives the real HTTP service. Focused tests cover amended CORS and disclosure behavior, live secret and generation inputs, nonrecoverable token state, legacy ledger migration with NULL origins and shadow-table isolation, bootstrap ordering and secret normalization, per-request disk reads, malformed token envelopes, cutover ordering, two-use predecessor overlap, non-consuming requests, later cutover replacement, corrupt state, and ten concurrent predecessor calls. Forty-five seeded randomized multi-generation lifecycles compare every response and resulting audit row with a hidden state-machine reference. The oracle must receive reward 1.0; no-op must fail.

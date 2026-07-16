@@ -149,10 +149,10 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
     h2_auc = evidence["metrics"]["beta"][0]
     assert registry_auc >= 0.94, "registry feed should overstate beta for this trap"
     assert h2_auc < AUC_FLOOR, "H2 canonical beta AUC should fail the metric floor"
-    assert expected["promoted"] == "delta", (
-        "delta's governed lineage waiver should make it the canonical-AUC winner"
+    assert expected["promoted"] == "omega", (
+        "omega wins once delta's replayed calibration voids its qualification"
     )
-    assert manifest["promoted"] == "delta", (
+    assert manifest["promoted"] == "omega", (
         "promoted model must follow H2 metrics, not registry-reported values"
     )
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
@@ -170,7 +170,20 @@ def test_gate1_uses_latest_completed_validation_run(evidence, expected):
     assert beta_auc == 0.74, (
         "beta must use the latest completed run even when an older completed run passed"
     )
-    assert expected["promoted"] == "delta"
+    assert expected["promoted"] == "omega"
+
+
+def test_calibration_events_override_stale_snapshot(manifest, evidence, expected):
+    """A-2026-07: delta's calibration_status snapshot is stale after event replay."""
+    assert evidence["calibrated"]["delta"] is False, (
+        "delta must be uncalibrated after replaying calibration_events"
+    )
+    assert expected["promoted"] == "omega"
+    assert manifest["promoted"] == "omega"
+    rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
+    assert REASON_UNCALIBRATED in rejected["delta"], (
+        "delta must be rejected as uncalibrated despite the stale snapshot row"
+    )
 
 
 def test_gate1_voids_superseded_completed_run(evidence, expected):
@@ -178,8 +191,8 @@ def test_gate1_voids_superseded_completed_run(evidence, expected):
     assert evidence["metrics"]["alpha"] == (0.75, 0.70), (
         "alpha operative metrics must fall back after alpha-run-2 is voided"
     )
-    assert expected["promoted"] == "delta", (
-        "with alpha failing Gate 1, delta's valid waiver makes it the safe winner"
+    assert expected["promoted"] == "omega", (
+        "with alpha failing Gate 1, omega is the sole qualifier once delta is uncalibrated"
     )
 
 
