@@ -143,7 +143,7 @@ def test_conflicts_use_h2_as_canonical_source(manifest):
 def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
     manifest, registry_by_id, evidence, expected
 ):
-    """A-2026-01: beta's registry AUC overstates H2, so body-only Gate 1 must not win."""
+    """Gate 1 must use operative H2 validation runs, not registry-reported metrics."""
     beta = registry_by_id["beta"]
     registry_auc = float(beta["metrics"]["auc"])
     h2_auc = evidence["metrics"]["beta"][0]
@@ -155,6 +155,32 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
     )
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
     assert REASON_METRIC in rejected["beta"]
+
+
+def test_gate1_uses_latest_completed_validation_run(evidence, expected):
+    """A-2026-04: Gate 1 ignores stale completed rows and later non-completed runs."""
+    alpha_auc = evidence["metrics"]["alpha"][0]
+    assert alpha_auc == 0.87, (
+        "alpha must use the latest completed validation run, not an older failing row "
+        "or a later failed run"
+    )
+    beta_auc = evidence["metrics"]["beta"][0]
+    assert beta_auc == 0.74, (
+        "beta must use the latest completed run even when an older completed run passed"
+    )
+    assert expected["promoted"] == "alpha"
+
+
+def test_manifest_only_registry_candidates(manifest, registry_by_id):
+    """Only registry candidates may appear in promoted, rejected, or conflicts."""
+    registry_ids = set(registry_by_id)
+    if manifest["promoted"] is not None:
+        assert manifest["promoted"] in registry_ids
+    for entry in manifest["rejected"]:
+        assert entry["model"] in registry_ids
+    for conflict in manifest["conflicts"]:
+        assert conflict["model"] in registry_ids
+    assert "zeta" not in registry_ids, "zeta is H2-only bait and must stay out of the manifest"
 
 
 def test_script_regenerates_manifest_from_live_evidence(manifest, registry, expected):

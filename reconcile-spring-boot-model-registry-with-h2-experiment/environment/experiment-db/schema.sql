@@ -7,11 +7,15 @@ CREATE TABLE models (
   version  VARCHAR(32)  NOT NULL
 );
 
-CREATE TABLE validation_metrics (
-  model_id  VARCHAR(64) PRIMARY KEY,
-  auc       DOUBLE      NOT NULL,
-  accuracy  DOUBLE      NOT NULL,
-  CONSTRAINT fk_vm_model FOREIGN KEY (model_id) REFERENCES models(id)
+CREATE TABLE validation_runs (
+  run_id       VARCHAR(64)  NOT NULL,
+  model_id     VARCHAR(64)  NOT NULL,
+  captured_at  TIMESTAMP    NOT NULL,
+  status       VARCHAR(32)  NOT NULL,
+  auc          DOUBLE       NOT NULL,
+  accuracy     DOUBLE       NOT NULL,
+  PRIMARY KEY (run_id),
+  CONSTRAINT fk_vr_model FOREIGN KEY (model_id) REFERENCES models(id)
 );
 
 CREATE TABLE feature_hash_lineage (

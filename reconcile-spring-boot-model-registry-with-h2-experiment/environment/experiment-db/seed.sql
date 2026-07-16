@@ -1,7 +1,5 @@
 -- Canonical validation evidence for the churn-model registry.
--- These rows are the authoritative source of truth for promotion review.
--- Note: the experiment store tracks every model the lab has evaluated,
--- including retired ones; the registry API decides what is a candidate.
+-- Multiple validation_runs per model; amendments define which run is operative.
 
 INSERT INTO models (id, name, version) VALUES ('alpha', 'churn-model-alpha', '1.2.0');
 INSERT INTO models (id, name, version) VALUES ('beta',  'churn-model-beta',  '0.9.1');
@@ -10,14 +8,29 @@ INSERT INTO models (id, name, version) VALUES ('delta', 'churn-model-delta', '1.
 INSERT INTO models (id, name, version) VALUES ('omega', 'churn-model-omega', '1.4.2');
 INSERT INTO models (id, name, version) VALUES ('zeta',  'churn-model-zeta',  '0.3.1');
 
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('alpha', 0.87, 0.82);
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('beta',  0.74, 0.79);
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('gamma', 0.88, 0.81);
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('delta', 0.90, 0.85);
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('omega', 0.84, 0.80);
-INSERT INTO validation_metrics (model_id, auc, accuracy) VALUES ('zeta',  0.95, 0.90);
+-- alpha: older completed run fails; a newer failed run must not override; latest completed passes
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('alpha-run-1', 'alpha', TIMESTAMP '2026-01-10 08:00:00', 'completed', 0.75, 0.70);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('alpha-run-fail', 'alpha', TIMESTAMP '2026-03-01 09:00:00', 'failed', 0.99, 0.99);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('alpha-run-2', 'alpha', TIMESTAMP '2026-03-20 10:00:00', 'completed', 0.87, 0.82);
 
--- Lineage is historical: one row per (model, version) that ever shipped.
+-- beta: an older passing completed run is stale; latest completed still fails Gate 1
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('beta-run-1', 'beta', TIMESTAMP '2026-01-05 08:00:00', 'completed', 0.88, 0.81);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('beta-run-2', 'beta', TIMESTAMP '2026-03-01 10:00:00', 'completed', 0.74, 0.79);
+
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('gamma-run-1', 'gamma', TIMESTAMP '2026-02-01 08:00:00', 'completed', 0.88, 0.81);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('delta-run-1', 'delta', TIMESTAMP '2026-02-01 08:00:00', 'completed', 0.90, 0.85);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('omega-run-1', 'omega', TIMESTAMP '2026-02-01 08:00:00', 'completed', 0.84, 0.80);
+INSERT INTO validation_runs (run_id, model_id, captured_at, status, auc, accuracy)
+  VALUES ('zeta-run-1', 'zeta', TIMESTAMP '2026-02-01 08:00:00', 'completed', 0.95, 0.90);
+
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('alpha', '1.1.0', 'fh_alpha_77d');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('alpha', '1.2.0', 'fh_alpha_9c1');
 INSERT INTO feature_hash_lineage (model_id, model_version, feature_hash) VALUES ('beta',  '0.9.0', 'fh_beta_310');

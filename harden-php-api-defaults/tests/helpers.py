@@ -57,6 +57,27 @@ def read_secret():
         return handle.read().strip()
 
 
+def shadow_audit_rows():
+    """Return rows from any shadow ledger table if present."""
+    conn = sqlite3.connect(AUDIT_DB)
+    conn.row_factory = sqlite3.Row
+    try:
+        tables = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='audit'"
+            )
+        }
+        if "audit" not in tables:
+            return []
+        cur = conn.execute(
+            "SELECT id, event, route, origin, decision, reason FROM audit ORDER BY id"
+        )
+        return [dict(row) for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+
 def seed_legacy_ledger():
     """(Re)write the audit ledger in the legacy schema-1 layout with history.
 
@@ -76,6 +97,15 @@ def seed_legacy_ledger():
             "INSERT INTO audit_log (ts, event, route, actor, decision, reason) "
             "VALUES (?, ?, ?, ?, ?, ?)",
             LEGACY_HISTORY,
+        )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS audit ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, "
+            "route TEXT NOT NULL, origin TEXT, decision TEXT NOT NULL, reason TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO audit (ts, event, route, origin, decision, reason) "
+            "VALUES ('2026-01-01T00:00:00+00:00', 'decoy', '/legacy', NULL, 'accepted', 'decoy_seed')"
         )
         conn.commit()
     finally:

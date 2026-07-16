@@ -22,8 +22,6 @@ function audit_log($config, $event, $route, $origin, $decision, $reason)
 {
     try {
         $db = audit_db($config);
-        // Wrong: a prior deploy created a shadow ledger table; inserts land here
-        // while audit_log keeps the legacy layout and stops growing.
         $db->exec('CREATE TABLE IF NOT EXISTS audit (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ts TEXT NOT NULL,

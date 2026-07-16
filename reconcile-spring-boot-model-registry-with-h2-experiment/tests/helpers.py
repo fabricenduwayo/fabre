@@ -159,11 +159,26 @@ def run_reconcile_script(args: list[str], timeout: float = 240.0) -> subprocess.
     )
 
 
+LATEST_COMPLETED_METRICS_SQL = """
+SELECT vr.model_id, vr.auc, vr.accuracy
+FROM validation_runs vr
+INNER JOIN (
+    SELECT model_id, MAX(captured_at) AS max_captured
+    FROM validation_runs
+    WHERE status = 'completed'
+    GROUP BY model_id
+) latest
+    ON vr.model_id = latest.model_id
+   AND vr.captured_at = latest.max_captured
+WHERE vr.status = 'completed'
+"""
+
+
 def load_evidence(db_url: str) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
     metrics = {
         row["model_id"]: (float(row["auc"]), float(row["accuracy"]))
-        for row in h2_select("SELECT model_id, auc, accuracy FROM validation_metrics", db_url)
+        for row in h2_select(LATEST_COMPLETED_METRICS_SQL, db_url)
     }
     lineage = {
         (row["model_id"], row["model_version"]): row["feature_hash"]

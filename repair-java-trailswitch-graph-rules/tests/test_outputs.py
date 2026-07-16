@@ -30,7 +30,7 @@ def test_plan_reaches_arrival_terminal():
 
 
 def test_clearance_rule_opens_scenic_spur():
-    """A matching clear rule must unlock the spur before the direct junction leg is gated."""
+    """South/north switches reach arrival via the scenic spur."""
     result = plan("A", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["A", "C", "B", "D", "E"]
@@ -38,52 +38,72 @@ def test_clearance_rule_opens_scenic_spur():
 
 
 def test_route_lock_blocks_staging_spur():
-    """A non-matching early rule must not stop a later wildcard lock from blocking north/north."""
+    """North/north switches cannot reach arrival when staging locks apply."""
     result = plan("A", "E", {"sw1": "north", "sw2": "north"})
     assert result["reachable"] is False
     assert result["path"] == []
 
 
 def test_platform_lock_blocks_staging_when_sw2_north():
-    """A NULL lock_sw1 rule must still lock when the listed sw2 position matches."""
+    """North/north cannot reach staging when a wildcard platform lock matches sw2."""
     result = plan("A", "D", {"sw1": "north", "sw2": "north"})
     assert result["reachable"] is False
     assert result["path"] == []
 
 
 def test_clearance_beats_later_platform_lock():
-    """A matching clear rule at lower priority must open the spur before the platform lock."""
+    """South/north can reach staging when clearance opens the spur."""
     result = plan("A", "D", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["A", "C", "B", "D"]
 
 
 def test_lock_group_relay_blocks_arrival_leg():
-    """A locked spur edge must relay the lock to its paired arrival leg in the yard group."""
+    """North/north cannot depart staging toward arrival when relay locks apply."""
     result = plan("D", "E", {"sw1": "north", "sw2": "north"})
     assert result["reachable"] is False
     assert result["path"] == []
 
 
 def test_lock_group_relay_clears_when_spur_opens():
-    """Clearance on the spur must keep the relayed arrival leg open for staging departures."""
+    """South/north can depart staging toward arrival when relayed locks clear."""
     result = plan("D", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["D", "E"]
 
 
 def test_spur_hold_relay_blocks_staging_departure():
-    """A spur hold lock must relay to block staging departures even when switches match the hold."""
+    """South/south cannot depart staging toward arrival under the spur hold lineup."""
     result = plan("D", "E", {"sw1": "south", "sw2": "south"})
     assert result["reachable"] is False
     assert result["path"] == []
 
 
 def test_scenic_spur_relay_open_after_clearance():
-    """Clearance on the yard spur must relay-open the paired arrival leg for B to E runs."""
+    """South/north can run B to E through staging after relayed locks clear."""
     result = plan("B", "E", {"sw1": "south", "sw2": "north"})
     assert result["reachable"] is True
     assert result["path"] == ["B", "D", "E"]
+
+
+def test_overlapping_lock_groups_relay_to_recirc():
+    """Shared group edges must relay to a fixed point before path planning."""
+    blocked = plan("E", "C", {"sw1": "north", "sw2": "north"})
+    assert blocked["reachable"] is False
+    assert blocked["path"] == []
+    open_line = plan("E", "C", {"sw1": "south", "sw2": "north"})
+    assert open_line["reachable"] is True
+    assert open_line["path"] == ["E", "C"]
+
+
+def test_lock_positions_require_conjunction():
+    """A route lock listing two switch positions requires both to match."""
+    open_line = plan("A", "B", {"sw1": "north", "sw2": "north"})
+    assert open_line["reachable"] is True
+    assert open_line["path"] == ["A", "B"]
+    blocked = plan("A", "B", {"sw1": "north", "sw2": "south"})
+    assert blocked["reachable"] is False
+    assert blocked["path"] == []
 
 
 def test_cycle_guard_finishes_quickly():
@@ -100,10 +120,3 @@ def test_sql_lookups_are_parameterized():
     source = REPO_JAVA.read_text(encoding="utf-8")
     assert "from_station = '" not in source
     assert "?" in source or "from_station = ?" in source
-
-
-def test_lock_positions_require_conjunction():
-    """A two-position lock must not fire when only one switch matches."""
-    result = plan("A", "E", {"sw1": "south", "sw2": "south"})
-    assert result["reachable"] is True
-    assert result["path"] == ["A", "C", "E"]

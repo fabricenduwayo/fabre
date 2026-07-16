@@ -22,8 +22,11 @@ INSERT INTO route_rules (rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, ru
     ('r_hold_d', 'e_b_d', 10, 'north', 'north', 'lock'),
     ('r_release_de', 'e_d_e', 6, 'south', 'north', 'clear'),
     ('r_platform_de', 'e_d_e', 9, NULL, 'north', 'lock'),
-    ('r_gate_ce', 'e_c_e', 15, 'south', 'north', 'lock');
+    ('r_gate_ce', 'e_c_e', 15, 'south', 'north', 'lock'),
+    ('r_conj_ab', 'e_a_b', 20, 'north', 'south', 'lock');
 
 INSERT INTO lock_groups (group_id, edge_id) VALUES
     ('yard_spur', 'e_b_d'),
-    ('yard_spur', 'e_d_e');
+    ('yard_spur', 'e_d_e'),
+    ('recirc_gate', 'e_d_e'),
+    ('recirc_gate', 'e_e_c');

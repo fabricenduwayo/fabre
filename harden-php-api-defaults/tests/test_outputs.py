@@ -28,6 +28,7 @@ from helpers import (
     replay_request,
     request,
     reset_state,
+    shadow_audit_rows,
     simulate,
 )
 
@@ -483,6 +484,75 @@ def test_empty_token_file_still_blocks_bootstrap():
     )
     assert status == 409, f"empty token file must block bootstrap, got {status}"
     assert not (body and "token" in body)
+
+
+def test_shadow_ledger_receives_no_new_writes():
+    """AU-LEDGER-SCOPE: shadow ledger tables must not absorb audited writes."""
+    reset_state()
+    secret = read_secret()
+    before = shadow_audit_rows()
+    assert before, "expected a seeded shadow ledger row in audit.db"
+
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    token = body["token"]
+
+    request("GET", "/health", {"Authorization": f"Bearer {token}", "Origin": ALLOWED})
+    after = shadow_audit_rows()
+    assert len(after) == len(before), "shadow ledger must not grow during audited requests"
+    assert [r for r in audit_rows() if r["reason"] != "legacy_history"], (
+        "audit_log must still receive new rows"
+    )
+
+
+def test_legacy_row_ids_preserved():
+    """AU-LEDGER-SCOPE: migration must preserve historical row ids."""
+    reset_state()
+    secret = read_secret()
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    history = [r for r in audit_rows() if r["reason"] == "legacy_history"]
+    assert {row["id"] for row in history} == {1, 2}
+
+
+def test_health_follows_rotated_on_disk_digest():
+    """G-2026-14: health must re-read the token digest after on-disk rotation."""
+    reset_state()
+    secret = read_secret()
+    status, _, _, body = request(
+        "POST",
+        "/admin/bootstrap",
+        {**JSON, "X-Bootstrap-Secret": secret},
+        "{}",
+    )
+    assert status == 201 and body and body.get("token")
+    old_token = body["token"]
+
+    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {old_token}"})
+    assert status == 200
+
+    import hashlib
+
+    new_token = "rotated-" + old_token[:8]
+    digest = hashlib.sha256(new_token.encode("utf-8")).hexdigest()
+    with open(TOKEN_FILE, "w", encoding="utf-8") as fh:
+        fh.write(digest + "\n")
+
+    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {old_token}"})
+    assert status == 401, "stale bearer must fail after digest rotation on disk"
+
+    status, _, _, _ = request("GET", "/health", {"Authorization": f"Bearer {new_token}"})
+    assert status == 200, "new bearer must succeed after digest rotation on disk"
 
 
 def test_ledger_migration_reapplies_after_reseed():

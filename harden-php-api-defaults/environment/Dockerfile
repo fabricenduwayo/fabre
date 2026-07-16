@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-15-r51
+# platform-revision: 2026-07-16-r52
 
 WORKDIR /app
 
@@ -30,4 +30,4 @@ RUN chmod +x /app/harbordesk/start.sh \
     && chmod 600 /app/harbordesk/data/bootstrap_secret \
     && rm -f /app/harbordesk/data/audit.db \
     && sqlite3 /app/harbordesk/data/audit.db \
-        "CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, actor TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:00:00+00:00', 'health', '/health', 'svc-legacy', 'accepted', 'legacy_history'); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:05:00+00:00', 'bootstrap', '/admin/bootstrap', 'svc-legacy', 'denied', 'legacy_history');"
+        "CREATE TABLE audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, actor TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:00:00+00:00', 'health', '/health', 'svc-legacy', 'accepted', 'legacy_history'); INSERT INTO audit_log (ts, event, route, actor, decision, reason) VALUES ('2026-01-02T08:05:00+00:00', 'bootstrap', '/admin/bootstrap', 'svc-legacy', 'denied', 'legacy_history'); CREATE TABLE audit (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, event TEXT NOT NULL, route TEXT NOT NULL, origin TEXT, decision TEXT NOT NULL, reason TEXT); INSERT INTO audit (ts, event, route, origin, decision, reason) VALUES ('2026-01-01T00:00:00+00:00', 'decoy', '/legacy', NULL, 'accepted', 'decoy_seed');"

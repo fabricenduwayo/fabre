@@ -41,8 +41,8 @@ function audit_db($config)
             decision TEXT NOT NULL,
             reason TEXT
         )');
-        $db->exec('INSERT INTO audit_log (ts, event, route, origin, decision, reason)
-                   SELECT ts, event, route, NULL, decision, reason FROM audit_log_legacy');
+        $db->exec('INSERT INTO audit_log (id, ts, event, route, origin, decision, reason)
+                   SELECT id, ts, event, route, NULL, decision, reason FROM audit_log_legacy');
         $db->exec('DROP TABLE audit_log_legacy');
     }
     return $db;
