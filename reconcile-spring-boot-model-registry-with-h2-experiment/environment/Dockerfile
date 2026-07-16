@@ -1,12 +1,12 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-16-r5
+# platform-revision: 2026-07-16-r6
 
 WORKDIR /app
 
-# JRE for the prebuilt registry jar and H2 tooling; Python drives reconciliation.
+# JDK for the registry jar, reconcile CLI, and H2 tooling; Python drives pytest only.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        openjdk-17-jre-headless \
+        openjdk-17-jdk-headless \
         curl \
         procps \
         tmux \
@@ -17,14 +17,13 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
 
-COPY reconcile-model-release/reconcile.py /app/reconcile-model-release/reconcile.py
-RUN chmod +x /app/reconcile-model-release/reconcile.py
+COPY lib/ /app/lib/
+COPY reconcile-model-release/ /app/reconcile-model-release/
+RUN chmod +x /app/reconcile-model-release/build.sh \
+    && bash /app/reconcile-model-release/build.sh
 
 RUN mkdir -p /app/model-registry/target
 COPY model-registry/target/model-registry-0.1.0.jar /app/model-registry/target/model-registry-0.1.0.jar
-
-RUN mkdir -p /app/lib
-COPY h2-2.2.224.jar /app/lib/h2-2.2.224.jar
 
 COPY policy/promotion-policy.md /app/policy/promotion-policy.md
 COPY policy/promotion-policy-amendments.md /app/policy/promotion-policy-amendments.md

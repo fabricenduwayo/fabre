@@ -1,8 +1,8 @@
-Difficulty Explanation
-Agents must repair a Spring Boot route referee where JDBC lookups, per-edge first-match route rules, clear-vs-lock precedence, and yard lock-group relay all interact. The broken repository leaks station ids into SQL, collapses lock groups, and sorts rules incorrectly, while the handler applies every matching rule instead of first-match-wins and the planner re-enqueues visited nodes on cyclic graphs.
+=== Difficulty ===
+Agents must harden a railway safety interlock where bound SQL lookups, per-edge first-match authorization, relay latch transitions, overlapping lock groups, and cyclic state-space routing interact. Authorization must be recomputed for every station-plus-relay snapshot, transitions apply only after an authorized edge crossing, and paths may revisit stations under new relay state.
 
-Solution Explanation
-Fix GraphPathRepository to parameterize station lookups, load full lock groups, and sort rules by ascending priority then rule id. In SwitchRuleHandler, stop at the first matching rule per edge, let a clear leave the edge unlocked, then relay locks across yard_spur. In PathPlanner, mark nodes visited when enqueued so cyclic planning terminates with cycle_guard true.
+=== Solution ===
+Parameterize untrusted station lookups, load relay snapshots and edge transitions from PostgreSQL, and sort rules by ascending priority then rule id. For each search state, evaluate first-match route rules and fixed-point lock relay before considering edges, then apply relay transitions after crossing an active unlocked edge. Search over station-plus-relay pairs so release circuits and repeated junction visits reconstruct correctly.
 
-Verification Explanation
-Tests call the live POST /v1/plan API for health, junction and scenic reachability, north-spur blocks, platform wildcard locks, clear-before-lock precedence, yard relay open and blocked cases, cycle-guard timing, parameterized SQL source checks, and two-position lock conjunction.
+=== Verification ===
+Tests exercise the live health and planning endpoints across direct, scenic, blocked, clearance, wildcard, conjunction, relay-release, and overlapping-group lineups. They reset or mutate the yard_release latch in PostgreSQL, verify held and released routes including repeated stations, prompt cycle termination with cycle_guard true, empty unreachable paths, exact seeded routes, and parameterized station lookup source.

@@ -9,7 +9,7 @@ canonical sources the reconciliation step must reconcile:
   identity.
 
 Nothing here hardcodes a winning model id; the expected decision falls out of
-whichever database the reconcile script is pointed at, evaluated against the
+whichever database the reconcile CLI is pointed at, evaluated against the
 documented policy gates. The same machinery grades the shipped experiment store
 and the verifier-built variant stores, which keeps a hardcoded manifest or a
 fixture-tuned shortcut from passing.
@@ -36,7 +36,8 @@ API_BASE_URL = "http://localhost:8080"
 HEALTH_URL = f"{API_BASE_URL}/health"
 CANDIDATES_URL = f"{API_BASE_URL}/models/candidates"
 MAIN_DB_URL = "jdbc:h2:file:/app/experiment-db/experiments"
-STEP_SCRIPT = APP / "reconcile-model-release" / "reconcile.py"
+RECONCILE_CLASSES = APP / "reconcile-model-release" / "classes"
+MAIN_CLASS = "com.snorkel.registry.Main"
 H2_JAR = APP / "lib" / "h2-2.2.224.jar"
 TESTS_DIR = Path(__file__).resolve().parent
 
@@ -66,13 +67,13 @@ def find_h2_jar() -> str:
     return sorted(jars)[-1]
 
 
-def find_reconcile_script() -> str:
-    """Locate the agent-built reconcile-model-release Python entrypoint."""
-    assert STEP_SCRIPT.is_file(), (
-        f"reconcile script not found at {STEP_SCRIPT} — "
-        "implement /app/reconcile-model-release/reconcile.py"
+def reconcile_classpath() -> str:
+    """Classpath for the agent-built reconcile-model-release Java CLI."""
+    assert RECONCILE_CLASSES.is_dir(), (
+        f"reconcile classes not found at {RECONCILE_CLASSES} — "
+        "build /app/reconcile-model-release with build.sh"
     )
-    return str(STEP_SCRIPT)
+    return f"{RECONCILE_CLASSES}:/app/lib/*"
 
 
 def run_h2_script(db_url: str, script_path: Path) -> None:
@@ -149,10 +150,10 @@ def wait_for_api(seconds: float) -> bool:
     return api_healthy()
 
 
-def run_reconcile_script(args: list[str], timeout: float = 240.0) -> subprocess.CompletedProcess:
-    """Run the agent-built reconciliation script from /app with the given args."""
+def run_reconcile_cli(args: list[str], timeout: float = 240.0) -> subprocess.CompletedProcess:
+    """Run the agent-built reconcile-model-release Java CLI from /app."""
     return subprocess.run(
-        ["python3", find_reconcile_script(), *args],
+        ["java", "-cp", reconcile_classpath(), MAIN_CLASS, *args],
         cwd=str(APP),
         capture_output=True,
         text=True,

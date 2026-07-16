@@ -1,9 +1,11 @@
 #!/bin/bash
-# Oracle solution: implement the reconcile-model-release script and run it so
+# Oracle solution: implement the reconcile-model-release Java CLI and run it so
 # the decision manifest is derived from the live registry API + H2 store.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET="/app/reconcile-model-release"
+SRC="${SCRIPT_DIR}/reconcile-model-release/src"
 
 for _ in $(seq 1 90); do
     if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
@@ -19,11 +21,10 @@ if ! curl -sf http://localhost:8080/health >/dev/null 2>&1; then
     exit 1
 fi
 
-mkdir -p /app/build
+mkdir -p /app/build "${TARGET}/src/com/snorkel/registry"
+cp -R "${SRC}/com/snorkel/registry/." "${TARGET}/src/com/snorkel/registry/"
+bash "${TARGET}/build.sh"
 
-cp "${SCRIPT_DIR}/reconcile.py" /app/reconcile-model-release/reconcile.py
-chmod +x /app/reconcile-model-release/reconcile.py
-
-python3 /app/reconcile-model-release/reconcile.py
+java -cp "${TARGET}/classes:/app/lib/*" com.snorkel.registry.Main
 
 cat /app/build/release-decision.json

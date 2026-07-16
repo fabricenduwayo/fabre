@@ -2,7 +2,7 @@
 
 These fixtures load the agent-produced manifest, read the canonical evidence
 from the live H2 experiment store and registry API, and build the variant H2
-databases the agent's reconcile script is rerun against. The pure helpers live in
+databases the agent's Java reconcile CLI is rerun against. The pure helpers live in
 ``helpers.py``.
 """
 
@@ -95,3 +95,9 @@ def variant_a_db_url() -> str:
 def variant_b_db_url() -> str:
     """Variant store with a valid grant and malformed replacement pair."""
     return _build_variant_db("variant_b_seed.sql")
+
+
+@pytest.fixture(scope="session")
+def variant_c_db_url() -> str:
+    """Variant store where a partial waiver suppresses one of two gate failures."""
+    return _build_variant_db("variant_c_seed.sql")

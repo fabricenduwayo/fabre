@@ -6,9 +6,8 @@
 **/.mypy_cache/
 **/.ruff_cache/
 **/node_modules/
-model-registry/**
-!model-registry/target/
-model-registry/target/**
+**/*.jar
+!lib/**
 !model-registry/target/model-registry-0.1.0.jar
 maven-repo.tar.gz
 maven-repo/
