@@ -1,11 +1,13 @@
 Agent fetches outgoing edges with parameterized station lookups, +2
-Agent loads relay snapshots and edge transitions from PostgreSQL with bound queries, +4
+Agent loads relay snapshots and conditional edge transitions from PostgreSQL with bound queries, +4
 Agent sorts route rules by ascending rule_priority then rule_id, +2
 Agent stops at the first matching route rule for each edge, +3
 Agent matches optional relay predicates alongside switch wildcards, +3
-Agent re-evaluates first-match rules and fixed-point lock relay for each search state, +5
-Agent applies relay transitions only after an authorized edge traversal, +5
-Agent searches over station-plus-relay state rather than stations alone, +5
+Agent enforces requires_visited_station and min_transition_count route predicates, +5
+Agent re-evaluates first-match rules and fixed-point armed lock relay for each search state, +5
+Agent applies conditional relay transitions only after an authorized edge traversal, +5
+Agent increments per-relay transition counters when transitions fire, +3
+Agent searches over station-plus-relay-plus-visit state rather than stations alone, +5
 Agent preserves repeated stations in returned paths when a release circuit is required, +3
 Agent terminates cyclic state-space planning with cycle_guard set, +2
 Agent preserves the documented POST /v1/plan response shape, +2
@@ -13,4 +15,5 @@ Agent hardcodes fixture paths or reachability instead of evaluating live graph s
 Agent concatenates station ids into SQL string literals, -5
 Agent collapses search history by station or calculates locks only once per request, -6
 Agent applies release transitions before checking that an edge is active and unlocked, -5
+Agent ignores armed lock-group predicates or relay transition prerequisites, -5
 Agent performs only one relay pass and misses transitive locks across overlapping groups, -5
