@@ -17,11 +17,11 @@ languages = [
 ]
 tags = [
     "security",
-    "release-authorization",
-    "policy-governance",
-    "fail-closed",
+    "release-governance",
+    "policy-reconciliation",
     "h2",
     "jdbc",
+    "json-schema",
 ]
 expert_time_estimate_min = 120
 junior_time_estimate_min = 300
