@@ -166,12 +166,13 @@ def test_token_state_is_nonrecoverable_and_owner_only():
 
 
 def test_health_reasons_and_origin_audit():
-    """Health classifies credentials precisely and audits request origin or NULL."""
+    """Health classifies credentials and audits the allowlist-resolved origin."""
     reset_state()
     token = bootstrap_ok()
     assert health(authorization="Basic dXNlcjpwYXNz")[0] == 401
     assert health(authorization="Bearer ")[0] == 401
     assert health("wrong", ALLOWED)[0] == 401
+    assert health(token, "https://evil.example")[0] == 200
     assert health(token, ALLOWED_2)[0] == 200
     rows = [
         row
@@ -183,8 +184,11 @@ def test_health_reasons_and_origin_audit():
         ("denied", "missing_credentials"),
         ("denied", "invalid_token"),
         ("accepted", None),
+        ("accepted", None),
     ]
     assert rows[0]["origin"] is None
+    assert rows[2]["origin"] == ALLOWED
+    assert rows[3]["origin"] is None
     assert rows[-1]["origin"] == ALLOWED_2
 
 
@@ -242,6 +246,19 @@ def test_predecessor_has_exact_shared_two_use_overlap():
     assert health(old)[0] == 200
     assert health(old)[0] == 401
     assert health(current)[0] == 200
+    reasons = [
+        (row["decision"], row["reason"])
+        for row in audit_rows()
+        if row["event"] == "health" and row["reason"] != "legacy_history"
+    ]
+    assert reasons == [
+        ("accepted", None),
+        ("accepted", "predecessor_overlap"),
+        ("accepted", None),
+        ("accepted", "predecessor_overlap"),
+        ("denied", "invalid_token"),
+        ("accepted", None),
+    ]
 
 
 def test_invalid_health_does_not_consume_predecessor_overlap():
@@ -285,7 +302,9 @@ def test_predecessor_budget_is_atomic_across_workers():
         for row in audit_rows()
         if row["event"] == "health" and row["reason"] != "legacy_history"
     ]
-    assert sum(row["decision"] == "accepted" for row in lifecycle_rows) == 2
+    accepted = [row for row in lifecycle_rows if row["decision"] == "accepted"]
+    assert len(accepted) == 2
+    assert all(row["reason"] == "predecessor_overlap" for row in accepted)
     assert len(lifecycle_rows) == 10
 
 

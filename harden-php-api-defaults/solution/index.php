@@ -11,6 +11,7 @@ header_remove('X-Powered-By');
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+$auditOrigin = cors_origin_allowed($config, $origin) ? $origin : null;
 
 apply_cors($config, $origin);
 
@@ -32,41 +33,42 @@ if ($path === '/health' && $method === 'GET') {
     }
 
     if ($token === null) {
-        audit_log($config, 'health', $path, $origin, 'denied', 'missing_credentials');
+        audit_log($config, 'health', $path, $auditOrigin, 'denied', 'missing_credentials');
         fail($config, 401, 'unauthorized');
         exit;
     }
 
     try {
-        $accepted = with_token_state_lock($config, function () use ($config, $token) {
+        $verdict = with_token_state_lock($config, function () use ($config, $token) {
             $record = read_token_state_unlocked($config);
             if (!$record['valid']) {
-                return false;
+                return 'denied';
             }
             $state = $record['state'];
             $digest = hash('sha256', $token);
             if (hash_equals($state['current_digest'], $digest)) {
-                return true;
+                return 'current';
             }
             if ($state['previous_digest'] !== null
                     && $state['previous_uses_remaining'] > 0
                     && hash_equals($state['previous_digest'], $digest)) {
                 $state['previous_uses_remaining']--;
                 write_token_state_unlocked($config, $state);
-                return true;
+                return 'predecessor';
             }
-            return false;
+            return 'denied';
         });
     } catch (Throwable $error) {
         fail($config, 500, 'internal error');
         exit;
     }
 
-    if ($accepted) {
-        audit_log($config, 'health', $path, $origin, 'accepted', null);
+    if ($verdict === 'current' || $verdict === 'predecessor') {
+        $reason = $verdict === 'predecessor' ? 'predecessor_overlap' : null;
+        audit_log($config, 'health', $path, $auditOrigin, 'accepted', $reason);
         send_json($config, 200, ['status' => 'ok']);
     } else {
-        audit_log($config, 'health', $path, $origin, 'denied', 'invalid_token');
+        audit_log($config, 'health', $path, $auditOrigin, 'denied', 'invalid_token');
         fail($config, 401, 'unauthorized');
     }
     exit;
@@ -76,7 +78,7 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     $raw = file_get_contents('php://input');
     json_decode($raw, true);
     if ($raw !== '' && json_last_error() !== JSON_ERROR_NONE) {
-        audit_log($config, 'bootstrap', $path, $origin, 'denied', 'malformed_request');
+        audit_log($config, 'bootstrap', $path, $auditOrigin, 'denied', 'malformed_request');
         fail($config, 400, 'bad request');
         exit;
     }
@@ -126,10 +128,10 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     }
 
     if ($result['status'] === 201) {
-        audit_log($config, 'bootstrap', $path, $origin, 'accepted', null);
+        audit_log($config, 'bootstrap', $path, $auditOrigin, 'accepted', null);
         send_json($config, 201, ['token' => $result['token']]);
     } elseif ($result['reason'] !== null) {
-        audit_log($config, 'bootstrap', $path, $origin, 'denied', $result['reason']);
+        audit_log($config, 'bootstrap', $path, $auditOrigin, 'denied', $result['reason']);
         fail($config, $result['status'], $result['message']);
     } else {
         fail($config, $result['status'], $result['message']);

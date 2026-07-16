@@ -1,0 +1,34 @@
+zipped 48 files (25302.1 KB)
+Traceback (most recent call last):
+  File "/Users/fabrice-mac-mini/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/snorkelai_stb/utils.py", line 383, in get_daas_resource
+    response = urlopen(request, timeout=timeout, context=get_ssl_context())
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 495, in open
+    response = meth(req, response)
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 604, in http_response
+    response = self.parent.error(
+        'http', request, response, code, msg, hdrs)
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 533, in error
+    return self._call_chain(*args)
+           ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/Users/fabrice-mac-mini/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/urllib/request.py", line 613, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 403: Forbidden
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/resubmit_registry.py", line 233, in <module>
+    main()
+    ~~~~^^
+  File "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/resubmit_registry.py", line 137, in main
+    presigned = request_s3_presigned_url(PROJECT_ID, assignment_id, zip_path.name)
+  File "/Users/fabrice-mac-mini/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/snorkelai_stb/utils.py", line 645, in request_s3_presigned_url
+    result = get_daas_resource(path, "POST")
+  File "/Users/fabrice-mac-mini/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/snorkelai_stb/utils.py", line 389, in get_daas_resource
+    raise HTTPError(e.url, e.code, reason, e.hdrs, e.fp) from e
+urllib.error.HTTPError: HTTP Error 403: Forbidden: You do not have permission to upload files for this assignment. The assignment may be completed, expired, or not belong to you.

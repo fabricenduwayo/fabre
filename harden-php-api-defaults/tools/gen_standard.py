@@ -268,7 +268,7 @@ NORMATIVE["EH-NO-DISCLOSE"] = """### EH-NO-DISCLOSE — No internal disclosure i
 
 **Rationale.** Debug traces and internal details must never be returned to callers in a hardened deployment.
 
-**Requirement.** Debug mode shall be disabled. No response shall contain a stack trace, exception text, internal file path, or a `X-Debug-Mode` header. Error responses shall carry a generic JSON body of the form `{"error":"<short message>"}` with no `trace` field. An unknown route or unsupported method shall return `404` with body `{"error":"not found"}` and shall not be audited.
+**Requirement.** Debug mode shall be disabled. No response shall contain a stack trace, exception text, internal file path, or a `X-Debug-Mode` header. Error responses shall carry a generic JSON body of the form `{"error":"<short message>"}` with no `trace` field. A rejection of malformed JSON input under AC-BOOTSTRAP shall use the exact body `{"error":"bad request"}`. An unknown route or unsupported method shall return `404` with body `{"error":"not found"}` and shall not be audited.
 
 **Implementation guidance.** Ensure framework display-errors settings are disabled and that error helpers do not attach diagnostic fields.
 
@@ -354,7 +354,11 @@ AMENDMENTS_REAL = [
      "`Access-Control-Max-Age`) shall be emitted **only** on an `OPTIONS` "
      "preflight for an allowed origin. Non-preflight responses (including "
      "credentialed `GET` or `POST`) shall carry at most the grant headers of "
-     "CO-ORIGIN-ALLOW and shall not include those preflight hints."),
+     "CO-ORIGIN-ALLOW and shall not include those preflight hints. The "
+     "CO-ORIGIN-ALLOW grant itself — `Access-Control-Allow-Origin`, "
+     "`Access-Control-Allow-Credentials`, and `Vary: Origin` — shall be present "
+     "on **every** allowed-origin response regardless of method; `Vary: Origin` "
+     "is part of the cross-origin grant, not a preflight hint."),
     ("G-2026-12", "AC-TOKEN-STORE",
      "The on-disk administrative token representation shall be the lowercase "
      "hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). "
@@ -429,6 +433,19 @@ AMENDMENTS_REAL = [
      "`admin_token.state` or `token_state.json` are non-compliant. "
      "`/app/harbordesk/data/admin_token.lock` is permitted for concurrency "
      "coordination only and is not credential state."),
+    ("G-2026-24", "AU-LEDGER-SCOPE",
+     "The request origin recorded by AU-LEDGER-SCOPE is the origin as resolved "
+     "against the CO-ORIGIN-ALLOW allowlist for the current request. An "
+     "allowlisted `Origin` header value shall be stored exactly; a disallowed "
+     "or absent `Origin` shall be stored as SQL `NULL`. Raw unvalidated origin "
+     "identifiers must never be persisted in the ledger. This resolution "
+     "applies to every audited row, including denials."),
+    ("G-2026-25", "AC-CREDENTIAL-CUTOVER",
+     "An accepted `GET /health` request that consumes a predecessor-overlap "
+     "allowance under AC-CREDENTIAL-CUTOVER shall be audited with decision "
+     "`accepted` and reason `predecessor_overlap`. An accepted request "
+     "presenting the current credential keeps a SQL `NULL` audit reason. "
+     "Denial reasons are unchanged."),
 ]
 
 AMENDMENTS_FILLER = [

@@ -202,6 +202,11 @@ class State:
         self.previous_remaining = 0
 
 
+def audited_origin(origin):
+    """Resolve the ledger origin: allowlisted exact value or SQL NULL."""
+    return origin if origin in ALLOWED_ORIGINS else None
+
+
 def expected_cors(origin, preflight):
     """Resolve amended CORS headers for one request."""
     if origin not in ALLOWED_ORIGINS:
@@ -244,14 +249,26 @@ def simulate(state, operation):
                 "status": 401,
                 "body": "error",
                 "cors": cors,
-                "audit": ("health", path, origin, "denied", "missing_credentials"),
+                "audit": (
+                    "health",
+                    path,
+                    audited_origin(origin),
+                    "denied",
+                    "missing_credentials",
+                ),
             }
         accepted = False
+        via_predecessor = False
         if credential == state.current:
             accepted = True
         elif credential == state.previous and state.previous_remaining > 0:
             accepted = True
+            via_predecessor = True
             state.previous_remaining -= 1
+        if accepted:
+            reason = "predecessor_overlap" if via_predecessor else None
+        else:
+            reason = "invalid_token"
         return {
             "status": 200 if accepted else 401,
             "body": "ok" if accepted else "error",
@@ -259,9 +276,9 @@ def simulate(state, operation):
             "audit": (
                 "health",
                 path,
-                origin,
+                audited_origin(origin),
                 "accepted" if accepted else "denied",
-                None if accepted else "invalid_token",
+                reason,
             ),
         }
 
@@ -275,7 +292,7 @@ def simulate(state, operation):
                 "audit": (
                     "bootstrap",
                     path,
-                    origin,
+                    audited_origin(origin),
                     "denied",
                     "malformed_request",
                 ),
@@ -291,7 +308,7 @@ def simulate(state, operation):
                 "audit": (
                     "bootstrap",
                     path,
-                    origin,
+                    audited_origin(origin),
                     "denied",
                     "already_bootstrapped",
                 ),
@@ -304,7 +321,7 @@ def simulate(state, operation):
                 "audit": (
                     "bootstrap",
                     path,
-                    origin,
+                    audited_origin(origin),
                     "denied",
                     "invalid_secret",
                 ),
@@ -319,7 +336,7 @@ def simulate(state, operation):
             "status": 201,
             "body": "token",
             "cors": cors,
-            "audit": ("bootstrap", path, origin, "accepted", None),
+            "audit": ("bootstrap", path, audited_origin(origin), "accepted", None),
         }
 
     return {"status": 404, "body": "error", "cors": cors, "audit": None}

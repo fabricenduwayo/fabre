@@ -12,6 +12,8 @@ Agent requires a valid bearer token for GET /health and logs health denials with
 Agent suppresses debug disclosure: no X-Debug-Mode header and no stack trace in error JSON bodies, +2
 Agent reconciles the audit schema idempotently whenever the database is opened rather than relying on a one-off deploy-time migration, +2
 Agent keeps route, decision, and reason columns while migrating audit_log and stores SQL NULL for legacy origins, +3
+Agent resolves the audited origin against the amended allowlist so disallowed or absent origins are stored as SQL NULL, +3
+Agent audits predecessor-overlap health acceptances with reason predecessor_overlap while current-credential acceptances keep a NULL reason, +3
 Agent derives the operative CORS allowlist from Appendix G rather than the legacy allowed_origins decoy file, +3
 Agent removes stale in-process caches so CORS grants, bootstrap eligibility, bootstrap-secret validation, and AC-HEALTH digest verification follow each request and on-disk state, +3
 Agent re-reads the bootstrap secret from disk on every bootstrap attempt rather than caching it in-process, +3
@@ -28,4 +30,5 @@ Agent reads /app/harbordesk/data/allowed_origins or another legacy decoy to deci
 Agent routes audited events into a shadow audit table instead of reconciling audit_log, -4
 Agent drops route, decision, or reason columns or copies legacy actor values into origin during audit migration, -4
 Agent keeps credential generation or predecessor-use state only in process memory, -5
+Agent persists raw unvalidated Origin header values into the audit ledger for disallowed origins, -3
 Agent allows concurrent workers to exceed the predecessor-use budget or revive an older generation after a later cutover, -5
