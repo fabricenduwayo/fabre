@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-16-r7
+# platform-revision: 2026-07-16-r8
 
 WORKDIR /app
 
@@ -27,6 +27,7 @@ COPY model-registry/target/model-registry-0.1.0.jar /app/model-registry/target/m
 
 COPY policy/promotion-policy.md /app/policy/promotion-policy.md
 COPY policy/promotion-policy-amendments.md /app/policy/promotion-policy-amendments.md
+COPY policy/release-authorization-audit.md /app/policy/release-authorization-audit.md
 COPY schemas/release-decision.schema.json /app/schemas/release-decision.schema.json
 
 COPY experiment-db/experiments.mv.db /app/experiment-db/experiments.mv.db
