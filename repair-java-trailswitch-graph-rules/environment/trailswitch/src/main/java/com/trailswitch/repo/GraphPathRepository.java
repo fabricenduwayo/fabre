@@ -38,7 +38,8 @@ public class GraphPathRepository {
 
     public List<RouteRule> loadRules() {
         return jdbc.query(
-                "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action "
+                "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action, "
+                        + "match_relay_id, match_relay_state "
                         + "FROM route_rules ORDER BY rule_priority ASC, rule_id DESC",
                 (rs, rowNum) ->
                         new RouteRule(
@@ -47,7 +48,9 @@ public class GraphPathRepository {
                                 rs.getInt("rule_priority"),
                                 rs.getString("lock_sw1"),
                                 rs.getString("lock_sw2"),
-                                rs.getString("rule_action")));
+                                rs.getString("rule_action"),
+                                rs.getString("match_relay_id"),
+                                rs.getString("match_relay_state")));
     }
 
     public Map<String, Set<String>> loadLockGroups() {

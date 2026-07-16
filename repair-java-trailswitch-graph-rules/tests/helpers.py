@@ -36,6 +36,25 @@ def ensure_service() -> None:
     raise RuntimeError("TrailSwitch service did not become ready")
 
 
+def set_relay_state(state: str) -> None:
+    """Set the yard_release relay latch in PostgreSQL."""
+    subprocess.run(
+        [
+            "runuser",
+            "-u",
+            "postgres",
+            "--",
+            "psql",
+            "-d",
+            "trailswitch",
+            "-c",
+            f"UPDATE relay_latches SET relay_state = '{state}' "
+            "WHERE relay_id = 'yard_release';",
+        ],
+        check=True,
+    )
+
+
 def plan(from_station: str, to_station: str, switches: dict[str, str]) -> dict:
     """Call POST /v1/plan and return the JSON body."""
     resp = requests.post(

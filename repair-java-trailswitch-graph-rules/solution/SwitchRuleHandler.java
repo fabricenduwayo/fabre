@@ -1,5 +1,6 @@
 package com.trailswitch.service;
 
+import com.trailswitch.model.RelayTransition;
 import com.trailswitch.model.RouteRule;
 import com.trailswitch.repo.GraphPathRepository;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ public class SwitchRuleHandler {
         this.repository = repository;
     }
 
-    public Set<String> lockedEdges(Map<String, String> switches) {
+    public Set<String> lockedEdges(Map<String, String> switches, Map<String, String> relayState) {
         Set<String> locked = new HashSet<>();
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new HashMap<>();
@@ -25,7 +26,7 @@ public class SwitchRuleHandler {
             if (edgeDecided.containsKey(rule.edgeId())) {
                 continue;
             }
-            if (ruleMatches(switches, rule)) {
+            if (ruleMatches(switches, relayState, rule)) {
                 if ("clear".equalsIgnoreCase(rule.ruleAction())) {
                     edgeDecided.put(rule.edgeId(), true);
                     continue;
@@ -36,6 +37,17 @@ public class SwitchRuleHandler {
         }
         applyLockGroups(locked);
         return locked;
+    }
+
+    public Map<String, String> advanceRelays(String traversedEdge, Map<String, String> relayState) {
+        Map<String, String> next = new HashMap<>(relayState);
+        for (RelayTransition transition : repository.loadRelayTransitions(traversedEdge)) {
+            String current = next.getOrDefault(transition.relayId(), transition.fromState());
+            if (current.equalsIgnoreCase(transition.fromState())) {
+                next.put(transition.relayId(), transition.toState());
+            }
+        }
+        return Map.copyOf(next);
     }
 
     private void applyLockGroups(Set<String> locked) {
@@ -62,7 +74,8 @@ public class SwitchRuleHandler {
         } while (changed);
     }
 
-    private boolean ruleMatches(Map<String, String> switches, RouteRule rule) {
+    private boolean ruleMatches(
+            Map<String, String> switches, Map<String, String> relayState, RouteRule rule) {
         if (rule.lockSw1() != null
                 && !switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
             return false;
@@ -71,6 +84,12 @@ public class SwitchRuleHandler {
                 && !switches.getOrDefault("sw2", "").equalsIgnoreCase(rule.lockSw2())) {
             return false;
         }
-        return rule.lockSw1() != null || rule.lockSw2() != null;
+        if (rule.matchRelayId() != null) {
+            String current = relayState.getOrDefault(rule.matchRelayId(), "");
+            if (!current.equalsIgnoreCase(rule.matchRelayState())) {
+                return false;
+            }
+        }
+        return rule.lockSw1() != null || rule.lockSw2() != null || rule.matchRelayId() != null;
     }
 }

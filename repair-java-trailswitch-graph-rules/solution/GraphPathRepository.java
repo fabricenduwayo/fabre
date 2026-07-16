@@ -2,6 +2,7 @@ package com.trailswitch.repo;
 
 import com.trailswitch.model.EdgeRow;
 import com.trailswitch.model.LockGroupRow;
+import com.trailswitch.model.RelayTransition;
 import com.trailswitch.model.RouteRule;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class GraphPathRepository {
     public List<EdgeRow> loadOutgoing(String stationId) {
         return jdbc.query(
                 "SELECT edge_id, from_station, to_station, requires_sw1, requires_sw2 "
-                        + "FROM edges WHERE from_station = ?",
+                        + "FROM edges WHERE from_station = ? ORDER BY edge_id",
                 (rs, rowNum) ->
                         new EdgeRow(
                                 rs.getString("edge_id"),
@@ -35,7 +36,8 @@ public class GraphPathRepository {
 
     public List<RouteRule> loadRules() {
         return jdbc.query(
-                "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action "
+                "SELECT rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action, "
+                        + "match_relay_id, match_relay_state "
                         + "FROM route_rules ORDER BY rule_priority ASC, rule_id ASC",
                 (rs, rowNum) ->
                         new RouteRule(
@@ -44,7 +46,9 @@ public class GraphPathRepository {
                                 rs.getInt("rule_priority"),
                                 rs.getString("lock_sw1"),
                                 rs.getString("lock_sw2"),
-                                rs.getString("rule_action")));
+                                rs.getString("rule_action"),
+                                rs.getString("match_relay_id"),
+                                rs.getString("match_relay_state")));
     }
 
     public Map<String, Set<String>> loadLockGroups() {
@@ -58,6 +62,33 @@ public class GraphPathRepository {
             groups.computeIfAbsent(row.groupId(), ignored -> new HashSet<>()).add(row.edgeId());
         }
         return groups;
+    }
+
+    public Map<String, String> loadRelayStates() {
+        return jdbc.query(
+                "SELECT relay_id, relay_state FROM relay_latches",
+                rs -> {
+                    Map<String, String> relays = new HashMap<>();
+                    while (rs.next()) {
+                        relays.put(rs.getString("relay_id"), rs.getString("relay_state"));
+                    }
+                    return relays;
+                });
+    }
+
+    public List<RelayTransition> loadRelayTransitions(String edgeId) {
+        return jdbc.query(
+                "SELECT edge_id, transition_order, relay_id, from_state, to_state "
+                        + "FROM edge_relay_transitions WHERE edge_id = ? "
+                        + "ORDER BY transition_order ASC, relay_id ASC",
+                (rs, rowNum) ->
+                        new RelayTransition(
+                                rs.getString("edge_id"),
+                                rs.getInt("transition_order"),
+                                rs.getString("relay_id"),
+                                rs.getString("from_state"),
+                                rs.getString("to_state")),
+                edgeId);
     }
 
     public List<String> listStations() {

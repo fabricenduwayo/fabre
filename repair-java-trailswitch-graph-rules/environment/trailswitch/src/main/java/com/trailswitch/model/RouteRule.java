@@ -6,4 +6,6 @@ public record RouteRule(
         int rulePriority,
         String lockSw1,
         String lockSw2,
-        String ruleAction) {}
+        String ruleAction,
+        String matchRelayId,
+        String matchRelayState) {}

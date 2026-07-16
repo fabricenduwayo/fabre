@@ -4,6 +4,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST=/app/trailswitch/src/main/java/com/trailswitch
 
 cp "$HERE/GraphPathRepository.java" "$DEST/repo/GraphPathRepository.java"
+cp "$HERE/RelayTransition.java" "$DEST/model/RelayTransition.java"
 cp "$HERE/SwitchRuleHandler.java" "$DEST/service/SwitchRuleHandler.java"
 cp "$HERE/PathPlanner.java" "$DEST/service/PathPlanner.java"
 

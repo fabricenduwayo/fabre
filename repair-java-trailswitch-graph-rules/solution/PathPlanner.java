@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PathPlanner {
-    private static final int MAX_DEPTH = 12;
+    private static final int MAX_DEPTH = 16;
 
     private final GraphPathRepository repository;
     private final SwitchRuleHandler ruleHandler;
@@ -25,32 +25,33 @@ public class PathPlanner {
     }
 
     public PlanResult plan(String from, String to, Map<String, String> switches) {
-        Set<String> locked = ruleHandler.lockedEdges(switches);
-        Queue<String> queue = new ArrayDeque<>();
-        Map<String, String> parent = new HashMap<>();
-        Set<String> visited = new HashSet<>();
-        queue.add(from);
-        visited.add(from);
-        parent.put(from, null);
+        SearchState start = new SearchState(from, repository.loadRelayStates());
+        Queue<SearchState> queue = new ArrayDeque<>();
+        Map<SearchState, SearchState> parent = new HashMap<>();
+        Set<SearchState> discovered = new HashSet<>();
+        queue.add(start);
+        discovered.add(start);
+        parent.put(start, null);
 
         while (!queue.isEmpty()) {
-            String current = queue.poll();
-            if (current.equals(to)) {
-                return new PlanResult(true, rebuild(parent, to), true);
+            SearchState current = queue.poll();
+            if (current.station().equals(to)) {
+                return new PlanResult(true, rebuild(parent, current), true);
             }
-            int depth = depthOf(parent, current);
-            if (depth >= MAX_DEPTH) {
+            if (depthOf(parent, current) >= MAX_DEPTH) {
                 continue;
             }
-            for (EdgeRow edge : repository.loadOutgoing(current)) {
+            Set<String> locked = ruleHandler.lockedEdges(switches, current.relays());
+            for (EdgeRow edge : repository.loadOutgoing(current.station())) {
                 if (locked.contains(edge.edgeId())) {
                     continue;
                 }
                 if (!edgeActive(edge, switches)) {
                     continue;
                 }
-                String next = edge.toStation();
-                if (visited.add(next)) {
+                Map<String, String> nextRelays = ruleHandler.advanceRelays(edge.edgeId(), current.relays());
+                SearchState next = new SearchState(edge.toStation(), nextRelays);
+                if (discovered.add(next)) {
                     parent.put(next, current);
                     queue.add(next);
                 }
@@ -59,9 +60,9 @@ public class PathPlanner {
         return new PlanResult(false, List.of(), true);
     }
 
-    private int depthOf(Map<String, String> parent, String node) {
+    private int depthOf(Map<SearchState, SearchState> parent, SearchState node) {
         int depth = 0;
-        String walk = node;
+        SearchState walk = node;
         while (parent.get(walk) != null) {
             depth++;
             walk = parent.get(walk);
@@ -81,15 +82,21 @@ public class PathPlanner {
         return true;
     }
 
-    private List<String> rebuild(Map<String, String> parent, String to) {
+    private List<String> rebuild(Map<SearchState, SearchState> parent, SearchState goal) {
         List<String> path = new ArrayList<>();
-        String walk = to;
+        SearchState walk = goal;
         while (walk != null) {
-            path.add(0, walk);
+            path.add(0, walk.station());
             walk = parent.get(walk);
         }
         return path;
     }
 
     public record PlanResult(boolean reachable, List<String> path, boolean cycleGuard) {}
+
+    private record SearchState(String station, Map<String, String> relays) {
+        private SearchState {
+            relays = Map.copyOf(relays);
+        }
+    }
 }
