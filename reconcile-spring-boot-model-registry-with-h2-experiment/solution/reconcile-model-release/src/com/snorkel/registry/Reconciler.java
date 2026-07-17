@@ -244,10 +244,102 @@ public final class Reconciler {
                                 waiver.get("model_id"),
                                 waiver.get("model_version"),
                                 waiver.get("reason_code"),
-                                parseTimestamp(event.get("occurred_at"))));
+                                parseTimestamp(event.get("occurred_at")),
+                                event.get("event_id")));
             }
         }
         return active;
+    }
+
+    private static Set<String> approvalQuorum(
+            String dbUrl, List<ActiveWaiver> activeWaivers) throws Exception {
+        List<Map<String, String>> contexts =
+                h2Select("SELECT context_id, decision_at FROM release_context", dbUrl);
+        if (contexts.size() != 1) {
+            throw new IllegalStateException("release_context must contain exactly one decision");
+        }
+        Instant decisionAt = parseTimestamp(contexts.get(0).get("decision_at"));
+        Map<String, ActiveWaiver> activeById = new HashMap<>();
+        for (ActiveWaiver waiver : activeWaivers) {
+            activeById.put(waiver.waiverId, waiver);
+        }
+
+        Map<ApprovalReviewKey, Map<String, String>> latest = new HashMap<>();
+        for (Map<String, String> event :
+                h2Select(
+                        """
+                        SELECT event_id, waiver_id, reviewer_id, reviewer_role,
+                               event_type, occurred_at
+                        FROM waiver_approval_events
+                        """,
+                        dbUrl)) {
+            ActiveWaiver waiver = activeById.get(event.get("waiver_id"));
+            if (waiver == null) {
+                continue;
+            }
+            Instant occurredAt = parseTimestamp(event.get("occurred_at"));
+            if (occurredAt.isAfter(decisionAt)
+                    || compareEventOrder(
+                                    occurredAt,
+                                    event.get("event_id"),
+                                    waiver.grantAt,
+                                    waiver.grantEventId)
+                            <= 0) {
+                continue;
+            }
+            ApprovalReviewKey key =
+                    new ApprovalReviewKey(
+                            event.get("waiver_id"),
+                            event.get("reviewer_id"),
+                            event.get("reviewer_role"));
+            Map<String, String> current = latest.get(key);
+            if (current == null
+                    || compareEventOrder(
+                                    occurredAt,
+                                    event.get("event_id"),
+                                    parseTimestamp(current.get("occurred_at")),
+                                    current.get("event_id"))
+                            > 0) {
+                latest.put(key, event);
+            }
+        }
+
+        Map<String, Map<String, Set<String>>> reviewers = new HashMap<>();
+        for (Map<String, String> event : latest.values()) {
+            if (!"approve".equals(event.get("event_type"))) {
+                continue;
+            }
+            reviewers
+                    .computeIfAbsent(event.get("waiver_id"), ignored -> new HashMap<>())
+                    .computeIfAbsent(event.get("reviewer_role"), ignored -> new HashSet<>())
+                    .add(event.get("reviewer_id"));
+        }
+
+        Set<String> approved = new HashSet<>();
+        for (Map.Entry<String, Map<String, Set<String>>> entry : reviewers.entrySet()) {
+            Set<String> risk =
+                    entry.getValue().getOrDefault("risk", Set.of());
+            Set<String> owners =
+                    entry.getValue().getOrDefault("model_owner", Set.of());
+            boolean distinct = false;
+            for (String riskReviewer : risk) {
+                for (String ownerReviewer : owners) {
+                    if (!riskReviewer.equals(ownerReviewer)) {
+                        distinct = true;
+                    }
+                }
+            }
+            if (distinct) {
+                approved.add(entry.getKey());
+            }
+        }
+        return approved;
+    }
+
+    private static int compareEventOrder(
+            Instant leftAt, String leftId, Instant rightAt, String rightId) {
+        int timeComparison = leftAt.compareTo(rightAt);
+        return timeComparison != 0 ? timeComparison : leftId.compareTo(rightId);
     }
 
     private static int compareEventKey(
@@ -370,7 +462,14 @@ public final class Reconciler {
             }
             calibrated.put(entry.getKey(), effective);
         }
-        return new Evidence(metrics, metricCapturedAt, lineage, calibrated, activeWaivers(dbUrl));
+        List<ActiveWaiver> waivers = activeWaivers(dbUrl);
+        return new Evidence(
+                metrics,
+                metricCapturedAt,
+                lineage,
+                calibrated,
+                waivers,
+                approvalQuorum(dbUrl, waivers));
     }
 
     private static ObjectNode buildManifest(
@@ -425,12 +524,19 @@ public final class Reconciler {
 
                 List<String> remaining = new ArrayList<>();
                 String operativeCapturedAt = evidence.metricCapturedAt.get(modelId);
+                Instant operativeAt =
+                        operativeCapturedAt == null
+                                ? null
+                                : parseTimestamp(operativeCapturedAt);
                 for (String reason : fails) {
                     List<ActiveWaiver> matching = new ArrayList<>();
                     for (ActiveWaiver waiver : evidence.activeWaivers) {
                         if (waiver.modelId.equals(modelId)
                                 && waiver.modelVersion.equals(version)
-                                && waiver.reasonCode.equals(reason)) {
+                                && waiver.reasonCode.equals(reason)
+                                && evidence.approvedWaiverIds.contains(waiver.waiverId)
+                                && (operativeAt == null
+                                        || waiver.grantAt.isBefore(operativeAt))) {
                             matching.add(waiver);
                         }
                     }
@@ -444,12 +550,6 @@ public final class Reconciler {
                                             Comparator.comparing((ActiveWaiver w) -> w.grantAt)
                                                     .thenComparing(w -> w.waiverId))
                                     .orElseThrow();
-                    if (operativeCapturedAt != null
-                            && !selected.grantAt.isBefore(
-                                    parseTimestamp(operativeCapturedAt))) {
-                        remaining.add(reason);
-                        continue;
-                    }
                     ObjectNode applied = JSON.createObjectNode();
                     applied.put("waiver_id", selected.waiverId);
                     applied.put("model", modelId);
@@ -538,14 +638,19 @@ public final class Reconciler {
             String modelId,
             String modelVersion,
             String reasonCode,
-            Instant grantAt) {}
+            Instant grantAt,
+            String grantEventId) {}
 
     private record Evidence(
             Map<String, double[]> metrics,
             Map<String, String> metricCapturedAt,
             Map<LineageKey, String> lineage,
             Map<String, Boolean> calibrated,
-            List<ActiveWaiver> activeWaivers) {}
+            List<ActiveWaiver> activeWaivers,
+            Set<String> approvedWaiverIds) {}
+
+    private record ApprovalReviewKey(
+            String waiverId, String reviewerId, String reviewerRole) {}
 
     private Reconciler() {}
 }

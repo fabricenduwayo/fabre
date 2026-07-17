@@ -6,6 +6,12 @@ set -uo pipefail
 
 mkdir -p /logs/verifier
 
+if [ "$PWD" = "/" ]; then
+  echo "Error: No working directory set." >&2
+  echo 0 > /logs/verifier/reward.txt
+  exit 0
+fi
+
 PYTHONPATH=/tests python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA /tests/test_outputs.py -q
 rc=$?
 if [ "$rc" -eq 0 ]; then

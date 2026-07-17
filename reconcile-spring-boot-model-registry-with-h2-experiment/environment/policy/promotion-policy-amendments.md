@@ -94,3 +94,25 @@ An active waiver may suppress a raw gate failure only when its grant event's
 from A-2026-04 through A-2026-08. Waivers granted on or after that instant
 cannot suppress failures derived from that operative run and must not appear in
 `applied_waivers` for it.
+
+## A-2026-11 — amends A-2026-06 waiver approval quorum
+
+A waiver may suppress a raw failure only when it has an effective approval
+quorum for its **latest valid grant epoch**. Replay `waiver_approval_events`
+through `release_context.decision_at`, ordered by `occurred_at` and then
+lexicographic `event_id`. Ignore approval events that do not sort strictly
+after the active waiver's latest valid grant event. For each
+`(waiver_id, reviewer_id, reviewer_role)`, only the latest remaining event is
+effective; `withdraw` removes that reviewer's approval for that role.
+
+Quorum requires an effective `approve` from role `risk` and an effective
+`approve` from role `model_owner`, with **different reviewer ids**. A
+replacement waiver never inherits its predecessor's approvals, and a waiver
+that is revoked and later granted again cannot reuse approvals from an earlier
+grant epoch.
+
+For each raw failure, first discard active waivers that fail this quorum or
+A-2026-10's operative-run timing rule. Select the suppressing waiver from the
+remaining eligible set by A-2026-06's latest-grant and waiver-id tie-break. This
+means a newer active but under-approved waiver does not shadow an older active
+waiver that is fully eligible.

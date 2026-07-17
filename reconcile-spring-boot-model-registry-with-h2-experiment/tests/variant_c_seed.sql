@@ -90,3 +90,9 @@ UPDATE waiver_events SET paired_event_id = 'event-delta-old-revoke'
 INSERT INTO waiver_events VALUES
   ('event-omega-metric-grant', 'omega-metric', 'grant',
    TIMESTAMP '2026-01-05 09:00:00', NULL);
+INSERT INTO waiver_approval_events VALUES
+  ('approval-omega-risk', 'omega-metric', 'reviewer-risk-3', 'risk',
+   'approve', TIMESTAMP '2026-01-06 09:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-omega-owner', 'omega-metric', 'reviewer-owner-3', 'model_owner',
+   'approve', TIMESTAMP '2026-01-06 10:00:00');

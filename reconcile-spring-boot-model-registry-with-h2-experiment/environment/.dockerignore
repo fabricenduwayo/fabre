@@ -13,6 +13,7 @@ maven-repo.tar.gz
 maven-repo/
 **/*.mv.db
 !experiment-db/experiments.mv.db
+experiment-db/jobs/
 **/*.trace.db
 *.log
 solution/

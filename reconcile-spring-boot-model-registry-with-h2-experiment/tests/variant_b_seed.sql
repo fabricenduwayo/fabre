@@ -76,6 +76,12 @@ INSERT INTO waiver_events VALUES
   ('event-gamma-grant', 'gamma-calibration', 'grant',
    TIMESTAMP '2026-01-05 09:00:00', NULL);
 INSERT INTO waiver_events VALUES
+  ('event-gamma-revoke', 'gamma-calibration', 'revoke',
+   TIMESTAMP '2026-02-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-gamma-regrant', 'gamma-calibration', 'grant',
+   TIMESTAMP '2026-03-05 09:00:00', NULL);
+INSERT INTO waiver_events VALUES
   ('event-beta-old-grant', 'beta-metric-old', 'grant',
    TIMESTAMP '2026-01-05 09:00:00', NULL);
 INSERT INTO waiver_events VALUES
@@ -88,3 +94,12 @@ UPDATE waiver_events SET paired_event_id = 'event-beta-new-grant'
   WHERE event_id = 'event-beta-old-revoke';
 UPDATE waiver_events SET paired_event_id = 'event-beta-old-revoke'
   WHERE event_id = 'event-beta-new-grant';
+
+-- These approvals belong to gamma's first grant epoch. The March regrant
+-- requires fresh approvals, so gamma remains uncalibrated under A-2026-11.
+INSERT INTO waiver_approval_events VALUES
+  ('approval-gamma-risk', 'gamma-calibration', 'reviewer-risk-2', 'risk',
+   'approve', TIMESTAMP '2026-01-06 09:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-gamma-owner', 'gamma-calibration', 'reviewer-owner-2',
+   'model_owner', 'approve', TIMESTAMP '2026-01-06 10:00:00');

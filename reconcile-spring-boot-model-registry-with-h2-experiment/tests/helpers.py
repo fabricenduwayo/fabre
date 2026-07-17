@@ -287,9 +287,60 @@ def active_waivers(db_url: str) -> list[dict]:
             < parse_timestamp(waiver["valid_until"])
         ):
             result.append(
-                {**waiver, "grant_at": parse_timestamp(event["occurred_at"])}
+                {
+                    **waiver,
+                    "grant_at": parse_timestamp(event["occurred_at"]),
+                    "grant_event_id": event["event_id"],
+                }
             )
     return result
+
+
+def approval_quorum(db_url: str, active_waivers: list[dict]) -> set[str]:
+    """Return active waiver ids satisfying A-2026-11's current-grant quorum."""
+    contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
+    assert len(contexts) == 1, "release_context must contain exactly one decision"
+    decision_at = parse_timestamp(contexts[0]["decision_at"])
+    active_by_id = {waiver["waiver_id"]: waiver for waiver in active_waivers}
+
+    latest: dict[tuple[str, str, str], dict[str, str]] = {}
+    for event in h2_select(
+        """
+        SELECT event_id, waiver_id, reviewer_id, reviewer_role,
+               event_type, occurred_at
+        FROM waiver_approval_events
+        """,
+        db_url,
+    ):
+        waiver = active_by_id.get(event["waiver_id"])
+        if waiver is None:
+            continue
+        event_key = (parse_timestamp(event["occurred_at"]), event["event_id"])
+        grant_key = (waiver["grant_at"], waiver["grant_event_id"])
+        if event_key <= grant_key or event_key[0] > decision_at:
+            continue
+        key = (event["waiver_id"], event["reviewer_id"], event["reviewer_role"])
+        current = latest.get(key)
+        if current is None or event_key > (
+            parse_timestamp(current["occurred_at"]),
+            current["event_id"],
+        ):
+            latest[key] = event
+
+    reviewers: dict[str, dict[str, set[str]]] = {}
+    for event in latest.values():
+        if event["event_type"] != "approve":
+            continue
+        roles = reviewers.setdefault(event["waiver_id"], {})
+        roles.setdefault(event["reviewer_role"], set()).add(event["reviewer_id"])
+
+    approved: set[str] = set()
+    for waiver_id, roles in reviewers.items():
+        risk = roles.get("risk", set())
+        owners = roles.get("model_owner", set())
+        if any(risk_reviewer != owner_reviewer for risk_reviewer in risk for owner_reviewer in owners):
+            approved.add(waiver_id)
+    return approved
 
 
 def effective_calibration(db_url: str) -> dict[str, bool]:
@@ -341,12 +392,14 @@ def load_evidence(db_url: str) -> dict:
     metric_captured_at = {
         model_id: values[2] for model_id, values in metrics.items()
     }
+    waivers = active_waivers(db_url)
     return {
         "metrics": metric_values,
         "metric_captured_at": metric_captured_at,
         "lineage": lineage,
         "calibrated": calibrated,
-        "active_waivers": active_waivers(db_url),
+        "active_waivers": waivers,
+        "approved_waiver_ids": approval_quorum(db_url, waivers),
     }
 
 
@@ -380,12 +433,20 @@ def evaluate_candidate_with_waivers(
     applied: list[tuple[str, str, str, str]] = []
     operative_at = evidence.get("metric_captured_at", {}).get(model_id)
     for reason in reasons:
+        operative_timestamp = (
+            parse_timestamp(operative_at) if operative_at is not None else None
+        )
         matching = [
             waiver
             for waiver in evidence["active_waivers"]
             if waiver["model_id"] == model_id
             and waiver["model_version"] == version
             and waiver["reason_code"] == reason
+            and waiver["waiver_id"] in evidence["approved_waiver_ids"]
+            and (
+                operative_timestamp is None
+                or waiver["grant_at"] < operative_timestamp
+            )
         ]
         if not matching:
             remaining.append(reason)
@@ -393,11 +454,6 @@ def evaluate_candidate_with_waivers(
         selected = max(
             matching, key=lambda waiver: (waiver["grant_at"], waiver["waiver_id"])
         )
-        if operative_at is not None and selected["grant_at"] >= parse_timestamp(
-            operative_at
-        ):
-            remaining.append(reason)
-            continue
         applied.append((selected["waiver_id"], model_id, version, reason))
     return remaining, applied
 

@@ -159,7 +159,13 @@ def test_shipped_decision_uses_h2_metrics_not_registry_overstatement(
         "promoted model must follow H2 metrics, not registry-reported values"
     )
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
-    assert REASON_METRIC in rejected["beta"]
+    assert rejected["beta"] == {"lost_tiebreak"}, (
+        "beta's canonical metric failure is waived, then its canonical H2 AUC loses tie-break"
+    )
+    assert any(
+        row["model"] == "beta" and row["reason"] == REASON_METRIC
+        for row in manifest["applied_waivers"]
+    )
 
 
 def test_gate1_uses_latest_completed_validation_run(evidence, expected):
@@ -220,7 +226,7 @@ def test_omega_same_timestamp_calibration_replay(evidence, expected):
 
 
 def test_shipped_waiver_lifecycle(manifest, evidence, expected):
-    """A-2026-06/10: only grants before the operative run may suppress failures."""
+    """A-2026-06/10/11: suppression needs timing and latest-grant approval quorum."""
     active_ids = {waiver["waiver_id"] for waiver in evidence["active_waivers"]}
     assert "delta-lineage-new" in active_ids
     assert "delta-lineage-alt" in active_ids
@@ -234,16 +240,28 @@ def test_shipped_waiver_lifecycle(manifest, evidence, expected):
     assert "alpha-metric-future" not in active_ids, (
         "events after release_context.decision_at must not count"
     )
-    assert expected["applied_waivers"] == set(), (
-        "delta's lineage grants occur after its operative validation run and must not "
-        "appear in applied_waivers"
+    assert "beta-metric-quorum" in evidence["approved_waiver_ids"]
+    assert "beta-metric-noquorum" not in evidence["approved_waiver_ids"], (
+        "one reviewer carrying both role labels must not satisfy approval quorum"
     )
+    assert expected["applied_waivers"] == {
+        ("beta-metric-quorum", "beta", "0.9.1", "metric_threshold")
+    }, "the older fully approved beta waiver must survive the newer under-approved grant"
     reported = {
         (row["waiver_id"], row["model"], row["model_version"], row["reason"])
         for row in manifest["applied_waivers"]
     }
-    assert reported == set(), (
-        "waivers granted on or after the operative run captured_at must not be reported"
+    assert reported == expected["applied_waivers"]
+    rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
+    assert rejected["beta"] == {"lost_tiebreak"}, (
+        "beta's metric failure is suppressed, but its lower H2 AUC still loses tie-break"
+    )
+
+
+def test_shipped_waiver_quorum_replays_ties_and_distinct_reviewers(evidence):
+    """A-2026-11 replays approval ties and requires distinct risk/owner reviewers."""
+    assert evidence["approved_waiver_ids"] == {"beta-metric-quorum"}, (
+        "only the waiver with a final owner approval and a distinct risk reviewer qualifies"
     )
 
 
@@ -310,7 +328,7 @@ def test_cli_generalizes_without_predecessor_revival(registry, variant_a_db_url)
 
 
 def test_cli_generalizes_with_malformed_replacement(registry, variant_b_db_url):
-    """A valid simple grant applies while a malformed replacement pair is ignored."""
+    """Stale pre-regrant approvals and a malformed replacement pair are ignored."""
     variant_expected = expected_decision(registry, load_evidence(variant_b_db_url))
     with tempfile.TemporaryDirectory() as tmp:
         out_path = Path(tmp) / "variant-b.json"
@@ -323,6 +341,18 @@ def test_cli_generalizes_with_malformed_replacement(registry, variant_b_db_url):
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     jsonschema.validate(instance=variant_manifest, schema=schema)
     assert_manifest_matches_expected(variant_manifest, registry, variant_expected)
+    assert variant_manifest["promoted"] == "omega"
+    rejected = {
+        entry["model"]: set(entry["reasons"])
+        for entry in variant_manifest["rejected"]
+    }
+    assert "uncalibrated" in rejected["gamma"], (
+        "gamma's approvals predate its latest grant epoch and cannot approve the regrant"
+    )
+    assert not any(
+        row["waiver_id"] == "gamma-calibration"
+        for row in variant_manifest["applied_waivers"]
+    )
 
 
 def test_cli_reports_partial_waiver_under_dual_failure(registry, variant_c_db_url):

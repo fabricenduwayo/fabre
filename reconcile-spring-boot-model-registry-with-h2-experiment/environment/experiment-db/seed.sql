@@ -92,6 +92,12 @@ INSERT INTO promotion_waivers VALUES
   ('beta-metric-new', 'beta', '0.9.1', 'metric_threshold',
    TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
    'beta-metric-old');
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-quorum', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+INSERT INTO promotion_waivers VALUES
+  ('beta-metric-noquorum', 'beta', '0.9.1', 'metric_threshold',
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
 
 -- gamma is revoked; omega's live waiver is irrelevant because its metric gate
 -- passes; alpha's grant occurs after the decision time.
@@ -138,6 +144,12 @@ UPDATE waiver_events SET paired_event_id = 'event-beta-new-grant'
   WHERE event_id = 'event-beta-old-revoke';
 UPDATE waiver_events SET paired_event_id = 'event-beta-old-revoke'
   WHERE event_id = 'event-beta-new-grant';
+INSERT INTO waiver_events VALUES
+  ('event-beta-quorum-grant', 'beta-metric-quorum', 'grant',
+   TIMESTAMP '2026-01-02 10:00:00', NULL);
+INSERT INTO waiver_events VALUES
+  ('event-beta-noquorum-grant', 'beta-metric-noquorum', 'grant',
+   TIMESTAMP '2026-01-10 10:00:00', NULL);
 
 INSERT INTO waiver_events VALUES
   ('event-gamma-grant', 'gamma-calibration', 'grant',
@@ -151,3 +163,22 @@ INSERT INTO waiver_events VALUES
 INSERT INTO waiver_events VALUES
   ('event-alpha-future-grant', 'alpha-metric-future', 'grant',
    TIMESTAMP '2026-04-20 09:00:00', NULL);
+
+-- A-2026-11: the newer beta waiver has both role labels but the same reviewer
+-- cannot satisfy both sides of quorum. The older waiver has distinct reviewers;
+-- same-timestamp event_id ordering leaves its model-owner approval active.
+INSERT INTO waiver_approval_events VALUES
+  ('approval-beta-q-risk', 'beta-metric-quorum', 'reviewer-risk-1', 'risk',
+   'approve', TIMESTAMP '2026-01-03 09:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-beta-q-owner-a-withdraw', 'beta-metric-quorum', 'reviewer-owner-1',
+   'model_owner', 'withdraw', TIMESTAMP '2026-01-03 10:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-beta-q-owner-z-approve', 'beta-metric-quorum', 'reviewer-owner-1',
+   'model_owner', 'approve', TIMESTAMP '2026-01-03 10:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-beta-nq-risk', 'beta-metric-noquorum', 'reviewer-dual', 'risk',
+   'approve', TIMESTAMP '2026-01-11 09:00:00');
+INSERT INTO waiver_approval_events VALUES
+  ('approval-beta-nq-owner', 'beta-metric-noquorum', 'reviewer-dual',
+   'model_owner', 'approve', TIMESTAMP '2026-01-11 09:05:00');

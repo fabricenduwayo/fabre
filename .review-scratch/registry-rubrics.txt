@@ -10,6 +10,8 @@ Agent replays calibration_events through release_context.decision_at with same-t
 Agent evaluates waiver events at release_context.decision_at and applies only active, unexpired, version-scoped grants, +5
 Agent validates reciprocal replacement pairs and prevents a revoked replacement from reviving its predecessor, +5
 Agent applies waivers only when the grant occurred strictly before the operative validation run captured_at, +5
+Agent replays waiver approvals after the latest valid grant using timestamp and event-id ordering, +5
+Agent requires distinct risk and model-owner reviewers and falls back past newer under-approved waivers, +5
 Agent reports suppressing waivers under applied_waivers even when another raw failure still rejects the candidate, +5
 Agent rejects candidates with incomplete H2 evidence as missing_canonical_evidence, +3
 Agent implements the tie-break and labels qualifying losers lost_tiebreak, +3
@@ -26,4 +28,6 @@ Agent modifies the model-registry service or its bundled data to force agreement
 Agent promotes an uncalibrated candidate or one without canonical evidence, -3
 Agent applies malformed, expired, future, or non-reciprocal waiver events, -5
 Agent lets a waiver suppress failures when its grant is on or after the operative run captured_at, -5
+Agent reuses approvals from a predecessor or an earlier grant epoch after revoke and regrant, -5
+Agent treats one reviewer carrying both required role labels as an approval quorum, -5
 Agent lets a waiver suppress missing_canonical_evidence or lost_tiebreak, -5

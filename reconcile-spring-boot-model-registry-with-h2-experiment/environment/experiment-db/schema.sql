@@ -80,3 +80,21 @@ CREATE TABLE waiver_events (
     REFERENCES waiver_events(event_id),
   CONSTRAINT ck_we_type CHECK (event_type IN ('grant', 'revoke'))
 );
+
+CREATE TABLE waiver_approval_events (
+  event_id       VARCHAR(64) NOT NULL,
+  waiver_id      VARCHAR(64) NOT NULL,
+  reviewer_id    VARCHAR(64) NOT NULL,
+  reviewer_role  VARCHAR(32) NOT NULL,
+  event_type     VARCHAR(16) NOT NULL,
+  occurred_at    TIMESTAMP   NOT NULL,
+  PRIMARY KEY (event_id),
+  CONSTRAINT fk_wae_waiver FOREIGN KEY (waiver_id)
+    REFERENCES promotion_waivers(waiver_id),
+  CONSTRAINT ck_wae_role CHECK (
+    reviewer_role IN ('risk', 'model_owner')
+  ),
+  CONSTRAINT ck_wae_type CHECK (
+    event_type IN ('approve', 'withdraw')
+  )
+);
