@@ -34,6 +34,14 @@ CREATE TABLE edge_relay_transitions (
     )
 );
 
+CREATE TABLE release_sequences (
+    sequence_id TEXT NOT NULL,
+    step_order INTEGER NOT NULL CHECK (step_order > 0),
+    edge_id TEXT NOT NULL REFERENCES edges(edge_id),
+    PRIMARY KEY (sequence_id, step_order),
+    UNIQUE (sequence_id, edge_id)
+);
+
 CREATE TABLE route_rules (
     rule_id TEXT PRIMARY KEY,
     edge_id TEXT NOT NULL REFERENCES edges(edge_id),
@@ -45,14 +53,24 @@ CREATE TABLE route_rules (
     match_relay_state TEXT,
     count_relay_id TEXT REFERENCES relay_latches(relay_id),
     min_transition_count INTEGER,
+    max_transition_count INTEGER,
     requires_visited_station TEXT REFERENCES stations(station_id),
+    requires_completed_sequence TEXT,
     CONSTRAINT route_rule_relay_pair CHECK (
         (match_relay_id IS NULL AND match_relay_state IS NULL)
         OR (match_relay_id IS NOT NULL AND match_relay_state IS NOT NULL)
     ),
     CONSTRAINT route_rule_count_pair CHECK (
-        (count_relay_id IS NULL AND min_transition_count IS NULL)
-        OR (count_relay_id IS NOT NULL AND min_transition_count IS NOT NULL)
+        (count_relay_id IS NULL
+            AND min_transition_count IS NULL
+            AND max_transition_count IS NULL)
+        OR (count_relay_id IS NOT NULL
+            AND (min_transition_count IS NOT NULL OR max_transition_count IS NOT NULL))
+    ),
+    CONSTRAINT route_rule_count_range CHECK (
+        min_transition_count IS NULL
+        OR max_transition_count IS NULL
+        OR min_transition_count <= max_transition_count
     )
 );
 
@@ -68,4 +86,5 @@ CREATE TABLE lock_groups (
     )
 );
 
-GRANT SELECT ON stations, edges, relay_latches, edge_relay_transitions, route_rules, lock_groups TO trailswitch;
+GRANT SELECT ON stations, edges, relay_latches, edge_relay_transitions,
+    release_sequences, route_rules, lock_groups TO trailswitch;

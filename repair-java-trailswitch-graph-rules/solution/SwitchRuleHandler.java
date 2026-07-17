@@ -23,7 +23,8 @@ public class SwitchRuleHandler {
             Map<String, String> switches,
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
-            Set<String> visitedStations) {
+            Set<String> visitedStations,
+            Set<String> completedSequences) {
         Set<String> locked = new HashSet<>();
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new HashMap<>();
@@ -31,7 +32,13 @@ public class SwitchRuleHandler {
             if (edgeDecided.containsKey(rule.edgeId())) {
                 continue;
             }
-            if (ruleMatches(switches, relayState, transitionCounts, visitedStations, rule)) {
+            if (ruleMatches(
+                    switches,
+                    relayState,
+                    transitionCounts,
+                    visitedStations,
+                    completedSequences,
+                    rule)) {
                 if ("clear".equalsIgnoreCase(rule.ruleAction())) {
                     edgeDecided.put(rule.edgeId(), true);
                     continue;
@@ -44,8 +51,12 @@ public class SwitchRuleHandler {
         return locked;
     }
 
-    public RelayAdvanceResult advanceRelays(
-            String traversedEdge, Map<String, String> relayState, Map<String, Integer> transitionCounts) {
+    public SearchAdvanceResult advanceState(
+            String traversedEdge,
+            Map<String, String> relayState,
+            Map<String, Integer> transitionCounts,
+            Map<String, Integer> sequenceProgress,
+            Set<String> completedSequences) {
         Map<String, String> nextRelays = new HashMap<>(relayState);
         Map<String, Integer> nextCounts = new HashMap<>(transitionCounts);
         for (RelayTransition transition : repository.loadRelayTransitions(traversedEdge)) {
@@ -62,7 +73,37 @@ public class SwitchRuleHandler {
                 nextCounts.merge(transition.relayId(), 1, Integer::sum);
             }
         }
-        return new RelayAdvanceResult(Map.copyOf(nextRelays), Map.copyOf(nextCounts));
+
+        Map<String, Integer> nextProgress = new HashMap<>(sequenceProgress);
+        Set<String> nextCompleted = new HashSet<>(completedSequences);
+        for (Map.Entry<String, List<String>> entry :
+                repository.loadReleaseSequences().entrySet()) {
+            List<String> steps = entry.getValue();
+            if (steps.isEmpty()) {
+                continue;
+            }
+            int progress = nextProgress.getOrDefault(entry.getKey(), 0);
+            if (progress >= steps.size()) {
+                progress = 0;
+            }
+            if (traversedEdge.equals(steps.get(progress))) {
+                progress++;
+            } else if (traversedEdge.equals(steps.get(0))) {
+                progress = 1;
+            } else {
+                progress = 0;
+            }
+            if (progress == steps.size()) {
+                nextCompleted.add(entry.getKey());
+                progress = 0;
+            }
+            nextProgress.put(entry.getKey(), progress);
+        }
+        return new SearchAdvanceResult(
+                Map.copyOf(nextRelays),
+                Map.copyOf(nextCounts),
+                Map.copyOf(nextProgress),
+                Set.copyOf(nextCompleted));
     }
 
     private void applyLockGroups(Set<String> locked, Map<String, String> relayState) {
@@ -105,6 +146,7 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Set<String> visitedStations,
+            Set<String> completedSequences,
             RouteRule rule) {
         if (rule.lockSw1() != null
                 && !switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
@@ -130,12 +172,27 @@ public class SwitchRuleHandler {
                 return false;
             }
         }
+        if (rule.countRelayId() != null && rule.maxTransitionCount() != null) {
+            int count = transitionCounts.getOrDefault(rule.countRelayId(), 0);
+            if (count > rule.maxTransitionCount()) {
+                return false;
+            }
+        }
+        if (rule.requiresCompletedSequence() != null
+                && !completedSequences.contains(rule.requiresCompletedSequence())) {
+            return false;
+        }
         return rule.lockSw1() != null
                 || rule.lockSw2() != null
                 || rule.matchRelayId() != null
                 || rule.requiresVisitedStation() != null
-                || rule.countRelayId() != null;
+                || rule.countRelayId() != null
+                || rule.requiresCompletedSequence() != null;
     }
 
-    public record RelayAdvanceResult(Map<String, String> relays, Map<String, Integer> transitionCounts) {}
+    public record SearchAdvanceResult(
+            Map<String, String> relays,
+            Map<String, Integer> transitionCounts,
+            Map<String, Integer> sequenceProgress,
+            Set<String> completedSequences) {}
 }

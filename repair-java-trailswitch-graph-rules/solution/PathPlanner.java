@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PathPlanner {
-    private static final int MAX_DEPTH = 18;
+    private static final int MAX_DEPTH = 24;
 
     private final GraphPathRepository repository;
     private final SwitchRuleHandler ruleHandler;
@@ -30,6 +30,8 @@ public class PathPlanner {
                         from,
                         repository.loadRelayStates(),
                         Map.of(),
+                        Map.of(),
+                        Set.of(),
                         Set.of(from));
         Queue<SearchState> queue = new ArrayDeque<>();
         Map<SearchState, SearchState> parent = new HashMap<>();
@@ -51,7 +53,8 @@ public class PathPlanner {
                             switches,
                             current.relays(),
                             current.transitionCounts(),
-                            current.visited());
+                            current.visited(),
+                            current.completedSequences());
             for (EdgeRow edge : repository.loadOutgoing(current.station())) {
                 if (locked.contains(edge.edgeId())) {
                     continue;
@@ -59,9 +62,13 @@ public class PathPlanner {
                 if (!edgeActive(edge, switches)) {
                     continue;
                 }
-                SwitchRuleHandler.RelayAdvanceResult advanced =
-                        ruleHandler.advanceRelays(
-                                edge.edgeId(), current.relays(), current.transitionCounts());
+                SwitchRuleHandler.SearchAdvanceResult advanced =
+                        ruleHandler.advanceState(
+                                edge.edgeId(),
+                                current.relays(),
+                                current.transitionCounts(),
+                                current.sequenceProgress(),
+                                current.completedSequences());
                 Set<String> nextVisited = new HashSet<>(current.visited());
                 nextVisited.add(edge.toStation());
                 SearchState next =
@@ -69,6 +76,8 @@ public class PathPlanner {
                                 edge.toStation(),
                                 advanced.relays(),
                                 advanced.transitionCounts(),
+                                advanced.sequenceProgress(),
+                                advanced.completedSequences(),
                                 nextVisited);
                 if (discovered.add(next)) {
                     parent.put(next, current);
@@ -117,10 +126,14 @@ public class PathPlanner {
             String station,
             Map<String, String> relays,
             Map<String, Integer> transitionCounts,
+            Map<String, Integer> sequenceProgress,
+            Set<String> completedSequences,
             Set<String> visited) {
         private SearchState {
             relays = Map.copyOf(relays);
             transitionCounts = Map.copyOf(transitionCounts);
+            sequenceProgress = Map.copyOf(sequenceProgress);
+            completedSequences = Set.copyOf(completedSequences);
             visited = Set.copyOf(visited);
         }
     }

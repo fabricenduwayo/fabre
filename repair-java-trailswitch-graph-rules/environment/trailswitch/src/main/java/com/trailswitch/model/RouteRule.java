@@ -11,4 +11,6 @@ public record RouteRule(
         String matchRelayState,
         String countRelayId,
         Integer minTransitionCount,
-        String requiresVisitedStation) {}
+        Integer maxTransitionCount,
+        String requiresVisitedStation,
+        String requiresCompletedSequence) {}

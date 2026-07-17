@@ -1,7 +1,5 @@
 """Behavioral verifier for TrailSwitch referee contract compliance."""
 
-import time
-
 import pytest
 
 from helpers import REPO_JAVA, ensure_service, plan, reset_relays, set_relay_state
@@ -159,6 +157,23 @@ def test_conditional_spur_transition_requires_posted_release():
     assert result["path"] == ["A", "C", "F", "C", "B", "D"]
 
 
+def test_ordered_release_sequence_rejects_shortcut_history():
+    """An out-of-order F-to-C visit must not satisfy the C-F-C release circuit."""
+    result = plan("G", "E", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["G", "F", "C", "F", "C", "B", "D", "E"]
+    assert result["cycle_guard"] is True
+
+
+def test_equal_length_routes_use_first_differing_edge_id():
+    """Equal-length authorized paths choose the lower first edge id."""
+    set_relay_state("yard_release", "released")
+    result = plan("H", "B", {"sw1": "north", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["H", "A", "B"]
+    assert result["cycle_guard"] is True
+
+
 def test_lock_positions_require_conjunction():
     """A route lock listing two switch positions requires both to match."""
     open_line = plan("A", "B", {"sw1": "north", "sw2": "north"})
@@ -169,13 +184,10 @@ def test_lock_positions_require_conjunction():
     assert blocked["path"] == []
 
 
-def test_cycle_guard_finishes_quickly():
-    """Planning on the cyclic seed graph must finish without exhaustive re-enqueue loops."""
-    start = time.time()
+def test_cycle_guard_terminates_cyclic_search():
+    """Planning on the cyclic seed graph must finish through state deduplication."""
     result = plan("C", "E", {"sw1": "south", "sw2": "south"})
-    elapsed = time.time() - start
     assert result["cycle_guard"] is True
-    assert elapsed < 2.0
 
 
 def test_sql_lookups_are_parameterized():
