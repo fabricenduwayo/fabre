@@ -64,14 +64,14 @@ INSERT INTO release_context VALUES
   ('current-release', TIMESTAMP '2026-04-15 12:00:00');
 INSERT INTO promotion_waivers VALUES
   ('gamma-calibration', 'gamma', '2.0.0', 'uncalibrated',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-old', 'beta', '0.9.1', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-new', 'beta', '0.9.1', 'metric_threshold',
    TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
-   'beta-metric-old');
+   'beta-metric-old', NULL);
 INSERT INTO waiver_events VALUES
   ('event-gamma-grant', 'gamma-calibration', 'grant',
    TIMESTAMP '2026-01-05 09:00:00', NULL);

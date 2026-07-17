@@ -116,3 +116,27 @@ A-2026-10's operative-run timing rule. Select the suppressing waiver from the
 remaining eligible set by A-2026-06's latest-grant and waiver-id tie-break. This
 means a newer active but under-approved waiver does not shadow an older active
 waiver that is fully eligible.
+
+## A-2026-12 — amends A-2026-06 / A-2026-10 metric suppression anchoring
+
+`promotion_waivers` may carry an optional `anchors_run_id` referencing
+`validation_runs.run_id`. When set, a waiver may suppress only
+`metric_threshold` for its model id and version, and only when all of the
+following hold:
+
+1. The referenced run exists and its `model_id` equals the waiver's model id.
+2. After A-2026-04 through A-2026-08, that run is exactly the operative
+   completed validation run for the model at `release_context.decision_at`.
+3. The waiver's latest valid grant event's `occurred_at` is strictly before
+   that run's `captured_at` (replacing A-2026-10's operative-run reference
+   for anchored waivers).
+4. A-2026-11 approval quorum is satisfied for the latest grant epoch.
+
+When `anchors_run_id` is null, A-2026-10 continues to use the operative run
+from A-2026-04 through A-2026-08.
+
+A reciprocal replacement pair is malformed unless both waivers carry the
+same `anchors_run_id` (including both null). A voided or non-operative
+anchored run does not fall back to an unanchored waiver for the same raw
+failure unless that other waiver independently passes A-2026-06, A-2026-10,
+and A-2026-11.

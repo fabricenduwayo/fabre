@@ -64,11 +64,11 @@ INSERT INTO release_context VALUES
   ('current-release', TIMESTAMP '2026-04-15 12:00:00');
 INSERT INTO promotion_waivers VALUES
   ('delta-lineage-old', 'delta', '1.0.3', 'lineage_mismatch',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('delta-lineage-new', 'delta', '1.0.3', 'lineage_mismatch',
    TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
-   'delta-lineage-old');
+   'delta-lineage-old', NULL);
 INSERT INTO waiver_events VALUES
   ('event-old-grant', 'delta-lineage-old', 'grant',
    TIMESTAMP '2026-01-05 09:00:00', NULL);

@@ -158,7 +158,8 @@ public final class Reconciler {
                 h2Select(
                         """
                         SELECT waiver_id, model_id, model_version, reason_code,
-                               valid_from, valid_until, replaces_waiver_id
+                               valid_from, valid_until, replaces_waiver_id,
+                               anchors_run_id
                         FROM promotion_waivers
                         """,
                         dbUrl)) {
@@ -214,6 +215,10 @@ public final class Reconciler {
                     || !successor.get("reason_code").equals(predecessor.get("reason_code"))) {
                 continue;
             }
+            if (!successor.getOrDefault("anchors_run_id", "").strip()
+                    .equals(predecessor.getOrDefault("anchors_run_id", "").strip())) {
+                continue;
+            }
             validEvents.add(event);
         }
 
@@ -245,7 +250,8 @@ public final class Reconciler {
                                 waiver.get("model_version"),
                                 waiver.get("reason_code"),
                                 parseTimestamp(event.get("occurred_at")),
-                                event.get("event_id")));
+                                event.get("event_id"),
+                                waiver.getOrDefault("anchors_run_id", "").strip()));
             }
         }
         return active;
@@ -404,6 +410,7 @@ public final class Reconciler {
         }
         Map<String, double[]> metrics = new HashMap<>();
         Map<String, String> metricCapturedAt = new HashMap<>();
+        Map<String, String> operativeRunIds = new HashMap<>();
         for (Map.Entry<String, Map<String, String>> entry : latestByModel.entrySet()) {
             Map<String, String> row = entry.getValue();
             metrics.put(
@@ -413,6 +420,7 @@ public final class Reconciler {
                         Double.parseDouble(row.get("accuracy"))
                     });
             metricCapturedAt.put(entry.getKey(), row.get("captured_at"));
+            operativeRunIds.put(entry.getKey(), row.get("run_id"));
         }
         Map<LineageKey, String> lineage = new HashMap<>();
         for (Map<String, String> row :
@@ -466,6 +474,7 @@ public final class Reconciler {
         return new Evidence(
                 metrics,
                 metricCapturedAt,
+                operativeRunIds,
                 lineage,
                 calibrated,
                 waivers,
@@ -524,6 +533,7 @@ public final class Reconciler {
 
                 List<String> remaining = new ArrayList<>();
                 String operativeCapturedAt = evidence.metricCapturedAt.get(modelId);
+                String operativeRunId = evidence.operativeRunIds.get(modelId);
                 Instant operativeAt =
                         operativeCapturedAt == null
                                 ? null
@@ -531,14 +541,20 @@ public final class Reconciler {
                 for (String reason : fails) {
                     List<ActiveWaiver> matching = new ArrayList<>();
                     for (ActiveWaiver waiver : evidence.activeWaivers) {
-                        if (waiver.modelId.equals(modelId)
-                                && waiver.modelVersion.equals(version)
-                                && waiver.reasonCode.equals(reason)
-                                && evidence.approvedWaiverIds.contains(waiver.waiverId)
-                                && (operativeAt == null
-                                        || waiver.grantAt.isBefore(operativeAt))) {
-                            matching.add(waiver);
+                        if (!waiver.modelId.equals(modelId)
+                                || !waiver.modelVersion.equals(version)
+                                || !waiver.reasonCode.equals(reason)
+                                || !evidence.approvedWaiverIds.contains(waiver.waiverId)) {
+                            continue;
                         }
+                        if (!waiver.anchorsRunId.isEmpty()
+                                && !waiver.anchorsRunId.equals(operativeRunId)) {
+                            continue;
+                        }
+                        if (operativeAt != null && !waiver.grantAt.isBefore(operativeAt)) {
+                            continue;
+                        }
+                        matching.add(waiver);
                     }
                     if (matching.isEmpty()) {
                         remaining.add(reason);
@@ -639,11 +655,13 @@ public final class Reconciler {
             String modelVersion,
             String reasonCode,
             Instant grantAt,
-            String grantEventId) {}
+            String grantEventId,
+            String anchorsRunId) {}
 
     private record Evidence(
             Map<String, double[]> metrics,
             Map<String, String> metricCapturedAt,
+            Map<String, String> operativeRunIds,
             Map<LineageKey, String> lineage,
             Map<String, Boolean> calibrated,
             List<ActiveWaiver> activeWaivers,

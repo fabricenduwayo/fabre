@@ -101,3 +101,9 @@ def variant_b_db_url() -> str:
 def variant_c_db_url() -> str:
     """Variant store where a partial waiver suppresses one of two gate failures."""
     return _build_variant_db("variant_c_seed.sql")
+
+
+@pytest.fixture(scope="session")
+def variant_d_db_url() -> str:
+    """Variant store exercising operative-run anchoring with voiding and quorum."""
+    return _build_variant_db("variant_d_seed.sql")

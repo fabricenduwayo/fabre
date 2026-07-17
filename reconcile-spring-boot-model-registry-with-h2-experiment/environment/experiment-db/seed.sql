@@ -74,42 +74,42 @@ INSERT INTO release_context (context_id, decision_at)
 -- The replacement is the latest applicable lineage waiver at decision time.
 INSERT INTO promotion_waivers VALUES
   ('delta-lineage-old', 'delta', '1.0.3', 'lineage_mismatch',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('delta-lineage-new', 'delta', '1.0.3', 'lineage_mismatch',
    TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
-   'delta-lineage-old');
+   'delta-lineage-old', NULL);
 INSERT INTO promotion_waivers VALUES
   ('delta-lineage-alt', 'delta', '1.0.3', 'lineage_mismatch',
-   TIMESTAMP '2026-03-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-03-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 
 -- beta's predecessor is expired and its attempted replacement pair is
 -- malformed because the two sides occurred at different times.
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-old', 'beta', '0.9.1', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-03-31 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-new', 'beta', '0.9.1', 'metric_threshold',
    TIMESTAMP '2026-04-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00',
-   'beta-metric-old');
+   'beta-metric-old', NULL);
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-quorum', 'beta', '0.9.1', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('beta-metric-noquorum', 'beta', '0.9.1', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 
 -- gamma is revoked; omega's live waiver is irrelevant because its metric gate
 -- passes; alpha's grant occurs after the decision time.
 INSERT INTO promotion_waivers VALUES
   ('gamma-calibration', 'gamma', '2.0.0', 'uncalibrated',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('omega-metric', 'omega', '1.4.2', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 INSERT INTO promotion_waivers VALUES
   ('alpha-metric-future', 'alpha', '1.2.0', 'metric_threshold',
-   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL);
+   TIMESTAMP '2026-01-01 00:00:00', TIMESTAMP '2026-07-01 00:00:00', NULL, NULL);
 
 INSERT INTO waiver_events VALUES
   ('event-delta-old-grant', 'delta-lineage-old', 'grant',

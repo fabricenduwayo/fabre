@@ -167,7 +167,7 @@ FROM validation_runs
 """
 
 
-def operative_metrics(db_url: str) -> dict[str, tuple[float, float, str]]:
+def operative_metrics(db_url: str) -> dict[str, tuple[float, float, str, str]]:
     """Pick Gate 1 metrics per model using A-2026-04, A-2026-05, and A-2026-08."""
     runs = h2_select(LATEST_COMPLETED_METRICS_SQL, db_url)
     supersedes_by_run = {
@@ -199,7 +199,7 @@ def operative_metrics(db_url: str) -> dict[str, tuple[float, float, str]]:
         if current is None or captured_at > current["captured_at"]:
             latest_by_model[model_id] = row
     return {
-        model_id: (float(row["auc"]), float(row["accuracy"]), row["captured_at"])
+        model_id: (float(row["auc"]), float(row["accuracy"]), row["captured_at"], row["run_id"])
         for model_id, row in latest_by_model.items()
     }
 
@@ -219,7 +219,7 @@ def active_waivers(db_url: str) -> list[dict]:
         for row in h2_select(
             """
             SELECT waiver_id, model_id, model_version, reason_code,
-                   valid_from, valid_until, replaces_waiver_id
+                   valid_from, valid_until, replaces_waiver_id, anchors_run_id
             FROM promotion_waivers
             """,
             db_url,
@@ -263,6 +263,10 @@ def active_waivers(db_url: str) -> list[dict]:
             successor[key] != predecessor[key]
             for key in ("model_id", "model_version", "reason_code")
         ):
+            continue
+        successor_anchor = successor.get("anchors_run_id", "").strip()
+        predecessor_anchor = predecessor.get("anchors_run_id", "").strip()
+        if successor_anchor != predecessor_anchor:
             continue
         valid_events.append(event)
 
@@ -392,10 +396,14 @@ def load_evidence(db_url: str) -> dict:
     metric_captured_at = {
         model_id: values[2] for model_id, values in metrics.items()
     }
+    operative_run_ids = {
+        model_id: values[3] for model_id, values in metrics.items()
+    }
     waivers = active_waivers(db_url)
     return {
         "metrics": metric_values,
         "metric_captured_at": metric_captured_at,
+        "operative_run_ids": operative_run_ids,
         "lineage": lineage,
         "calibrated": calibrated,
         "active_waivers": waivers,
@@ -432,22 +440,30 @@ def evaluate_candidate_with_waivers(
     remaining: list[str] = []
     applied: list[tuple[str, str, str, str]] = []
     operative_at = evidence.get("metric_captured_at", {}).get(model_id)
+    operative_run_id = evidence.get("operative_run_ids", {}).get(model_id)
     for reason in reasons:
-        operative_timestamp = (
-            parse_timestamp(operative_at) if operative_at is not None else None
-        )
-        matching = [
-            waiver
-            for waiver in evidence["active_waivers"]
-            if waiver["model_id"] == model_id
-            and waiver["model_version"] == version
-            and waiver["reason_code"] == reason
-            and waiver["waiver_id"] in evidence["approved_waiver_ids"]
-            and (
-                operative_timestamp is None
-                or waiver["grant_at"] < operative_timestamp
+        matching = []
+        for waiver in evidence["active_waivers"]:
+            if (
+                waiver["model_id"] != model_id
+                or waiver["model_version"] != version
+                or waiver["reason_code"] != reason
+                or waiver["waiver_id"] not in evidence["approved_waiver_ids"]
+            ):
+                continue
+            anchor = waiver.get("anchors_run_id", "").strip() or None
+            if anchor is not None:
+                if operative_run_id != anchor:
+                    continue
+                timing_source = operative_at
+            else:
+                timing_source = operative_at
+            operative_timestamp = (
+                parse_timestamp(timing_source) if timing_source is not None else None
             )
-        ]
+            if operative_timestamp is not None and waiver["grant_at"] >= operative_timestamp:
+                continue
+            matching.append(waiver)
         if not matching:
             remaining.append(reason)
             continue

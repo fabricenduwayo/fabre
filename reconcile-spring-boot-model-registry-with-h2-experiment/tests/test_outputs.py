@@ -28,6 +28,7 @@ from helpers import (
     api_healthy,
     assert_manifest_matches_expected,
     evaluate_candidate,
+    evaluate_candidate_with_waivers,
     expected_decision,
     load_evidence,
     run_reconcile_cli,
@@ -377,3 +378,41 @@ def test_cli_reports_partial_waiver_under_dual_failure(registry, variant_c_db_ur
         for row in variant_manifest["applied_waivers"]
     }
     assert ("omega-metric", "omega", "1.4.2", "metric_threshold") in reported
+
+
+def test_anchored_waiver_voided_run_fails_closed(registry_by_id, variant_d_db_url):
+    """A waiver anchored to a voided validation run cannot suppress metric failures."""
+    evidence = load_evidence(variant_d_db_url)
+    assert evidence["operative_run_ids"]["beta"] == "beta-run-3"
+    _, applied = evaluate_candidate_with_waivers(registry_by_id["beta"], evidence)
+    reported = {row[0] for row in applied}
+    assert "beta-metric-anchored-stale" not in reported
+    assert "beta-metric-anchored-live" not in reported
+    assert "beta-metric-anchored-ok" in reported
+
+
+def test_cli_generalizes_operative_run_anchoring(registry, variant_d_db_url):
+    """Voided anchors, timing, quorum, and replacement integrity compose on live JDBC."""
+    variant_expected = expected_decision(registry, load_evidence(variant_d_db_url))
+    with tempfile.TemporaryDirectory() as tmp:
+        out_path = Path(tmp) / "variant-d.json"
+        result = run_reconcile_cli([variant_d_db_url, str(out_path)])
+        assert result.returncode == 0, (
+            f"reconcile CLI failed against the variant store:\n{result.stdout}\n{result.stderr}"
+        )
+        variant_manifest = json.loads(out_path.read_text(encoding="utf-8"))
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    jsonschema.validate(instance=variant_manifest, schema=schema)
+    assert_manifest_matches_expected(variant_manifest, registry, variant_expected)
+    assert variant_manifest["promoted"] == "omega"
+    reported = {
+        (row["waiver_id"], row["model"], row["model_version"], row["reason"])
+        for row in variant_manifest["applied_waivers"]
+    }
+    assert reported == {("beta-metric-anchored-ok", "beta", "0.9.1", "metric_threshold")}
+    rejected = {
+        entry["model"]: set(entry["reasons"])
+        for entry in variant_manifest["rejected"]
+    }
+    assert "lost_tiebreak" in rejected["beta"]
+    assert "uncalibrated" in rejected["gamma"]

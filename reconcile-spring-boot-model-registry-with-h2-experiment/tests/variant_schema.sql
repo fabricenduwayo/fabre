@@ -57,10 +57,13 @@ CREATE TABLE promotion_waivers (
   valid_from           TIMESTAMP   NOT NULL,
   valid_until          TIMESTAMP   NOT NULL,
   replaces_waiver_id   VARCHAR(64),
+  anchors_run_id       VARCHAR(64),
   PRIMARY KEY (waiver_id),
   CONSTRAINT fk_pw_model FOREIGN KEY (model_id) REFERENCES models(id),
   CONSTRAINT fk_pw_replaces FOREIGN KEY (replaces_waiver_id)
     REFERENCES promotion_waivers(waiver_id),
+  CONSTRAINT fk_pw_anchor FOREIGN KEY (anchors_run_id)
+    REFERENCES validation_runs(run_id),
   CONSTRAINT ck_pw_reason CHECK (
     reason_code IN ('metric_threshold', 'uncalibrated', 'lineage_mismatch')
   ),
