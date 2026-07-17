@@ -43,6 +43,14 @@ def bootstrap_ok(secret=None, origin=None):
     return response[3]["token"]
 
 
+def activate_pending(token):
+    """Confirm a staged successor from both allowed origins."""
+    first = health(token, ALLOWED)
+    second = health(token, ALLOWED_2)
+    assert first[0] == second[0] == 200
+    return first, second
+
+
 def assert_cors(headers, origin=None, preflight=False):
     """Assert the resolved CORS grant for one response."""
     if origin in ALLOWED_ORIGINS:
@@ -147,6 +155,9 @@ def test_secret_and_generation_are_live_deployment_inputs():
     assert bootstrap(original)[0] == 403
     second = bootstrap_ok(replacement.swapcase())
     assert second != first
+    assert health(second)[0] == 401
+    assert health(first)[0] == 200
+    activate_pending(second)
     assert health(second)[0] == 200
     with open(SECRET_FILE, "w", encoding="utf-8") as handle:
         handle.write(original + "\n")
@@ -231,7 +242,88 @@ def test_generation_advance_requires_secret_before_cutover():
     assert health(old)[0] == 200
     new = bootstrap_ok()
     assert new != old
+    assert health(new)[0] == 401
+    assert health(old)[0] == 200
+    activate_pending(new)
     assert health(new)[0] == 200
+
+
+def test_pending_successor_requires_two_distinct_allowed_origins():
+    """A staged successor activates only after both allowed origins confirm it."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+
+    assert health(pending)[0] == 401
+    assert health(pending, "https://evil.example")[0] == 401
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(current)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 200
+    assert health(pending)[0] == 200
+    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
+
+    reasons = [
+        row["reason"]
+        for row in audit_rows()
+        if row["event"] == "health" and row["reason"] != "legacy_history"
+    ]
+    assert reasons == [
+        "invalid_token",
+        "invalid_token",
+        "cutover_confirmation",
+        "cutover_confirmation",
+        None,
+        "cutover_activated",
+        None,
+        "predecessor_overlap",
+        "predecessor_overlap",
+        "invalid_token",
+    ]
+
+
+def test_higher_generation_replaces_only_unfinished_successor():
+    """A newer pending generation invalidates the old stage but preserves current."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    abandoned = bootstrap_ok()
+    assert health(abandoned, ALLOWED)[0] == 200
+
+    set_generation(INITIAL_GENERATION + 2)
+    assert bootstrap("wrong")[0] == 403
+    successor = bootstrap_ok()
+    assert health(abandoned, ALLOWED_2)[0] == 401
+    assert health(current)[0] == 200
+    assert health(successor, ALLOWED_2)[0] == 200
+    assert health(successor, ALLOWED)[0] == 200
+    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
+
+
+def test_pending_activation_is_atomic_across_workers():
+    """Concurrent confirmations perform one activation and one predecessor handoff."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+    before = len(audit_rows())
+
+    origins = [ALLOWED, ALLOWED_2] * 6
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        statuses = list(pool.map(lambda origin: health(pending, origin)[0], origins))
+    assert statuses == [200] * len(origins)
+
+    rows = [
+        row
+        for row in audit_rows()[before:]
+        if row["event"] == "health"
+    ]
+    reasons = [row["reason"] for row in rows]
+    assert reasons.count("cutover_activated") == 1
+    assert reasons.count("cutover_confirmation") >= 1
+    assert set(reasons) <= {None, "cutover_confirmation", "cutover_activated"}
+    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
 
 
 def test_predecessor_has_exact_shared_two_use_overlap():
@@ -240,6 +332,8 @@ def test_predecessor_has_exact_shared_two_use_overlap():
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     current = bootstrap_ok()
+    assert health(current)[0] == 401
+    activate_pending(current)
     assert health(current)[0] == 200
     assert health(old)[0] == 200
     assert health(current)[0] == 200
@@ -252,6 +346,9 @@ def test_predecessor_has_exact_shared_two_use_overlap():
         if row["event"] == "health" and row["reason"] != "legacy_history"
     ]
     assert reasons == [
+        ("denied", "invalid_token"),
+        ("accepted", "cutover_confirmation"),
+        ("accepted", "cutover_activated"),
         ("accepted", None),
         ("accepted", "predecessor_overlap"),
         ("accepted", None),
@@ -266,7 +363,8 @@ def test_invalid_health_does_not_consume_predecessor_overlap():
     reset_state()
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
-    bootstrap_ok()
+    pending = bootstrap_ok()
+    activate_pending(pending)
     for _ in range(4):
         assert health("wrong")[0] == 401
         assert health()[0] == 401
@@ -279,9 +377,12 @@ def test_later_cutover_replaces_unspent_predecessor():
     oldest = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     middle = bootstrap_ok()
+    activate_pending(middle)
     assert health(oldest)[0] == 200
     set_generation(INITIAL_GENERATION + 8)
     newest = bootstrap_ok()
+    assert health(middle)[0] == 200
+    activate_pending(newest)
     assert health(oldest)[0] == 401
     assert [health(middle)[0] for _ in range(3)] == [200, 200, 401]
     assert health(newest)[0] == 200
@@ -292,15 +393,17 @@ def test_predecessor_budget_is_atomic_across_workers():
     reset_state()
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
-    bootstrap_ok()
+    pending = bootstrap_ok()
+    activate_pending(pending)
+    before = len(audit_rows())
     with ThreadPoolExecutor(max_workers=10) as pool:
         statuses = list(pool.map(lambda _: health(old)[0], range(10)))
     assert statuses.count(200) == PREDECESSOR_USES
     assert statuses.count(401) == 10 - PREDECESSOR_USES
     lifecycle_rows = [
         row
-        for row in audit_rows()
-        if row["event"] == "health" and row["reason"] != "legacy_history"
+        for row in audit_rows()[before:]
+        if row["event"] == "health"
     ]
     accepted = [row for row in lifecycle_rows if row["decision"] == "accepted"]
     assert len(accepted) == 2

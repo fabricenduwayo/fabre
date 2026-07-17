@@ -83,24 +83,40 @@ function read_token_state_unlocked($config)
     }
     $decoded = json_decode((string) file_get_contents($config['token_file']), true);
     $valid = is_array($decoded)
-        && ($decoded['version'] ?? null) === 1
+        && ($decoded['version'] ?? null) === 2
         && is_int($decoded['generation'] ?? null)
         && $decoded['generation'] >= 0
         && digest_valid($decoded['current_digest'] ?? null)
         && is_int($decoded['previous_uses_remaining'] ?? null)
-        && $decoded['previous_uses_remaining'] >= 0;
+        && $decoded['previous_uses_remaining'] >= 0
+        && is_array($decoded['pending_origins'] ?? null);
     if (!$valid) {
         return ['exists' => true, 'valid' => false, 'state' => null];
     }
     $previousDigest = $decoded['previous_digest'] ?? null;
     $previousGeneration = $decoded['previous_generation'] ?? null;
-    $valid = (
+    $valid = $valid && (
         ($previousDigest === null && $previousGeneration === null)
         || (digest_valid($previousDigest)
             && is_int($previousGeneration)
             && $previousGeneration >= 0
             && $previousGeneration < $decoded['generation'])
     );
+    $pendingDigest = $decoded['pending_digest'] ?? null;
+    $pendingGeneration = $decoded['pending_generation'] ?? null;
+    $pendingOrigins = $decoded['pending_origins'] ?? null;
+    $validPending = is_array($pendingOrigins) && ((
+        $pendingDigest === null
+        && $pendingGeneration === null
+        && $pendingOrigins === []
+    ) || (
+        digest_valid($pendingDigest)
+        && is_int($pendingGeneration)
+        && $pendingGeneration > $decoded['generation']
+        && count($pendingOrigins) === count(array_unique($pendingOrigins))
+        && count(array_diff($pendingOrigins, $config['allowed_origins'])) === 0
+    ));
+    $valid = $valid && $validPending;
     return ['exists' => true, 'valid' => $valid, 'state' => $valid ? $decoded : null];
 }
 

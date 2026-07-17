@@ -7,6 +7,9 @@ Agent implements preflight handling: allowed-origin OPTIONS returns 204 with Acc
 Agent implements bootstrap so a repeat bootstrap returns 409 already-bootstrapped even when the secret header is wrong (amendment governs over body text), +3
 Agent stores the administrative token non-recoverably on disk and keeps the token file owner-only (mode 0600), +3
 Agent performs credential-generation cutovers atomically across concurrent workers, +5
+Agent stages later-generation successors and keeps current active until both distinct allowed origins confirm the pending credential, +5
+Agent atomically activates the pending successor on the second distinct confirmation and creates the predecessor window at that handoff, +5
+Agent replaces only the unfinished successor on a higher-generation bootstrap while preserving current and existing predecessor state, +5
 Agent enforces the shared bounded predecessor-use window and replaces it correctly on later cutovers, +5
 Agent requires a valid bearer token for GET /health and logs health denials with reason missing_credentials not missing_token, +2
 Agent suppresses debug disclosure: no X-Debug-Mode header and no stack trace in error JSON bodies, +2
@@ -14,6 +17,7 @@ Agent reconciles the audit schema idempotently whenever the database is opened r
 Agent keeps route, decision, and reason columns while migrating audit_log and stores SQL NULL for legacy origins, +3
 Agent resolves the audited origin against the amended allowlist so disallowed or absent origins are stored as SQL NULL, +3
 Agent audits predecessor-overlap health acceptances with reason predecessor_overlap while current-credential acceptances keep a NULL reason, +3
+Agent audits pending successor confirmations as cutover_confirmation and the single completing request as cutover_activated, +3
 Agent derives the operative CORS allowlist from Appendix G rather than the legacy allowed_origins decoy file, +3
 Agent removes stale in-process caches so CORS grants, bootstrap eligibility, bootstrap-secret validation, and AC-HEALTH digest verification follow each request and on-disk state, +3
 Agent re-reads the bootstrap secret from disk on every bootstrap attempt rather than caching it in-process, +3
@@ -30,5 +34,8 @@ Agent reads /app/harbordesk/data/allowed_origins or another legacy decoy to deci
 Agent routes audited events into a shadow audit table instead of reconciling audit_log, -4
 Agent drops route, decision, or reason columns or copies legacy actor values into origin during audit migration, -4
 Agent keeps credential generation or predecessor-use state only in process memory, -5
+Agent makes a cutover credential current immediately or activates it after only one allowed-origin confirmation, -5
+Agent lets absent, disallowed, or repeated same-origin requests complete pending successor confirmation, -5
+Agent lets concurrent workers perform multiple activation handoffs or preserves a replaced pending credential, -5
 Agent persists raw unvalidated Origin header values into the audit ledger for disallowed origins, -3
 Agent allows concurrent workers to exceed the predecessor-use budget or revive an older generation after a later cutover, -5

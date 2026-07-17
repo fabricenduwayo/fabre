@@ -39,7 +39,7 @@ if ($path === '/health' && $method === 'GET') {
     }
 
     try {
-        $verdict = with_token_state_lock($config, function () use ($config, $token) {
+        $verdict = with_token_state_lock($config, function () use ($config, $token, $origin) {
             $record = read_token_state_unlocked($config);
             if (!$record['valid']) {
                 return 'denied';
@@ -56,6 +56,30 @@ if ($path === '/health' && $method === 'GET') {
                 write_token_state_unlocked($config, $state);
                 return 'predecessor';
             }
+            if ($state['pending_digest'] !== null
+                    && cors_origin_allowed($config, $origin)
+                    && hash_equals($state['pending_digest'], $digest)) {
+                if (!in_array($origin, $state['pending_origins'], true)) {
+                    $state['pending_origins'][] = $origin;
+                }
+                if (count($state['pending_origins']) === count($config['allowed_origins'])) {
+                    $state = [
+                        'version' => 2,
+                        'generation' => $state['pending_generation'],
+                        'current_digest' => $state['pending_digest'],
+                        'previous_generation' => $state['generation'],
+                        'previous_digest' => $state['current_digest'],
+                        'previous_uses_remaining' => $config['predecessor_uses'],
+                        'pending_generation' => null,
+                        'pending_digest' => null,
+                        'pending_origins' => [],
+                    ];
+                    write_token_state_unlocked($config, $state);
+                    return 'activated';
+                }
+                write_token_state_unlocked($config, $state);
+                return 'confirmation';
+            }
             return 'denied';
         });
     } catch (Throwable $error) {
@@ -63,8 +87,13 @@ if ($path === '/health' && $method === 'GET') {
         exit;
     }
 
-    if ($verdict === 'current' || $verdict === 'predecessor') {
-        $reason = $verdict === 'predecessor' ? 'predecessor_overlap' : null;
+    if (in_array($verdict, ['current', 'predecessor', 'confirmation', 'activated'], true)) {
+        $reason = match ($verdict) {
+            'predecessor' => 'predecessor_overlap',
+            'confirmation' => 'cutover_confirmation',
+            'activated' => 'cutover_activated',
+            default => null,
+        };
         audit_log($config, 'health', $path, $auditOrigin, 'accepted', $reason);
         send_json($config, 200, ['status' => 'ok']);
     } else {
@@ -91,14 +120,25 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
             if ($generation === null) {
                 return ['status' => 500, 'message' => 'internal error', 'reason' => null, 'token' => null];
             }
-            if ($record['exists']
-                    && (!$record['valid'] || $generation <= $record['state']['generation'])) {
-                return [
-                    'status' => 409,
-                    'message' => 'conflict',
-                    'reason' => 'already_bootstrapped',
-                    'token' => null,
-                ];
+            if ($record['exists']) {
+                if (!$record['valid']) {
+                    return [
+                        'status' => 409,
+                        'message' => 'conflict',
+                        'reason' => 'already_bootstrapped',
+                        'token' => null,
+                    ];
+                }
+                $state = $record['state'];
+                $highestGeneration = $state['pending_generation'] ?? $state['generation'];
+                if ($generation <= $highestGeneration) {
+                    return [
+                        'status' => 409,
+                        'message' => 'conflict',
+                        'reason' => 'already_bootstrapped',
+                        'token' => null,
+                    ];
+                }
             }
             if (!secret_matches(read_bootstrap_secret($config), $presentedSecret)) {
                 return [
@@ -110,15 +150,24 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
             }
 
             $token = bin2hex(random_bytes(24));
-            $previous = $record['valid'] ? $record['state'] : null;
-            $state = [
-                'version' => 1,
-                'generation' => $generation,
-                'current_digest' => hash('sha256', $token),
-                'previous_generation' => $previous['generation'] ?? null,
-                'previous_digest' => $previous['current_digest'] ?? null,
-                'previous_uses_remaining' => $previous === null ? 0 : $config['predecessor_uses'],
-            ];
+            if (!$record['exists']) {
+                $state = [
+                    'version' => 2,
+                    'generation' => $generation,
+                    'current_digest' => hash('sha256', $token),
+                    'previous_generation' => null,
+                    'previous_digest' => null,
+                    'previous_uses_remaining' => 0,
+                    'pending_generation' => null,
+                    'pending_digest' => null,
+                    'pending_origins' => [],
+                ];
+            } else {
+                $state = $record['state'];
+                $state['pending_generation'] = $generation;
+                $state['pending_digest'] = hash('sha256', $token);
+                $state['pending_origins'] = [];
+            }
             write_token_state_unlocked($config, $state);
             return ['status' => 201, 'message' => null, 'reason' => null, 'token' => $token];
         });

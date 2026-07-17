@@ -446,6 +446,40 @@ AMENDMENTS_REAL = [
      "`accepted` and reason `predecessor_overlap`. An accepted request "
      "presenting the current credential keeps a SQL `NULL` audit reason. "
      "Denial reasons are unchanged."),
+    ("G-2026-26", "AC-CREDENTIAL-CUTOVER",
+     "A first successful AC-BOOTSTRAP activates its credential immediately. "
+     "Every later generation-authorized bootstrap still returns `201` with the "
+     "existing `token` JSON shape, but stages that credential as a pending "
+     "successor instead of displacing the current credential. A pending "
+     "successor becomes current only after successful health presentations "
+     "from both distinct origins in the amended CO-ORIGIN-ALLOW allowlist. "
+     "Repeated presentations from one allowed origin do not complete this "
+     "confirmation quorum. Until activation, the existing current credential "
+     "continues to verify normally and no predecessor allowance is created."),
+    ("G-2026-27", "AC-CREDENTIAL-CUTOVER",
+     "A health presentation of the pending successor is accepted only when "
+     "the request Origin is one of the two amended allowed origins. The first "
+     "distinct-origin confirmation, and repeats from that same origin while "
+     "the successor remains pending, are audited `accepted` with reason "
+     "`cutover_confirmation`. The request that supplies the second distinct "
+     "allowed origin atomically activates the successor and is audited "
+     "`accepted` with reason `cutover_activated`. A pending-successor "
+     "presentation with a disallowed or absent Origin is denied as "
+     "`invalid_token` and does not change confirmation state. After activation, "
+     "ordinary current and predecessor audit reasons follow G-2026-25."),
+    ("G-2026-28", "AC-TOKEN-STORE",
+     "The pending successor digest, its generation, and its set of confirmed "
+     "allowed origins are mutable credential state governed by G-2026-23 and "
+     "must participate in the same cross-worker critical section as current "
+     "and predecessor state. Activating a successor atomically makes the "
+     "displaced current credential the sole predecessor with the two-use "
+     "allowance, discarding any older predecessor and unused allowance. A "
+     "valid bootstrap for a still higher published generation replaces an "
+     "unfinished pending successor without displacing current or altering an "
+     "existing predecessor allowance; the replaced pending credential becomes "
+     "invalid. Bootstrap's already-bootstrapped comparison uses the greater of "
+     "current and pending generation, and a higher-generation replacement "
+     "still requires the live bootstrap secret."),
 ]
 
 AMENDMENTS_FILLER = [

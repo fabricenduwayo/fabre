@@ -1,5 +1,7 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-16-r58
+# Canonical Python runtime is required by Harbor's pytest verifier; PHP is the
+# application runtime and is installed from the base image's apt repository.
+# platform-revision: 2026-07-16-r59
 
 WORKDIR /app
 

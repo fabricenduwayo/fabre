@@ -200,6 +200,9 @@ class State:
         self.current = None
         self.previous = None
         self.previous_remaining = 0
+        self.pending_generation = None
+        self.pending = None
+        self.pending_origins = set()
 
 
 def audited_origin(origin):
@@ -259,14 +262,30 @@ def simulate(state, operation):
             }
         accepted = False
         via_predecessor = False
+        reason = None
         if credential == state.current:
             accepted = True
         elif credential == state.previous and state.previous_remaining > 0:
             accepted = True
             via_predecessor = True
             state.previous_remaining -= 1
+        elif credential == state.pending and origin in ALLOWED_ORIGINS:
+            accepted = True
+            state.pending_origins.add(origin)
+            if state.pending_origins == set(ALLOWED_ORIGINS):
+                state.previous = state.current
+                state.previous_remaining = PREDECESSOR_USES
+                state.current = state.pending
+                state.stored_generation = state.pending_generation
+                state.pending = None
+                state.pending_generation = None
+                state.pending_origins = set()
+                reason = "cutover_activated"
+            else:
+                reason = "cutover_confirmation"
         if accepted:
-            reason = "predecessor_overlap" if via_predecessor else None
+            if via_predecessor:
+                reason = "predecessor_overlap"
         else:
             reason = "invalid_token"
         return {
@@ -297,10 +316,12 @@ def simulate(state, operation):
                     "malformed_request",
                 ),
             }
-        if (
-            state.stored_generation is not None
-            and state.target_generation <= state.stored_generation
-        ):
+        highest_generation = (
+            state.pending_generation
+            if state.pending_generation is not None
+            else state.stored_generation
+        )
+        if highest_generation is not None and state.target_generation <= highest_generation:
             return {
                 "status": 409,
                 "body": "error",
@@ -327,11 +348,13 @@ def simulate(state, operation):
                 ),
             }
         label = operation["mint"]
-        if state.current is not None:
-            state.previous = state.current
-            state.previous_remaining = PREDECESSOR_USES
-        state.current = label
-        state.stored_generation = state.target_generation
+        if state.current is None:
+            state.current = label
+            state.stored_generation = state.target_generation
+        else:
+            state.pending = label
+            state.pending_generation = state.target_generation
+            state.pending_origins = set()
         return {
             "status": 201,
             "body": "token",
