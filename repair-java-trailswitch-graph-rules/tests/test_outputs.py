@@ -174,6 +174,22 @@ def test_equal_length_routes_use_first_differing_edge_id():
     assert result["cycle_guard"] is True
 
 
+def test_sequence_grant_voids_when_yard_returns_to_initial():
+    """Recirculation through arrival must re-earn release-sequence clearance."""
+    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == ["A", "C", "F", "C", "B", "D", "E", "C", "F", "C", "J"]
+    assert result["cycle_guard"] is True
+
+
+def test_transition_count_window_blocks_stale_yard_release():
+    """Departure clearance requires exactly one yard transition after re-approach."""
+    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"].count("D") == 1
+    assert result["path"].count("E") == 1
+
+
 def test_lock_positions_require_conjunction():
     """A route lock listing two switch positions requires both to match."""
     open_line = plan("A", "B", {"sw1": "north", "sw2": "north"})

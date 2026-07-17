@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SwitchRuleHandler {
     private final GraphPathRepository repository;
+    private Map<String, Set<String>> sequenceRelayDependencies;
 
     public SwitchRuleHandler(GraphPathRepository repository) {
         this.repository = repository;
@@ -56,7 +57,8 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Map<String, Integer> sequenceProgress,
-            Set<String> completedSequences) {
+            Set<String> completedSequences,
+            Map<String, String> initialRelays) {
         Map<String, String> nextRelays = new HashMap<>(relayState);
         Map<String, Integer> nextCounts = new HashMap<>(transitionCounts);
         for (RelayTransition transition : repository.loadRelayTransitions(traversedEdge)) {
@@ -99,11 +101,44 @@ public class SwitchRuleHandler {
             }
             nextProgress.put(entry.getKey(), progress);
         }
+        voidStaleSequenceGrants(initialRelays, nextRelays, nextCounts, nextCompleted);
         return new SearchAdvanceResult(
                 Map.copyOf(nextRelays),
                 Map.copyOf(nextCounts),
                 Map.copyOf(nextProgress),
                 Set.copyOf(nextCompleted));
+    }
+
+    private void voidStaleSequenceGrants(
+            Map<String, String> initialRelays,
+            Map<String, String> currentRelays,
+            Map<String, Integer> transitionCounts,
+            Set<String> completedSequences) {
+        for (Map.Entry<String, Integer> entry : transitionCounts.entrySet()) {
+            if (entry.getValue() <= 0) {
+                continue;
+            }
+            String relayId = entry.getKey();
+            String initial = initialRelays.getOrDefault(relayId, "");
+            String current = currentRelays.getOrDefault(relayId, "");
+            if (!current.equalsIgnoreCase(initial)) {
+                continue;
+            }
+            for (Map.Entry<String, Set<String>> dependency :
+                    sequenceRelayDependencies().entrySet()) {
+                if (!dependency.getValue().contains(relayId)) {
+                    continue;
+                }
+                completedSequences.remove(dependency.getKey());
+            }
+        }
+    }
+
+    private Map<String, Set<String>> sequenceRelayDependencies() {
+        if (sequenceRelayDependencies == null) {
+            sequenceRelayDependencies = repository.loadSequenceRelayDependencies();
+        }
+        return sequenceRelayDependencies;
     }
 
     private void applyLockGroups(Set<String> locked, Map<String, String> relayState) {

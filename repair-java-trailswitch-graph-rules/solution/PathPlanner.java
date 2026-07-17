@@ -25,14 +25,16 @@ public class PathPlanner {
     }
 
     public PlanResult plan(String from, String to, Map<String, String> switches) {
+        Map<String, String> initialRelays = repository.loadRelayStates();
         SearchState start =
                 new SearchState(
                         from,
-                        repository.loadRelayStates(),
+                        initialRelays,
                         Map.of(),
                         Map.of(),
                         Set.of(),
-                        Set.of(from));
+                        Set.of(from),
+                        initialRelays);
         Queue<SearchState> queue = new ArrayDeque<>();
         Map<SearchState, SearchState> parent = new HashMap<>();
         Set<SearchState> discovered = new HashSet<>();
@@ -68,7 +70,8 @@ public class PathPlanner {
                                 current.relays(),
                                 current.transitionCounts(),
                                 current.sequenceProgress(),
-                                current.completedSequences());
+                                current.completedSequences(),
+                                current.initialRelays());
                 Set<String> nextVisited = new HashSet<>(current.visited());
                 nextVisited.add(edge.toStation());
                 SearchState next =
@@ -78,7 +81,8 @@ public class PathPlanner {
                                 advanced.transitionCounts(),
                                 advanced.sequenceProgress(),
                                 advanced.completedSequences(),
-                                nextVisited);
+                                nextVisited,
+                                current.initialRelays());
                 if (discovered.add(next)) {
                     parent.put(next, current);
                     queue.add(next);
@@ -128,13 +132,15 @@ public class PathPlanner {
             Map<String, Integer> transitionCounts,
             Map<String, Integer> sequenceProgress,
             Set<String> completedSequences,
-            Set<String> visited) {
+            Set<String> visited,
+            Map<String, String> initialRelays) {
         private SearchState {
             relays = Map.copyOf(relays);
             transitionCounts = Map.copyOf(transitionCounts);
             sequenceProgress = Map.copyOf(sequenceProgress);
             completedSequences = Set.copyOf(completedSequences);
             visited = Set.copyOf(visited);
+            initialRelays = Map.copyOf(initialRelays);
         }
     }
 }

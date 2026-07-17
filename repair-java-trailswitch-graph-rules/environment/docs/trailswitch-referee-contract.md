@@ -35,6 +35,10 @@ it from source and SQL only — do not rely on manual playthroughs.
   sequence. A mismatch restarts at step one when the edge itself is the first step,
   otherwise it resets progress to zero. Completing the final step records that
   sequence as completed for the remainder of the candidate path.
+- When a relay returns to its per-request initial snapshot after at least one
+  transition fired on that relay during the candidate path, void every completed
+  sequence whose ordered steps include a transition on that relay. Re-earn
+  sequence clearance before any later rule may rely on it.
 - A station visit or relay transition does not substitute for sequence completion:
   the listed edges must be crossed in order. Sequence progress and completion are
   candidate-path state, not shared state and not PostgreSQL writes.

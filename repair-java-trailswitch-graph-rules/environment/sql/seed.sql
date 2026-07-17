@@ -6,7 +6,8 @@ INSERT INTO stations (station_id, label) VALUES
     ('E', 'Arrival'),
     ('F', 'Approach Circuit'),
     ('G', 'Shortcut Approach'),
-    ('H', 'Tie-Break Junction');
+    ('H', 'Tie-Break Junction'),
+    ('J', 'Recirc Checkpoint');
 
 INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2) VALUES
     ('e_a_b', 'A', 'B', 'north', NULL),
@@ -20,7 +21,8 @@ INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2
     ('e_f_c', 'F', 'C', 'south', 'north'),
     ('e_g_f', 'G', 'F', 'south', 'north'),
     ('e_h_a', 'H', 'A', 'north', 'north'),
-    ('e_h_c', 'H', 'C', 'north', 'north');
+    ('e_h_c', 'H', 'C', 'north', 'north'),
+    ('e_c_j', 'C', 'J', 'south', 'north');
 
 INSERT INTO relay_latches (relay_id, relay_state) VALUES
     ('yard_release', 'held'),
@@ -31,7 +33,8 @@ INSERT INTO edge_relay_transitions (
 ) VALUES
     ('e_f_c', 1, 'yard_release', 'held', 'released', NULL, NULL),
     ('e_b_d', 1, 'spur_seal', 'sealed', 'open', 'yard_release', 'released'),
-    ('e_d_e', 1, 'spur_seal', 'open', 'sealed', NULL, NULL);
+    ('e_d_e', 1, 'spur_seal', 'open', 'sealed', NULL, NULL),
+    ('e_e_c', 1, 'yard_release', 'released', 'held', NULL, NULL);
 
 INSERT INTO release_sequences (sequence_id, step_order, edge_id) VALUES
     ('approach_release', 1, 'e_c_f'),
@@ -56,7 +59,11 @@ INSERT INTO route_rules (
     ('r_de_hold_relay', 'e_d_e', 3, 'south', 'north', 'lock',
         'yard_release', 'held', NULL, NULL, NULL, NULL, NULL),
     ('r_de_visit_clear', 'e_d_e', 5, 'south', 'north', 'clear',
-        NULL, NULL, 'yard_release', 1, NULL, 'F', 'approach_release'),
+        NULL, NULL, 'yard_release', 1, 1, 'F', 'approach_release'),
+    ('r_cj_recirc_clear', 'e_c_j', 3, 'south', 'north', 'clear',
+        NULL, NULL, NULL, NULL, NULL, 'E', 'approach_release'),
+    ('r_cj_default_lock', 'e_c_j', 4, 'south', 'north', 'lock',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL),
     ('r_release_de_depot', 'e_d_e', 6, 'south', 'north', 'clear',
         'yard_release', 'released', 'yard_release', 0, 0, 'A', NULL),
     ('r_release_de_yard', 'e_d_e', 7, 'south', 'north', 'clear',

@@ -76,6 +76,25 @@ public class GraphPathRepository {
                 });
     }
 
+    public Map<String, Set<String>> loadSequenceRelayDependencies() {
+        return jdbc.query(
+                "SELECT DISTINCT rs.sequence_id, ert.relay_id "
+                        + "FROM release_sequences rs "
+                        + "JOIN edge_relay_transitions ert ON ert.edge_id = rs.edge_id "
+                        + "ORDER BY rs.sequence_id, ert.relay_id",
+                rs -> {
+                    Map<String, Set<String>> dependencies = new HashMap<>();
+                    while (rs.next()) {
+                        dependencies
+                                .computeIfAbsent(
+                                        rs.getString("sequence_id"),
+                                        ignored -> new HashSet<>())
+                                .add(rs.getString("relay_id"));
+                    }
+                    return dependencies;
+                });
+    }
+
     public Map<String, LockGroupSpec> loadLockGroups() {
         List<LockGroupRow> rows =
                 jdbc.query(
