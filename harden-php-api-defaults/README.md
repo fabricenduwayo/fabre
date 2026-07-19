@@ -8,16 +8,17 @@ reference implementation.
 
 ## Difficulty
 
-The latest measured edition is `trivial`: Claude Opus 4.8 and GPT-5.5 both
-passed 5/5. Those agents were given amendment ids, exact outcomes, and the
-ledger migration shape in the prompt, so most replaced the four small PHP files
-directly. This revision is not yet difficulty-measured and keeps the measured
-label until new platform runs exist.
+The latest measured edition is `hard`: Claude Opus 4.8 and GPT-5.5 both passed
+0/5. The evaluation also found one specification gap: every near-complete run
+used a reasonable but different key for the pending secret fingerprint. This
+revision names that envelope field and keeps the difficulty in interacting state
+rather than an undocumented string literal.
 
 The current revision trims the agent prompt back to control names and the
 normative Standard. It adds phase-fresh origin sponsorship, live secret
 fingerprint invalidation of partial cutovers, and audit-gated credential
-publication. The verifier replays 45 randomized lifecycles and injects SQLite
+publication. It also denial-fences each origin's sponsorship independently.
+The verifier replays 45 randomized lifecycles and injects SQLite
 append failures during sponsorship, confirmation, activation, and predecessor
 consumption against the real multi-worker API.
 

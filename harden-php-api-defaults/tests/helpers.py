@@ -325,6 +325,13 @@ def simulate(state, operation):
                 reason = "predecessor_overlap"
         elif reason is None:
             reason = "invalid_token"
+        if (
+            not accepted
+            and reason == "invalid_token"
+            and state.pending is not None
+            and origin in ALLOWED_ORIGINS
+        ):
+            state.pending_sponsors.discard(origin)
         return {
             "status": 200 if accepted else 401,
             "body": "ok" if accepted else "error",

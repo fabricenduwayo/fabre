@@ -534,6 +534,9 @@ AMENDMENTS_REAL = [
      "holding the credential lock. If its fingerprint changed, sponsorships "
      "and confirmations are atomically cleared and the pending state is rebound "
      "to the new live fingerprint; the pending digest and generation remain. "
+     "The credential envelope stores this fingerprint in the top-level "
+     "`pending_secret_digest` field as a 64-character lowercase hexadecimal "
+     "SHA-256 digest, or SQL-style JSON `null` when no successor is pending. "
      "The request is then evaluated against the cleared state, so incumbent "
      "health may establish fresh sponsorship but a pending presentation cannot. "
      "An unreadable live secret permits neither sponsorship nor confirmation."),
@@ -549,6 +552,15 @@ AMENDMENTS_REAL = [
      "is rolled back. Immediately before activation is published, the live "
      "credential generation is re-read in the same critical section; a pending "
      "successor that became stale is denied without confirmation or activation."),
+    ("G-2026-35", "AC-CREDENTIAL-CUTOVER",
+     "While a successor is pending, a `GET /health` request denied as "
+     "`invalid_token` from an allowed origin revokes any sponsorship recorded "
+     "for that same origin. The denial's audit append and sponsorship removal "
+     "are one G-2026-34 ledger-gated credential-state mutation. Existing "
+     "confirmations remain, sponsorships for other origins are unchanged, and "
+     "an absent or disallowed Origin revokes nothing. The incumbent credential "
+     "must be accepted again from the revoked origin before its pending "
+     "successor can confirm there."),
 ]
 
 AMENDMENTS_FILLER = [

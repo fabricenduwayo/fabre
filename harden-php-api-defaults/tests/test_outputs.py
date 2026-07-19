@@ -445,6 +445,23 @@ def test_pending_successor_requires_two_distinct_allowed_origins():
     ]
 
 
+def test_invalid_token_denial_revokes_same_origin_sponsorship():
+    """An allowed-origin invalid token fences only that origin's sponsorship."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health("invalid-after-sponsorship", ALLOWED)[0] == 401
+    assert health(pending, ALLOWED)[0] == 401
+    assert health(pending, ALLOWED_2)[0] == 200
+    assert health(current, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert audit_rows()[-1]["reason"] == "cutover_activated"
+
+
 def test_higher_generation_replaces_only_unfinished_successor():
     """A replacement clears old sponsorship and confirmation state."""
     reset_state()

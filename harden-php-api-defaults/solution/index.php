@@ -84,7 +84,24 @@ if ($path === '/health' && $method === 'GET') {
                 $reason,
                 $nextState,
                 $publish
-            ) use ($config, $path, $auditOrigin) {
+            ) use ($config, $path, $auditOrigin, $origin) {
+                if ($decision === 'denied'
+                        && $reason === 'invalid_token'
+                        && $nextState['pending_digest'] !== null
+                        && cors_origin_allowed($config, $origin)) {
+                    $sponsorPosition = array_search(
+                        $origin,
+                        $nextState['pending_sponsors'],
+                        true
+                    );
+                    if ($sponsorPosition !== false) {
+                        unset($nextState['pending_sponsors'][$sponsorPosition]);
+                        $nextState['pending_sponsors'] = array_values(
+                            $nextState['pending_sponsors']
+                        );
+                        $publish = true;
+                    }
+                }
                 return audit_log_then(
                     $config,
                     'health',

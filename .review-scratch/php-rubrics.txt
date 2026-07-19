@@ -6,10 +6,12 @@ Agent sets Vary: Origin on credentialed cross-origin responses that grant an all
 Agent implements preflight handling: allowed-origin OPTIONS returns 204 with Access-Control-Max-Age 300 and scoped method/header grants; disallowed origins get no grant headers, +3
 Agent implements bootstrap so a repeat bootstrap returns 409 already-bootstrapped even when the secret header is wrong (amendment governs over body text), +3
 Agent stores the administrative token non-recoverably on disk and keeps the token file owner-only (mode 0600), +3
+Agent stores the pending bootstrap-secret fingerprint under the documented top-level pending_secret_digest field, +3
 Agent performs credential-generation cutovers atomically across concurrent workers, +5
 Agent stages later-generation successors and keeps current active until both distinct allowed origins confirm the pending credential, +5
 Agent requires post-staging current-credential sponsorship at each allowed origin before the successor can confirm there, +5
 Agent invalidates pre-confirmation sponsorship for still-unconfirmed origins when the first confirmation starts a new sponsorship phase, +5
+Agent revokes only the matching allowed origin's sponsorship after an invalid_token health denial and requires fresh incumbent sponsorship there, +5
 Agent persists sponsorship and confirmation sets atomically and clears both when a higher generation replaces an unfinished successor, +4
 Agent binds pending state to the normalized live bootstrap-secret fingerprint and clears in-flight progress when that secret rotates, +5
 Agent fences a stale unfinished successor when the published generation advances again before replacement, +5
@@ -45,6 +47,7 @@ Agent makes a cutover credential current immediately or activates it after only 
 Agent lets absent, disallowed, or repeated same-origin requests complete pending successor confirmation, -5
 Agent lets an unsponsored successor confirm or carries pre-staging or replaced-successor sponsorship into a new pending generation, -6
 Agent lets sponsorship recorded before the first confirmation authorize another origin afterward without fresh incumbent sponsorship, -5
+Agent keeps sponsorship usable after an invalid_token denial from that same allowed origin or revokes another origin instead, -5
 Agent preserves sponsorship or confirmation progress across a live bootstrap-secret rotation, -5
 Agent lets a stale unfinished successor confirm or activate after the published generation advances again, -5
 Agent treats malformed token state as generation zero and overwrites it after a generation advance, -6
