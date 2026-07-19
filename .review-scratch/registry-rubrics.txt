@@ -12,6 +12,7 @@ Agent validates reciprocal replacement pairs and prevents a revoked replacement 
 Agent applies waivers only when the grant occurred strictly before the operative validation run captured_at, +5
 Agent replays waiver approvals after the latest valid grant using timestamp and event-id ordering, +5
 Agent requires distinct risk and model-owner reviewers and falls back past newer under-approved waivers, +5
+Agent replays reviewer_role_events and binds waiver approvals to the current role-assignment epoch, +5
 Agent enforces operative-run anchoring so metric waivers bind to the operative validation run after void propagation, +5
 Agent rejects reciprocal replacement pairs whose anchors_run_id values differ, +3
 Agent reports suppressing waivers under applied_waivers even when another raw failure still rejects the candidate, +5
@@ -32,5 +33,6 @@ Agent applies malformed, expired, future, or non-reciprocal waiver events, -5
 Agent lets a waiver suppress failures when its grant is on or after the operative run captured_at, -5
 Agent reuses approvals from a predecessor or an earlier grant epoch after revoke and regrant, -5
 Agent treats one reviewer carrying both required role labels as an approval quorum, -5
+Agent counts waiver approvals after reviewer-role revoke or from a prior role-assignment epoch, -5
 Agent lets an anchored waiver suppress metric failures when its anchor run is voided or no longer operative, -5
 Agent lets a waiver suppress missing_canonical_evidence or lost_tiebreak, -5

@@ -96,3 +96,10 @@ INSERT INTO waiver_approval_events VALUES
 INSERT INTO waiver_approval_events VALUES
   ('approval-omega-owner', 'omega-metric', 'reviewer-owner-3', 'model_owner',
    'approve', TIMESTAMP '2026-01-06 10:00:00');
+
+INSERT INTO reviewer_role_events VALUES
+  ('role-r3-assign', 'reviewer-risk-3', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o3-assign', 'reviewer-owner-3', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');

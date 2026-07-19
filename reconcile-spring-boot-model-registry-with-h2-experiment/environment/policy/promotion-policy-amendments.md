@@ -140,3 +140,19 @@ same `anchors_run_id` (including both null). A voided or non-operative
 anchored run does not fall back to an unanchored waiver for the same raw
 failure unless that other waiver independently passes A-2026-06, A-2026-10,
 and A-2026-11.
+
+## A-2026-13 — amends A-2026-11 reviewer-role authority epochs
+
+`waiver_approval_events.reviewer_role` records the role label claimed by the
+reviewer, not proof of authority. Replay `reviewer_role_events` through
+`release_context.decision_at` in ascending `occurred_at` order (tie-break by
+lexicographic `event_id`). For each `(reviewer_id, reviewer_role)` pair, the
+latest role event at or before decision time must be `assign` or `reassign`
+for any approval from that reviewer in that role to count.
+
+An approval counts only when it sorts strictly after both the waiver's latest
+valid grant event and the `occurred_at` of the current role-assignment epoch
+(the latest `assign` or `reassign` event for that reviewer and role). A `revoke`
+ends the epoch; a subsequent `assign` or `reassign` starts a new one.
+Approvals from before the current epoch do not transfer across revoke or
+reassign. Role events after `decision_at` are ignored.

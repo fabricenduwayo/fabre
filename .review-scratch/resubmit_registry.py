@@ -128,6 +128,7 @@ def main() -> None:
         "tests/test.sh",
         "tests/test_outputs.py",
         "tests/variant_c_seed.sql",
+        "tests/variant_e_seed.sql",
     }
     missing = required - set(names)
     if missing:

@@ -416,3 +416,84 @@ def test_cli_generalizes_operative_run_anchoring(registry, variant_d_db_url):
     }
     assert "lost_tiebreak" in rejected["beta"]
     assert "uncalibrated" in rejected["gamma"]
+
+
+def test_role_epochs_invalidate_stale_reviewer_authority(registry_by_id, variant_e_db_url):
+    """A-2026-13: revoked reviewer authority voids newer waiver approvals."""
+    evidence = load_evidence(variant_e_db_url)
+    assert "beta-metric-new" not in evidence["approved_waiver_ids"], (
+        "risk reviewer authority ended before decision time"
+    )
+    assert "beta-metric-quorum" in evidence["approved_waiver_ids"]
+    _, applied = evaluate_candidate_with_waivers(registry_by_id["beta"], evidence)
+    reported = {row[0] for row in applied}
+    assert reported == {"beta-metric-quorum"}
+
+
+def test_gamma_withdrawal_breaks_quorum_after_regrant(registry_by_id, variant_e_db_url):
+    """A-2026-11/13: post-quorum risk withdrawal leaves gamma uncalibrated."""
+    evidence = load_evidence(variant_e_db_url)
+    assert "gamma-calibration" not in evidence["approved_waiver_ids"]
+    assert evaluate_candidate(registry_by_id["gamma"], evidence) == [REASON_UNCALIBRATED]
+
+
+def test_variant_d_requires_operative_run_anchoring(registry_by_id, variant_d_db_url):
+    """Pre-A-2026-12 anchoring scope ignores anchor run model_id mismatches."""
+    evidence = load_evidence(variant_d_db_url)
+    anchored_ok = next(
+        waiver
+        for waiver in evidence["active_waivers"]
+        if waiver["waiver_id"] == "beta-metric-anchored-ok"
+    )
+    anchor_run = anchored_ok["anchors_run_id"].strip()
+    poisoned = dict(evidence)
+    poisoned["run_model_ids"] = dict(evidence["run_model_ids"])
+    poisoned["run_model_ids"][anchor_run] = "gamma"
+    _, applied_full = evaluate_candidate_with_waivers(registry_by_id["beta"], evidence)
+    _, applied_poisoned = evaluate_candidate_with_waivers(registry_by_id["beta"], poisoned)
+    _, applied_legacy = evaluate_candidate_with_waivers(
+        registry_by_id["beta"],
+        poisoned,
+        enforce_metric_anchoring=False,
+    )
+    full_ids = {row[0] for row in applied_full}
+    poisoned_ids = {row[0] for row in applied_poisoned}
+    legacy_ids = {row[0] for row in applied_legacy}
+    assert full_ids == {"beta-metric-anchored-ok"}
+    assert "beta-metric-anchored-ok" not in poisoned_ids
+    assert "beta-metric-anchored-ok" in legacy_ids
+
+
+def test_variant_e_requires_role_epochs(registry_by_id, variant_e_db_url):
+    """Ignoring reviewer-role epochs incorrectly approves a newer under-authority waiver."""
+    evidence = load_evidence(variant_e_db_url, enforce_role_epochs=False)
+    assert "beta-metric-new" in evidence["approved_waiver_ids"]
+    _, applied = evaluate_candidate_with_waivers(registry_by_id["beta"], evidence)
+    assert {row[0] for row in applied} == {"beta-metric-new"}
+
+
+def test_cli_generalizes_reviewer_role_epochs(registry, variant_e_db_url):
+    """Role revoke/reassign, withdrawal, and waiver fallback compose on live JDBC."""
+    variant_expected = expected_decision(registry, load_evidence(variant_e_db_url))
+    with tempfile.TemporaryDirectory() as tmp:
+        out_path = Path(tmp) / "variant-e.json"
+        result = run_reconcile_cli([variant_e_db_url, str(out_path)])
+        assert result.returncode == 0, (
+            f"reconcile CLI failed against the variant store:\n{result.stdout}\n{result.stderr}"
+        )
+        variant_manifest = json.loads(out_path.read_text(encoding="utf-8"))
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    jsonschema.validate(instance=variant_manifest, schema=schema)
+    assert_manifest_matches_expected(variant_manifest, registry, variant_expected)
+    assert variant_manifest["promoted"] == "omega"
+    reported = {
+        (row["waiver_id"], row["model"], row["model_version"], row["reason"])
+        for row in variant_manifest["applied_waivers"]
+    }
+    assert reported == {("beta-metric-quorum", "beta", "0.9.1", "metric_threshold")}
+    rejected = {
+        entry["model"]: set(entry["reasons"])
+        for entry in variant_manifest["rejected"]
+    }
+    assert "lost_tiebreak" in rejected["beta"]
+    assert "uncalibrated" in rejected["gamma"]

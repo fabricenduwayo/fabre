@@ -145,3 +145,34 @@ INSERT INTO waiver_approval_events VALUES
 INSERT INTO waiver_approval_events VALUES
   ('approval-beta-ok-owner', 'beta-metric-anchored-ok', 'reviewer-owner-5',
    'model_owner', 'approve', TIMESTAMP '2026-04-09 11:00:00');
+
+INSERT INTO reviewer_role_events VALUES
+  ('role-r1-assign', 'reviewer-risk-1', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o1-assign', 'reviewer-owner-1', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-r2-assign', 'reviewer-risk-2', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o2-assign', 'reviewer-owner-2', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-r3-assign', 'reviewer-risk-3', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o3-assign', 'reviewer-owner-3', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-r4-assign', 'reviewer-risk-4', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o4-assign', 'reviewer-owner-4', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-r5-assign', 'reviewer-risk-5', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o5-assign', 'reviewer-owner-5', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');

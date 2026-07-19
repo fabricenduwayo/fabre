@@ -1,5 +1,6 @@
 #!/bin/bash
 set -uo pipefail
+# Intentionally omit -e so pytest failures still reach the canonical reward block.
 
 # Verifier dependencies (pytest, pytest-json-ctrf, jsonschema) are preinstalled
 # by environment/Dockerfile; nothing is installed or downloaded here.

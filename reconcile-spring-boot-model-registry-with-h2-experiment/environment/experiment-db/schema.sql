@@ -101,3 +101,18 @@ CREATE TABLE waiver_approval_events (
     event_type IN ('approve', 'withdraw')
   )
 );
+
+CREATE TABLE reviewer_role_events (
+  event_id       VARCHAR(64) NOT NULL,
+  reviewer_id    VARCHAR(64) NOT NULL,
+  reviewer_role  VARCHAR(32) NOT NULL,
+  event_type     VARCHAR(16) NOT NULL,
+  occurred_at    TIMESTAMP   NOT NULL,
+  PRIMARY KEY (event_id),
+  CONSTRAINT ck_rre_role CHECK (
+    reviewer_role IN ('risk', 'model_owner')
+  ),
+  CONSTRAINT ck_rre_type CHECK (
+    event_type IN ('assign', 'revoke', 'reassign')
+  )
+);

@@ -1,6 +1,6 @@
--- Variant B: gamma has a valid ordinary calibration waiver. Beta's attempted
--- replacement is reciprocal but not simultaneous, so it must be ignored.
--- Gamma therefore qualifies and beats omega by canonical AUC.
+-- Variant B: gamma's regrant needs fresh approvals; stale pre-regrant
+-- approvals leave it uncalibrated. Beta's replacement pair is reciprocal
+-- but not simultaneous, so it must be ignored. Omega wins.
 
 INSERT INTO models (id, name, version) VALUES ('alpha', 'churn-model-alpha', '1.2.0');
 INSERT INTO models (id, name, version) VALUES ('beta',  'churn-model-beta',  '0.9.1');
@@ -103,3 +103,10 @@ INSERT INTO waiver_approval_events VALUES
 INSERT INTO waiver_approval_events VALUES
   ('approval-gamma-owner', 'gamma-calibration', 'reviewer-owner-2',
    'model_owner', 'approve', TIMESTAMP '2026-01-06 10:00:00');
+
+INSERT INTO reviewer_role_events VALUES
+  ('role-r2-assign', 'reviewer-risk-2', 'risk', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');
+INSERT INTO reviewer_role_events VALUES
+  ('role-o2-assign', 'reviewer-owner-2', 'model_owner', 'assign',
+   TIMESTAMP '2026-01-01 08:00:00');

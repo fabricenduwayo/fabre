@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
 # Canonical Python runtime is required by Harbor's pytest verifier; the same
 # image runs the Java 17 reconciler and H2 tooling, so the JDK is installed by apt.
-# platform-revision: 2026-07-16-r16
+# platform-revision: 2026-07-19-r17
 
 WORKDIR /app
 
@@ -42,5 +42,3 @@ RUN chmod +x /app/start-registry.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["sleep", "infinity"]
-
-WORKDIR /app

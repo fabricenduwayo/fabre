@@ -257,6 +257,45 @@ public final class Reconciler {
         return active;
     }
 
+    private static Map<RoleKey, Instant> reviewerRoleEpochs(String dbUrl, Instant decisionAt)
+            throws Exception {
+        Map<RoleKey, Map<String, String>> latest = new HashMap<>();
+        for (Map<String, String> event :
+                h2Select(
+                        """
+                        SELECT event_id, reviewer_id, reviewer_role, event_type, occurred_at
+                        FROM reviewer_role_events
+                        """,
+                        dbUrl)) {
+            Instant occurredAt = parseTimestamp(event.get("occurred_at"));
+            if (occurredAt.isAfter(decisionAt)) {
+                continue;
+            }
+            RoleKey key =
+                    new RoleKey(event.get("reviewer_id"), event.get("reviewer_role"));
+            Map<String, String> current = latest.get(key);
+            if (current == null
+                    || compareEventOrder(
+                                    occurredAt,
+                                    event.get("event_id"),
+                                    parseTimestamp(current.get("occurred_at")),
+                                    current.get("event_id"))
+                            > 0) {
+                latest.put(key, event);
+            }
+        }
+        Map<RoleKey, Instant> epochs = new HashMap<>();
+        for (Map.Entry<RoleKey, Map<String, String>> entry : latest.entrySet()) {
+            String eventType = entry.getValue().get("event_type");
+            if ("assign".equals(eventType) || "reassign".equals(eventType)) {
+                epochs.put(
+                        entry.getKey(),
+                        parseTimestamp(entry.getValue().get("occurred_at")));
+            }
+        }
+        return epochs;
+    }
+
     private static Set<String> approvalQuorum(
             String dbUrl, List<ActiveWaiver> activeWaivers) throws Exception {
         List<Map<String, String>> contexts =
@@ -269,6 +308,7 @@ public final class Reconciler {
         for (ActiveWaiver waiver : activeWaivers) {
             activeById.put(waiver.waiverId, waiver);
         }
+        Map<RoleKey, Instant> roleEpochs = reviewerRoleEpochs(dbUrl, decisionAt);
 
         Map<ApprovalReviewKey, Map<String, String>> latest = new HashMap<>();
         for (Map<String, String> event :
@@ -313,6 +353,13 @@ public final class Reconciler {
         Map<String, Map<String, Set<String>>> reviewers = new HashMap<>();
         for (Map<String, String> event : latest.values()) {
             if (!"approve".equals(event.get("event_type"))) {
+                continue;
+            }
+            RoleKey roleKey =
+                    new RoleKey(event.get("reviewer_id"), event.get("reviewer_role"));
+            Instant epochStart = roleEpochs.get(roleKey);
+            if (epochStart == null
+                    || !parseTimestamp(event.get("occurred_at")).isAfter(epochStart)) {
                 continue;
             }
             reviewers
@@ -411,6 +458,14 @@ public final class Reconciler {
         Map<String, double[]> metrics = new HashMap<>();
         Map<String, String> metricCapturedAt = new HashMap<>();
         Map<String, String> operativeRunIds = new HashMap<>();
+        Map<String, String> runModelIds = new HashMap<>();
+        Map<String, String> runCapturedAt = new HashMap<>();
+        for (Map<String, String> row :
+                h2Select(
+                        "SELECT run_id, model_id, captured_at FROM validation_runs", dbUrl)) {
+            runModelIds.put(row.get("run_id"), row.get("model_id"));
+            runCapturedAt.put(row.get("run_id"), row.get("captured_at"));
+        }
         for (Map.Entry<String, Map<String, String>> entry : latestByModel.entrySet()) {
             Map<String, String> row = entry.getValue();
             metrics.put(
@@ -475,6 +530,8 @@ public final class Reconciler {
                 metrics,
                 metricCapturedAt,
                 operativeRunIds,
+                runModelIds,
+                runCapturedAt,
                 lineage,
                 calibrated,
                 waivers,
@@ -547,11 +604,25 @@ public final class Reconciler {
                                 || !evidence.approvedWaiverIds.contains(waiver.waiverId)) {
                             continue;
                         }
-                        if (!waiver.anchorsRunId.isEmpty()
-                                && !waiver.anchorsRunId.equals(operativeRunId)) {
-                            continue;
+                        Instant timingAt = operativeAt;
+                        if (!waiver.anchorsRunId.isEmpty()) {
+                            if (!REASON_METRIC.equals(reason)) {
+                                continue;
+                            }
+                            if (!modelId.equals(evidence.runModelIds.get(waiver.anchorsRunId))) {
+                                continue;
+                            }
+                            if (!waiver.anchorsRunId.equals(operativeRunId)) {
+                                continue;
+                            }
+                            String anchorCaptured =
+                                    evidence.runCapturedAt.get(waiver.anchorsRunId);
+                            timingAt =
+                                    anchorCaptured == null
+                                            ? null
+                                            : parseTimestamp(anchorCaptured);
                         }
-                        if (operativeAt != null && !waiver.grantAt.isBefore(operativeAt)) {
+                        if (timingAt != null && !waiver.grantAt.isBefore(timingAt)) {
                             continue;
                         }
                         matching.add(waiver);
@@ -662,10 +733,14 @@ public final class Reconciler {
             Map<String, double[]> metrics,
             Map<String, String> metricCapturedAt,
             Map<String, String> operativeRunIds,
+            Map<String, String> runModelIds,
+            Map<String, String> runCapturedAt,
             Map<LineageKey, String> lineage,
             Map<String, Boolean> calibrated,
             List<ActiveWaiver> activeWaivers,
             Set<String> approvedWaiverIds) {}
+
+    private record RoleKey(String reviewerId, String reviewerRole) {}
 
     private record ApprovalReviewKey(
             String waiverId, String reviewerId, String reviewerRole) {}

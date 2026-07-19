@@ -300,12 +300,56 @@ def active_waivers(db_url: str) -> list[dict]:
     return result
 
 
-def approval_quorum(db_url: str, active_waivers: list[dict]) -> set[str]:
+def reviewer_role_epochs(
+    db_url: str, decision_at: datetime
+) -> dict[tuple[str, str], datetime | None]:
+    """Return the current role-assignment epoch start per reviewer and role.
+
+    Values are the ``occurred_at`` of the latest ``assign`` or ``reassign`` when
+    authority is active at ``decision_at``, else ``None`` after ``revoke``.
+    """
+    latest: dict[tuple[str, str], dict[str, str]] = {}
+    for event in h2_select(
+        """
+        SELECT event_id, reviewer_id, reviewer_role, event_type, occurred_at
+        FROM reviewer_role_events
+        """,
+        db_url,
+    ):
+        if parse_timestamp(event["occurred_at"]) > decision_at:
+            continue
+        key = (event["reviewer_id"], event["reviewer_role"])
+        event_key = (parse_timestamp(event["occurred_at"]), event["event_id"])
+        current = latest.get(key)
+        if current is None or event_key > (
+            parse_timestamp(current["occurred_at"]),
+            current["event_id"],
+        ):
+            latest[key] = event
+
+    epochs: dict[tuple[str, str], datetime | None] = {}
+    for key, event in latest.items():
+        if event["event_type"] in ("assign", "reassign"):
+            epochs[key] = parse_timestamp(event["occurred_at"])
+        else:
+            epochs[key] = None
+    return epochs
+
+
+def approval_quorum(
+    db_url: str,
+    active_waivers: list[dict],
+    *,
+    enforce_role_epochs: bool = True,
+) -> set[str]:
     """Return active waiver ids satisfying A-2026-11's current-grant quorum."""
     contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
     assert len(contexts) == 1, "release_context must contain exactly one decision"
     decision_at = parse_timestamp(contexts[0]["decision_at"])
     active_by_id = {waiver["waiver_id"]: waiver for waiver in active_waivers}
+    role_epochs = (
+        reviewer_role_epochs(db_url, decision_at) if enforce_role_epochs else {}
+    )
 
     latest: dict[tuple[str, str, str], dict[str, str]] = {}
     for event in h2_select(
@@ -335,6 +379,13 @@ def approval_quorum(db_url: str, active_waivers: list[dict]) -> set[str]:
     for event in latest.values():
         if event["event_type"] != "approve":
             continue
+        role_key = (event["reviewer_id"], event["reviewer_role"])
+        if enforce_role_epochs:
+            epoch_start = role_epochs.get(role_key)
+            if epoch_start is None:
+                continue
+            if parse_timestamp(event["occurred_at"]) <= epoch_start:
+                continue
         roles = reviewers.setdefault(event["waiver_id"], {})
         roles.setdefault(event["reviewer_role"], set()).add(event["reviewer_id"])
 
@@ -379,7 +430,7 @@ def effective_calibration(db_url: str) -> dict[str, bool]:
     return calibrated
 
 
-def load_evidence(db_url: str) -> dict:
+def load_evidence(db_url: str, *, enforce_role_epochs: bool = True) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
     metrics = operative_metrics(db_url)
     lineage = {
@@ -388,6 +439,11 @@ def load_evidence(db_url: str) -> dict:
             "SELECT model_id, model_version, feature_hash FROM feature_hash_lineage", db_url
         )
     }
+    run_rows = h2_select(
+        "SELECT run_id, model_id, captured_at FROM validation_runs", db_url
+    )
+    run_model_ids = {row["run_id"]: row["model_id"] for row in run_rows}
+    run_captured_at = {row["run_id"]: row["captured_at"] for row in run_rows}
     calibrated = effective_calibration(db_url)
     assert metrics, f"no validation_metrics rows returned from {db_url}"
     metric_values = {
@@ -404,15 +460,29 @@ def load_evidence(db_url: str) -> dict:
         "metrics": metric_values,
         "metric_captured_at": metric_captured_at,
         "operative_run_ids": operative_run_ids,
+        "run_model_ids": run_model_ids,
+        "run_captured_at": run_captured_at,
         "lineage": lineage,
         "calibrated": calibrated,
         "active_waivers": waivers,
-        "approved_waiver_ids": approval_quorum(db_url, waivers),
+        "approved_waiver_ids": approval_quorum(
+            db_url, waivers, enforce_role_epochs=enforce_role_epochs
+        ),
+        "role_epochs": reviewer_role_epochs(
+            db_url, parse_timestamp(
+                h2_select("SELECT decision_at FROM release_context", db_url)[0]["decision_at"]
+            )
+        )
+        if enforce_role_epochs
+        else {},
     }
 
 
 def evaluate_candidate_with_waivers(
-    candidate: dict, evidence: dict
+    candidate: dict,
+    evidence: dict,
+    *,
+    enforce_metric_anchoring: bool = True,
 ) -> tuple[list[str], list[tuple[str, str, str, str]]]:
     """Return effective reasons and selected suppressing governance waivers.
 
@@ -453,9 +523,18 @@ def evaluate_candidate_with_waivers(
                 continue
             anchor = waiver.get("anchors_run_id", "").strip() or None
             if anchor is not None:
-                if operative_run_id != anchor:
-                    continue
-                timing_source = operative_at
+                if enforce_metric_anchoring:
+                    if reason != REASON_METRIC:
+                        continue
+                    if evidence.get("run_model_ids", {}).get(anchor) != model_id:
+                        continue
+                    if operative_run_id != anchor:
+                        continue
+                    timing_source = evidence.get("run_captured_at", {}).get(anchor)
+                else:
+                    if operative_run_id != anchor:
+                        continue
+                    timing_source = operative_at
             else:
                 timing_source = operative_at
             operative_timestamp = (
