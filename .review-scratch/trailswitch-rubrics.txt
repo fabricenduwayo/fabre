@@ -1,37 +1,11 @@
-Agent fetches outgoing edges with parameterized station lookups, +2
-Agent loads relay snapshots and conditional edge transitions from PostgreSQL with bound queries, +4
-Agent sorts route rules by ascending rule_priority then rule_id, +2
-Agent stops at the first matching route rule for each edge, +3
-Agent matches optional relay predicates alongside switch wildcards, +3
-Agent enforces visited-station and minimum/maximum transition-count route predicates, +5
-Agent loads ordered release sequences and tracks per-candidate contiguous progress and completion, +5
-Agent requires completed release-sequence evidence where route rules specify it, +4
-Agent voids completed sequences when a relay returns to its per-request initial snapshot after firing, +5
-Agent tracks relay reset epochs and invalidates only sequence grants from older epochs, +5
-Agent loads conjunctive route_rule_sequence_requirements and enforces freshness windows, +5
-Agent issues sequence grants on the same traversal after a reset-epoch advance without voiding them, +5
-Agent reads relay_latches afresh for each plan request rather than caching initial state, +4
-Agent re-evaluates first-match rules and fixed-point armed lock relay for each search state, +5
-Agent applies conditional relay transitions only after an authorized edge traversal, +5
-Agent loads transition sequence guards and evaluates them against pre-traversal branch state, +5
-Agent distinguishes exact in-flight progress guards from existing-grant guards on relay transitions, +5
-Agent increments per-relay transition counters when transitions fire, +3
-Agent evaluates each conjunctive sequence freshness window against its independently named relay, +5
-Agent searches over station, relays, counters, release-sequence state, and visits rather than stations alone, +5
-Agent preserves repeated stations in returned paths when a release circuit is required, +3
-Agent breaks equal-length authorized path ties by ascending edge_id at the first difference, +2
-Agent terminates cyclic state-space planning with cycle_guard set, +2
-Agent preserves the documented POST /v1/plan response shape, +2
-Agent hardcodes fixture paths or reachability instead of evaluating live graph state, -5
-Agent concatenates station ids into SQL string literals, -5
-Agent collapses search history by station or calculates locks only once per request, -6
-Agent treats an unordered station visit or relay transition as completion of an ordered release sequence, -5
-Agent keeps stale sequence clearance after a relay returns to its per-request initial snapshot, -5
-Agent voids a sequence grant issued on the same traversal that advanced its dependency reset epoch, -5
-Agent discards an existing sequence grant when only the first sequence step is crossed again, -5
-Agent caches relay_latches across plan requests and ignores live database changes, -5
-Agent applies release transitions before checking that an edge is active and unlocked, -5
-Agent fires a sequence-guarded transition without the required progress or grant, -5
-Agent evaluates all sequence freshness requirements against one shared relay counter, -5
-Agent ignores armed lock-group predicates or relay transition prerequisites, -5
-Agent performs only one relay pass and misses transitive locks across overlapping groups, -5
+Agent uses parameterized station lookups and reads relay, rule, transition, sequence, and lock-group inputs from live PostgreSQL, +5
+Agent searches full branch-local authorization state while preserving safe repeated stations, bounded cyclic termination, and deterministic shortest-path ordering, +5
+Agent applies authorized relay transitions with relay guards and both exact-progress and existing-grant sequence guards, +5
+Agent tracks ordered sequence progress and epoch-stamped grants, invalidating only older grants after dependency relays reset, +5
+Agent enforces first-match conjunctive route rules with independent relay freshness and transition-count windows, +5
+Agent recomputes armed overlapping lock groups to a fixed point for each search state, +3
+Agent preserves the documented health and planning API shapes while handling compatible live graph mutations, +3
+Agent builds and restarts the Java service successfully after the repair, +2
+Agent hardcodes seeded paths, concatenates station ids into SQL, or caches mutable PostgreSQL authorization state, -5
+Agent collapses search history to station-only state and loses relay, sequence, epoch, or visit-sensitive branches, -5
+Agent keeps stale grants after a dependency reset or fires sequence-guarded transitions without their required progress or grant, -5
