@@ -6,7 +6,7 @@ Agent discovers the experiment-db schema through JDBC/SQL instead of guessing ta
 Agent pulls the candidate set from the live registry API and metrics, lineage, and calibration from H2, +3
 Agent joins feature-hash lineage on model id and the registry-reported version, +5
 Agent voids validation_runs targeted by supersedes_run_id and propagates voids transitively along the supersession chain before choosing the operative completed row, +5
-Agent replays calibration_events through release_context.decision_at with same-timestamp event_id ordering instead of trusting calibration_status alone, +5
+Agent replays calibration_events only through each operative run captured_at (or earlier decision_at) with same-timestamp event_id ordering, +5
 Agent evaluates waiver events at release_context.decision_at and applies only active, unexpired, version-scoped grants, +5
 Agent validates reciprocal replacement pairs and prevents a revoked replacement from reviving its predecessor, +5
 Agent applies waivers only when the grant occurred strictly before the operative validation run captured_at, +5
@@ -15,6 +15,8 @@ Agent requires distinct risk and model-owner reviewers and falls back past newer
 Agent replays reviewer_role_events and binds waiver approvals to the current role-assignment epoch, +5
 Agent enforces operative-run anchoring so metric waivers bind to the operative validation run after void propagation, +5
 Agent rejects reciprocal replacement pairs whose anchors_run_id values differ, +3
+Agent arbitrates eligible waivers across raw failures so only the newest member of each suppression group survives, +5
+Agent filters waiver eligibility before suppression-group arbitration and rejects replacement pairs that change groups, +5
 Agent reports suppressing waivers under applied_waivers even when another raw failure still rejects the candidate, +5
 Agent rejects candidates with incomplete H2 evidence as missing_canonical_evidence, +3
 Agent implements the tie-break and labels qualifying losers lost_tiebreak, +3
@@ -24,6 +26,7 @@ Agent supports the optional JDBC-URL and output-path CLI arguments with the docu
 Agent hand-writes /app/build/release-decision.json instead of generating it with the Java CLI, -5
 Agent evaluates promotion gates against registry API metrics instead of H2 canonical values, -5
 Agent uses calibration_status without replaying calibration_events when amendments apply, -5
+Agent replays post-operative-run calibration events merely because they precede decision_at, -5
 Agent treats a voided superseding run as operative or skips transitive void propagation, -5
 Agent joins lineage on model id only or compares against a non-matching version hash, -3
 Agent hardcodes model ids, metric values, or the final decision inside the reconciler, -5
@@ -35,4 +38,6 @@ Agent reuses approvals from a predecessor or an earlier grant epoch after revoke
 Agent treats one reviewer carrying both required role labels as an approval quorum, -5
 Agent counts waiver approvals after reviewer-role revoke or from a prior role-assignment epoch, -5
 Agent lets an anchored waiver suppress metric failures when its anchor run is voided or no longer operative, -5
+Agent applies multiple waivers from one suppression group or lets an ineligible newer member shadow an older eligible member, -5
+Agent accepts a reciprocal replacement pair whose suppression groups differ, -5
 Agent lets a waiver suppress missing_canonical_evidence or lost_tiebreak, -5

@@ -121,6 +121,7 @@ def main() -> None:
         "environment/experiment-db/experiments.mv.db",
         "environment/lib/h2-2.2.224.jar",
         "environment/model-registry/target/model-registry-0.1.0.jar",
+        "environment/policy/promotion-policy-amendments.md",
         "environment/reconcile-model-release/build.sh",
         "environment/reconcile-model-release/src/com/snorkel/registry/Main.java",
         "solution/solve.sh",
@@ -129,6 +130,7 @@ def main() -> None:
         "tests/test_outputs.py",
         "tests/variant_c_seed.sql",
         "tests/variant_e_seed.sql",
+        "tests/variant_f_seed.sql",
     }
     missing = required - set(names)
     if missing:

@@ -209,8 +209,10 @@ def parse_timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
 
 
-def active_waivers(db_url: str) -> list[dict]:
-    """Evaluate the A-2026-06 waiver event lifecycle as of decision_at."""
+def active_waivers(
+    db_url: str, *, enforce_group_integrity: bool = True
+) -> list[dict]:
+    """Evaluate waiver lifecycle and replacement integrity as of decision_at."""
     contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
     assert len(contexts) == 1, "release_context must contain exactly one decision"
     decision_at = parse_timestamp(contexts[0]["decision_at"])
@@ -222,6 +224,13 @@ def active_waivers(db_url: str) -> list[dict]:
                    valid_from, valid_until, replaces_waiver_id, anchors_run_id
             FROM promotion_waivers
             """,
+            db_url,
+        )
+    }
+    suppression_groups = {
+        row["waiver_id"]: row["suppression_group"]
+        for row in h2_select(
+            "SELECT waiver_id, suppression_group FROM waiver_suppression_groups",
             db_url,
         )
     }
@@ -268,6 +277,10 @@ def active_waivers(db_url: str) -> list[dict]:
         predecessor_anchor = predecessor.get("anchors_run_id", "").strip()
         if successor_anchor != predecessor_anchor:
             continue
+        if enforce_group_integrity and suppression_groups.get(
+            successor["waiver_id"]
+        ) != suppression_groups.get(predecessor["waiver_id"]):
+            continue
         valid_events.append(event)
 
     latest: dict[str, dict] = {}
@@ -295,6 +308,7 @@ def active_waivers(db_url: str) -> list[dict]:
                     **waiver,
                     "grant_at": parse_timestamp(event["occurred_at"]),
                     "grant_event_id": event["event_id"],
+                    "suppression_group": suppression_groups.get(waiver_id),
                 }
             )
     return result
@@ -398,8 +412,13 @@ def approval_quorum(
     return approved
 
 
-def effective_calibration(db_url: str) -> dict[str, bool]:
-    """Replay A-2026-07 calibration_events through release_context.decision_at."""
+def effective_calibration(
+    db_url: str,
+    operative_by_model: dict[str, tuple[float, float, str, str]],
+    *,
+    enforce_operative_cutoff: bool = True,
+) -> dict[str, bool]:
+    """Replay calibration through each operative run cutoff under A-2026-14."""
     contexts = h2_select("SELECT context_id, decision_at FROM release_context", db_url)
     assert len(contexts) == 1, "release_context must contain exactly one decision"
     decision_at = parse_timestamp(contexts[0]["decision_at"])
@@ -420,17 +439,29 @@ def effective_calibration(db_url: str) -> dict[str, bool]:
     calibrated: dict[str, bool] = {}
     for model_id, flag in snapshot.items():
         effective = flag
+        cutoff = decision_at
+        operative = operative_by_model.get(model_id)
+        if enforce_operative_cutoff and operative is not None:
+            cutoff = min(cutoff, parse_timestamp(operative[2]))
         ordered = sorted(
             events_by_model.get(model_id, []),
             key=lambda row: (parse_timestamp(row["occurred_at"]), row["event_id"]),
         )
         for event in ordered:
+            if parse_timestamp(event["occurred_at"]) > cutoff:
+                continue
             effective = event["event_type"] == "calibrate"
         calibrated[model_id] = effective
     return calibrated
 
 
-def load_evidence(db_url: str, *, enforce_role_epochs: bool = True) -> dict:
+def load_evidence(
+    db_url: str,
+    *,
+    enforce_role_epochs: bool = True,
+    enforce_operative_calibration_cutoff: bool = True,
+    enforce_group_integrity: bool = True,
+) -> dict:
     """Read the canonical promotion evidence out of an H2 experiment database."""
     metrics = operative_metrics(db_url)
     lineage = {
@@ -444,7 +475,11 @@ def load_evidence(db_url: str, *, enforce_role_epochs: bool = True) -> dict:
     )
     run_model_ids = {row["run_id"]: row["model_id"] for row in run_rows}
     run_captured_at = {row["run_id"]: row["captured_at"] for row in run_rows}
-    calibrated = effective_calibration(db_url)
+    calibrated = effective_calibration(
+        db_url,
+        metrics,
+        enforce_operative_cutoff=enforce_operative_calibration_cutoff,
+    )
     assert metrics, f"no validation_metrics rows returned from {db_url}"
     metric_values = {
         model_id: (values[0], values[1]) for model_id, values in metrics.items()
@@ -455,7 +490,9 @@ def load_evidence(db_url: str, *, enforce_role_epochs: bool = True) -> dict:
     operative_run_ids = {
         model_id: values[3] for model_id, values in metrics.items()
     }
-    waivers = active_waivers(db_url)
+    waivers = active_waivers(
+        db_url, enforce_group_integrity=enforce_group_integrity
+    )
     return {
         "metrics": metric_values,
         "metric_captured_at": metric_captured_at,
@@ -483,6 +520,7 @@ def evaluate_candidate_with_waivers(
     evidence: dict,
     *,
     enforce_metric_anchoring: bool = True,
+    enforce_suppression_groups: bool = True,
 ) -> tuple[list[str], list[tuple[str, str, str, str]]]:
     """Return effective reasons and selected suppressing governance waivers.
 
@@ -507,10 +545,9 @@ def evaluate_candidate_with_waivers(
     if candidate.get("featureHash") != lineage_hash:
         reasons.append(REASON_LINEAGE)
 
-    remaining: list[str] = []
-    applied: list[tuple[str, str, str, str]] = []
     operative_at = evidence.get("metric_captured_at", {}).get(model_id)
     operative_run_id = evidence.get("operative_run_ids", {}).get(model_id)
+    eligible_by_reason: dict[str, list[dict]] = {}
     for reason in reasons:
         matching = []
         for waiver in evidence["active_waivers"]:
@@ -543,6 +580,44 @@ def evaluate_candidate_with_waivers(
             if operative_timestamp is not None and waiver["grant_at"] >= operative_timestamp:
                 continue
             matching.append(waiver)
+        eligible_by_reason[reason] = matching
+
+    group_winners: dict[str, str] = {}
+    if enforce_suppression_groups:
+        for matching in eligible_by_reason.values():
+            for waiver in matching:
+                group = waiver.get("suppression_group")
+                if group is None:
+                    continue
+                current_id = group_winners.get(group)
+                current = next(
+                    (
+                        candidate_waiver
+                        for candidate_matches in eligible_by_reason.values()
+                        for candidate_waiver in candidate_matches
+                        if candidate_waiver["waiver_id"] == current_id
+                    ),
+                    None,
+                )
+                if current is None or (
+                    waiver["grant_at"],
+                    waiver["waiver_id"],
+                ) > (
+                    current["grant_at"],
+                    current["waiver_id"],
+                ):
+                    group_winners[group] = waiver["waiver_id"]
+
+    remaining: list[str] = []
+    applied: list[tuple[str, str, str, str]] = []
+    for reason in reasons:
+        matching = [
+            waiver
+            for waiver in eligible_by_reason[reason]
+            if not enforce_suppression_groups
+            or waiver.get("suppression_group") is None
+            or group_winners.get(waiver["suppression_group"]) == waiver["waiver_id"]
+        ]
         if not matching:
             remaining.append(reason)
             continue

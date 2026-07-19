@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -165,6 +166,13 @@ public final class Reconciler {
                         dbUrl)) {
             waivers.put(row.get("waiver_id"), row);
         }
+        Map<String, String> suppressionGroups = new HashMap<>();
+        for (Map<String, String> row :
+                h2Select(
+                        "SELECT waiver_id, suppression_group FROM waiver_suppression_groups",
+                        dbUrl)) {
+            suppressionGroups.put(row.get("waiver_id"), row.get("suppression_group"));
+        }
 
         Map<String, Map<String, String>> events = new HashMap<>();
         for (Map<String, String> row :
@@ -219,6 +227,11 @@ public final class Reconciler {
                     .equals(predecessor.getOrDefault("anchors_run_id", "").strip())) {
                 continue;
             }
+            if (!Objects.equals(
+                    suppressionGroups.get(successor.get("waiver_id")),
+                    suppressionGroups.get(predecessor.get("waiver_id")))) {
+                continue;
+            }
             validEvents.add(event);
         }
 
@@ -251,7 +264,8 @@ public final class Reconciler {
                                 waiver.get("reason_code"),
                                 parseTimestamp(event.get("occurred_at")),
                                 event.get("event_id"),
-                                waiver.getOrDefault("anchors_run_id", "").strip()));
+                                waiver.getOrDefault("anchors_run_id", "").strip(),
+                                suppressionGroups.get(waiver.get("waiver_id"))));
             }
         }
         return active;
@@ -514,6 +528,14 @@ public final class Reconciler {
         }
         for (Map.Entry<String, Boolean> entry : snapshot.entrySet()) {
             boolean effective = entry.getValue();
+            Instant cutoff = decisionAt;
+            String operativeCapturedAt = metricCapturedAt.get(entry.getKey());
+            if (operativeCapturedAt != null) {
+                Instant operativeAt = parseTimestamp(operativeCapturedAt);
+                if (operativeAt.isBefore(cutoff)) {
+                    cutoff = operativeAt;
+                }
+            }
             List<Map<String, String>> events =
                     new ArrayList<>(eventsByModel.getOrDefault(entry.getKey(), List.of()));
             events.sort(
@@ -521,6 +543,9 @@ public final class Reconciler {
                                     parseTimestamp(row.get("occurred_at")))
                             .thenComparing(row -> row.get("event_id")));
             for (Map<String, String> event : events) {
+                if (parseTimestamp(event.get("occurred_at")).isAfter(cutoff)) {
+                    continue;
+                }
                 effective = "calibrate".equals(event.get("event_type"));
             }
             calibrated.put(entry.getKey(), effective);
@@ -588,13 +613,13 @@ public final class Reconciler {
                     fails.add(REASON_LINEAGE);
                 }
 
-                List<String> remaining = new ArrayList<>();
                 String operativeCapturedAt = evidence.metricCapturedAt.get(modelId);
                 String operativeRunId = evidence.operativeRunIds.get(modelId);
                 Instant operativeAt =
                         operativeCapturedAt == null
                                 ? null
                                 : parseTimestamp(operativeCapturedAt);
+                Map<String, List<ActiveWaiver>> eligibleByReason = new LinkedHashMap<>();
                 for (String reason : fails) {
                     List<ActiveWaiver> matching = new ArrayList<>();
                     for (ActiveWaiver waiver : evidence.activeWaivers) {
@@ -627,6 +652,37 @@ public final class Reconciler {
                         }
                         matching.add(waiver);
                     }
+                    eligibleByReason.put(reason, matching);
+                }
+
+                Map<String, ActiveWaiver> groupWinners = new HashMap<>();
+                for (List<ActiveWaiver> matching : eligibleByReason.values()) {
+                    for (ActiveWaiver waiver : matching) {
+                        if (waiver.suppressionGroup == null) {
+                            continue;
+                        }
+                        ActiveWaiver current = groupWinners.get(waiver.suppressionGroup);
+                        if (current == null
+                                || Comparator.comparing((ActiveWaiver w) -> w.grantAt)
+                                                .thenComparing(w -> w.waiverId)
+                                                .compare(waiver, current)
+                                        > 0) {
+                            groupWinners.put(waiver.suppressionGroup, waiver);
+                        }
+                    }
+                }
+
+                List<String> remaining = new ArrayList<>();
+                for (String reason : fails) {
+                    List<ActiveWaiver> matching =
+                            eligibleByReason.get(reason).stream()
+                                    .filter(
+                                            waiver ->
+                                                    waiver.suppressionGroup == null
+                                                            || groupWinners.get(
+                                                                            waiver.suppressionGroup)
+                                                                    == waiver)
+                                    .toList();
                     if (matching.isEmpty()) {
                         remaining.add(reason);
                         continue;
@@ -727,7 +783,8 @@ public final class Reconciler {
             String reasonCode,
             Instant grantAt,
             String grantEventId,
-            String anchorsRunId) {}
+            String anchorsRunId,
+            String suppressionGroup) {}
 
     private record Evidence(
             Map<String, double[]> metrics,

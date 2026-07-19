@@ -194,17 +194,15 @@ def test_gate1_transitive_void_preserves_later_survivor(evidence, expected):
     )
 
 
-def test_calibration_events_override_stale_snapshot(manifest, evidence, expected):
-    """A-2026-07: delta's calibration_status snapshot is stale after event replay."""
-    assert evidence["calibrated"]["delta"] is False, (
-        "delta must be uncalibrated after replaying calibration_events"
+def test_calibration_replay_stops_at_operative_run(manifest, evidence, expected):
+    """A-2026-14: post-run calibration events cannot change Gate 2."""
+    assert evidence["calibrated"]["delta"] is True, (
+        "delta's post-run uncalibrate event must not alter operative calibration"
     )
     assert expected["promoted"] == "omega"
     assert manifest["promoted"] == "omega"
     rejected = {entry["model"]: set(entry["reasons"]) for entry in manifest["rejected"]}
-    assert REASON_UNCALIBRATED in rejected["delta"], (
-        "delta must be rejected as uncalibrated despite the stale snapshot row"
-    )
+    assert rejected["delta"] == {"lineage_mismatch"}
 
 
 def test_gate1_voids_superseded_completed_run(evidence, expected):
@@ -497,3 +495,95 @@ def test_cli_generalizes_reviewer_role_epochs(registry, variant_e_db_url):
     }
     assert "lost_tiebreak" in rejected["beta"]
     assert "uncalibrated" in rejected["gamma"]
+
+
+def test_variant_f_requires_operative_calibration_cutoff(
+    registry_by_id, variant_f_db_url
+):
+    """Post-run calibration cannot alter the operative Gate 2 result."""
+    evidence = load_evidence(variant_f_db_url)
+    legacy = load_evidence(
+        variant_f_db_url,
+        enforce_operative_calibration_cutoff=False,
+    )
+    assert evidence["calibrated"]["omega"] is False
+    assert legacy["calibrated"]["omega"] is True
+    full_reasons, full_applied = evaluate_candidate_with_waivers(
+        registry_by_id["omega"], evidence
+    )
+    legacy_reasons, legacy_applied = evaluate_candidate_with_waivers(
+        registry_by_id["omega"], legacy
+    )
+    assert full_reasons == [REASON_METRIC]
+    assert {row[0] for row in full_applied} == {"omega-calibration-grouped"}
+    assert legacy_reasons == []
+    assert {row[0] for row in legacy_applied} == {"omega-metric-grouped"}
+
+
+def test_variant_f_requires_suppression_group_arbitration(
+    registry_by_id, variant_f_db_url
+):
+    """One suppression-group winner cannot suppress two raw failures."""
+    evidence = load_evidence(variant_f_db_url)
+    grouped_reasons, grouped_applied = evaluate_candidate_with_waivers(
+        registry_by_id["omega"], evidence
+    )
+    legacy_reasons, legacy_applied = evaluate_candidate_with_waivers(
+        registry_by_id["omega"],
+        evidence,
+        enforce_suppression_groups=False,
+    )
+    assert grouped_reasons == [REASON_METRIC]
+    assert {row[0] for row in grouped_applied} == {"omega-calibration-grouped"}
+    assert legacy_reasons == []
+    assert {row[0] for row in legacy_applied} == {
+        "omega-metric-grouped",
+        "omega-calibration-grouped",
+    }
+
+
+def test_variant_f_replacement_cannot_change_suppression_group(
+    registry_by_id, variant_f_db_url
+):
+    """A cross-group replacement pair is ignored before approval selection."""
+    evidence = load_evidence(variant_f_db_url)
+    legacy = load_evidence(variant_f_db_url, enforce_group_integrity=False)
+    full_reasons, full_applied = evaluate_candidate_with_waivers(
+        registry_by_id["beta"], evidence
+    )
+    legacy_reasons, legacy_applied = evaluate_candidate_with_waivers(
+        registry_by_id["beta"], legacy
+    )
+    assert full_reasons == [REASON_METRIC]
+    assert full_applied == []
+    assert legacy_reasons == []
+    assert {row[0] for row in legacy_applied} == {"beta-metric-new-group"}
+
+
+def test_cli_generalizes_calibration_cutoff_and_suppression_groups(
+    registry, variant_f_db_url
+):
+    """The real CLI composes cutoff, group arbitration, and pair integrity."""
+    variant_expected = expected_decision(registry, load_evidence(variant_f_db_url))
+    with tempfile.TemporaryDirectory() as tmp:
+        out_path = Path(tmp) / "variant-f.json"
+        result = run_reconcile_cli([variant_f_db_url, str(out_path)])
+        assert result.returncode == 0, (
+            "reconcile CLI failed against the calibration/group variant:\n"
+            f"{result.stdout}\n{result.stderr}"
+        )
+        variant_manifest = json.loads(out_path.read_text(encoding="utf-8"))
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    jsonschema.validate(instance=variant_manifest, schema=schema)
+    assert_manifest_matches_expected(variant_manifest, registry, variant_expected)
+    assert variant_manifest["promoted"] is None
+    rejected = {
+        entry["model"]: set(entry["reasons"])
+        for entry in variant_manifest["rejected"]
+    }
+    assert rejected["omega"] == {REASON_METRIC}
+    assert rejected["beta"] == {REASON_METRIC}
+    assert {
+        (row["waiver_id"], row["reason"])
+        for row in variant_manifest["applied_waivers"]
+    } == {("omega-calibration-grouped", REASON_UNCALIBRATED)}

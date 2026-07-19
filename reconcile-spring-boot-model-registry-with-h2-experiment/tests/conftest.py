@@ -113,3 +113,9 @@ def variant_d_db_url() -> str:
 def variant_e_db_url() -> str:
     """Variant store exercising reviewer-role authority epochs and withdrawal."""
     return _build_variant_db("variant_e_seed.sql")
+
+
+@pytest.fixture(scope="session")
+def variant_f_db_url() -> str:
+    """Variant store exercising calibration cutoff and suppression groups."""
+    return _build_variant_db("variant_f_seed.sql")

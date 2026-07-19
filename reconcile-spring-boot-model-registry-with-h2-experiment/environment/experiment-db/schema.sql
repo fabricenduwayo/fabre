@@ -84,6 +84,14 @@ CREATE TABLE waiver_events (
   CONSTRAINT ck_we_type CHECK (event_type IN ('grant', 'revoke'))
 );
 
+CREATE TABLE waiver_suppression_groups (
+  waiver_id          VARCHAR(64) NOT NULL,
+  suppression_group  VARCHAR(64) NOT NULL,
+  PRIMARY KEY (waiver_id),
+  CONSTRAINT fk_wsg_waiver FOREIGN KEY (waiver_id)
+    REFERENCES promotion_waivers(waiver_id)
+);
+
 CREATE TABLE waiver_approval_events (
   event_id       VARCHAR(64) NOT NULL,
   waiver_id      VARCHAR(64) NOT NULL,

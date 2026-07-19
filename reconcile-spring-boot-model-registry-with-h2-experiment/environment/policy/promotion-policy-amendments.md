@@ -156,3 +156,32 @@ valid grant event and the `occurred_at` of the current role-assignment epoch
 ends the epoch; a subsequent `assign` or `reassign` starts a new one.
 Approvals from before the current epoch do not transfer across revoke or
 reassign. Role events after `decision_at` are ignored.
+
+## A-2026-14 — amends A-2026-07 Gate 2 replay cutoff
+
+Gate 2 evaluates calibration at the operative validation run selected after
+A-2026-04 through A-2026-08, not at the later release decision. Replay each
+model's `calibration_events` only through the earlier of
+`release_context.decision_at` and that operative run's `captured_at`, retaining
+A-2026-09 ordering. A calibration change after that cutoff does not alter the
+raw `uncalibrated` result for the release, even when it precedes
+`decision_at`. A candidate without an operative run still fails closed under
+`missing_canonical_evidence`.
+
+## A-2026-15 — waiver suppression groups
+
+`waiver_suppression_groups` optionally assigns a waiver to one named
+suppression group. Absence from the table means the waiver is ungrouped. For
+each candidate, first compute raw failures and filter active waivers by matching
+model/version/reason, latest-grant approval quorum, reviewer-role authority,
+operative-run timing, and optional run anchoring. Then retain at most one
+eligible waiver from each non-null suppression group: the waiver with the latest
+grant event wins, breaking a tie by lexicographically greatest waiver id.
+Ungrouped eligible waivers all survive this step. Apply A-2026-06's ordinary
+per-reason selection only to those survivors.
+
+Group arbitration happens after eligibility. An ineligible newer waiver cannot
+shadow an older eligible waiver in its group, and a group winner suppresses only
+its own matching raw failure. A reciprocal replacement pair is malformed unless
+the predecessor and successor have the same suppression group, including both
+being ungrouped.
