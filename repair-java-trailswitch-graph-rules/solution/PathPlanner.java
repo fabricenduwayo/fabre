@@ -1,6 +1,7 @@
 package com.trailswitch.service;
 
 import com.trailswitch.model.EdgeRow;
+import com.trailswitch.model.SequenceGrant;
 import com.trailswitch.repo.GraphPathRepository;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -32,7 +33,8 @@ public class PathPlanner {
                         initialRelays,
                         Map.of(),
                         Map.of(),
-                        Set.of(),
+                        Map.of(),
+                        Map.of(),
                         Set.of(from),
                         initialRelays);
         Queue<SearchState> queue = new ArrayDeque<>();
@@ -56,7 +58,7 @@ public class PathPlanner {
                             current.relays(),
                             current.transitionCounts(),
                             current.visited(),
-                            current.completedSequences());
+                            current.sequenceGrants());
             for (EdgeRow edge : repository.loadOutgoing(current.station())) {
                 if (locked.contains(edge.edgeId())) {
                     continue;
@@ -70,7 +72,8 @@ public class PathPlanner {
                                 current.relays(),
                                 current.transitionCounts(),
                                 current.sequenceProgress(),
-                                current.completedSequences(),
+                                current.sequenceGrants(),
+                                current.relayResetEpochs(),
                                 current.initialRelays());
                 Set<String> nextVisited = new HashSet<>(current.visited());
                 nextVisited.add(edge.toStation());
@@ -80,7 +83,8 @@ public class PathPlanner {
                                 advanced.relays(),
                                 advanced.transitionCounts(),
                                 advanced.sequenceProgress(),
-                                advanced.completedSequences(),
+                                advanced.sequenceGrants(),
+                                advanced.relayResetEpochs(),
                                 nextVisited,
                                 current.initialRelays());
                 if (discovered.add(next)) {
@@ -131,14 +135,16 @@ public class PathPlanner {
             Map<String, String> relays,
             Map<String, Integer> transitionCounts,
             Map<String, Integer> sequenceProgress,
-            Set<String> completedSequences,
+            Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> relayResetEpochs,
             Set<String> visited,
             Map<String, String> initialRelays) {
         private SearchState {
             relays = Map.copyOf(relays);
             transitionCounts = Map.copyOf(transitionCounts);
             sequenceProgress = Map.copyOf(sequenceProgress);
-            completedSequences = Set.copyOf(completedSequences);
+            sequenceGrants = Map.copyOf(sequenceGrants);
+            relayResetEpochs = Map.copyOf(relayResetEpochs);
             visited = Set.copyOf(visited);
             initialRelays = Map.copyOf(initialRelays);
         }

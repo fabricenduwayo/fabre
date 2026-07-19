@@ -4,6 +4,7 @@ import com.trailswitch.model.EdgeRow;
 import com.trailswitch.model.LockGroupRow;
 import com.trailswitch.model.RelayTransition;
 import com.trailswitch.model.RouteRule;
+import com.trailswitch.model.SequenceRequirement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +58,31 @@ public class GraphPathRepository {
                                 (Integer) rs.getObject("max_transition_count"),
                                 rs.getString("requires_visited_station"),
                                 rs.getString("requires_completed_sequence")));
+    }
+
+    public Map<String, List<SequenceRequirement>> loadSequenceRequirements() {
+        return jdbc.query(
+                "SELECT rule_id, requirement_order, sequence_id, freshness_relay_id, "
+                        + "min_transitions_since, max_transitions_since "
+                        + "FROM route_rule_sequence_requirements "
+                        + "ORDER BY rule_id, requirement_order",
+                rs -> {
+                    Map<String, List<SequenceRequirement>> grouped = new HashMap<>();
+                    while (rs.next()) {
+                        SequenceRequirement requirement =
+                                new SequenceRequirement(
+                                        rs.getString("rule_id"),
+                                        rs.getInt("requirement_order"),
+                                        rs.getString("sequence_id"),
+                                        rs.getString("freshness_relay_id"),
+                                        (Integer) rs.getObject("min_transitions_since"),
+                                        (Integer) rs.getObject("max_transitions_since"));
+                        grouped.computeIfAbsent(
+                                        requirement.ruleId(), ignored -> new ArrayList<>())
+                                .add(requirement);
+                    }
+                    return grouped;
+                });
     }
 
     public Map<String, List<String>> loadReleaseSequences() {
@@ -149,7 +175,9 @@ public class GraphPathRepository {
     }
 
     public List<String> listStations() {
-        return jdbc.query("SELECT station_id FROM stations ORDER BY station_id", (rs, rowNum) -> rs.getString(1));
+        return jdbc.query(
+                "SELECT station_id FROM stations ORDER BY station_id",
+                (rs, rowNum) -> rs.getString(1));
     }
 
     public record LockGroupSpec(Set<String> edges, String armRelayId, String armRelayState) {}

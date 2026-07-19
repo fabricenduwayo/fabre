@@ -2,8 +2,11 @@ package com.trailswitch.service;
 
 import com.trailswitch.model.RelayTransition;
 import com.trailswitch.model.RouteRule;
+import com.trailswitch.model.SequenceGrant;
+import com.trailswitch.model.SequenceRequirement;
 import com.trailswitch.repo.GraphPathRepository;
 import com.trailswitch.repo.GraphPathRepository.LockGroupSpec;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +17,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class SwitchRuleHandler {
     private final GraphPathRepository repository;
-    private Map<String, Set<String>> sequenceRelayDependencies;
 
     public SwitchRuleHandler(GraphPathRepository repository) {
         this.repository = repository;
@@ -25,7 +27,7 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Set<String> visitedStations,
-            Set<String> completedSequences) {
+            Map<String, SequenceGrant> sequenceGrants) {
         Set<String> locked = new HashSet<>();
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new HashMap<>();
@@ -38,7 +40,7 @@ public class SwitchRuleHandler {
                     relayState,
                     transitionCounts,
                     visitedStations,
-                    completedSequences,
+                    sequenceGrants,
                     rule)) {
                 if ("clear".equalsIgnoreCase(rule.ruleAction())) {
                     edgeDecided.put(rule.edgeId(), true);
@@ -57,10 +59,12 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Map<String, Integer> sequenceProgress,
-            Set<String> completedSequences,
+            Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> relayResetEpochs,
             Map<String, String> initialRelays) {
         Map<String, String> nextRelays = new HashMap<>(relayState);
         Map<String, Integer> nextCounts = new HashMap<>(transitionCounts);
+        Map<String, Integer> nextResetEpochs = new HashMap<>(relayResetEpochs);
         for (RelayTransition transition : repository.loadRelayTransitions(traversedEdge)) {
             if (transition.requiresRelayId() != null) {
                 String required =
@@ -73,11 +77,16 @@ public class SwitchRuleHandler {
             if (current.equalsIgnoreCase(transition.fromState())) {
                 nextRelays.put(transition.relayId(), transition.toState());
                 nextCounts.merge(transition.relayId(), 1, Integer::sum);
+                String initial = initialRelays.getOrDefault(transition.relayId(), "");
+                if (transition.toState().equalsIgnoreCase(initial)
+                        && nextCounts.getOrDefault(transition.relayId(), 0) > 0) {
+                    nextResetEpochs.merge(transition.relayId(), 1, Integer::sum);
+                }
             }
         }
 
         Map<String, Integer> nextProgress = new HashMap<>(sequenceProgress);
-        Set<String> nextCompleted = new HashSet<>(completedSequences);
+        Map<String, SequenceGrant> nextGrants = new HashMap<>(sequenceGrants);
         for (Map.Entry<String, List<String>> entry :
                 repository.loadReleaseSequences().entrySet()) {
             List<String> steps = entry.getValue();
@@ -96,49 +105,54 @@ public class SwitchRuleHandler {
                 progress = 0;
             }
             if (progress == steps.size()) {
-                nextCompleted.add(entry.getKey());
+                nextGrants.put(
+                        entry.getKey(),
+                        issueGrant(entry.getKey(), nextResetEpochs, nextCounts));
                 progress = 0;
             }
             nextProgress.put(entry.getKey(), progress);
         }
-        voidStaleSequenceGrants(initialRelays, nextRelays, nextCounts, nextCompleted);
+
+        voidStaleGrants(nextResetEpochs, nextGrants);
         return new SearchAdvanceResult(
                 Map.copyOf(nextRelays),
                 Map.copyOf(nextCounts),
                 Map.copyOf(nextProgress),
-                Set.copyOf(nextCompleted));
+                Map.copyOf(nextGrants),
+                Map.copyOf(nextResetEpochs));
     }
 
-    private void voidStaleSequenceGrants(
-            Map<String, String> initialRelays,
-            Map<String, String> currentRelays,
-            Map<String, Integer> transitionCounts,
-            Set<String> completedSequences) {
-        for (Map.Entry<String, Integer> entry : transitionCounts.entrySet()) {
-            if (entry.getValue() <= 0) {
-                continue;
-            }
-            String relayId = entry.getKey();
-            String initial = initialRelays.getOrDefault(relayId, "");
-            String current = currentRelays.getOrDefault(relayId, "");
-            if (!current.equalsIgnoreCase(initial)) {
-                continue;
-            }
-            for (Map.Entry<String, Set<String>> dependency :
-                    sequenceRelayDependencies().entrySet()) {
-                if (!dependency.getValue().contains(relayId)) {
-                    continue;
+    private SequenceGrant issueGrant(
+            String sequenceId,
+            Map<String, Integer> resetEpochs,
+            Map<String, Integer> transitionCounts) {
+        Map<String, Integer> epochsAtGrant = new HashMap<>();
+        Map<String, Integer> countsAtGrant = new HashMap<>();
+        for (String relayId :
+                    repository.loadSequenceRelayDependencies()
+                            .getOrDefault(sequenceId, Set.of())) {
+            epochsAtGrant.put(relayId, resetEpochs.getOrDefault(relayId, 0));
+            countsAtGrant.put(relayId, transitionCounts.getOrDefault(relayId, 0));
+        }
+        return new SequenceGrant(sequenceId, Map.copyOf(epochsAtGrant), Map.copyOf(countsAtGrant));
+    }
+
+    private void voidStaleGrants(
+            Map<String, Integer> resetEpochs, Map<String, SequenceGrant> sequenceGrants) {
+        List<String> stale = new ArrayList<>();
+        Map<String, Set<String>> dependencies = repository.loadSequenceRelayDependencies();
+        for (Map.Entry<String, SequenceGrant> entry : sequenceGrants.entrySet()) {
+            SequenceGrant grant = entry.getValue();
+            for (String relayId : dependencies.getOrDefault(grant.sequenceId(), Set.of())) {
+                int grantEpoch = grant.resetEpochsAtGrant().getOrDefault(relayId, 0);
+                int currentEpoch = resetEpochs.getOrDefault(relayId, 0);
+                if (grantEpoch < currentEpoch) {
+                    stale.add(entry.getKey());
+                    break;
                 }
-                completedSequences.remove(dependency.getKey());
             }
         }
-    }
-
-    private Map<String, Set<String>> sequenceRelayDependencies() {
-        if (sequenceRelayDependencies == null) {
-            sequenceRelayDependencies = repository.loadSequenceRelayDependencies();
-        }
-        return sequenceRelayDependencies;
+        stale.forEach(sequenceGrants::remove);
     }
 
     private void applyLockGroups(Set<String> locked, Map<String, String> relayState) {
@@ -181,7 +195,7 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Set<String> visitedStations,
-            Set<String> completedSequences,
+            Map<String, SequenceGrant> sequenceGrants,
             RouteRule rule) {
         if (rule.lockSw1() != null
                 && !switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
@@ -213,21 +227,66 @@ public class SwitchRuleHandler {
                 return false;
             }
         }
-        if (rule.requiresCompletedSequence() != null
-                && !completedSequences.contains(rule.requiresCompletedSequence())) {
-            return false;
+        for (SequenceRequirement requirement : requirementsForRule(rule)) {
+            if (!sequenceRequirementSatisfied(
+                    requirement, sequenceGrants, transitionCounts)) {
+                return false;
+            }
         }
         return rule.lockSw1() != null
                 || rule.lockSw2() != null
                 || rule.matchRelayId() != null
                 || rule.requiresVisitedStation() != null
                 || rule.countRelayId() != null
-                || rule.requiresCompletedSequence() != null;
+                || rule.requiresCompletedSequence() != null
+                || repository.loadSequenceRequirements().containsKey(rule.ruleId());
+    }
+
+    private List<SequenceRequirement> requirementsForRule(RouteRule rule) {
+        List<SequenceRequirement> requirements =
+                new ArrayList<>(
+                        repository.loadSequenceRequirements().getOrDefault(rule.ruleId(), List.of()));
+        if (rule.requiresCompletedSequence() != null) {
+            requirements.add(
+                    new SequenceRequirement(
+                            rule.ruleId(),
+                            0,
+                            rule.requiresCompletedSequence(),
+                            null,
+                            null,
+                            null));
+        }
+        return requirements;
+    }
+
+    private boolean sequenceRequirementSatisfied(
+            SequenceRequirement requirement,
+            Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> transitionCounts) {
+        SequenceGrant grant = sequenceGrants.get(requirement.sequenceId());
+        if (grant == null) {
+            return false;
+        }
+        if (requirement.freshnessRelayId() == null) {
+            return true;
+        }
+        int current = transitionCounts.getOrDefault(requirement.freshnessRelayId(), 0);
+        int atGrant =
+                grant.transitionCountsAtGrant().getOrDefault(requirement.freshnessRelayId(), 0);
+        int since = current - atGrant;
+        if (requirement.minTransitionsSince() != null && since < requirement.minTransitionsSince()) {
+            return false;
+        }
+        if (requirement.maxTransitionsSince() != null && since > requirement.maxTransitionsSince()) {
+            return false;
+        }
+        return true;
     }
 
     public record SearchAdvanceResult(
             Map<String, String> relays,
             Map<String, Integer> transitionCounts,
             Map<String, Integer> sequenceProgress,
-            Set<String> completedSequences) {}
+            Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> relayResetEpochs) {}
 }

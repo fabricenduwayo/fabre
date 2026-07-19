@@ -33,12 +33,23 @@ it from source and SQL only — do not rely on manual playthroughs.
   search state.
 - After an authorized traversal, an edge matching the next step advances that
   sequence. A mismatch restarts at step one when the edge itself is the first step,
-  otherwise it resets progress to zero. Completing the final step records that
-  sequence as completed for the remainder of the candidate path.
+  otherwise it resets progress to zero. Completing the final step issues a sequence
+  grant that records the current dependency reset epochs and relay transition
+  counters for every relay that participates in that sequence.
+- Crossing the first step again starts a new attempt without discarding an existing
+  grant. Progress mismatches reset only in-flight progress, not grants already
+  issued on the candidate path.
 - When a relay returns to its per-request initial snapshot after at least one
-  transition fired on that relay during the candidate path, void every completed
-  sequence whose ordered steps include a transition on that relay. Re-earn
-  sequence clearance before any later rule may rely on it.
+  transition fired on that relay during the candidate path, advance that relay's
+  reset epoch. Apply relay transitions and advance reset epochs before invalidating
+  grants. A sequence completed on the same traversal that advances a reset epoch is
+  issued in the new epoch and remains valid. Invalidate only grants whose recorded
+  reset epoch for that relay is older than the current epoch.
+- `route_rule_sequence_requirements` lists conjunctive sequence grants a rule may
+  require. Each row names a `sequence_id` and optional `freshness_relay_id` with
+  minimum/maximum transition-count deltas since that grant was issued. Legacy
+  `requires_completed_sequence` on `route_rules` behaves as a single requirement
+  with no freshness window. All listed requirements must pass.
 - A station visit or relay transition does not substitute for sequence completion:
   the listed edges must be crossed in order. Sequence progress and completion are
   candidate-path state, not shared state and not PostgreSQL writes.
@@ -50,9 +61,9 @@ it from source and SQL only — do not rely on manual playthroughs.
 - A route rule matches when all of its non-NULL `lock_sw1` and `lock_sw2` values
   equal the requested positions, any relay predicate matches the current relay
   snapshot, any `requires_visited_station` appears in the path visited so far,
-  any `count_relay_id` minimum/maximum transition-count range is met, and any
-  `requires_completed_sequence` has completed on that candidate path. NULL switch
-  columns are wildcards; when both switch values are non-NULL, both must match.
+  any `count_relay_id` minimum/maximum transition-count range is met, and every
+  configured sequence requirement in `route_rule_sequence_requirements` or legacy
+  `requires_completed_sequence` is satisfied. NULL switch columns are wildcards; when both switch values are non-NULL, both must match.
 - The first matching rule for an edge decides that edge: `lock` locks it and
   `clear` leaves it unlocked. Ignore every later matching rule for the same edge.
 - Finish route-rule evaluation before lock-group relay. A group with any locked
@@ -66,8 +77,8 @@ it from source and SQL only — do not rely on manual playthroughs.
 
 ## Path planning
 
-- Search over `(station, relay snapshot, transition counters, release-sequence
-  progress/completions, visited stations)`, not stations alone.
+- Search over `(station, relay snapshot, transition counters, relay reset epochs,
+  release-sequence progress/grants, visited stations)`, not stations alone.
 - Prefer the shortest authorized path by edge count; break ties by ascending
   `edge_id` on the first differing edge.
 - Returned paths list every station visit, including repeats when a release circuit

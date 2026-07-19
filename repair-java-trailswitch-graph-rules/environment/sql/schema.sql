@@ -74,6 +74,28 @@ CREATE TABLE route_rules (
     )
 );
 
+CREATE TABLE route_rule_sequence_requirements (
+    rule_id TEXT NOT NULL REFERENCES route_rules(rule_id),
+    requirement_order INTEGER NOT NULL CHECK (requirement_order > 0),
+    sequence_id TEXT NOT NULL,
+    freshness_relay_id TEXT REFERENCES relay_latches(relay_id),
+    min_transitions_since INTEGER,
+    max_transitions_since INTEGER,
+    PRIMARY KEY (rule_id, requirement_order),
+    CONSTRAINT route_rule_seq_freshness_pair CHECK (
+        (freshness_relay_id IS NULL
+            AND min_transitions_since IS NULL
+            AND max_transitions_since IS NULL)
+        OR (freshness_relay_id IS NOT NULL
+            AND (min_transitions_since IS NOT NULL OR max_transitions_since IS NOT NULL))
+    ),
+    CONSTRAINT route_rule_seq_freshness_range CHECK (
+        min_transitions_since IS NULL
+        OR max_transitions_since IS NULL
+        OR min_transitions_since <= max_transitions_since
+    )
+);
+
 CREATE TABLE lock_groups (
     group_id TEXT NOT NULL,
     edge_id TEXT NOT NULL REFERENCES edges(edge_id),
@@ -87,4 +109,5 @@ CREATE TABLE lock_groups (
 );
 
 GRANT SELECT ON stations, edges, relay_latches, edge_relay_transitions,
-    release_sequences, route_rules, lock_groups TO trailswitch;
+    release_sequences, route_rules, route_rule_sequence_requirements, lock_groups
+    TO trailswitch;

@@ -38,7 +38,10 @@ INSERT INTO edge_relay_transitions (
 
 INSERT INTO release_sequences (sequence_id, step_order, edge_id) VALUES
     ('approach_release', 1, 'e_c_f'),
-    ('approach_release', 2, 'e_f_c');
+    ('approach_release', 2, 'e_f_c'),
+    ('arrival_return', 1, 'e_b_d'),
+    ('arrival_return', 2, 'e_d_e'),
+    ('arrival_return', 3, 'e_e_c');
 
 INSERT INTO route_rules (
     rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action,
@@ -61,7 +64,7 @@ INSERT INTO route_rules (
     ('r_de_visit_clear', 'e_d_e', 5, 'south', 'north', 'clear',
         NULL, NULL, 'yard_release', 1, 1, 'F', 'approach_release'),
     ('r_cj_recirc_clear', 'e_c_j', 3, 'south', 'north', 'clear',
-        NULL, NULL, NULL, NULL, NULL, 'E', 'approach_release'),
+        NULL, NULL, NULL, NULL, NULL, 'E', NULL),
     ('r_cj_default_lock', 'e_c_j', 4, 'south', 'north', 'lock',
         NULL, NULL, NULL, NULL, NULL, NULL, NULL),
     ('r_release_de_depot', 'e_d_e', 6, 'south', 'north', 'clear',
@@ -90,3 +93,10 @@ INSERT INTO lock_groups (group_id, edge_id, arm_relay_id, arm_relay_state) VALUE
     ('recirc_gate', 'e_e_c', 'yard_release', 'held'),
     ('yard_approach', 'e_c_b', NULL, NULL),
     ('yard_approach', 'e_b_d', NULL, NULL);
+
+INSERT INTO route_rule_sequence_requirements (
+    rule_id, requirement_order, sequence_id,
+    freshness_relay_id, min_transitions_since, max_transitions_since
+) VALUES
+    ('r_cj_recirc_clear', 1, 'approach_release', 'yard_release', 0, 2),
+    ('r_cj_recirc_clear', 2, 'arrival_return', 'yard_release', 0, 1);

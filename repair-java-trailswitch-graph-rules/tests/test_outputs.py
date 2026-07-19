@@ -2,7 +2,18 @@
 
 import pytest
 
-from helpers import REPO_JAVA, ensure_service, plan, reset_relays, set_relay_state
+from helpers import (
+    REPO_JAVA,
+    add_probe_edge_f_to_j,
+    ensure_service,
+    plan,
+    remove_probe_edge_f_to_j,
+    reset_relays,
+    restore_checkpoint_freshness_window,
+    run_sql,
+    set_relay_state,
+    tighten_checkpoint_freshness_window,
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -211,3 +222,84 @@ def test_sql_lookups_are_parameterized():
     source = REPO_JAVA.read_text(encoding="utf-8")
     assert "from_station = '" not in source
     assert "?" in source or "from_station = ?" in source
+
+
+def test_checkpoint_requires_dual_sequence_grants():
+    """Recirc checkpoint clearance needs re-earned approach and fresh arrival grants."""
+    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == [
+        "A",
+        "C",
+        "F",
+        "C",
+        "B",
+        "D",
+        "E",
+        "C",
+        "F",
+        "C",
+        "J",
+    ]
+
+
+def test_arrival_grant_survives_same_traversal_reset_epoch():
+    """A grant issued after a relay reset epoch advance on the same edge stays valid."""
+    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert result["reachable"] is True
+    assert result["path"] == [
+        "A",
+        "C",
+        "F",
+        "C",
+        "B",
+        "D",
+        "E",
+        "C",
+        "F",
+        "C",
+        "J",
+    ]
+
+
+def test_restarting_first_step_preserves_existing_grant():
+    """Crossing the first release step again must not discard an existing grant."""
+    add_probe_edge_f_to_j()
+    try:
+        earned = plan("C", "B", {"sw1": "south", "sw2": "north"})
+        assert earned["path"] == ["C", "F", "C", "B"]
+        restarted = plan("C", "F", {"sw1": "south", "sw2": "north"})
+        assert restarted["reachable"] is True
+        assert restarted["path"] == ["C", "F"]
+        shortcut = plan("F", "J", {"sw1": "south", "sw2": "north"})
+        assert shortcut["reachable"] is True
+        assert shortcut["path"] == ["F", "J"]
+    finally:
+        remove_probe_edge_f_to_j()
+
+
+def test_live_freshness_window_blocks_stale_arrival_grant():
+    """Tightening a sequence freshness window in PostgreSQL must change authorization."""
+    tighten_checkpoint_freshness_window()
+    try:
+        blocked = plan("A", "J", {"sw1": "south", "sw2": "north"})
+        assert blocked["reachable"] is False
+        assert blocked["path"] == []
+    finally:
+        restore_checkpoint_freshness_window()
+
+
+def test_dual_sequence_requirement_blocks_without_arrival_grant():
+    """Checkpoint clearance fails when only the approach grant is present after recirc."""
+    run_sql("DELETE FROM release_sequences WHERE sequence_id = 'arrival_return';")
+    try:
+        blocked = plan("A", "J", {"sw1": "south", "sw2": "north"})
+        assert blocked["reachable"] is False
+        assert blocked["path"] == []
+    finally:
+        run_sql(
+            "INSERT INTO release_sequences (sequence_id, step_order, edge_id) VALUES "
+            "('arrival_return', 1, 'e_b_d'), "
+            "('arrival_return', 2, 'e_d_e'), "
+            "('arrival_return', 3, 'e_e_c');"
+        )

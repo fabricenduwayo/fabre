@@ -5,6 +5,8 @@ DEST=/app/trailswitch/src/main/java/com/trailswitch
 
 cp "$HERE/GraphPathRepository.java" "$DEST/repo/GraphPathRepository.java"
 cp "$HERE/RelayTransition.java" "$DEST/model/RelayTransition.java"
+cp "$HERE/SequenceGrant.java" "$DEST/model/SequenceGrant.java"
+cp "$HERE/SequenceRequirement.java" "$DEST/model/SequenceRequirement.java"
 cp "$HERE/SwitchRuleHandler.java" "$DEST/service/SwitchRuleHandler.java"
 cp "$HERE/PathPlanner.java" "$DEST/service/PathPlanner.java"
 
