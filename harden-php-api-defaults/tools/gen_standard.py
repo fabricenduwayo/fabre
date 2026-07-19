@@ -1,120 +1,16 @@
 #!/usr/bin/env python3
 """Generate the HarborDesk Edge API Hardening Standard dossier.
 
-The dossier is intentionally long. The normative clauses the API must implement
-are embedded among realistic filler controls, and several of them are superseded
-by the authoritative amendments in Appendix G. Where the body and Appendix G
-disagree, Appendix G governs (see section 1.4).
+The Standard is a body of numbered controls followed by the authoritative
+Appendix G amendments. Where the body of a control and an amendment in
+Appendix G disagree, Appendix G governs (see section 1.4).
 
 Run from the task root:  python3 tools/gen_standard.py
 """
 
 import os
-import random
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "environment", "docs", "standard.md")
-
-rng = random.Random(54193)
-
-DOMAINS = [
-    ("AC", "Access Control"),
-    ("AU", "Audit and Accountability"),
-    ("CO", "Cross-Origin Controls"),
-    ("EH", "Error Handling and Disclosure"),
-    ("SV", "Service Configuration"),
-    ("MA", "Maintenance"),
-    ("NW", "Network Controls"),
-    ("IR", "Incident Response"),
-]
-
-SEV = ["Low", "Moderate", "High", "Critical"]
-HOSTCLASS = [
-    "all HarborDesk API deployments",
-    "edge and gateway deployments",
-    "internet-facing API nodes",
-    "internal staging deployments",
-    "credential-bearing API nodes",
-]
-
-RATIONALE = [
-    "Uncontrolled drift in this area has historically been the root cause of audit findings during the annual assessment.",
-    "Adversaries routinely probe for misconfigurations of this control when establishing a foothold against the API edge.",
-    "Consistent enforcement reduces the mean time to detect anomalous access across the fleet.",
-    "The control exists to keep responses deterministic so that repeated assessments converge on a stable state.",
-    "Inconsistent application of this requirement across nodes complicates evidence collection and weakens attestations.",
-    "This requirement aligns the API with the principle of least privilege mandated by the governing security policy.",
-    "Operational experience shows that small deviations here cascade into larger exposure during incident response.",
-    "The control supports reproducible deployments of the API baseline and simplifies forensic comparison.",
-]
-
-GUIDANCE = [
-    "Operators should prefer configuration that is idempotent so that re-deploying the API produces no further changes.",
-    "Where automation is used, ensure the tooling reads the canonical source files rather than cached copies.",
-    "Changes should be staged in a non-production environment and validated against the verification procedure below.",
-    "Document any approved deviation in the exceptions register with a scheduled review date.",
-    "Prefer explicit values over relying on framework defaults, which may vary between runtime versions.",
-    "When in doubt, treat the stricter interpretation as authoritative pending clarification from the standards owner.",
-    "Coordinate with the platform team before altering anything that affects credential handling.",
-    "Retain the prior configuration so that a rollback can be performed without redeploying the node.",
-]
-
-VERIFY = [
-    "Verification is performed by replaying a sequence of requests and comparing each response to the normalized policy expectation.",
-    "Evidence is the API's response status, headers, and body together with the resulting audit ledger rows.",
-    "Assessors may replay the request sequence after applying fixes to confirm the node has converged.",
-    "Automated property checks generate varied request sequences to confirm the control behaves consistently.",
-    "The verifier records the request and response for inclusion in the assessment package.",
-]
-
-REFS = [
-    "Governing Security Policy GSP-2024 §{a}.{b}",
-    "Edge Operations Runbook ROB-{a}",
-    "Baseline Configuration Guide BCG-{a}.{b}",
-    "Prior assessment finding AF-{a}",
-    "Vendor hardening note VHN-{a}-{b}",
-]
-
-
-def refs():
-    return "; ".join(
-        rng.choice(REFS).format(a=rng.randint(1, 9), b=rng.randint(0, 9))
-        for _ in range(rng.randint(2, 4))
-    )
-
-
-def revhist(cid):
-    out = []
-    for _ in range(rng.randint(2, 4)):
-        y = rng.choice([2022, 2023, 2024, 2025])
-        m = rng.randint(1, 12)
-        out.append(
-            f"- {y}-{m:02d}: editorial revision to {cid}; clarified scope and wording."
-        )
-    return "\n".join(out)
-
-
-def para(bank, n):
-    return " ".join(rng.choice(bank) for _ in range(n))
-
-
-def filler_control(cid, title, domain):
-    return f"""### {cid} — {title}
-
-**Domain:** {domain}  **Severity:** {rng.choice(SEV)}  **Applies to:** {rng.choice(HOSTCLASS)}
-
-**Rationale.** {para(RATIONALE, rng.randint(3, 5))}
-
-**Requirement.** {para(GUIDANCE, 1)} The deployment shall maintain the configuration described in this control at all times, and the verifier shall treat any deviation as reportable. {para(RATIONALE, 1)}
-
-**Implementation guidance.** {para(GUIDANCE, rng.randint(5, 8))}
-
-**Verification.** {para(VERIFY, rng.randint(3, 5))}
-
-**References.** {refs()}
-
-**Revision history.**
-{revhist(cid)}
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +198,8 @@ The ledger is an operational record that predates the current deployment and **a
 """
 
 # ---------------------------------------------------------------------------
-# Appendix G amendments (authoritative). Real overrides + filler.
+# Appendix G amendments (authoritative). Operative overrides plus a few
+# non-operative entries that section 1.4 lets implementers disregard.
 # ---------------------------------------------------------------------------
 AMENDMENTS_REAL = [
     ("G-2026-01", "CO-ORIGIN-ALLOW",
@@ -563,10 +460,10 @@ AMENDMENTS_REAL = [
      "successor can confirm there."),
 ]
 
-AMENDMENTS_FILLER = [
+AMENDMENTS_NO_EFFECT = [
     ("G-2026-07", "NW-TLS-CIPHERS",
-     "The approved TLS cipher suite list is updated; see Appendix C. This "
-     "amendment does not affect API behavior."),
+     "The approved TLS cipher suite list is updated. This amendment does not "
+     "affect API behavior."),
     ("G-2026-08", "MA-PATCH-WINDOW",
      "The maintenance window is shifted by one hour for the eastern region. This "
      "amendment does not affect API behavior."),
@@ -579,8 +476,28 @@ AMENDMENTS_FILLER = [
 ]
 
 
+DEFINITIONS = [
+    ("Origin", "The value of the HTTP `Origin` request header, compared exactly against the allowlist of CO-ORIGIN-ALLOW as amended."),
+    ("Allowed origin", "An origin that is byte-for-byte a member of the allowlist as amended by Appendix G."),
+    ("Bootstrap secret", "The shared secret in `data/bootstrap_secret` proving authority to mint the administrative token."),
+    ("Administrative token", "The single credential minted by AC-BOOTSTRAP and verified by AC-HEALTH."),
+    ("Credential generation", "The monotonically increasing deployment value in `data/credential_generation` that authorizes an administrative credential cutover."),
+    ("Predecessor credential", "The displaced current credential retained for the bounded AC-CREDENTIAL-CUTOVER overlap."),
+    ("Decision", "The audited outcome of a request, one of `accepted` or `denied`."),
+    ("Reason", "The audited denial reason, where applicable, as defined by the relevant control as amended."),
+    ("Audited request", "A `GET /health` or `POST /admin/bootstrap` request, recorded per AU-LEDGER-SCOPE."),
+    ("Ledger", "The persistent SQLite record at `data/audit.db`."),
+]
+
+DOMAIN_SECTIONS = [
+    ("3", "Access Control", ["AC-BOOTSTRAP", "AC-TOKEN-STORE", "AC-HEALTH", "AC-CREDENTIAL-CUTOVER"]),
+    ("4", "Audit and Accountability", ["AU-LEDGER-SCOPE"]),
+    ("5", "Cross-Origin Controls", ["CO-ORIGIN-ALLOW", "CO-PREFLIGHT"]),
+    ("6", "Error Handling and Disclosure", ["EH-NO-DISCLOSE"]),
+]
+
+
 def build():
-    rng.seed(54193)
     parts = []
     parts.append("# HarborDesk Edge API Hardening Standard (HEAS)\n")
     parts.append(
@@ -595,8 +512,7 @@ def build():
         "the API answers cross-origin, authentication, bootstrap, error, and "
         "audit-logging requests. The deployment must agree with this Standard for "
         "every request it serves.\n\n"
-        + para(RATIONALE, 4)
-        + "\n\n### 1.4 Precedence of amendments\n\n"
+        "### 1.4 Precedence of amendments\n\n"
         "This Standard is maintained as a body of numbered controls followed by "
         "an authoritative list of amendments in **Appendix G**. Where the body of "
         "a control and an amendment in Appendix G disagree, **the amendment in "
@@ -607,84 +523,21 @@ def build():
     )
 
     parts.append("\n## 2. Definitions\n")
-    terms = [
-        ("Origin", "The value of the HTTP `Origin` request header, compared exactly against the allowlist of CO-ORIGIN-ALLOW as amended."),
-        ("Allowed origin", "An origin that is byte-for-byte a member of the allowlist as amended by Appendix G."),
-        ("Bootstrap secret", "The shared secret in `data/bootstrap_secret` proving authority to mint the administrative token."),
-        ("Administrative token", "The single credential minted by AC-BOOTSTRAP and verified by AC-HEALTH."),
-        ("Credential generation", "The monotonically increasing deployment value in `data/credential_generation` that authorizes an administrative credential cutover."),
-        ("Predecessor credential", "The displaced current credential retained for the bounded AC-CREDENTIAL-CUTOVER overlap."),
-        ("Decision", "The audited outcome of a request, one of `accepted` or `denied`."),
-        ("Reason", "The audited denial reason, where applicable, as defined by the relevant control as amended."),
-        ("Audited request", "A `GET /health` or `POST /admin/bootstrap` request, recorded per AU-LEDGER-SCOPE."),
-        ("Ledger", "The persistent SQLite record at `data/audit.db`."),
-    ]
-    for t, d in terms:
-        parts.append(f"\n**{t}.** {d} {para(RATIONALE, rng.randint(1,2))}\n")
+    for term, meaning in DEFINITIONS:
+        parts.append(f"\n**{term}.** {meaning}\n")
 
-    normative_by_domain = {
-        "Access Control": ["AC-BOOTSTRAP", "AC-TOKEN-STORE", "AC-HEALTH", "AC-CREDENTIAL-CUTOVER"],
-        "Cross-Origin Controls": ["CO-ORIGIN-ALLOW", "CO-PREFLIGHT"],
-        "Error Handling and Disclosure": ["EH-NO-DISCLOSE"],
-        "Audit and Accountability": ["AU-LEDGER-SCOPE"],
-    }
-
-    section = 3
-    for code, dname in DOMAINS:
+    for section, dname, ids in DOMAIN_SECTIONS:
         parts.append(f"\n## {section}. {dname}\n")
-        parts.append(para(RATIONALE, rng.randint(4, 6)) + "\n\n")
-        parts.append(para(GUIDANCE, rng.randint(4, 6)) + "\n")
-        n_filler = rng.randint(11, 15)
-        idx = 1
-        for _ in range(n_filler):
-            cid = f"{code}-{idx:03d}"
-            title = filler_title(rng)
-            parts.append("\n" + filler_control(cid, title, dname))
-            idx += 1
-            if dname in normative_by_domain and normative_by_domain[dname] and rng.random() < 0.4:
-                nid = normative_by_domain[dname].pop(0)
-                parts.append("\n" + NORMATIVE[nid])
-        for nid in normative_by_domain.get(dname, []):
+        for nid in ids:
             parts.append("\n" + NORMATIVE[nid])
-        normative_by_domain[dname] = []
-        section += 1
 
-    parts.append("\n## Appendix A. Deployment classification\n")
-    for _ in range(rng.randint(8, 12)):
-        parts.append(
-            f"\n- **{rng.choice(['DC', 'GW', 'ED', 'SV'])}-{rng.randint(100,999)}**: "
-            + para(GUIDANCE, rng.randint(2, 3))
-        )
-    parts.append("\n\n## Appendix C. Banner and cipher wording\n\n" + para(GUIDANCE, 6) + "\n")
-    parts.append("\n## Appendix B. Control rationale narratives\n")
-    for _ in range(rng.randint(14, 20)):
-        parts.append(
-            f"\n### Narrative {rng.choice(['NB','RB','XB'])}-{rng.randint(10,99)}\n\n"
-            + para(RATIONALE + GUIDANCE, rng.randint(6, 10))
-        )
-    parts.append("\n\n## Appendix D. Assessment procedures\n")
-    for _ in range(rng.randint(12, 18)):
-        parts.append(
-            f"\n- **Procedure {rng.randint(100,999)}.** "
-            + para(VERIFY + GUIDANCE, rng.randint(3, 5))
-        )
-    parts.append("\n\n## Appendix E. Change log\n")
-    for _ in range(rng.randint(70, 100)):
-        y = rng.choice([2023, 2024, 2025, 2026])
-        parts.append(
-            f"\n- {y}-{rng.randint(1,12):02d}-{rng.randint(1,28):02d}: "
-            + para(RATIONALE + GUIDANCE, rng.randint(1, 2))
-        )
-
-    parts.append("\n\n## Appendix G. Amendments (authoritative)\n\n")
+    parts.append("\n## Appendix G. Amendments (authoritative)\n\n")
     parts.append(
         "The following amendments are in force and **supersede** the body of the "
         "referenced controls per section 1.4. They are listed in effective-date "
         "order.\n"
     )
-    all_amends = list(AMENDMENTS_REAL) + list(AMENDMENTS_FILLER)
-    rng.shuffle(all_amends)
-    for aid, target, text in all_amends:
+    for aid, target, text in sorted(AMENDMENTS_REAL + AMENDMENTS_NO_EFFECT):
         parts.append(f"\n### {aid} — amends {target}\n\n{text}\n")
 
     text = "\n".join(parts) + "\n"
@@ -692,20 +545,7 @@ def build():
     with open(OUT, "w") as fh:
         fh.write(text)
     words = len(text.split())
-    print(f"wrote {OUT}: {len(text)} chars, ~{words} words, ~{int(words*1.33)} tokens")
-
-
-TITLE_A = ["Mandatory", "Approved", "Restricted", "Centralized", "Hardened",
-           "Verified", "Controlled", "Standard", "Baseline", "Monitored"]
-TITLE_B = ["request logging", "rate limiting", "session timeout",
-           "log forwarding", "header normalization", "package provenance",
-           "content-type enforcement", "service enablement", "credential rotation",
-           "interface configuration", "response compression", "cache directive",
-           "method allowlisting", "TLS configuration", "console access"]
-
-
-def filler_title(rng):
-    return f"{rng.choice(TITLE_A)} {rng.choice(TITLE_B)}"
+    print(f"wrote {OUT}: {len(text)} chars, ~{words} words, ~{int(words * 1.33)} tokens")
 
 
 if __name__ == "__main__":

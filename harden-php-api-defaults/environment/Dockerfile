@@ -1,12 +1,11 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# Canonical Python runtime is required by Harbor's pytest verifier; PHP is the
-# application runtime and is installed from the base image's apt repository.
-# platform-revision: 2026-07-19-r64
+# The verifier runs on Python (pytest); PHP is the application runtime and is
+# installed from the base image's apt repository.
 
 WORKDIR /app
 
 # PHP runs the API (no compilation needed), sqlite3 for the audit ledger,
-# plus the agent runtime tools. apt versions float per Terminus apt policy.
+# plus the agent runtime tools. apt package versions are not pinned (distro packages).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         php-cli \
@@ -25,9 +24,8 @@ RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.t
 COPY harbordesk/ /app/harbordesk/
 COPY docs/ /app/docs/
 
-# Seed the audit ledger with the legacy schema currently in production (a stale
-# "actor" column, no "origin") plus real historical rows, so the audit-logging
-# defect is reproducible and a naive rebuild that discards history is caught.
+# Seed the audit ledger with the legacy production schema (a stale "actor"
+# column, no "origin") plus real historical rows.
 RUN chmod +x /app/harbordesk/start.sh \
     && chmod 600 /app/harbordesk/data/bootstrap_secret \
     && rm -f /app/harbordesk/data/audit.db \
