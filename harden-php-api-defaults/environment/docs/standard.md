@@ -2646,19 +2646,24 @@ The preflight cache lifetime in CO-PREFLIGHT is lowered from `600` to `300` seco
 The approved service banner wording is updated. This amendment does not affect API behavior.
 
 
-### G-2026-24 — amends AU-LEDGER-SCOPE
+### G-2026-19 — amends AC-BOOTSTRAP
 
-The request origin recorded by AU-LEDGER-SCOPE is the origin as resolved against the CO-ORIGIN-ALLOW allowlist for the current request. An allowlisted `Origin` header value shall be stored exactly; a disallowed or absent `Origin` shall be stored as SQL `NULL`. Raw unvalidated origin identifiers must never be persisted in the ledger. This resolution applies to every audited row, including denials.
-
-
-### G-2026-08 — amends MA-PATCH-WINDOW
-
-The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
+Bootstrap eligibility under AC-BOOTSTRAP is determined solely by whether the administrative token file exists on disk. AC-HEALTH credential verification, however, shall treat the on-disk representation as absent unless the token file contains a valid 64-character lowercase hexadecimal SHA-256 digest. An empty, whitespace-only, or otherwise malformed file therefore retains already-bootstrapped refusal while denying every presented bearer credential with reason `invalid_token`.
 
 
-### G-2026-12 — amends AC-TOKEN-STORE
+### G-2026-21 — amends AC-CREDENTIAL-CUTOVER
 
-The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
+The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted predecessor health requests per cutover**, shared across all workers. The third and later presentation of that predecessor is denied as `invalid_token`. A successful initial bootstrap or cutover returns `201` with the existing `token` JSON shape. When a token state already exists and the published generation has not advanced, AC-BOOTSTRAP keeps the amended `409` / `already_bootstrapped` outcome before secret validation. Once the generation advances, secret validation is required and a successful request performs the cutover. This amendment supersedes G-2026-12 and G-2026-19 only as to the physical shape recognized as valid: `/app/harbordesk/data/admin_token` may be an implementation-defined state envelope rather than a bare digest, but every credential in it must still be represented only by a 64-character lowercase SHA-256 digest and the file must remain mode `0600`. A malformed envelope retains G-2026-19's split behavior: it blocks bootstrap at an unadvanced generation and verifies no health credential. The envelope itself must be stored solely in `/app/harbordesk/data/admin_token`; auxiliary credential-state files are non-compliant.
+
+
+### G-2026-23 — amends AC-TOKEN-STORE
+
+All mutable credential and cutover state—current and predecessor digests, generation binding, and predecessor-overlap counters—shall be persisted only in `/app/harbordesk/data/admin_token`. Sidecar state files such as `admin_token.state` or `token_state.json` are non-compliant. `/app/harbordesk/data/admin_token.lock` is permitted for concurrency coordination only and is not credential state.
+
+
+### G-2026-09 — amends IR-CONTACT
+
+The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
 
 
 ### G-2026-14 — amends AC-BOOTSTRAP
@@ -2666,14 +2671,14 @@ The on-disk administrative token representation shall be the lowercase hexadecim
 Bootstrap eligibility and AC-HEALTH credential verification shall consult the on-disk token file on every request. In-process caches of whether a token exists or of the stored credential representation are non-compliant.
 
 
-### G-2026-19 — amends AC-BOOTSTRAP
+### G-2026-08 — amends MA-PATCH-WINDOW
 
-Bootstrap eligibility under AC-BOOTSTRAP is determined solely by whether the administrative token file exists on disk. AC-HEALTH credential verification, however, shall treat the on-disk representation as absent unless the token file contains a valid 64-character lowercase hexadecimal SHA-256 digest. An empty, whitespace-only, or otherwise malformed file therefore retains already-bootstrapped refusal while denying every presented bearer credential with reason `invalid_token`.
+The maintenance window is shifted by one hour for the eastern region. This amendment does not affect API behavior.
 
 
-### G-2026-26 — amends AC-CREDENTIAL-CUTOVER
+### G-2026-28 — amends AC-TOKEN-STORE
 
-A first successful AC-BOOTSTRAP activates its credential immediately. Every later generation-authorized bootstrap still returns `201` with the existing `token` JSON shape, but stages that credential as a pending successor instead of displacing the current credential. A pending successor becomes current only after successful health presentations from both distinct origins in the amended CO-ORIGIN-ALLOW allowlist. Repeated presentations from one allowed origin do not complete this confirmation quorum. Until activation, the existing current credential continues to verify normally and no predecessor allowance is created.
+The pending successor digest, its generation, and its set of confirmed allowed origins are mutable credential state governed by G-2026-23 and must participate in the same cross-worker critical section as current and predecessor state. Activating a successor atomically makes the displaced current credential the sole predecessor with the two-use allowance, discarding any older predecessor and unused allowance. A valid bootstrap for a still higher published generation replaces an unfinished pending successor without displacing current or altering an existing predecessor allowance; the replaced pending credential becomes invalid. Bootstrap's already-bootstrapped comparison uses the greater of current and pending generation, and a higher-generation replacement still requires the live bootstrap secret.
 
 
 ### G-2026-01 — amends CO-ORIGIN-ALLOW
@@ -2691,9 +2696,9 @@ The approved TLS cipher suite list is updated; see Appendix C. This amendment do
 Bootstrap secret validation shall compare the presented `X-Bootstrap-Secret` header to the on-disk secret using a **case-insensitive** ASCII match. Letter case in the header value must not cause an otherwise-correct secret to be rejected.
 
 
-### G-2026-09 — amends IR-CONTACT
+### G-2026-26 — amends AC-CREDENTIAL-CUTOVER
 
-The incident-response on-call rotation contact list is revised. This amendment does not affect API behavior.
+A first successful AC-BOOTSTRAP activates its credential immediately. Every later generation-authorized bootstrap still returns `201` with the existing `token` JSON shape, but stages that credential as a pending successor instead of displacing the current credential. A pending successor becomes current only after successful health presentations from both distinct origins in the amended CO-ORIGIN-ALLOW allowlist. Repeated presentations from one allowed origin do not complete this confirmation quorum. Until activation, the existing current credential continues to verify normally and no predecessor allowance is created.
 
 
 ### G-2026-13 — amends CO-ORIGIN-ALLOW
@@ -2706,9 +2711,9 @@ Cross-origin grant and preflight hint headers apply only to the current request.
 Before the case-insensitive comparison of G-2026-15, both the presented `X-Bootstrap-Secret` header value and the on-disk bootstrap secret file contents shall be trimmed of leading and trailing ASCII whitespace.
 
 
-### G-2026-21 — amends AC-CREDENTIAL-CUTOVER
+### G-2026-12 — amends AC-TOKEN-STORE
 
-The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted predecessor health requests per cutover**, shared across all workers. The third and later presentation of that predecessor is denied as `invalid_token`. A successful initial bootstrap or cutover returns `201` with the existing `token` JSON shape. When a token state already exists and the published generation has not advanced, AC-BOOTSTRAP keeps the amended `409` / `already_bootstrapped` outcome before secret validation. Once the generation advances, secret validation is required and a successful request performs the cutover. This amendment supersedes G-2026-12 and G-2026-19 only as to the physical shape recognized as valid: `/app/harbordesk/data/admin_token` may be an implementation-defined state envelope rather than a bare digest, but every credential in it must still be represented only by a 64-character lowercase SHA-256 digest and the file must remain mode `0600`. A malformed envelope retains G-2026-19's split behavior: it blocks bootstrap at an unadvanced generation and verifies no health credential. The envelope itself must be stored solely in `/app/harbordesk/data/admin_token`; auxiliary credential-state files are non-compliant.
+The on-disk administrative token representation shall be the lowercase hexadecimal SHA-256 digest of the raw bearer token (64 hex characters). AC-HEALTH shall verify a presented bearer by applying the same digest before comparison.
 
 
 ### G-2026-11 — amends CO-PREFLIGHT
@@ -2718,12 +2723,12 @@ The method, header, and max-age hint headers in CO-PREFLIGHT (`Access-Control-Al
 
 ### G-2026-05 — amends AC-BOOTSTRAP
 
-The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong**. Secret validation is reached only when no token yet exists.
+The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped check takes precedence over secret validation. After the malformed-input check, an existing administrative token shall cause an `already_bootstrapped` refusal **even when the presented bootstrap secret is absent or wrong** while the published generation has not advanced beyond the bound in G-2026-21 and G-2026-28. Secret validation is reached when no token yet exists, and again once the published generation exceeds that bound even though token state remains on disk.
 
 
-### G-2026-23 — amends AC-TOKEN-STORE
+### G-2026-24 — amends AU-LEDGER-SCOPE
 
-All mutable credential and cutover state—current and predecessor digests, generation binding, and predecessor-overlap counters—shall be persisted only in `/app/harbordesk/data/admin_token`. Sidecar state files such as `admin_token.state` or `token_state.json` are non-compliant. `/app/harbordesk/data/admin_token.lock` is permitted for concurrency coordination only and is not credential state.
+The request origin recorded by AU-LEDGER-SCOPE is the origin as resolved against the CO-ORIGIN-ALLOW allowlist for the current request. An allowlisted `Origin` header value shall be stored exactly; a disallowed or absent `Origin` shall be stored as SQL `NULL`. Raw unvalidated origin identifiers must never be persisted in the ledger. This resolution applies to every audited row, including denials.
 
 
 ### G-2026-20 — amends CO-ORIGIN-ALLOW
@@ -2731,9 +2736,9 @@ All mutable credential and cutover state—current and predecessor digests, gene
 When a request carries an `Origin` header that is not on the allowlist, the response shall include none of the CO-ORIGIN-ALLOW grant headers and shall not include `Vary: Origin`.
 
 
-### G-2026-28 — amends AC-TOKEN-STORE
+### G-2026-29 — amends AC-CREDENTIAL-CUTOVER
 
-The pending successor digest, its generation, and its set of confirmed allowed origins are mutable credential state governed by G-2026-23 and must participate in the same cross-worker critical section as current and predecessor state. Activating a successor atomically makes the displaced current credential the sole predecessor with the two-use allowance, discarding any older predecessor and unused allowance. A valid bootstrap for a still higher published generation replaces an unfinished pending successor without displacing current or altering an existing predecessor allowance; the replaced pending credential becomes invalid. Bootstrap's already-bootstrapped comparison uses the greater of current and pending generation, and a higher-generation replacement still requires the live bootstrap secret.
+If the published generation advances beyond the generation bound to an unfinished pending successor, presentations of that stale pending credential are denied as `invalid_token` and must not confirm or activate. Current and predecessor credentials continue to verify until a secret-authorized bootstrap for the higher published generation stages a replacement successor.
 
 
 ### G-2026-18 — amends AC-HEALTH

@@ -59,6 +59,12 @@ if ($path === '/health' && $method === 'GET') {
             if ($state['pending_digest'] !== null
                     && cors_origin_allowed($config, $origin)
                     && hash_equals($state['pending_digest'], $digest)) {
+                $publishedGeneration = read_credential_generation($config);
+                if ($publishedGeneration !== null
+                        && $state['pending_generation'] !== null
+                        && $publishedGeneration > $state['pending_generation']) {
+                    return 'denied';
+                }
                 if (!in_array($origin, $state['pending_origins'], true)) {
                     $state['pending_origins'][] = $origin;
                 }

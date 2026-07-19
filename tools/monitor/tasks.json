@@ -12,8 +12,7 @@
     "resubmit_script": ".review-scratch/resubmit_tls.py"
   },
   "harden-php-api-defaults": {
-    "resubmit_script": ".review-scratch/resubmit_one.py",
-    "resubmit_arg": "php"
+    "resubmit_script": ".review-scratch/resubmit_php.py"
   },
   "repair-cpp-setup-auditor": {
     "resubmit_script": ".review-scratch/resubmit_cpp.py"

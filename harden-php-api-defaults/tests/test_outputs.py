@@ -95,6 +95,33 @@ def assert_expected(expected, actual):
         assert parsed and set(parsed) == {"error"}
 
 
+def test_options_preflight_creates_no_audit_row():
+    """OPTIONS preflights are outside AU-LEDGER-SCOPE."""
+    reset_state()
+    bootstrap_ok()
+    before = len(audit_rows())
+    status, headers, raw, _ = request("OPTIONS", "/anything", {"Origin": ALLOWED_2})
+    assert status == 204 and raw == ""
+    assert_cors(headers, ALLOWED_2, preflight=True)
+    assert len(audit_rows()) == before
+
+
+def test_stale_pending_denied_when_generation_advances_again():
+    """A generation advance fences an unfinished successor before replacement."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+    assert health(pending, ALLOWED)[0] == 200
+    set_generation(INITIAL_GENERATION + 2)
+    assert health(pending, ALLOWED)[0] == 401
+    assert health(pending, ALLOWED_2)[0] == 401
+    assert health(current)[0] == 200
+    assert bootstrap("wrong")[0] == 403
+    replacement = bootstrap_ok()
+    assert health(replacement, ALLOWED)[0] == 200
+
+
 def test_cors_preflight_and_no_disclosure():
     """Amended CORS is request-scoped and errors disclose no debug details."""
     reset_state()

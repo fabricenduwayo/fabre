@@ -270,23 +270,30 @@ def simulate(state, operation):
             via_predecessor = True
             state.previous_remaining -= 1
         elif credential == state.pending and origin in ALLOWED_ORIGINS:
-            accepted = True
-            state.pending_origins.add(origin)
-            if state.pending_origins == set(ALLOWED_ORIGINS):
-                state.previous = state.current
-                state.previous_remaining = PREDECESSOR_USES
-                state.current = state.pending
-                state.stored_generation = state.pending_generation
-                state.pending = None
-                state.pending_generation = None
-                state.pending_origins = set()
-                reason = "cutover_activated"
+            if (
+                state.pending_generation is not None
+                and state.target_generation > state.pending_generation
+            ):
+                accepted = False
+                reason = "invalid_token"
             else:
-                reason = "cutover_confirmation"
+                accepted = True
+                state.pending_origins.add(origin)
+                if state.pending_origins == set(ALLOWED_ORIGINS):
+                    state.previous = state.current
+                    state.previous_remaining = PREDECESSOR_USES
+                    state.current = state.pending
+                    state.stored_generation = state.pending_generation
+                    state.pending = None
+                    state.pending_generation = None
+                    state.pending_origins = set()
+                    reason = "cutover_activated"
+                else:
+                    reason = "cutover_confirmation"
         if accepted:
             if via_predecessor:
                 reason = "predecessor_overlap"
-        else:
+        elif reason is None:
             reason = "invalid_token"
         return {
             "status": 200 if accepted else 401,

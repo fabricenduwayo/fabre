@@ -329,8 +329,10 @@ AMENDMENTS_REAL = [
      "already-bootstrapped check takes precedence over secret validation. After "
      "the malformed-input check, an existing administrative token shall cause an "
      "`already_bootstrapped` refusal **even when the presented bootstrap secret "
-     "is absent or wrong**. Secret validation is reached only when no token yet "
-     "exists."),
+     "is absent or wrong** while the published generation has not advanced beyond "
+     "the bound in G-2026-21 and G-2026-28. Secret validation is reached when no "
+     "token yet exists, and again once the published generation exceeds that bound "
+     "even though token state remains on disk."),
     ("G-2026-06", "AU-LEDGER-SCOPE",
      "Migration of the legacy ledger is made explicit. The on-disk ledger is in "
      "a legacy layout carrying a non-null `actor` column and lacking an `origin` "
@@ -480,6 +482,13 @@ AMENDMENTS_REAL = [
      "invalid. Bootstrap's already-bootstrapped comparison uses the greater of "
      "current and pending generation, and a higher-generation replacement "
      "still requires the live bootstrap secret."),
+    ("G-2026-29", "AC-CREDENTIAL-CUTOVER",
+     "If the published generation advances beyond the generation bound to an "
+     "unfinished pending successor, presentations of that stale pending "
+     "credential are denied as `invalid_token` and must not confirm or activate. "
+     "Current and predecessor credentials continue to verify until a "
+     "secret-authorized bootstrap for the higher published generation stages a "
+     "replacement successor."),
 ]
 
 AMENDMENTS_FILLER = [
