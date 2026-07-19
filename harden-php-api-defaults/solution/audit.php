@@ -2,6 +2,26 @@
 
 function audit_log($config, $event, $route, $origin, $decision, $reason)
 {
+    audit_log_then(
+        $config,
+        $event,
+        $route,
+        $origin,
+        $decision,
+        $reason,
+        static fn() => null
+    );
+}
+
+function audit_log_then(
+    $config,
+    $event,
+    $route,
+    $origin,
+    $decision,
+    $reason,
+    $publish
+) {
     $db = new SQLite3($config['audit_db']);
     $db->enableExceptions(true);
     $db->busyTimeout(5000);
@@ -53,11 +73,16 @@ function audit_log($config, $event, $route, $origin, $decision, $reason)
         $stmt->bindValue(':decision', $decision, SQLITE3_TEXT);
         $stmt->bindValue(':reason', $reason, $reason === null ? SQLITE3_NULL : SQLITE3_TEXT);
         $stmt->execute();
+        $result = $publish();
         $db->exec('COMMIT');
     } catch (Throwable $error) {
-        $db->exec('ROLLBACK');
+        try {
+            $db->exec('ROLLBACK');
+        } catch (Throwable $ignored) {
+        }
         $db->close();
         throw $error;
     }
     $db->close();
+    return $result;
 }

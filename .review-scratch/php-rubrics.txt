@@ -9,7 +9,9 @@ Agent stores the administrative token non-recoverably on disk and keeps the toke
 Agent performs credential-generation cutovers atomically across concurrent workers, +5
 Agent stages later-generation successors and keeps current active until both distinct allowed origins confirm the pending credential, +5
 Agent requires post-staging current-credential sponsorship at each allowed origin before the successor can confirm there, +5
+Agent invalidates pre-confirmation sponsorship for still-unconfirmed origins when the first confirmation starts a new sponsorship phase, +5
 Agent persists sponsorship and confirmation sets atomically and clears both when a higher generation replaces an unfinished successor, +4
+Agent binds pending state to the normalized live bootstrap-secret fingerprint and clears in-flight progress when that secret rotates, +5
 Agent fences a stale unfinished successor when the published generation advances again before replacement, +5
 Agent atomically activates the pending successor on the second distinct confirmation and creates the predecessor window at that handoff, +5
 Agent replaces only the unfinished successor on a higher-generation bootstrap while preserving current and existing predecessor state, +5
@@ -21,6 +23,8 @@ Agent keeps route, decision, and reason columns while migrating audit_log and st
 Agent resolves the audited origin against the amended allowlist so disallowed or absent origins are stored as SQL NULL, +3
 Agent audits predecessor-overlap health acceptances with reason predecessor_overlap while current-credential acceptances keep a NULL reason, +3
 Agent audits pending successor confirmations as cutover_confirmation and the single completing request as cutover_activated, +3
+Agent appends mutating health audit rows before token-state publication while holding one credential lock and rolls back on either failure, +5
+Agent re-reads credential generation immediately before publishing activation inside the gated critical section, +3
 Agent derives the operative CORS allowlist from Appendix G rather than the legacy allowed_origins decoy file, +3
 Agent removes stale in-process caches so CORS grants, bootstrap eligibility, bootstrap-secret validation, and AC-HEALTH digest verification follow each request and on-disk state, +3
 Agent re-reads the bootstrap secret from disk on every bootstrap attempt rather than caching it in-process, +3
@@ -40,9 +44,12 @@ Agent keeps credential generation or predecessor-use state only in process memor
 Agent makes a cutover credential current immediately or activates it after only one allowed-origin confirmation, -5
 Agent lets absent, disallowed, or repeated same-origin requests complete pending successor confirmation, -5
 Agent lets an unsponsored successor confirm or carries pre-staging or replaced-successor sponsorship into a new pending generation, -6
+Agent lets sponsorship recorded before the first confirmation authorize another origin afterward without fresh incumbent sponsorship, -5
+Agent preserves sponsorship or confirmation progress across a live bootstrap-secret rotation, -5
 Agent lets a stale unfinished successor confirm or activate after the published generation advances again, -5
 Agent treats malformed token state as generation zero and overwrites it after a generation advance, -6
 Agent audits OPTIONS preflights or unknown routes into the ledger, -4
 Agent lets concurrent workers perform multiple activation handoffs or preserves a replaced pending credential, -5
+Agent publishes sponsorship, confirmation, activation, or predecessor consumption when the corresponding audit append fails, -5
 Agent persists raw unvalidated Origin header values into the audit ledger for disallowed origins, -3
 Agent allows concurrent workers to reuse one origin's predecessor allowance, accepts predecessor requests without an allowed origin, or revives an older generation after a later cutover, -6

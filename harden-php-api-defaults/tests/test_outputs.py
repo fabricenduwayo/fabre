@@ -1,5 +1,6 @@
 """Behavioral verifier for the amended HarborDesk API and credential lifecycle."""
 
+import json
 import os
 import random
 import sqlite3
@@ -205,6 +206,8 @@ def test_token_state_is_nonrecoverable_and_owner_only():
         stored = handle.read()
     assert first not in stored
     assert second not in stored
+    assert read_secret() not in stored
+    assert len(json.loads(stored)["pending_secret_digest"]) == 64
     assert stat.S_IMODE(os.stat(TOKEN_FILE).st_mode) == 0o600
 
 
@@ -295,6 +298,104 @@ def test_pre_staging_sponsorship_does_not_authorize_confirmation():
     assert health(pending)[0] == 200
 
 
+def test_second_origin_requires_phase_fresh_sponsorship():
+    """First confirmation voids earlier sponsorship for unconfirmed origins."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 401
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 200
+    assert health(pending)[0] == 200
+
+
+def test_secret_rotation_clears_inflight_cutover_progress():
+    """A live secret change clears confirmations and sponsorships under lock."""
+    reset_state()
+    original = read_secret()
+    current = bootstrap_ok(original)
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok(original)
+    assert health(current, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+
+    rotated = "hd-cutover-rotated-7f19"
+    try:
+        with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+            handle.write(rotated + "\n")
+        assert health(pending, ALLOWED_2)[0] == 401
+        assert health(current, ALLOWED_2)[0] == 200
+        assert health(pending, ALLOWED_2)[0] == 200
+        assert health(pending)[0] == 401
+        assert health(current, ALLOWED)[0] == 200
+        assert health(pending, ALLOWED)[0] == 200
+        assert health(pending)[0] == 200
+    finally:
+        with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+            handle.write(original + "\n")
+
+
+def test_failed_audit_append_cannot_publish_health_state():
+    """Audit failure preserves sponsorship and predecessor allowances."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+
+    def set_failure_trigger(enabled):
+        conn = sqlite3.connect(AUDIT_DB, timeout=10)
+        try:
+            conn.execute("DROP TRIGGER IF EXISTS fail_health_audit")
+            if enabled:
+                conn.execute(
+                    "CREATE TRIGGER fail_health_audit "
+                    "BEFORE INSERT ON audit_log WHEN NEW.event = 'health' "
+                    "BEGIN SELECT RAISE(ABORT, 'blocked'); END"
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+    set_failure_trigger(True)
+    try:
+        assert health(current, ALLOWED)[0] == 500
+    finally:
+        set_failure_trigger(False)
+    assert health(pending, ALLOWED)[0] == 401
+    assert health(current, ALLOWED)[0] == 200
+
+    set_failure_trigger(True)
+    try:
+        assert health(pending, ALLOWED)[0] == 500
+    finally:
+        set_failure_trigger(False)
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 401
+    assert health(current, ALLOWED_2)[0] == 200
+
+    set_failure_trigger(True)
+    try:
+        assert health(pending, ALLOWED_2)[0] == 500
+    finally:
+        set_failure_trigger(False)
+    assert health(pending, ALLOWED_2)[0] == 200
+    assert audit_rows()[-1]["reason"] == "cutover_activated"
+
+    set_failure_trigger(True)
+    try:
+        assert health(current, ALLOWED)[0] == 500
+    finally:
+        set_failure_trigger(False)
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED)[0] == 401
+
+
 def test_pending_successor_requires_two_distinct_allowed_origins():
     """Each origin needs incumbent sponsorship before it can confirm a successor."""
     reset_state()
@@ -380,9 +481,12 @@ def test_pending_activation_is_atomic_across_workers():
     pending = bootstrap_ok()
     assert health(current, ALLOWED)[0] == 200
     assert health(current, ALLOWED_2)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 401
+    assert health(current, ALLOWED_2)[0] == 200
     before = len(audit_rows())
 
-    origins = [ALLOWED, ALLOWED_2] * 6
+    origins = [ALLOWED_2] * 12
     with ThreadPoolExecutor(max_workers=12) as pool:
         statuses = list(pool.map(lambda origin: health(pending, origin)[0], origins))
     assert statuses == [200] * len(origins)
@@ -394,8 +498,7 @@ def test_pending_activation_is_atomic_across_workers():
     ]
     reasons = [row["reason"] for row in rows]
     assert reasons.count("cutover_activated") == 1
-    assert reasons.count("cutover_confirmation") >= 1
-    assert set(reasons) <= {None, "cutover_confirmation", "cutover_activated"}
+    assert set(reasons) <= {None, "cutover_activated"}
     assert [
         health(current, ALLOWED)[0],
         health(current, ALLOWED)[0],
@@ -543,8 +646,8 @@ def test_randomized_lifecycles_match_resolved_policy():
         expected_audit = []
         for index, operation in enumerate(make_sequence(rng)):
             expected = simulate(state, operation)
-            if operation["kind"] == "advance":
-                set_generation(operation["generation"])
+            if operation["kind"] in {"advance", "rotate_secret"}:
+                replay(operation, secret, tokens)
                 continue
             actual = replay(operation, secret, tokens)
             try:

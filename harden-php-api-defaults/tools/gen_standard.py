@@ -519,6 +519,36 @@ AMENDMENTS_REAL = [
      "remaining-origin allowances are mutable credential state under G-2026-23. "
      "A later activation discards all older allowances and initializes exactly "
      "the two allowances for its newly displaced current credential."),
+    ("G-2026-32", "AC-CREDENTIAL-CUTOVER",
+     "Sponsorship is phase-fresh. When a pending successor records its first "
+     "distinct-origin confirmation, every sponsorship for a still-unconfirmed "
+     "origin is void, even when that sponsorship was recorded after staging. "
+     "Before another origin may confirm, the incumbent current credential must "
+     "be accepted again from that origin after the first confirmation. Repeats "
+     "from an already-confirmed origin do not start another phase or invalidate "
+     "fresh sponsorship for the remaining origin."),
+    ("G-2026-33", "AC-TOKEN-STORE",
+     "A staged successor is bound to a case-normalized SHA-256 fingerprint of "
+     "the live bootstrap secret used to stage it. Every health request that "
+     "touches valid pending state shall re-read the bootstrap secret while "
+     "holding the credential lock. If its fingerprint changed, sponsorships "
+     "and confirmations are atomically cleared and the pending state is rebound "
+     "to the new live fingerprint; the pending digest and generation remain. "
+     "The request is then evaluated against the cleared state, so incumbent "
+     "health may establish fresh sponsorship but a pending presentation cannot. "
+     "An unreadable live secret permits neither sponsorship nor confirmation."),
+    ("G-2026-34", "AU-LEDGER-SCOPE",
+     "A health request that would register sponsorship, record confirmation, "
+     "activate a successor, or consume predecessor overlap shall append its "
+     "resolved `audit_log` row before publishing the changed credential "
+     "envelope. Ledger reconciliation, append, and token publication all occur "
+     "while the credential lock is held, with the SQLite transaction remaining "
+     "open through token publication. If reconciliation or append fails, the "
+     "request returns `500`, publishes no credential mutation, and consumes no "
+     "allowance or progress. If token publication fails, the audit transaction "
+     "is rolled back. Immediately before activation is published, the live "
+     "credential generation is re-read in the same critical section; a pending "
+     "successor that became stale is denied without confirmation or activation."),
 ]
 
 AMENDMENTS_FILLER = [

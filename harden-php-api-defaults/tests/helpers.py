@@ -204,6 +204,8 @@ class State:
         self.pending = None
         self.pending_origins = set()
         self.pending_sponsors = set()
+        self.secret_revision = 0
+        self.pending_secret_revision = None
 
 
 def audited_origin(origin):
@@ -238,6 +240,9 @@ def simulate(state, operation):
     if operation["kind"] == "advance":
         state.target_generation += operation.get("amount", 1)
         return None
+    if operation["kind"] == "rotate_secret":
+        state.secret_revision += 1
+        return None
 
     method = operation["method"]
     path = operation["path"]
@@ -261,6 +266,13 @@ def simulate(state, operation):
                     "missing_credentials",
                 ),
             }
+        if (
+            state.pending is not None
+            and state.pending_secret_revision != state.secret_revision
+        ):
+            state.pending_sponsors = set()
+            state.pending_origins = set()
+            state.pending_secret_revision = state.secret_revision
         accepted = False
         via_predecessor = False
         reason = None
@@ -291,7 +303,10 @@ def simulate(state, operation):
                 reason = "invalid_token"
             else:
                 accepted = True
+                new_confirmation = origin not in state.pending_origins
                 state.pending_origins.add(origin)
+                if new_confirmation and len(state.pending_origins) == 1:
+                    state.pending_sponsors.intersection_update(state.pending_origins)
                 if state.pending_origins == set(ALLOWED_ORIGINS):
                     state.previous = state.current
                     state.previous_origins_remaining = set(ALLOWED_ORIGINS)
@@ -301,6 +316,7 @@ def simulate(state, operation):
                     state.pending_generation = None
                     state.pending_origins = set()
                     state.pending_sponsors = set()
+                    state.pending_secret_revision = None
                     reason = "cutover_activated"
                 else:
                     reason = "cutover_confirmation"
@@ -377,6 +393,7 @@ def simulate(state, operation):
             state.pending_generation = state.target_generation
             state.pending_origins = set()
             state.pending_sponsors = set()
+            state.pending_secret_revision = state.secret_revision
         return {
             "status": 201,
             "body": "token",
@@ -392,6 +409,10 @@ def replay(operation, secret, tokens):
     if operation["kind"] == "advance":
         set_generation(operation["generation"])
         return None
+    if operation["kind"] == "rotate_secret":
+        with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+            handle.write(operation["value"] + "\n")
+        return None
     headers = {}
     origin = operation.get("origin")
     if origin is not None:
@@ -399,7 +420,7 @@ def replay(operation, secret, tokens):
     if operation["path"] == "/admin/bootstrap" and operation["method"] == "POST":
         headers["Content-Type"] = "application/json"
         if operation.get("secret") == "valid":
-            headers["X-Bootstrap-Secret"] = secret
+            headers["X-Bootstrap-Secret"] = read_secret()
         elif operation.get("secret") == "wrong":
             headers["X-Bootstrap-Secret"] = "wrong-" + secret[:5]
         return request("POST", "/admin/bootstrap", headers, operation.get("body", "{}"))
@@ -496,21 +517,7 @@ def make_sequence(rng):
                     "kind": "request",
                     "method": "GET",
                     "path": "/health",
-                    "credential": label,
-                    "origin": ALLOWED_ORIGINS[1],
-                },
-                {
-                    "kind": "request",
-                    "method": "GET",
-                    "path": "/health",
                     "credential": current_label,
-                    "origin": ALLOWED_ORIGINS[0],
-                },
-                {
-                    "kind": "request",
-                    "method": "GET",
-                    "path": "/health",
-                    "credential": label,
                     "origin": ALLOWED_ORIGINS[0],
                 },
                 {
@@ -519,6 +526,13 @@ def make_sequence(rng):
                     "path": "/health",
                     "credential": current_label,
                     "origin": ALLOWED_ORIGINS[1],
+                },
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": label,
+                    "origin": ALLOWED_ORIGINS[0],
                 },
                 {
                     "kind": "request",
@@ -529,6 +543,69 @@ def make_sequence(rng):
                 },
             ]
         )
+        if rng.random() < 0.5:
+            sequence.extend(
+                [
+                    {
+                        "kind": "rotate_secret",
+                        "value": f"hd-random-secret-{number}-{rng.randrange(1_000_000)}",
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": label,
+                        "origin": ALLOWED_ORIGINS[1],
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": current_label,
+                        "origin": ALLOWED_ORIGINS[1],
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": label,
+                        "origin": ALLOWED_ORIGINS[1],
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": current_label,
+                        "origin": ALLOWED_ORIGINS[0],
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": label,
+                        "origin": ALLOWED_ORIGINS[0],
+                    },
+                ]
+            )
+        else:
+            sequence.extend(
+                [
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": current_label,
+                        "origin": ALLOWED_ORIGINS[1],
+                    },
+                    {
+                        "kind": "request",
+                        "method": "GET",
+                        "path": "/health",
+                        "credential": label,
+                        "origin": ALLOWED_ORIGINS[1],
+                    },
+                ]
+            )
         labels.append(label)
         for _ in range(rng.randint(4, 8)):
             sequence.append(

@@ -64,6 +64,7 @@ def main() -> None:
         "solution/config.php",
         "solution/index.php",
         "solution/http.php",
+        "solution/audit.php",
         "tests/test.sh",
         "tests/test_outputs.py",
         "tests/helpers.py",

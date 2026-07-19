@@ -14,11 +14,12 @@ ledger migration shape in the prompt, so most replaced the four small PHP files
 directly. This revision is not yet difficulty-measured and keeps the measured
 label until new platform runs exist.
 
-The revised Standard adds a deployment-generation credential cutover with a
-shared two-use predecessor overlap. Rotation, concurrent health requests, later
-cutovers, live secret/generation reads, and the reseedable audit migration now
-interact in one long-lived multi-worker service. The verifier replays 45
-randomized lifecycles and a concurrent cutover case against the real API.
+The current revision trims the agent prompt back to control names and the
+normative Standard. It adds phase-fresh origin sponsorship, live secret
+fingerprint invalidation of partial cutovers, and audit-gated credential
+publication. The verifier replays 45 randomized lifecycles and injects SQLite
+append failures during sponsorship, confirmation, activation, and predecessor
+consumption against the real multi-worker API.
 
 ## Layout
 

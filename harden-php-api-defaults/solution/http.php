@@ -58,6 +58,15 @@ function secret_matches($expected, $presented)
     return hash_equals($left, $right);
 }
 
+function bootstrap_secret_fingerprint($config)
+{
+    $secret = read_bootstrap_secret($config);
+    if ($secret === null) {
+        return null;
+    }
+    return hash('sha256', strtolower(ascii_trim($secret)));
+}
+
 function read_credential_generation($config)
 {
     if (!is_file($config['credential_generation_file'])) {
@@ -110,15 +119,18 @@ function read_token_state_unlocked($config)
     $pendingGeneration = $decoded['pending_generation'] ?? null;
     $pendingOrigins = $decoded['pending_origins'] ?? null;
     $pendingSponsors = $decoded['pending_sponsors'] ?? null;
+    $pendingSecretDigest = $decoded['pending_secret_digest'] ?? null;
     $validPending = is_array($pendingOrigins) && is_array($pendingSponsors) && ((
         $pendingDigest === null
         && $pendingGeneration === null
         && $pendingOrigins === []
         && $pendingSponsors === []
+        && $pendingSecretDigest === null
     ) || (
         digest_valid($pendingDigest)
         && is_int($pendingGeneration)
         && $pendingGeneration > $decoded['generation']
+        && digest_valid($pendingSecretDigest)
         && count($pendingOrigins) === count(array_unique($pendingOrigins))
         && count(array_diff($pendingOrigins, $config['allowed_origins'])) === 0
         && count($pendingSponsors) === count(array_unique($pendingSponsors))

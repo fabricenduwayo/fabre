@@ -39,24 +39,80 @@ if ($path === '/health' && $method === 'GET') {
     }
 
     try {
-        $verdict = with_token_state_lock($config, function () use ($config, $token, $origin) {
+        $verdict = with_token_state_lock($config, function () use (
+            $config,
+            $token,
+            $origin,
+            $path,
+            $auditOrigin
+        ) {
             $record = read_token_state_unlocked($config);
             if (!$record['valid']) {
-                return 'denied';
+                return audit_log_then(
+                    $config,
+                    'health',
+                    $path,
+                    $auditOrigin,
+                    'denied',
+                    'invalid_token',
+                    static fn() => 'denied'
+                );
             }
             $state = $record['state'];
+            $stateChanged = false;
+            $pendingSecretUsable = true;
+            if ($state['pending_digest'] !== null) {
+                $liveSecretDigest = bootstrap_secret_fingerprint($config);
+                if ($liveSecretDigest === null) {
+                    $pendingSecretUsable = false;
+                    if ($state['pending_sponsors'] !== [] || $state['pending_origins'] !== []) {
+                        $state['pending_sponsors'] = [];
+                        $state['pending_origins'] = [];
+                        $stateChanged = true;
+                    }
+                } elseif (!hash_equals($state['pending_secret_digest'], $liveSecretDigest)) {
+                    $state['pending_sponsors'] = [];
+                    $state['pending_origins'] = [];
+                    $state['pending_secret_digest'] = $liveSecretDigest;
+                    $stateChanged = true;
+                }
+            }
+            $stateAfterSecretRefresh = $state;
+            $finish = function (
+                $verdict,
+                $decision,
+                $reason,
+                $nextState,
+                $publish
+            ) use ($config, $path, $auditOrigin) {
+                return audit_log_then(
+                    $config,
+                    'health',
+                    $path,
+                    $auditOrigin,
+                    $decision,
+                    $reason,
+                    function () use ($config, $nextState, $publish, $verdict) {
+                        if ($publish) {
+                            write_token_state_unlocked($config, $nextState);
+                        }
+                        return $verdict;
+                    }
+                );
+            };
             $digest = hash('sha256', $token);
             if (hash_equals($state['current_digest'], $digest)) {
                 $publishedGeneration = read_credential_generation($config);
                 if ($state['pending_digest'] !== null
+                        && $pendingSecretUsable
                         && $publishedGeneration !== null
                         && $publishedGeneration === $state['pending_generation']
                         && cors_origin_allowed($config, $origin)
                         && !in_array($origin, $state['pending_sponsors'], true)) {
                     $state['pending_sponsors'][] = $origin;
-                    write_token_state_unlocked($config, $state);
+                    $stateChanged = true;
                 }
-                return 'current';
+                return $finish('current', 'accepted', null, $state, $stateChanged);
             }
             if ($state['previous_digest'] !== null
                     && hash_equals($state['previous_digest'], $digest)
@@ -67,14 +123,25 @@ if ($path === '/health' && $method === 'GET') {
                     true
                 );
                 if ($position === false) {
-                    return 'denied';
+                    return $finish(
+                        'denied',
+                        'denied',
+                        'invalid_token',
+                        $state,
+                        $stateChanged
+                    );
                 }
                 unset($state['previous_origins_remaining'][$position]);
                 $state['previous_origins_remaining'] = array_values(
                     $state['previous_origins_remaining']
                 );
-                write_token_state_unlocked($config, $state);
-                return 'predecessor';
+                return $finish(
+                    'predecessor',
+                    'accepted',
+                    'predecessor_overlap',
+                    $state,
+                    true
+                );
             }
             if ($state['pending_digest'] !== null
                     && cors_origin_allowed($config, $origin)
@@ -83,15 +150,45 @@ if ($path === '/health' && $method === 'GET') {
                 if ($publishedGeneration !== null
                         && $state['pending_generation'] !== null
                         && $publishedGeneration > $state['pending_generation']) {
-                    return 'denied';
+                    return $finish(
+                        'denied',
+                        'denied',
+                        'invalid_token',
+                        $state,
+                        $stateChanged
+                    );
                 }
-                if (!in_array($origin, $state['pending_sponsors'], true)) {
-                    return 'denied';
+                if (!$pendingSecretUsable
+                        || !in_array($origin, $state['pending_sponsors'], true)) {
+                    return $finish(
+                        'denied',
+                        'denied',
+                        'invalid_token',
+                        $state,
+                        $stateChanged
+                    );
                 }
                 if (!in_array($origin, $state['pending_origins'], true)) {
                     $state['pending_origins'][] = $origin;
+                    if (count($state['pending_origins']) === 1) {
+                        $state['pending_sponsors'] = array_values(array_intersect(
+                            $state['pending_sponsors'],
+                            $state['pending_origins']
+                        ));
+                    }
                 }
                 if (count($state['pending_origins']) === count($config['allowed_origins'])) {
+                    $activationGeneration = read_credential_generation($config);
+                    if ($activationGeneration === null
+                            || $activationGeneration > $state['pending_generation']) {
+                        return $finish(
+                            'denied',
+                            'denied',
+                            'invalid_token',
+                            $stateAfterSecretRefresh,
+                            $stateChanged
+                        );
+                    }
                     $state = [
                         'version' => 2,
                         'generation' => $state['pending_generation'],
@@ -103,14 +200,31 @@ if ($path === '/health' && $method === 'GET') {
                         'pending_digest' => null,
                         'pending_origins' => [],
                         'pending_sponsors' => [],
+                        'pending_secret_digest' => null,
                     ];
-                    write_token_state_unlocked($config, $state);
-                    return 'activated';
+                    return $finish(
+                        'activated',
+                        'accepted',
+                        'cutover_activated',
+                        $state,
+                        true
+                    );
                 }
-                write_token_state_unlocked($config, $state);
-                return 'confirmation';
+                return $finish(
+                    'confirmation',
+                    'accepted',
+                    'cutover_confirmation',
+                    $state,
+                    true
+                );
             }
-            return 'denied';
+            return $finish(
+                'denied',
+                'denied',
+                'invalid_token',
+                $state,
+                $stateChanged
+            );
         });
     } catch (Throwable $error) {
         fail($config, 500, 'internal error');
@@ -118,16 +232,8 @@ if ($path === '/health' && $method === 'GET') {
     }
 
     if (in_array($verdict, ['current', 'predecessor', 'confirmation', 'activated'], true)) {
-        $reason = match ($verdict) {
-            'predecessor' => 'predecessor_overlap',
-            'confirmation' => 'cutover_confirmation',
-            'activated' => 'cutover_activated',
-            default => null,
-        };
-        audit_log($config, 'health', $path, $auditOrigin, 'accepted', $reason);
         send_json($config, 200, ['status' => 'ok']);
     } else {
-        audit_log($config, 'health', $path, $auditOrigin, 'denied', 'invalid_token');
         fail($config, 401, 'unauthorized');
     }
     exit;
@@ -170,7 +276,8 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
                     ];
                 }
             }
-            if (!secret_matches(read_bootstrap_secret($config), $presentedSecret)) {
+            $liveSecret = read_bootstrap_secret($config);
+            if (!secret_matches($liveSecret, $presentedSecret)) {
                 return [
                     'status' => 403,
                     'message' => 'forbidden',
@@ -192,6 +299,7 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
                     'pending_digest' => null,
                     'pending_origins' => [],
                     'pending_sponsors' => [],
+                    'pending_secret_digest' => null,
                 ];
             } else {
                 $state = $record['state'];
@@ -199,6 +307,10 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
                 $state['pending_digest'] = hash('sha256', $token);
                 $state['pending_origins'] = [];
                 $state['pending_sponsors'] = [];
+                $state['pending_secret_digest'] = hash(
+                    'sha256',
+                    strtolower(ascii_trim($liveSecret))
+                );
             }
             write_token_state_unlocked($config, $state);
             return ['status' => 201, 'message' => null, 'reason' => null, 'token' => $token];
