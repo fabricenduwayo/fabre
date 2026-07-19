@@ -87,34 +87,42 @@ function read_token_state_unlocked($config)
         && is_int($decoded['generation'] ?? null)
         && $decoded['generation'] >= 0
         && digest_valid($decoded['current_digest'] ?? null)
-        && is_int($decoded['previous_uses_remaining'] ?? null)
-        && $decoded['previous_uses_remaining'] >= 0
+        && is_array($decoded['previous_origins_remaining'] ?? null)
         && is_array($decoded['pending_origins'] ?? null);
     if (!$valid) {
         return ['exists' => true, 'valid' => false, 'state' => null];
     }
     $previousDigest = $decoded['previous_digest'] ?? null;
     $previousGeneration = $decoded['previous_generation'] ?? null;
+    $previousOrigins = $decoded['previous_origins_remaining'] ?? null;
     $valid = $valid && (
-        ($previousDigest === null && $previousGeneration === null)
+        ($previousDigest === null
+            && $previousGeneration === null
+            && $previousOrigins === [])
         || (digest_valid($previousDigest)
             && is_int($previousGeneration)
             && $previousGeneration >= 0
             && $previousGeneration < $decoded['generation'])
+            && count($previousOrigins) === count(array_unique($previousOrigins))
+            && count(array_diff($previousOrigins, $config['allowed_origins'])) === 0
     );
     $pendingDigest = $decoded['pending_digest'] ?? null;
     $pendingGeneration = $decoded['pending_generation'] ?? null;
     $pendingOrigins = $decoded['pending_origins'] ?? null;
-    $validPending = is_array($pendingOrigins) && ((
+    $pendingSponsors = $decoded['pending_sponsors'] ?? null;
+    $validPending = is_array($pendingOrigins) && is_array($pendingSponsors) && ((
         $pendingDigest === null
         && $pendingGeneration === null
         && $pendingOrigins === []
+        && $pendingSponsors === []
     ) || (
         digest_valid($pendingDigest)
         && is_int($pendingGeneration)
         && $pendingGeneration > $decoded['generation']
         && count($pendingOrigins) === count(array_unique($pendingOrigins))
         && count(array_diff($pendingOrigins, $config['allowed_origins'])) === 0
+        && count($pendingSponsors) === count(array_unique($pendingSponsors))
+        && count(array_diff($pendingSponsors, $config['allowed_origins'])) === 0
     ));
     $valid = $valid && $validPending;
     return ['exists' => true, 'valid' => $valid, 'state' => $valid ? $decoded : null];

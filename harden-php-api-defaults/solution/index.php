@@ -47,12 +47,32 @@ if ($path === '/health' && $method === 'GET') {
             $state = $record['state'];
             $digest = hash('sha256', $token);
             if (hash_equals($state['current_digest'], $digest)) {
+                $publishedGeneration = read_credential_generation($config);
+                if ($state['pending_digest'] !== null
+                        && $publishedGeneration !== null
+                        && $publishedGeneration === $state['pending_generation']
+                        && cors_origin_allowed($config, $origin)
+                        && !in_array($origin, $state['pending_sponsors'], true)) {
+                    $state['pending_sponsors'][] = $origin;
+                    write_token_state_unlocked($config, $state);
+                }
                 return 'current';
             }
             if ($state['previous_digest'] !== null
-                    && $state['previous_uses_remaining'] > 0
-                    && hash_equals($state['previous_digest'], $digest)) {
-                $state['previous_uses_remaining']--;
+                    && hash_equals($state['previous_digest'], $digest)
+                    && cors_origin_allowed($config, $origin)) {
+                $position = array_search(
+                    $origin,
+                    $state['previous_origins_remaining'],
+                    true
+                );
+                if ($position === false) {
+                    return 'denied';
+                }
+                unset($state['previous_origins_remaining'][$position]);
+                $state['previous_origins_remaining'] = array_values(
+                    $state['previous_origins_remaining']
+                );
                 write_token_state_unlocked($config, $state);
                 return 'predecessor';
             }
@@ -65,6 +85,9 @@ if ($path === '/health' && $method === 'GET') {
                         && $publishedGeneration > $state['pending_generation']) {
                     return 'denied';
                 }
+                if (!in_array($origin, $state['pending_sponsors'], true)) {
+                    return 'denied';
+                }
                 if (!in_array($origin, $state['pending_origins'], true)) {
                     $state['pending_origins'][] = $origin;
                 }
@@ -75,10 +98,11 @@ if ($path === '/health' && $method === 'GET') {
                         'current_digest' => $state['pending_digest'],
                         'previous_generation' => $state['generation'],
                         'previous_digest' => $state['current_digest'],
-                        'previous_uses_remaining' => $config['predecessor_uses'],
+                        'previous_origins_remaining' => $config['allowed_origins'],
                         'pending_generation' => null,
                         'pending_digest' => null,
                         'pending_origins' => [],
+                        'pending_sponsors' => [],
                     ];
                     write_token_state_unlocked($config, $state);
                     return 'activated';
@@ -163,16 +187,18 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
                     'current_digest' => hash('sha256', $token),
                     'previous_generation' => null,
                     'previous_digest' => null,
-                    'previous_uses_remaining' => 0,
+                    'previous_origins_remaining' => [],
                     'pending_generation' => null,
                     'pending_digest' => null,
                     'pending_origins' => [],
+                    'pending_sponsors' => [],
                 ];
             } else {
                 $state = $record['state'];
                 $state['pending_generation'] = $generation;
                 $state['pending_digest'] = hash('sha256', $token);
                 $state['pending_origins'] = [];
+                $state['pending_sponsors'] = [];
             }
             write_token_state_unlocked($config, $state);
             return ['status' => 201, 'message' => null, 'reason' => null, 'token' => $token];

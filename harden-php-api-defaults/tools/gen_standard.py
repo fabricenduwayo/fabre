@@ -404,7 +404,12 @@ AMENDMENTS_REAL = [
      "unless the token file contains a valid 64-character lowercase hexadecimal "
      "SHA-256 digest. An empty, whitespace-only, or otherwise malformed file "
      "therefore retains already-bootstrapped refusal while denying every "
-     "presented bearer credential with reason `invalid_token`."),
+     "presented bearer credential with reason `invalid_token`. This malformed-file "
+     "refusal is a hard gate immediately after AC-BOOTSTRAP's malformed-request "
+     "check: it returns `409` / `already_bootstrapped` before secret validation "
+     "or any generation comparison, even when the published generation has "
+     "advanced. Generation-authorized cutover requires a valid existing state "
+     "envelope from which a current generation can be established."),
     ("G-2026-20", "CO-ORIGIN-ALLOW",
      "When a request carries an `Origin` header that is not on the allowlist, "
      "the response shall include none of the CO-ORIGIN-ALLOW grant headers and "
@@ -424,8 +429,9 @@ AMENDMENTS_REAL = [
      "envelope rather than a bare digest, but every credential in it must still "
      "be represented only by a 64-character lowercase SHA-256 digest and the file "
      "must remain mode `0600`. A malformed envelope retains G-2026-19's split "
-     "behavior: it blocks bootstrap at an unadvanced generation and verifies no "
-     "health credential. The envelope itself must be stored solely in "
+     "behavior at every published generation: it blocks bootstrap before the "
+     "generation bound is evaluated and verifies no health credential. The "
+     "envelope itself must be stored solely in "
      "`/app/harbordesk/data/admin_token`; auxiliary credential-state files are "
      "non-compliant."),
     ("G-2026-23", "AC-TOKEN-STORE",
@@ -489,6 +495,30 @@ AMENDMENTS_REAL = [
      "Current and predecessor credentials continue to verify until a "
      "secret-authorized bootstrap for the higher published generation stages a "
      "replacement successor."),
+    ("G-2026-30", "AC-CREDENTIAL-CUTOVER",
+     "Each allowed-origin successor confirmation must be sponsored by the "
+     "incumbent current credential at that same origin after the successor was "
+     "staged. While a non-stale pending successor exists, an accepted current-"
+     "credential `GET /health` from an allowed origin records sponsorship for "
+     "that origin inside the credential state critical section; its audit reason "
+     "remains SQL `NULL`. A pending-successor presentation from an allowed but "
+     "unsponsored origin is denied as `invalid_token` and records no confirmation. "
+     "Once sponsored, that origin may confirm under G-2026-27. Sponsorship before "
+     "staging does not count, predecessor requests never sponsor, and replacing "
+     "an unfinished successor clears both its sponsorships and confirmations. "
+     "Sponsorships are mutable credential state under G-2026-23 and activation "
+     "atomically clears them with the pending successor."),
+    ("G-2026-31", "AC-CREDENTIAL-CUTOVER",
+     "The two-use predecessor overlap is origin-partitioned: activation creates "
+     "one predecessor allowance for each of the two amended allowed origins. A "
+     "predecessor credential is accepted only when the request Origin is an "
+     "allowed origin whose allowance remains, and that origin's allowance is "
+     "consumed atomically. A repeated presentation from the same origin, or a "
+     "presentation with a disallowed or absent Origin, is denied as "
+     "`invalid_token` without consuming another origin's allowance. The two "
+     "remaining-origin allowances are mutable credential state under G-2026-23. "
+     "A later activation discards all older allowances and initializes exactly "
+     "the two allowances for its newly displaced current credential."),
 ]
 
 AMENDMENTS_FILLER = [

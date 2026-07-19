@@ -43,10 +43,12 @@ def bootstrap_ok(secret=None, origin=None):
     return response[3]["token"]
 
 
-def activate_pending(token):
-    """Confirm a staged successor from both allowed origins."""
-    first = health(token, ALLOWED)
-    second = health(token, ALLOWED_2)
+def activate_pending(current, pending):
+    """Sponsor and confirm a staged successor from both allowed origins."""
+    assert health(current, ALLOWED)[0] == 200
+    first = health(pending, ALLOWED)
+    assert health(current, ALLOWED_2)[0] == 200
+    second = health(pending, ALLOWED_2)
     assert first[0] == second[0] == 200
     return first, second
 
@@ -112,6 +114,7 @@ def test_stale_pending_denied_when_generation_advances_again():
     current = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     pending = bootstrap_ok()
+    assert health(current, ALLOWED)[0] == 200
     assert health(pending, ALLOWED)[0] == 200
     set_generation(INITIAL_GENERATION + 2)
     assert health(pending, ALLOWED)[0] == 401
@@ -119,6 +122,8 @@ def test_stale_pending_denied_when_generation_advances_again():
     assert health(current)[0] == 200
     assert bootstrap("wrong")[0] == 403
     replacement = bootstrap_ok()
+    assert health(replacement, ALLOWED)[0] == 401
+    assert health(current, ALLOWED)[0] == 200
     assert health(replacement, ALLOWED)[0] == 200
 
 
@@ -184,7 +189,7 @@ def test_secret_and_generation_are_live_deployment_inputs():
     assert second != first
     assert health(second)[0] == 401
     assert health(first)[0] == 200
-    activate_pending(second)
+    activate_pending(first, second)
     assert health(second)[0] == 200
     with open(SECRET_FILE, "w", encoding="utf-8") as handle:
         handle.write(original + "\n")
@@ -271,12 +276,27 @@ def test_generation_advance_requires_secret_before_cutover():
     assert new != old
     assert health(new)[0] == 401
     assert health(old)[0] == 200
-    activate_pending(new)
+    activate_pending(old, new)
     assert health(new)[0] == 200
 
 
+def test_pre_staging_sponsorship_does_not_authorize_confirmation():
+    """Current-token origin visits count only after the successor is staged."""
+    reset_state()
+    current = bootstrap_ok()
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+    assert health(pending, ALLOWED)[0] == 401
+    assert health(pending, ALLOWED_2)[0] == 401
+    activate_pending(current, pending)
+    assert health(pending)[0] == 200
+
+
 def test_pending_successor_requires_two_distinct_allowed_origins():
-    """A staged successor activates only after both allowed origins confirm it."""
+    """Each origin needs incumbent sponsorship before it can confirm a successor."""
     reset_state()
     current = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
@@ -284,12 +304,21 @@ def test_pending_successor_requires_two_distinct_allowed_origins():
 
     assert health(pending)[0] == 401
     assert health(pending, "https://evil.example")[0] == 401
+    assert health(pending, ALLOWED)[0] == 401
+    assert health(current, ALLOWED)[0] == 200
     assert health(pending, ALLOWED)[0] == 200
     assert health(pending, ALLOWED)[0] == 200
     assert health(current)[0] == 200
+    assert health(pending, ALLOWED_2)[0] == 401
+    assert health(current, ALLOWED_2)[0] == 200
     assert health(pending, ALLOWED_2)[0] == 200
     assert health(pending)[0] == 200
-    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
+    assert [
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED_2)[0],
+        health(current, ALLOWED_2)[0],
+    ] == [200, 401, 200, 401]
 
     reasons = [
         row["reason"]
@@ -299,23 +328,30 @@ def test_pending_successor_requires_two_distinct_allowed_origins():
     assert reasons == [
         "invalid_token",
         "invalid_token",
+        "invalid_token",
+        None,
         "cutover_confirmation",
         "cutover_confirmation",
+        None,
+        "invalid_token",
         None,
         "cutover_activated",
         None,
         "predecessor_overlap",
+        "invalid_token",
         "predecessor_overlap",
         "invalid_token",
     ]
 
 
 def test_higher_generation_replaces_only_unfinished_successor():
-    """A newer pending generation invalidates the old stage but preserves current."""
+    """A replacement clears old sponsorship and confirmation state."""
     reset_state()
     current = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     abandoned = bootstrap_ok()
+    assert health(abandoned, ALLOWED)[0] == 401
+    assert health(current, ALLOWED)[0] == 200
     assert health(abandoned, ALLOWED)[0] == 200
 
     set_generation(INITIAL_GENERATION + 2)
@@ -323,9 +359,17 @@ def test_higher_generation_replaces_only_unfinished_successor():
     successor = bootstrap_ok()
     assert health(abandoned, ALLOWED_2)[0] == 401
     assert health(current)[0] == 200
-    assert health(successor, ALLOWED_2)[0] == 200
+    assert health(successor, ALLOWED)[0] == 401
+    assert health(current, ALLOWED)[0] == 200
     assert health(successor, ALLOWED)[0] == 200
-    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health(successor, ALLOWED_2)[0] == 200
+    assert [
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED_2)[0],
+        health(current, ALLOWED_2)[0],
+    ] == [200, 401, 200, 401]
 
 
 def test_pending_activation_is_atomic_across_workers():
@@ -334,6 +378,8 @@ def test_pending_activation_is_atomic_across_workers():
     current = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     pending = bootstrap_ok()
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
     before = len(audit_rows())
 
     origins = [ALLOWED, ALLOWED_2] * 6
@@ -350,22 +396,30 @@ def test_pending_activation_is_atomic_across_workers():
     assert reasons.count("cutover_activated") == 1
     assert reasons.count("cutover_confirmation") >= 1
     assert set(reasons) <= {None, "cutover_confirmation", "cutover_activated"}
-    assert [health(current)[0] for _ in range(3)] == [200, 200, 401]
+    assert [
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED)[0],
+        health(current, ALLOWED_2)[0],
+        health(current, ALLOWED_2)[0],
+    ] == [200, 401, 200, 401]
 
 
-def test_predecessor_has_exact_shared_two_use_overlap():
-    """Only two accepted predecessor health calls survive one cutover."""
+def test_predecessor_overlap_is_partitioned_by_allowed_origin():
+    """Predecessor overlap grants one atomic acceptance per allowed origin."""
     reset_state()
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     current = bootstrap_ok()
     assert health(current)[0] == 401
-    activate_pending(current)
+    activate_pending(old, current)
     assert health(current)[0] == 200
-    assert health(old)[0] == 200
-    assert health(current)[0] == 200
-    assert health(old)[0] == 200
     assert health(old)[0] == 401
+    assert health(old, "https://evil.example")[0] == 401
+    assert health(old, ALLOWED)[0] == 200
+    assert health(old, ALLOWED)[0] == 401
+    assert health(current)[0] == 200
+    assert health(old, ALLOWED_2)[0] == 200
+    assert health(old, ALLOWED_2)[0] == 401
     assert health(current)[0] == 200
     reasons = [
         (row["decision"], row["reason"])
@@ -374,10 +428,15 @@ def test_predecessor_has_exact_shared_two_use_overlap():
     ]
     assert reasons == [
         ("denied", "invalid_token"),
+        ("accepted", None),
         ("accepted", "cutover_confirmation"),
+        ("accepted", None),
         ("accepted", "cutover_activated"),
         ("accepted", None),
+        ("denied", "invalid_token"),
+        ("denied", "invalid_token"),
         ("accepted", "predecessor_overlap"),
+        ("denied", "invalid_token"),
         ("accepted", None),
         ("accepted", "predecessor_overlap"),
         ("denied", "invalid_token"),
@@ -386,16 +445,23 @@ def test_predecessor_has_exact_shared_two_use_overlap():
 
 
 def test_invalid_health_does_not_consume_predecessor_overlap():
-    """Missing and wrong credentials leave both predecessor allowances intact."""
+    """Untrusted requests leave both origin-partitioned allowances intact."""
     reset_state()
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     pending = bootstrap_ok()
-    activate_pending(pending)
+    activate_pending(old, pending)
     for _ in range(4):
         assert health("wrong")[0] == 401
         assert health()[0] == 401
-    assert [health(old)[0] for _ in range(3)] == [200, 200, 401]
+    assert health(old)[0] == 401
+    assert health(old, "https://evil.example")[0] == 401
+    assert [
+        health(old, ALLOWED)[0],
+        health(old, ALLOWED_2)[0],
+        health(old, ALLOWED)[0],
+        health(old, ALLOWED_2)[0],
+    ] == [200, 200, 401, 401]
 
 
 def test_later_cutover_replaces_unspent_predecessor():
@@ -404,14 +470,19 @@ def test_later_cutover_replaces_unspent_predecessor():
     oldest = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     middle = bootstrap_ok()
-    activate_pending(middle)
-    assert health(oldest)[0] == 200
+    activate_pending(oldest, middle)
+    assert health(oldest, ALLOWED)[0] == 200
     set_generation(INITIAL_GENERATION + 8)
     newest = bootstrap_ok()
     assert health(middle)[0] == 200
-    activate_pending(newest)
-    assert health(oldest)[0] == 401
-    assert [health(middle)[0] for _ in range(3)] == [200, 200, 401]
+    activate_pending(middle, newest)
+    assert health(oldest, ALLOWED_2)[0] == 401
+    assert [
+        health(middle, ALLOWED)[0],
+        health(middle, ALLOWED_2)[0],
+        health(middle, ALLOWED)[0],
+        health(middle, ALLOWED_2)[0],
+    ] == [200, 200, 401, 401]
     assert health(newest)[0] == 200
 
 
@@ -421,10 +492,11 @@ def test_predecessor_budget_is_atomic_across_workers():
     old = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     pending = bootstrap_ok()
-    activate_pending(pending)
+    activate_pending(old, pending)
     before = len(audit_rows())
+    origins = [ALLOWED] * 5 + [ALLOWED_2] * 5
     with ThreadPoolExecutor(max_workers=10) as pool:
-        statuses = list(pool.map(lambda _: health(old)[0], range(10)))
+        statuses = list(pool.map(lambda origin: health(old, origin)[0], origins))
     assert statuses.count(200) == PREDECESSOR_USES
     assert statuses.count(401) == 10 - PREDECESSOR_USES
     lifecycle_rows = [
@@ -439,11 +511,13 @@ def test_predecessor_budget_is_atomic_across_workers():
 
 
 def test_corrupt_existing_state_blocks_bootstrap_and_health():
-    """An existing malformed credential state remains bootstrapped but unusable."""
+    """Malformed state hard-blocks bootstrap before generation and secret checks."""
     reset_state()
     with open(TOKEN_FILE, "w", encoding="utf-8") as handle:
         handle.write("not-valid-credential-state\n")
     os.chmod(TOKEN_FILE, 0o600)
+    set_generation(INITIAL_GENERATION + 100)
+    assert bootstrap("wrong")[0] == 409
     assert bootstrap(read_secret())[0] == 409
     assert health("anything")[0] == 401
 

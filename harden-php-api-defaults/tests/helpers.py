@@ -199,10 +199,11 @@ class State:
         self.stored_generation = None
         self.current = None
         self.previous = None
-        self.previous_remaining = 0
+        self.previous_origins_remaining = set()
         self.pending_generation = None
         self.pending = None
         self.pending_origins = set()
+        self.pending_sponsors = set()
 
 
 def audited_origin(origin):
@@ -265,10 +266,19 @@ def simulate(state, operation):
         reason = None
         if credential == state.current:
             accepted = True
-        elif credential == state.previous and state.previous_remaining > 0:
+            if (
+                state.pending is not None
+                and state.target_generation == state.pending_generation
+                and origin in ALLOWED_ORIGINS
+            ):
+                state.pending_sponsors.add(origin)
+        elif (
+            credential == state.previous
+            and origin in state.previous_origins_remaining
+        ):
             accepted = True
             via_predecessor = True
-            state.previous_remaining -= 1
+            state.previous_origins_remaining.remove(origin)
         elif credential == state.pending and origin in ALLOWED_ORIGINS:
             if (
                 state.pending_generation is not None
@@ -276,17 +286,21 @@ def simulate(state, operation):
             ):
                 accepted = False
                 reason = "invalid_token"
+            elif origin not in state.pending_sponsors:
+                accepted = False
+                reason = "invalid_token"
             else:
                 accepted = True
                 state.pending_origins.add(origin)
                 if state.pending_origins == set(ALLOWED_ORIGINS):
                     state.previous = state.current
-                    state.previous_remaining = PREDECESSOR_USES
+                    state.previous_origins_remaining = set(ALLOWED_ORIGINS)
                     state.current = state.pending
                     state.stored_generation = state.pending_generation
                     state.pending = None
                     state.pending_generation = None
                     state.pending_origins = set()
+                    state.pending_sponsors = set()
                     reason = "cutover_activated"
                 else:
                     reason = "cutover_confirmation"
@@ -362,6 +376,7 @@ def simulate(state, operation):
             state.pending = label
             state.pending_generation = state.target_generation
             state.pending_origins = set()
+            state.pending_sponsors = set()
         return {
             "status": 201,
             "body": "token",
@@ -473,6 +488,46 @@ def make_sequence(rng):
                 "mint": label,
                 "origin": origin(),
             }
+        )
+        current_label = labels[-1]
+        sequence.extend(
+            [
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": label,
+                    "origin": ALLOWED_ORIGINS[1],
+                },
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": current_label,
+                    "origin": ALLOWED_ORIGINS[0],
+                },
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": label,
+                    "origin": ALLOWED_ORIGINS[0],
+                },
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": current_label,
+                    "origin": ALLOWED_ORIGINS[1],
+                },
+                {
+                    "kind": "request",
+                    "method": "GET",
+                    "path": "/health",
+                    "credential": label,
+                    "origin": ALLOWED_ORIGINS[1],
+                },
+            ]
         )
         labels.append(label)
         for _ in range(rng.randint(4, 8)):
