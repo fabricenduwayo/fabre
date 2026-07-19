@@ -27,10 +27,13 @@ planning must derive authorization from the current database on every request.
 
 - Track every sequence independently and in edge order. A mismatch resets in-flight
   progress, except that its first edge starts a new attempt. Existing grants remain.
-- A completed sequence grants the branch evidence stamped with dependency reset
-  epochs and relay transition counts. Transitions and reset-epoch changes on the
-  completing traversal happen before that new grant is stamped; only older-epoch
-  grants are invalidated.
+- A completed sequence grants the branch evidence stamped with the current reset
+  epochs of its dependency relays and their transition counts. Transitions and
+  reset-epoch changes on the completing traversal are applied before the new grant
+  is stamped. When a relay later returns to its request-start state its reset epoch
+  advances again, and any grant already stamped against an older epoch of that relay
+  is voided: the branch must re-earn that grant before a requirement measured against
+  that relay can pass. A newer-epoch grant is unaffected.
 - Every requirement attached to a route rule is conjunctive. Its freshness range is
   measured against the row's named relay, independently of other requirements.
   Legacy `requires_completed_sequence` is an additional unwindowed requirement.

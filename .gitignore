@@ -1,5 +1,6 @@
 .DS_Store
 .venv/
+CLAUDE.md
 tools/monitor/.env
 tools/monitor/secrets.env
 tools/monitor/.venv/

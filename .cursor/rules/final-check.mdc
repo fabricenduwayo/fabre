@@ -240,15 +240,30 @@ The oracle solution must not:
 - depend on external internet calls
 - be flaky
 
-Useful commands:
+Run it with `harbor run -a oracle -p <task-folder>` (see Local testing commands
+below). If the Oracle Agent cannot solve the task, the task is broken.
+
+## Local testing commands
+
+Run before every submit/resubmit. Use a dummy key for local verifier runs — no
+personal API key (see `personal-api-key-consent.mdc`).
 
 ```bash
+export ANTHROPIC_API_KEY=dummy
+
+# Oracle must pass green every time (reward 1.0). Add -v to debug.
 harbor run -a oracle -p <task-folder>
-harbor run -a oracle -p <task-folder> -v
+
+# NOP must fail (reward 0.0) — proves the tests aren't trivially satisfied.
+harbor run -a nop -p <task-folder>
+
+# Drop into the built environment interactively to poke around.
 harbor tasks start-env -p <task-folder> -i
 ```
 
-If the Oracle Agent cannot solve the task, the task is broken.
+Run oracle first, then NOP. Both must land the way above or the task is not
+reward-trustworthy. For milestone tasks, each `steps/milestone_N` oracle must
+pass and its NOP must fail.
 
 ## tests/test.sh rules
 

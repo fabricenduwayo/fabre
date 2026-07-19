@@ -1,0 +1,18 @@
+---
+description: Require explicit permission before using Fabrice's personal API keys
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Personal API key consent
+
+- Never use Fabrice's personal API keys for tests, validation, evaluations,
+  oracle/agent runs, or any external API call unless he explicitly authorizes that
+  specific run.
+- A key being present in the environment, shell profile, or macOS Keychain does
+  not grant permission to use it.
+- Default to non-billable deterministic checks, dummy credentials (e.g.
+  `ANTHROPIC_API_KEY=dummy` for local harbor verifier runs), or existing results.
+- If a run genuinely needs a personal key and permission was not given, ask first.
+- Never print, echo, log, or include a personal key in commands or responses.
