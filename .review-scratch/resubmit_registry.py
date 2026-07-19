@@ -85,6 +85,13 @@ def main() -> None:
         for ln in rubric_path.read_text().splitlines()
         if ln.strip() and not ln.startswith(("reconcile-", "("))
     ]
+    invalid = [
+        ln
+        for ln in rubric_lines
+        if not re.fullmatch(r"Agent .+, [+-](?:1|2|3|5)", ln)
+    ]
+    if invalid:
+        raise SystemExit(f"invalid rubric wording or score: {invalid}")
     test_rubrics = "\n".join(rubric_lines)
     neg = sum(1 for ln in rubric_lines if re.search(r", -\d+$", ln))
     if neg < 3:
