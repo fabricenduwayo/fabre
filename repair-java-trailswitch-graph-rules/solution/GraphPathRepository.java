@@ -107,6 +107,8 @@ public class GraphPathRepository {
                 "SELECT DISTINCT rs.sequence_id, ert.relay_id "
                         + "FROM release_sequences rs "
                         + "JOIN edge_relay_transitions ert ON ert.edge_id = rs.edge_id "
+                        + "AND (ert.requires_sequence_id IS NULL "
+                        + "OR ert.requires_sequence_id = rs.sequence_id) "
                         + "ORDER BY rs.sequence_id, ert.relay_id",
                 rs -> {
                     Map<String, Set<String>> dependencies = new HashMap<>();
@@ -159,7 +161,8 @@ public class GraphPathRepository {
     public List<RelayTransition> loadRelayTransitions(String edgeId) {
         return jdbc.query(
                 "SELECT edge_id, transition_order, relay_id, from_state, to_state, "
-                        + "requires_relay_id, requires_relay_state "
+                        + "requires_relay_id, requires_relay_state, "
+                        + "requires_sequence_id, requires_sequence_progress "
                         + "FROM edge_relay_transitions WHERE edge_id = ? "
                         + "ORDER BY transition_order ASC, relay_id ASC",
                 (rs, rowNum) ->
@@ -170,7 +173,9 @@ public class GraphPathRepository {
                                 rs.getString("from_state"),
                                 rs.getString("to_state"),
                                 rs.getString("requires_relay_id"),
-                                rs.getString("requires_relay_state")),
+                                rs.getString("requires_relay_state"),
+                                rs.getString("requires_sequence_id"),
+                                (Integer) rs.getObject("requires_sequence_progress")),
                 edgeId);
     }
 

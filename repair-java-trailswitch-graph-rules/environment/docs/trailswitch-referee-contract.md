@@ -1,92 +1,59 @@
 # TrailSwitch referee contract
 
-The TrailSwitch debugging arena at `/app/trailswitch` is a Spring Boot API over the
-PostgreSQL dataset in `/app/sql/schema.sql` and `/app/sql/seed.sql`. Operators audit
-it from source and SQL only — do not rely on manual playthroughs.
+TrailSwitch is a Spring Boot API over the live PostgreSQL graph defined by
+`/app/sql/schema.sql`. Rows may change while the service remains running, so
+planning must derive authorization from the current database on every request.
 
 ## Graph model
 
-- `stations`, `edges`, `route_rules`, `lock_groups`, `relay_latches`,
-  `edge_relay_transitions`, and `release_sequences` define the railway graph,
-  relay state, ordered circuit evidence, and lock semantics.
-  Authoritative rows live in `/app/sql/schema.sql` and `/app/sql/seed.sql`.
-- An edge is available only when its non-NULL `requires_sw1` and `requires_sw2`
-  positions match the request and it is not locked under the current search context.
+- The graph, route rules, relay transitions, ordered sequences, sequence
+  requirements, and armed lock groups come from their same-named schema tables.
+- Non-null edge switch requirements are conjunctive. An active edge is usable only
+  when its switch positions match and the current search branch leaves it unlocked.
 
 ## Relay semantics
 
-- `relay_latches` stores the current latch state for each relay id. Load a fresh
-  initial snapshot for every `POST /v1/plan`; the table is live operational input
-  and must not be cached across requests. Transition counts and release-sequence
-  progress always begin empty, including when a relay starts released in the table.
-- `edge_relay_transitions` defines ordered relay changes that fire only after an
-  authorized edge traversal. Apply transitions only once the edge is active and
-  unlocked; copy the relay snapshot before applying changes for that edge.
-- A transition may list `requires_relay_id` and `requires_relay_state`; it fires only
-  when that predicate matches the snapshot being updated.
-- Increment a per-relay transition counter whenever a transition actually fires.
+- Snapshot `relay_latches` at the start of each plan; never cache it across requests.
+  Branch-local transition counts, reset epochs, and sequence state start empty.
+- Apply an edge's transitions in database order only after that edge is authorized.
+  Relay guards inspect the evolving branch snapshot.
+- A sequence-guarded transition with `requires_sequence_progress` needs that exact
+  pre-traversal in-flight progress. When the sequence id is present and progress is
+  null, the branch must already hold that sequence's grant.
+- Count only transitions that fire. Returning a relay to its request-start state
+  after it changed advances that relay's reset epoch.
 
 ## Ordered release sequences
 
-- `release_sequences` lists contiguous edge sequences by `sequence_id` and
-  ascending `step_order`. Track progress independently for every sequence in each
-  search state.
-- After an authorized traversal, an edge matching the next step advances that
-  sequence. A mismatch restarts at step one when the edge itself is the first step,
-  otherwise it resets progress to zero. Completing the final step issues a sequence
-  grant that records the current dependency reset epochs and relay transition
-  counters for every relay that participates in that sequence.
-- Crossing the first step again starts a new attempt without discarding an existing
-  grant. Progress mismatches reset only in-flight progress, not grants already
-  issued on the candidate path.
-- When a relay returns to its per-request initial snapshot after at least one
-  transition fired on that relay during the candidate path, advance that relay's
-  reset epoch. Apply relay transitions and advance reset epochs before invalidating
-  grants. A sequence completed on the same traversal that advances a reset epoch is
-  issued in the new epoch and remains valid. Invalidate only grants whose recorded
-  reset epoch for that relay is older than the current epoch.
-- `route_rule_sequence_requirements` lists conjunctive sequence grants a rule may
-  require. Each row names a `sequence_id` and optional `freshness_relay_id` with
-  minimum/maximum transition-count deltas since that grant was issued. Legacy
-  `requires_completed_sequence` on `route_rules` behaves as a single requirement
-  with no freshness window. All listed requirements must pass.
-- A station visit or relay transition does not substitute for sequence completion:
-  the listed edges must be crossed in order. Sequence progress and completion are
-  candidate-path state, not shared state and not PostgreSQL writes.
+- Track every sequence independently and in edge order. A mismatch resets in-flight
+  progress, except that its first edge starts a new attempt. Existing grants remain.
+- A completed sequence grants the branch evidence stamped with dependency reset
+  epochs and relay transition counts. Transitions and reset-epoch changes on the
+  completing traversal happen before that new grant is stamped; only older-epoch
+  grants are invalidated.
+- Every requirement attached to a route rule is conjunctive. Its freshness range is
+  measured against the row's named relay, independently of other requirements.
+  Legacy `requires_completed_sequence` is an additional unwindowed requirement.
+- Sequence progress and grants belong to one candidate path. Visits and relay state
+  do not substitute for crossing the listed edges in order.
 
 ## Route and lock semantics
 
-- Evaluate route rules in ascending `rule_priority`, breaking ties by ascending
-  `rule_id`.
-- A route rule matches when all of its non-NULL `lock_sw1` and `lock_sw2` values
-  equal the requested positions, any relay predicate matches the current relay
-  snapshot, any `requires_visited_station` appears in the path visited so far,
-  any `count_relay_id` minimum/maximum transition-count range is met, and every
-  configured sequence requirement in `route_rule_sequence_requirements` or legacy
-  `requires_completed_sequence` is satisfied. NULL switch columns are wildcards; when both switch values are non-NULL, both must match.
-- The first matching rule for an edge decides that edge: `lock` locks it and
-  `clear` leaves it unlocked. Ignore every later matching rule for the same edge.
-- Finish route-rule evaluation before lock-group relay. A group with any locked
-  member locks all of its members; repeat this across overlapping groups until no
-  additional edge becomes locked.
-- A lock group may arm only when optional `arm_relay_id` / `arm_relay_state` match
-  the current relay snapshot; disarmed groups do not participate in relay.
-- Recompute route decisions and lock-group closure independently for every search
-  state, including relay snapshot, transition counters, release-sequence state,
-  and visited stations.
+- Rules are ordered by ascending priority then rule id. The first matching rule per
+  edge decides `clear` or `lock`; null match fields are wildcards.
+- Switch, relay, visited-station, transition-count, and all sequence predicates on
+  that rule must match together.
+- After direct decisions, propagate locks through armed and overlapping groups to a
+  fixed point. Relay transitions can arm or disarm groups later in the same branch,
+  so recompute decisions for each authorization-relevant search state.
 
 ## Path planning
 
-- Search over `(station, relay snapshot, transition counters, relay reset epochs,
-  release-sequence progress/grants, visited stations)`, not stations alone.
-- Prefer the shortest authorized path by edge count; break ties by ascending
-  `edge_id` on the first differing edge.
-- Returned paths list every station visit, including repeats when a release circuit
-  revisits a junction under a new relay snapshot.
-
-Path planning must terminate even though the seeded graph contains cycles. Deduplicate
-the full search state and keep a finite traversal bound. A normal reachable or
-unreachable result reports `cycle_guard` as true.
+- Preserve every branch state that can change later authorization; station-only
+  visitation is insufficient. Cyclic searches must terminate with bounded full-state
+  deduplication.
+- Choose the fewest-edge authorized path, then the lexicographically smaller edge-id
+  sequence. Returned station paths retain repeated visits.
 
 ## API shape (keep intact)
 

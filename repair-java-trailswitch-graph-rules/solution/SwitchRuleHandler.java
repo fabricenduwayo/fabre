@@ -66,6 +66,17 @@ public class SwitchRuleHandler {
         Map<String, Integer> nextCounts = new HashMap<>(transitionCounts);
         Map<String, Integer> nextResetEpochs = new HashMap<>(relayResetEpochs);
         for (RelayTransition transition : repository.loadRelayTransitions(traversedEdge)) {
+            if (transition.requiresSequenceId() != null) {
+                if (transition.requiresSequenceProgress() == null) {
+                    if (!sequenceGrants.containsKey(transition.requiresSequenceId())) {
+                        continue;
+                    }
+                } else if (sequenceProgress.getOrDefault(
+                                transition.requiresSequenceId(), 0)
+                        != transition.requiresSequenceProgress()) {
+                    continue;
+                }
+            }
             if (transition.requiresRelayId() != null) {
                 String required =
                         nextRelays.getOrDefault(transition.requiresRelayId(), "");

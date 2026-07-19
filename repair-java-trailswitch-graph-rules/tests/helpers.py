@@ -4,14 +4,10 @@ from __future__ import annotations
 
 import subprocess
 import time
-from pathlib import Path
 
 import requests
 
 API = "http://127.0.0.1:8080"
-REPO_JAVA = Path(
-    "/app/trailswitch/src/main/java/com/trailswitch/repo/GraphPathRepository.java"
-)
 
 
 def ensure_service() -> None:
@@ -80,30 +76,97 @@ def run_sql(sql: str) -> None:
     )
 
 
-def add_probe_edge_f_to_j() -> None:
-    """Insert a verifier-owned F-to-J probe edge and clearance rule."""
+def add_quoted_station_probe() -> None:
+    """Insert a live graph edge whose station id contains an apostrophe."""
+    run_sql(
+        "INSERT INTO stations (station_id, label) VALUES ('Q''1', 'Quoted Probe') "
+        "ON CONFLICT (station_id) DO NOTHING;"
+    )
     run_sql(
         "INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2) "
-        "VALUES ('e_f_j_probe', 'F', 'J', 'south', 'north') "
+        "VALUES ('e_quote_probe', 'Q''1', 'A', NULL, NULL) "
         "ON CONFLICT (edge_id) DO NOTHING;"
     )
+
+
+def remove_quoted_station_probe() -> None:
+    """Remove the quoted-station live graph probe."""
+    run_sql("DELETE FROM edges WHERE edge_id = 'e_quote_probe';")
+    run_sql("DELETE FROM stations WHERE station_id = 'Q''1';")
+
+
+def disable_release_transition_progress_guard() -> None:
+    """Make the yard release transition accept zero shortcut progress."""
     run_sql(
-        "INSERT INTO route_rules ("
-        "rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action, "
-        "match_relay_id, match_relay_state, count_relay_id, "
-        "min_transition_count, max_transition_count, requires_visited_station, "
-        "requires_completed_sequence"
-        ") VALUES ("
-        "'r_fj_probe_clear', 'e_f_j_probe', 2, 'south', 'north', 'clear', "
-        "NULL, NULL, NULL, NULL, NULL, NULL, 'approach_release'"
-        ") ON CONFLICT (rule_id) DO NOTHING;"
+        "UPDATE edge_relay_transitions "
+        "SET requires_sequence_id = 'approach_release', requires_sequence_progress = 0 "
+        "WHERE edge_id = 'e_f_c' AND relay_id = 'yard_release';"
     )
 
 
-def remove_probe_edge_f_to_j() -> None:
-    """Remove the verifier-owned F-to-J probe fixtures."""
-    run_sql("DELETE FROM route_rules WHERE rule_id = 'r_fj_probe_clear';")
-    run_sql("DELETE FROM edges WHERE edge_id = 'e_f_j_probe';")
+def restore_release_transition_progress_guard() -> None:
+    """Restore the seeded approach-progress guard on yard release."""
+    run_sql(
+        "UPDATE edge_relay_transitions "
+        "SET requires_sequence_id = 'approach_release', requires_sequence_progress = 1 "
+        "WHERE edge_id = 'e_f_c' AND relay_id = 'yard_release';"
+    )
+
+
+def disable_spur_transition_grant_guard() -> None:
+    """Make the C-to-F spur transition ignore the arrival grant."""
+    run_sql(
+        "UPDATE edge_relay_transitions "
+        "SET requires_sequence_id = NULL, requires_sequence_progress = NULL "
+        "WHERE edge_id = 'e_c_f' AND relay_id = 'spur_seal';"
+    )
+
+
+def restore_spur_transition_grant_guard() -> None:
+    """Restore the arrival-grant guard on the C-to-F spur transition."""
+    run_sql(
+        "UPDATE edge_relay_transitions "
+        "SET requires_sequence_id = 'arrival_return', requires_sequence_progress = NULL "
+        "WHERE edge_id = 'e_c_f' AND relay_id = 'spur_seal';"
+    )
+
+
+def remove_yard_reset_transition() -> None:
+    """Remove the E-to-C yard reset transition from the live graph."""
+    run_sql(
+        "DELETE FROM edge_relay_transitions "
+        "WHERE edge_id = 'e_e_c' AND relay_id = 'yard_release';"
+    )
+
+
+def restore_yard_reset_transition() -> None:
+    """Restore the seeded E-to-C yard reset transition."""
+    run_sql(
+        "INSERT INTO edge_relay_transitions ("
+        "edge_id, transition_order, relay_id, from_state, to_state, "
+        "requires_relay_id, requires_relay_state, "
+        "requires_sequence_id, requires_sequence_progress"
+        ") VALUES ("
+        "'e_e_c', 1, 'yard_release', 'released', 'held', "
+        "NULL, NULL, NULL, NULL"
+        ") ON CONFLICT (edge_id, transition_order, relay_id) DO NOTHING;"
+    )
+
+
+def tighten_departure_transition_window() -> None:
+    """Require zero yard transitions for the visit-based departure clearance."""
+    run_sql(
+        "UPDATE route_rules SET min_transition_count = 0, max_transition_count = 0 "
+        "WHERE rule_id = 'r_de_visit_clear';"
+    )
+
+
+def restore_departure_transition_window() -> None:
+    """Restore the seeded one-transition departure clearance window."""
+    run_sql(
+        "UPDATE route_rules SET min_transition_count = 1, max_transition_count = 1 "
+        "WHERE rule_id = 'r_de_visit_clear';"
+    )
 
 
 def tighten_checkpoint_freshness_window() -> None:

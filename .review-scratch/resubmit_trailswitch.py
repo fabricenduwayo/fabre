@@ -53,6 +53,23 @@ def main() -> None:
     import zipfile
 
     names = zipfile.ZipFile(zip_path).namelist()
+    required = {
+        "instruction.md",
+        "task.toml",
+        "environment/Dockerfile",
+        "environment/docs/trailswitch-referee-contract.md",
+        "environment/sql/schema.sql",
+        "environment/sql/seed.sql",
+        "solution/solve.sh",
+        "solution/RelayTransition.java",
+        "solution/SwitchRuleHandler.java",
+        "tests/test.sh",
+        "tests/test_outputs.py",
+        "tests/helpers.py",
+    }
+    missing = sorted(required.difference(names))
+    if missing:
+        raise SystemExit(f"refusing to upload ZIP missing required files: {missing}")
     leaked = [
         n
         for n in names

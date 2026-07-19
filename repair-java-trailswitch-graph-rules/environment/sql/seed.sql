@@ -7,7 +7,8 @@ INSERT INTO stations (station_id, label) VALUES
     ('F', 'Approach Circuit'),
     ('G', 'Shortcut Approach'),
     ('H', 'Tie-Break Junction'),
-    ('J', 'Recirc Checkpoint');
+    ('J', 'Recirc Checkpoint'),
+    ('K', 'Release Indicator');
 
 INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2) VALUES
     ('e_a_b', 'A', 'B', 'north', NULL),
@@ -22,19 +23,28 @@ INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2
     ('e_g_f', 'G', 'F', 'south', 'north'),
     ('e_h_a', 'H', 'A', 'north', 'north'),
     ('e_h_c', 'H', 'C', 'north', 'north'),
-    ('e_c_j', 'C', 'J', 'south', 'north');
+    ('e_c_j', 'C', 'J', 'south', 'north'),
+    ('e_c_k', 'C', 'K', 'south', 'north');
 
 INSERT INTO relay_latches (relay_id, relay_state) VALUES
     ('yard_release', 'held'),
     ('spur_seal', 'sealed');
 
 INSERT INTO edge_relay_transitions (
-    edge_id, transition_order, relay_id, from_state, to_state, requires_relay_id, requires_relay_state
+    edge_id, transition_order, relay_id, from_state, to_state,
+    requires_relay_id, requires_relay_state,
+    requires_sequence_id, requires_sequence_progress
 ) VALUES
-    ('e_f_c', 1, 'yard_release', 'held', 'released', NULL, NULL),
-    ('e_b_d', 1, 'spur_seal', 'sealed', 'open', 'yard_release', 'released'),
-    ('e_d_e', 1, 'spur_seal', 'open', 'sealed', NULL, NULL),
-    ('e_e_c', 1, 'yard_release', 'released', 'held', NULL, NULL);
+    ('e_c_f', 1, 'spur_seal', 'sealed', 'open',
+        NULL, NULL, 'arrival_return', NULL),
+    ('e_f_c', 1, 'yard_release', 'held', 'released',
+        NULL, NULL, 'approach_release', 1),
+    ('e_b_d', 1, 'spur_seal', 'sealed', 'open',
+        'yard_release', 'released', NULL, NULL),
+    ('e_d_e', 1, 'spur_seal', 'open', 'sealed',
+        NULL, NULL, NULL, NULL),
+    ('e_e_c', 1, 'yard_release', 'released', 'held',
+        NULL, NULL, NULL, NULL);
 
 INSERT INTO release_sequences (sequence_id, step_order, edge_id) VALUES
     ('approach_release', 1, 'e_c_f'),
@@ -67,6 +77,10 @@ INSERT INTO route_rules (
         NULL, NULL, NULL, NULL, NULL, 'E', NULL),
     ('r_cj_default_lock', 'e_c_j', 4, 'south', 'north', 'lock',
         NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('r_ck_release_clear', 'e_c_k', 1, 'south', 'north', 'clear',
+        'yard_release', 'released', NULL, NULL, NULL, NULL, NULL),
+    ('r_ck_default_lock', 'e_c_k', 2, 'south', 'north', 'lock',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL),
     ('r_release_de_depot', 'e_d_e', 6, 'south', 'north', 'clear',
         'yard_release', 'released', 'yard_release', 0, 0, 'A', NULL),
     ('r_release_de_yard', 'e_d_e', 7, 'south', 'north', 'clear',
@@ -81,6 +95,8 @@ INSERT INTO route_rules (
         NULL, NULL, NULL, NULL, NULL, NULL, NULL),
     ('r_conj_ab', 'e_a_b', 20, 'north', 'south', 'lock',
         NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('r_cb_spur_open_lock', 'e_c_b', 2, 'south', 'north', 'lock',
+        'spur_seal', 'open', NULL, NULL, NULL, NULL, NULL),
     ('r_approach_hold_cb', 'e_c_b', 3, NULL, NULL, 'lock',
         'yard_release', 'held', NULL, NULL, NULL, NULL, NULL),
     ('r_approach_release_cb', 'e_c_b', 3, NULL, NULL, 'clear',
@@ -99,4 +115,4 @@ INSERT INTO route_rule_sequence_requirements (
     freshness_relay_id, min_transitions_since, max_transitions_since
 ) VALUES
     ('r_cj_recirc_clear', 1, 'approach_release', 'yard_release', 0, 2),
-    ('r_cj_recirc_clear', 2, 'arrival_return', 'yard_release', 0, 1);
+    ('r_cj_recirc_clear', 2, 'arrival_return', 'spur_seal', 0, 1);

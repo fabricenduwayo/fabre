@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
 # Canonical Python runtime is required by Harbor's pytest verifier; the same
 # container runs the Java 17 service, so the JDK and Maven are installed by apt.
-# platform-revision: 2026-07-19-r64
+# platform-revision: 2026-07-19-r65
 
 WORKDIR /app
 

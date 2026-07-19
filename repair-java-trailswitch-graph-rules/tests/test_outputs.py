@@ -3,15 +3,22 @@
 import pytest
 
 from helpers import (
-    REPO_JAVA,
-    add_probe_edge_f_to_j,
+    add_quoted_station_probe,
+    disable_release_transition_progress_guard,
+    disable_spur_transition_grant_guard,
     ensure_service,
     plan,
-    remove_probe_edge_f_to_j,
+    remove_quoted_station_probe,
+    remove_yard_reset_transition,
     reset_relays,
     restore_checkpoint_freshness_window,
+    restore_departure_transition_window,
+    restore_release_transition_progress_guard,
+    restore_spur_transition_grant_guard,
+    restore_yard_reset_transition,
     run_sql,
     set_relay_state,
+    tighten_departure_transition_window,
     tighten_checkpoint_freshness_window,
 )
 
@@ -168,12 +175,31 @@ def test_conditional_spur_transition_requires_posted_release():
     assert result["path"] == ["A", "C", "F", "C", "B", "D"]
 
 
-def test_ordered_release_sequence_rejects_shortcut_history():
-    """An out-of-order F-to-C visit must not satisfy the C-F-C release circuit."""
-    result = plan("G", "E", {"sw1": "south", "sw2": "north"})
-    assert result["reachable"] is True
-    assert result["path"] == ["G", "F", "C", "F", "C", "B", "D", "E"]
-    assert result["cycle_guard"] is True
+def test_sequence_progress_gates_release_transition():
+    """The F-to-C relay fires only after in-flight C-to-F progress."""
+    guarded = plan("G", "K", {"sw1": "south", "sw2": "north"})
+    assert guarded["reachable"] is True
+    assert guarded["path"] == ["G", "F", "C", "F", "C", "K"]
+    disable_release_transition_progress_guard()
+    try:
+        unguarded = plan("G", "K", {"sw1": "south", "sw2": "north"})
+        assert unguarded["reachable"] is True
+        assert unguarded["path"] == ["G", "F", "C", "K"]
+    finally:
+        restore_release_transition_progress_guard()
+
+
+def test_sequence_grant_gates_spur_transition():
+    """The C-to-F spur transition waits for an arrival-return grant."""
+    baseline = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert baseline["reachable"] is True
+    disable_spur_transition_grant_guard()
+    try:
+        blocked = plan("A", "J", {"sw1": "south", "sw2": "north"})
+        assert blocked["reachable"] is False
+        assert blocked["path"] == []
+    finally:
+        restore_spur_transition_grant_guard()
 
 
 def test_equal_length_routes_use_first_differing_edge_id():
@@ -186,19 +212,32 @@ def test_equal_length_routes_use_first_differing_edge_id():
 
 
 def test_sequence_grant_voids_when_yard_returns_to_initial():
-    """Recirculation through arrival must re-earn release-sequence clearance."""
-    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
-    assert result["reachable"] is True
-    assert result["path"] == ["A", "C", "F", "C", "B", "D", "E", "C", "F", "C", "J"]
-    assert result["cycle_guard"] is True
+    """The live E-to-C reset forces approach clearance to be earned again."""
+    reset_path = plan("A", "J", {"sw1": "south", "sw2": "north"})
+    assert reset_path["reachable"] is True
+    assert reset_path["path"] == [
+        "A", "C", "F", "C", "B", "D", "E", "C", "F", "C", "J"
+    ]
+    remove_yard_reset_transition()
+    try:
+        no_reset = plan("A", "J", {"sw1": "south", "sw2": "north"})
+        assert no_reset["reachable"] is True
+        assert no_reset["path"] == ["A", "C", "F", "C", "B", "D", "E", "C", "J"]
+    finally:
+        restore_yard_reset_transition()
 
 
 def test_transition_count_window_blocks_stale_yard_release():
-    """Departure clearance requires exactly one yard transition after re-approach."""
-    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
-    assert result["reachable"] is True
-    assert result["path"].count("D") == 1
-    assert result["path"].count("E") == 1
+    """Changing the live departure count window changes route authorization."""
+    baseline = plan("A", "E", {"sw1": "south", "sw2": "north"})
+    assert baseline["reachable"] is True
+    tighten_departure_transition_window()
+    try:
+        blocked = plan("A", "E", {"sw1": "south", "sw2": "north"})
+        assert blocked["reachable"] is False
+        assert blocked["path"] == []
+    finally:
+        restore_departure_transition_window()
 
 
 def test_lock_positions_require_conjunction():
@@ -212,16 +251,22 @@ def test_lock_positions_require_conjunction():
 
 
 def test_cycle_guard_terminates_cyclic_search():
-    """Planning on the cyclic seed graph must finish through state deduplication."""
-    result = plan("C", "E", {"sw1": "south", "sw2": "south"})
+    """An unreachable target on the C-E cycle terminates with an empty path."""
+    result = plan("C", "J", {"sw1": "south", "sw2": "south"})
+    assert result["reachable"] is False
+    assert result["path"] == []
     assert result["cycle_guard"] is True
 
 
 def test_sql_lookups_are_parameterized():
-    """GraphPathRepository must not concatenate station ids into SQL strings."""
-    source = REPO_JAVA.read_text(encoding="utf-8")
-    assert "from_station = '" not in source
-    assert "?" in source or "from_station = ?" in source
+    """A live station id containing an apostrophe remains safely routable."""
+    add_quoted_station_probe()
+    try:
+        result = plan("Q'1", "A", {"sw1": "north", "sw2": "north"})
+        assert result["reachable"] is True
+        assert result["path"] == ["Q'1", "A"]
+    finally:
+        remove_quoted_station_probe()
 
 
 def test_checkpoint_requires_dual_sequence_grants():
@@ -241,41 +286,6 @@ def test_checkpoint_requires_dual_sequence_grants():
         "C",
         "J",
     ]
-
-
-def test_arrival_grant_survives_same_traversal_reset_epoch():
-    """A grant issued after a relay reset epoch advance on the same edge stays valid."""
-    result = plan("A", "J", {"sw1": "south", "sw2": "north"})
-    assert result["reachable"] is True
-    assert result["path"] == [
-        "A",
-        "C",
-        "F",
-        "C",
-        "B",
-        "D",
-        "E",
-        "C",
-        "F",
-        "C",
-        "J",
-    ]
-
-
-def test_restarting_first_step_preserves_existing_grant():
-    """Crossing the first release step again must not discard an existing grant."""
-    add_probe_edge_f_to_j()
-    try:
-        earned = plan("C", "B", {"sw1": "south", "sw2": "north"})
-        assert earned["path"] == ["C", "F", "C", "B"]
-        restarted = plan("C", "F", {"sw1": "south", "sw2": "north"})
-        assert restarted["reachable"] is True
-        assert restarted["path"] == ["C", "F"]
-        shortcut = plan("F", "J", {"sw1": "south", "sw2": "north"})
-        assert shortcut["reachable"] is True
-        assert shortcut["path"] == ["F", "J"]
-    finally:
-        remove_probe_edge_f_to_j()
 
 
 def test_live_freshness_window_blocks_stale_arrival_grant():

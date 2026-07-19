@@ -13,7 +13,10 @@ Agent issues sequence grants on the same traversal after a reset-epoch advance w
 Agent reads relay_latches afresh for each plan request rather than caching initial state, +4
 Agent re-evaluates first-match rules and fixed-point armed lock relay for each search state, +5
 Agent applies conditional relay transitions only after an authorized edge traversal, +5
+Agent loads transition sequence guards and evaluates them against pre-traversal branch state, +5
+Agent distinguishes exact in-flight progress guards from existing-grant guards on relay transitions, +5
 Agent increments per-relay transition counters when transitions fire, +3
+Agent evaluates each conjunctive sequence freshness window against its independently named relay, +5
 Agent searches over station, relays, counters, release-sequence state, and visits rather than stations alone, +5
 Agent preserves repeated stations in returned paths when a release circuit is required, +3
 Agent breaks equal-length authorized path ties by ascending edge_id at the first difference, +2
@@ -28,5 +31,7 @@ Agent voids a sequence grant issued on the same traversal that advanced its depe
 Agent discards an existing sequence grant when only the first sequence step is crossed again, -5
 Agent caches relay_latches across plan requests and ignores live database changes, -5
 Agent applies release transitions before checking that an edge is active and unlocked, -5
+Agent fires a sequence-guarded transition without the required progress or grant, -5
+Agent evaluates all sequence freshness requirements against one shared relay counter, -5
 Agent ignores armed lock-group predicates or relay transition prerequisites, -5
 Agent performs only one relay pass and misses transitive locks across overlapping groups, -5

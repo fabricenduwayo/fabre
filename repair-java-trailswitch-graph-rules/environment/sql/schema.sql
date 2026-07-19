@@ -25,12 +25,19 @@ CREATE TABLE edge_relay_transitions (
     to_state TEXT NOT NULL,
     requires_relay_id TEXT REFERENCES relay_latches(relay_id),
     requires_relay_state TEXT,
+    requires_sequence_id TEXT,
+    requires_sequence_progress INTEGER,
     PRIMARY KEY (edge_id, transition_order, relay_id),
     CHECK (from_state IN ('held', 'released', 'sealed', 'open')),
     CHECK (to_state IN ('held', 'released', 'sealed', 'open')),
     CONSTRAINT edge_relay_requires_pair CHECK (
         (requires_relay_id IS NULL AND requires_relay_state IS NULL)
         OR (requires_relay_id IS NOT NULL AND requires_relay_state IS NOT NULL)
+    ),
+    CONSTRAINT edge_relay_sequence_guard CHECK (
+        (requires_sequence_id IS NULL AND requires_sequence_progress IS NULL)
+        OR (requires_sequence_id IS NOT NULL
+            AND (requires_sequence_progress IS NULL OR requires_sequence_progress >= 0))
     )
 );
 

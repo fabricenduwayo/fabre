@@ -7,4 +7,6 @@ public record RelayTransition(
         String fromState,
         String toState,
         String requiresRelayId,
-        String requiresRelayState) {}
+        String requiresRelayState,
+        String requiresSequenceId,
+        Integer requiresSequenceProgress) {}
