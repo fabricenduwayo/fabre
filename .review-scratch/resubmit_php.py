@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Submit harden-php-api-defaults with ZIP + explanations + rubric."""
 import os
+import re
 import sys
 import tempfile
 import time
@@ -41,7 +42,22 @@ def load_explanations() -> tuple[str, str, str]:
 
 def main() -> None:
     difficulty, solution, verification = load_explanations()
-    test_rubrics = RUBRIC.read_text().strip()
+    rubric_lines = [line.strip() for line in RUBRIC.read_text().splitlines() if line.strip()]
+    invalid = [
+        line
+        for line in rubric_lines
+        if not re.fullmatch(r"Agent .+, [+-](?:1|2|3|5)", line)
+    ]
+    if invalid:
+        raise SystemExit(f"invalid rubric wording or score: {invalid}")
+    scores = [int(line.rsplit(", ", 1)[1]) for line in rubric_lines]
+    positive_total = sum(score for score in scores if score > 0)
+    negative_total = sum(score for score in scores if score < 0)
+    if positive_total >= 40:
+        raise SystemExit(f"positive rubric total must be below 40, got {positive_total}")
+    if negative_total > -11:
+        raise SystemExit(f"negative rubric total must be at least -11, got {negative_total}")
+    test_rubrics = "\n".join(rubric_lines)
 
     assignment_id, _ = get_assignment_id_for_submission(
         SUBMISSION_ID, project_id=PROJECT_ID

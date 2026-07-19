@@ -8,11 +8,10 @@ reference implementation.
 
 ## Difficulty
 
-The latest measured edition is `hard`: Claude Opus 4.8 and GPT-5.5 both passed
-0/5. The evaluation also found one specification gap: every near-complete run
-used a reasonable but different key for the pending secret fingerprint. This
-revision names that envelope field and keeps the difficulty in interacting state
-rather than an undocumented string literal.
+The latest measured edition is `medium`: Claude Opus 4.8 passed 2/5 and GPT-5.5
+passed 3/5. Every test passed in at least one agent run. This revision keeps the
+working lifecycle unchanged while documenting the resolved behavior and full
+credential-envelope schema that quality review found too implicit.
 
 The current revision trims the agent prompt back to control names and the
 normative Standard. It adds phase-fresh origin sponsorship, live secret
