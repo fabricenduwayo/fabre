@@ -606,6 +606,28 @@ def test_later_cutover_replaces_unspent_predecessor():
     assert health(newest)[0] == 200
 
 
+def test_incumbent_use_after_confirming_voids_that_confirmation():
+    """Going back to the incumbent credential gives up that origin's confirmation."""
+    reset_state()
+    first = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    second = bootstrap_ok()
+
+    assert health(first, ALLOWED)[0] == 200
+    assert health(second, ALLOWED)[0] == 200
+    assert health(first, ALLOWED)[0] == 200
+
+    assert health(first, ALLOWED_2)[0] == 200
+    assert health(second, ALLOWED_2)[0] == 200
+    assert "cutover_activated" not in [row["reason"] for row in audit_rows()], (
+        "the voided confirmation should have left the quorum incomplete"
+    )
+
+    assert health(first, ALLOWED)[0] == 200
+    assert health(second, ALLOWED)[0] == 200
+    assert audit_rows()[-1]["reason"] == "cutover_activated"
+
+
 def test_pending_successor_freezes_predecessor_overlap():
     """A live pending successor freezes predecessor overlap without spending it."""
     reset_state()

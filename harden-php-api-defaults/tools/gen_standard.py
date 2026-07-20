@@ -469,6 +469,16 @@ AMENDMENTS_REAL = [
      "is rolled back. Immediately before activation is published, the live "
      "credential generation is re-read in the same critical section; a pending "
      "successor that became stale is denied without confirmation or activation."),
+    ("G-2026-37", "AC-CREDENTIAL-CUTOVER",
+     "An origin that confirms a pending successor has cut over to it. If the "
+     "incumbent current credential is afterwards accepted on `GET /health` from "
+     "that same origin while that successor is still pending, the origin's "
+     "confirmation is void and the successor falls back to the confirmation set "
+     "it held beforehand. The same request still records sponsorship for that "
+     "origin under G-2026-30, so the origin may confirm again. A confirmation "
+     "set emptied this way makes the next confirmation a first confirmation for "
+     "the purposes of G-2026-32. Whether the quorum is complete is judged only "
+     "after the current request's effect on the confirmation set is applied."),
     ("G-2026-36", "AC-CREDENTIAL-CUTOVER",
      "While a pending successor exists at the published generation, the "
      "predecessor overlap is frozen. A predecessor credential presented from an "

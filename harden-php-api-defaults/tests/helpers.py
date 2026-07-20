@@ -283,6 +283,7 @@ def simulate(state, operation):
                 and state.target_generation == state.pending_generation
                 and origin in ALLOWED_ORIGINS
             ):
+                state.pending_origins.discard(origin)
                 state.pending_sponsors.add(origin)
         elif (
             credential == state.previous

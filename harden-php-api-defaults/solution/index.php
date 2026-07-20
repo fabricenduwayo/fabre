@@ -124,10 +124,23 @@ if ($path === '/health' && $method === 'GET') {
                         && $pendingSecretUsable
                         && $publishedGeneration !== null
                         && $publishedGeneration === $state['pending_generation']
-                        && cors_origin_allowed($config, $origin)
-                        && !in_array($origin, $state['pending_sponsors'], true)) {
-                    $state['pending_sponsors'][] = $origin;
-                    $stateChanged = true;
+                        && cors_origin_allowed($config, $origin)) {
+                    $confirmed = array_search(
+                        $origin,
+                        $state['pending_origins'],
+                        true
+                    );
+                    if ($confirmed !== false) {
+                        unset($state['pending_origins'][$confirmed]);
+                        $state['pending_origins'] = array_values(
+                            $state['pending_origins']
+                        );
+                        $stateChanged = true;
+                    }
+                    if (!in_array($origin, $state['pending_sponsors'], true)) {
+                        $state['pending_sponsors'][] = $origin;
+                        $stateChanged = true;
+                    }
                 }
                 return $finish('current', 'accepted', null, $state, $stateChanged);
             }

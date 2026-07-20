@@ -429,3 +429,8 @@ While a successor is pending, a `GET /health` request denied as `invalid_token` 
 
 While a pending successor exists at the published generation, the predecessor overlap is frozen. A predecessor credential presented from an allowed origin that still holds an allowance is denied as `overlap_frozen` and consumes no allowance, and the request records no sponsorship or confirmation change. The freeze lifts when the pending successor is activated, replaced, or fenced as stale by a higher published generation; any allowance untouched during the freeze is still spendable afterwards exactly as G-2026-31 describes. A denial under this amendment is not an `invalid_token` denial and therefore does not revoke sponsorship under G-2026-35.
 
+
+### G-2026-37 — amends AC-CREDENTIAL-CUTOVER
+
+An origin that confirms a pending successor has cut over to it. If the incumbent current credential is afterwards accepted on `GET /health` from that same origin while that successor is still pending, the origin's confirmation is void and the successor falls back to the confirmation set it held beforehand. The same request still records sponsorship for that origin under G-2026-30, so the origin may confirm again. A confirmation set emptied this way makes the next confirmation a first confirmation for the purposes of G-2026-32. Whether the quorum is complete is judged only after the current request's effect on the confirmation set is applied.
+
