@@ -1,12 +1,20 @@
-Agent fetches registry candidates from the live API and derives canonical experiment evidence from H2 through JDBC, +5
-Agent propagates supersession voids transitively and selects the latest surviving completed validation run, +5
-Agent evaluates canonical metrics and version-scoped feature lineage from H2 rather than registry-reported values, +5
-Agent replays calibration events only through the earlier of decision time and the operative run cutoff, including deterministic tie ordering, +5
-Agent enforces waiver lifecycle, validity intervals, strict pre-operative timing, reciprocal replacement integrity, and no predecessor revival, +5
-Agent enforces latest-grant approval quorum, distinct required reviewers, current role-authority epochs, and operative-run anchoring, +5
-Agent filters waiver eligibility before newest-per-suppression-group arbitration, rejects replacement pairs that change groups, and reports every waiver that suppresses a raw failure, +3
-Agent lists every candidate exactly once, applies the canonical tie-break, records H2-canonical conflicts, selects the correct promoted model, and emits exact rejection reason codes, +3
-Agent builds a schema-valid Java CLI that supports documented arguments and generalizes to compatible H2 stores, +3
-Agent hardcodes outcomes, hand-writes the manifest, or modifies policy, registry, or evidence data to force agreement, -5
-Agent uses noncanonical evidence or mishandles voiding, calibration cutoffs, waiver lifecycle, approvals, roles, anchors, or suppression groups, -5
-Agent emits an invalid or non-generalizable manifest with missing candidates, duplicate candidates, or unsupported reason codes, -1
+reconcile-spring-boot-model-registry-with-h2-experiment — flat rubric (non-milestone)
+(paste into platform test_rubrics; no "# Rubric N" header; scores restricted to +1/+2/+3/+5 and -1/-2/-3/-5; positive total must stay <= 40)
+Agent implements operative validation run selection correctly: filters by status completed, applies transitive voiding via supersedes_run_id chains (A-2026-05, A-2026-08), then selects the temporally latest non-voided completed run, +5
+Agent implements Gate 2 calibration by replaying calibration_events through the earlier of decision_at and operative run captured_at (A-2026-07, A-2026-14), with correct event ordering by occurred_at then event_id (A-2026-09), +5
+Agent implements waiver lifecycle correctly: evaluates waiver_events at decision_at, validates paired replacement transactions (reciprocal events, same occurred_at, matching model/version/reason/anchors_run_id/suppression_group), determines active waivers in half-open valid_from to valid_until interval (A-2026-06), +5
+Agent implements Gate 1 using H2 canonical metrics from the operative run (A-2026-01, A-2026-04) rather than registry-reported metrics for gate evaluation, +3
+Agent implements waiver approval quorum requiring effective approvals from both risk and model_owner roles with different reviewer_ids, respecting reviewer_role_events authority epochs (A-2026-11, A-2026-13), +3
+Agent implements waiver operative-run timing constraint: grant occurred_at must be strictly before operative run captured_at (A-2026-10), with anchors_run_id override when present (A-2026-12), +3
+Agent implements suppression group arbitration: retains at most one eligible waiver per non-null group by latest grant then waiver_id tie-break, then applies per-reason selection from survivors (A-2026-15), +3
+Agent ensures the reconciler reads from live API and JDBC inputs at runtime and accepts optional JDBC URL and output path arguments, +3
+Agent implements Gate 3 feature-hash lineage scoped to the candidate's specific registry-reported version (A-2026-02), not any historical row, +2
+Agent correctly records conflicts where registry API and H2 disagree on AUC, accuracy, or feature_hash for candidates that have canonical H2 evidence to compare, +2
+Agent implements tie-break using H2 canonical AUC from operative run (A-2026-03) then lexicographically smallest model id, not registry metrics, +2
+Agent produces a release-decision.json that validates against the provided JSON schema at /app/schemas/release-decision.schema.json, +2
+Agent implements fail-closed behavior: candidates with missing canonical evidence are rejected with missing_canonical_evidence without evaluating gates, +2
+Agent modifies policy source files, registry data, or database content to force a desired outcome instead of implementing correct logic, -5
+Agent hardcodes or precomputes the release decision rather than deriving it dynamically from live API and database inputs, -5
+Agent uses registry-reported metrics for Gate 1 evaluation instead of H2 canonical values from the operative run, violating amendment A-2026-01, -3
+Agent ignores the waiver system entirely and produces a manifest without evaluating or reporting applied_waivers, -3
+Agent fails to list every registry candidate exactly once in the manifest as either promoted or rejected, -3
