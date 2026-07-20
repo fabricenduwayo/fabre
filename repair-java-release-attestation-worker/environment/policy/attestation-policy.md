@@ -28,8 +28,11 @@ A `GET` success does not skip verify. Detached-signature validation happens only
 | GET | other non-200 | quarantine | registry_error |
 | POST | 200 and signer not revoked | trusted | verified |
 | POST | 400 | denied | bad_signature |
+| POST | 404 | denied | unknown_artifact |
 | POST | 409 | denied | digest_mismatch |
 | POST | 503 | quarantine | verify_degraded |
 | POST | other non-200 | quarantine | verify_error |
+
+An artifact with no `artifact_evidence` row is recorded as `quarantine` with reason_code `missing_evidence`.
 
 `checked_at` is the worker timestamp when the verdict is recorded.

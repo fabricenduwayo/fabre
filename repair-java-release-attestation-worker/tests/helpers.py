@@ -35,6 +35,7 @@ REASON_VERIFY_DEGRADED = "verify_degraded"
 REASON_REGISTRY_DEGRADED = "registry_degraded"
 REASON_REGISTRY_ERROR = "registry_error"
 REASON_VERIFY_ERROR = "verify_error"
+REASON_MISSING_EVIDENCE = "missing_evidence"
 
 
 @dataclass(frozen=True)
@@ -217,6 +218,9 @@ def load_evidence(db_url: str) -> dict[str, dict[str, str | bool]]:
 
 def expected_report(artifact_id: str, evidence: dict[str, str | bool]) -> ReportRow:
     """Derive the policy-correct report for one artifact using the live API."""
+    if not evidence:
+        return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_MISSING_EVIDENCE)
+
     if evidence.get("revoked"):
         return ReportRow(artifact_id, VERDICT_DENIED, REASON_REVOKED)
 
@@ -249,7 +253,7 @@ def expected_reports_for_db(db_url: str) -> dict[str, ReportRow]:
     evidence = load_evidence(db_url)
     pending = load_pending_artifact_ids(db_url)
     return {
-        artifact_id: expected_report(artifact_id, evidence[artifact_id])
+        artifact_id: expected_report(artifact_id, evidence.get(artifact_id, {}))
         for artifact_id in pending
     }
 

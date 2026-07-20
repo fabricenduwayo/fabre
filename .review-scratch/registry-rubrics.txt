@@ -1,5 +1,3 @@
-reconcile-spring-boot-model-registry-with-h2-experiment — flat rubric (non-milestone)
-(paste into platform test_rubrics; no "# Rubric N" header; scores restricted to +1/+2/+3/+5 and -1/-2/-3/-5; positive total must stay <= 40)
 Agent implements operative validation run selection correctly: filters by status completed, applies transitive voiding via supersedes_run_id chains (A-2026-05, A-2026-08), then selects the temporally latest non-voided completed run, +5
 Agent implements Gate 2 calibration by replaying calibration_events through the earlier of decision_at and operative run captured_at (A-2026-07, A-2026-14), with correct event ordering by occurred_at then event_id (A-2026-09), +5
 Agent implements waiver lifecycle correctly: evaluates waiver_events at decision_at, validates paired replacement transactions (reciprocal events, same occurred_at, matching model/version/reason/anchors_run_id/suppression_group), determines active waivers in half-open valid_from to valid_until interval (A-2026-06), +5

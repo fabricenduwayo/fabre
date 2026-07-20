@@ -7,6 +7,7 @@
 **/.ruff_cache/
 **/*.mv.db
 **/*.trace.db
-*.log
+**/*.log
+jobs/
 solution/
 tests/

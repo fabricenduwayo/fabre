@@ -4,9 +4,10 @@ version = "2.0"
 author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
-category = "software-engineering"
+category = "security"
 subcategories = [
     "db_interaction",
+    "api_integration",
 ]
 number_of_milestones = 0
 codebase_size = "minimal"

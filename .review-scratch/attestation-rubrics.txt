@@ -1,5 +1,3 @@
-repair-java-release-attestation-worker — flat rubric (non-milestone)
-(paste into platform test_rubrics; scores restricted to +1/+2/+3/+5 and -1/-2/-3/-5; positive total must stay <= 40)
 Agent drains pending_attestations in enqueued_at order before writing attestation_reports, +2
 Agent uses artifact_evidence.sha256_digest from H2 as the POST /verify digest instead of registry_digest from GET, +5
 Agent calls POST /verify with the detached_signature from GET after a successful artifact lookup, +5
