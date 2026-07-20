@@ -25,13 +25,8 @@ COPY attest-objects/ /app/attest-objects/
 RUN chmod +x /app/attest-objects/build.sh \
     && bash /app/attest-objects/build.sh
 
+COPY policy/ /app/policy/
 COPY blob-store/ /app/blob-store/
-# The service is here to be exercised, not read. Compile it, then drop the
-# sources so the store's behaviour is discovered by running it, not by reading
-# how it decides.
-RUN chmod +x /app/blob-store/build.sh \
-    && bash /app/blob-store/build.sh \
-    && rm -rf /app/blob-store/src /app/blob-store/sources.txt /app/blob-store/build.sh
 
 # Build the shipped store: schema and seed load into an H2 file whose blob and
 # chunk files sit alongside it under /app/store.

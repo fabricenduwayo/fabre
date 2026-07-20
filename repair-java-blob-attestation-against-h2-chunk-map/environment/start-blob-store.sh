@@ -8,7 +8,7 @@ if curl -sf "http://localhost:${PORT}/health" >/dev/null 2>&1; then
     exit 0
 fi
 
-nohup java -cp "/app/blob-store/classes:/app/lib/*" \
+nohup java -cp "/app/lib/*" \
     com.snorkel.store.StoreServer "${PORT}" \
     >/var/log/blob-store.log 2>&1 &
 
