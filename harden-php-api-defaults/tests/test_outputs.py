@@ -379,11 +379,25 @@ def test_secret_and_generation_are_live_deployment_inputs():
 
 
 def envelope_strings():
-    """Raw credential envelope plus its string values, without pinning key names."""
+    """Raw credential envelope plus every string in it, at any nesting depth.
+
+    The envelope shape is implementation-defined, so this pins neither key names
+    nor structure: a digest counts wherever it is stored.
+    """
     with open(TOKEN_FILE, encoding="utf-8") as handle:
         raw = handle.read()
-    values = {v for v in json.loads(raw).values() if isinstance(v, str)}
-    return raw, values
+
+    def walk(node):
+        if isinstance(node, str):
+            yield node
+        elif isinstance(node, dict):
+            for value in node.values():
+                yield from walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                yield from walk(value)
+
+    return raw, set(walk(json.loads(raw)))
 
 
 def test_token_state_is_nonrecoverable_and_owner_only():
