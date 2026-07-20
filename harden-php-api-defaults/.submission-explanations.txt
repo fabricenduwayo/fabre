@@ -1,6 +1,6 @@
 DIFFICULTY
 
-Agents must reconcile a long amended hardening standard across PHP file state and a live SQLite ledger. Sponsorship has phases, secret rotation clears in-flight progress, and an allowed-origin invalid-token denial now revokes only that origin's sponsorship. Every state mutation remains gated by its audit append under the credential lock. The denial fence composes request classification, origin resolution, phase freshness, rollback, and later re-sponsorship without disturbing another origin or an existing confirmation.
+Agents must reconcile an amended hardening standard across PHP file state and a live SQLite ledger. Sponsorship has phases, secret rotation clears in-flight progress, and an allowed-origin invalid-token denial now revokes only that origin's sponsorship. Every state mutation remains gated by its audit append under the credential lock. The denial fence composes request classification, origin resolution, phase freshness, rollback, and later re-sponsorship without disturbing another origin or an existing confirmation.
 
 SOLUTION
 

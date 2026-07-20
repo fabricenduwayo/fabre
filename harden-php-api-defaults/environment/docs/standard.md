@@ -184,15 +184,18 @@ The ledger is an operational record that predates the current deployment and **a
 
 The wildcard value `*` shall never be emitted. *(Appendix G amends the allowlist.)*
 
-**Implementation guidance.** Comparison is exact; `https://harbordesk.internal` and `https://harbordesk.internal/` are different strings and only the former matches.
+The allowlist is defined solely by this Standard as amended; it shall not be read from, extended by, or overridden by any node-local file, environment variable, or other deployment data. A legacy `data/allowed_origins` file may be present on the node from an earlier configuration and is **not** policy: it shall not affect any grant.
 
-**Verification.** Allowed origins receive an exact echoed grant; all other origins receive none.
+**Implementation guidance.** Comparison is exact; `https://harbordesk.internal` and `https://harbordesk.internal/` are different strings and only the former matches. Build the allowlist from this Standard, not from any origins file the deployment happens to ship.
+
+**Verification.** Allowed origins receive an exact echoed grant; all other origins receive none. Rewriting or removing a node-local origins file does not change any grant.
 
 **References.** Governing Security Policy GSP-2024 §5.1; Baseline Configuration Guide BCG-2.2
 
 **Revision history.**
 - 2023-02: initial publication of CO-ORIGIN-ALLOW.
 - 2024-06: clarified exact-match semantics.
+- 2026-03: clarified that the allowlist is Standard-defined and not file-sourced.
 
 
 ### CO-PREFLIGHT — Preflight handling
@@ -249,7 +252,7 @@ The following amendments are in force and **supersede** the body of the referenc
 
 ### G-2026-01 — amends CO-ORIGIN-ALLOW
 
-The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches.
+The origin allowlist in CO-ORIGIN-ALLOW is extended to add the operations console origin `https://ops.harbordesk.internal`. The allowlist is therefore exactly `https://harbordesk.internal` and `https://ops.harbordesk.internal`. Exact-match semantics are unchanged: neither a trailing slash nor a differing port matches. This list is closed and Standard-defined: it is not read from, added to, or overridden by any node-local file (including a legacy `data/allowed_origins` file), environment variable, or deployment data.
 
 
 ### G-2026-02 — amends CO-PREFLIGHT
