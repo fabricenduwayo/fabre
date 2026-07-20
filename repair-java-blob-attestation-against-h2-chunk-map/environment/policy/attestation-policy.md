@@ -37,3 +37,16 @@ which is not necessarily the one that is cheapest to read back. Establishing
 which representation is authoritative is part of attesting an object correctly,
 and attesting against the wrong one clears altered objects and condemns sound
 ones.
+
+## Recorded outcome
+
+The auditor records its findings at `/app/build/attestation-report.json` with
+`intact`, `corrupt`, `unattestable`, and `conflicts` at the top level. `intact`
+is a list of object ids. Each `corrupt` and `unattestable` entry carries
+`object_id` and a `reason`: `corrupt` is always `digest_mismatch`, and
+`unattestable` is `missing_content` when the bytes cannot be read or
+`unsupported_digest` when the declared algorithm is not sha256. Each `conflicts`
+entry carries `object_id`, `cache_status` for what the store asserts (`verified`
+or `failed`), and `actual_status` for the recomputed verdict (`intact`,
+`corrupt`, or `unattestable`). The findings are verdicts and never contain
+reconstructed object bytes.
