@@ -1,0 +1,42 @@
+version = "2.0"
+
+[metadata]
+author_name = "Fabrice Nduwayo"
+author_email = "fabrice.nduwayo12@gmail.com"
+difficulty = "medium"
+category = "software-engineering"
+subcategories = [
+    "db_interaction",
+]
+number_of_milestones = 0
+codebase_size = "minimal"
+languages = [
+    "java",
+    "sql",
+    "bash",
+]
+tags = [
+    "attestation",
+    "release-governance",
+    "h2",
+    "jdbc",
+    "http-api",
+]
+expert_time_estimate_min = 90
+junior_time_estimate_min = 240
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 900.0
+
+[environment]
+os = "linux"
+allow_internet = false
+build_timeout_sec = 1200.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 8192
+workdir = "/app"

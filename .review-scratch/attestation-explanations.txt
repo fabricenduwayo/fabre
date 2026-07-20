@@ -1,0 +1,5 @@
+Agents must reconcile three sources: pending rows in H2, canonical digest and revocation in artifact_evidence, and a bundled HTTP API that can return stale registry_digest values. The broken worker skips detached-signature verify on GET success, posts the registry digest, and mishandles 409. Getting every verdict and reason_code right requires reading the short policy table and wiring JDBC plus two HTTP calls in loop order.
+
+The oracle replaces Worker.java so Main drains pending_attestations, checks H2 revocation first, GETs artifact metadata, POSTs /verify with the H2 digest and detached_signature, maps status codes to trusted/denied/quarantine, and MERGEs attestation_reports. solve.sh copies the solution sources, rebuilds with build.sh, and runs the CLI against the default JDBC URL.
+
+Pytest confirms /health, compares shipped attestation_reports to policy-derived expectations via live API calls, and reruns the agent-built worker on cloned H2 stores with variant pending rows (unknown artifact denied, live artifact trusted). A probe test shows registry_digest alone returns 409 from /verify for art-beta.

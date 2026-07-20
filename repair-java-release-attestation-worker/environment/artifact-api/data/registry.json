@@ -1,0 +1,47 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "art-alpha",
+      "version": "2.4.1",
+      "registry_digest": "d1111111111111111111111111111111111111111111111111111111111111",
+      "detached_signature": "sig-d1111111-key-a",
+      "signer_key_id": "key-a"
+    },
+    {
+      "artifact_id": "art-beta",
+      "version": "2.4.0",
+      "registry_digest": "d9999999999999999999999999999999999999999999999999999999999999",
+      "detached_signature": "sig-d2222222-key-b",
+      "signer_key_id": "key-b"
+    },
+    {
+      "artifact_id": "art-gamma",
+      "version": "1.9.0",
+      "registry_digest": "d3333333333333333333333333333333333333333333333333333333333333",
+      "detached_signature": "sig-d3333333-key-c",
+      "signer_key_id": "key-c"
+    },
+    {
+      "artifact_id": "art-delta",
+      "version": "2.3.9",
+      "registry_digest": "d4444444444444444444444444444444444444444444444444444444444444",
+      "detached_signature": "sig-bad00000-key-a",
+      "signer_key_id": "key-a"
+    },
+    {
+      "artifact_id": "art-epsilon",
+      "version": "1.8.2",
+      "registry_digest": "d5555555555555555555555555555555555555555555555555555555555555",
+      "detached_signature": "sig-d5555555-key-b",
+      "signer_key_id": "key-b",
+      "verify_degraded": true
+    },
+    {
+      "artifact_id": "art-live",
+      "version": "3.0.0",
+      "registry_digest": "dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "detached_signature": "sig-dbbbbbbb-key-b",
+      "signer_key_id": "key-b"
+    }
+  ]
+}

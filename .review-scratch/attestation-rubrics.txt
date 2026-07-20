@@ -1,0 +1,14 @@
+repair-java-release-attestation-worker — flat rubric (non-milestone)
+(paste into platform test_rubrics; scores restricted to +1/+2/+3/+5 and -1/-2/-3/-5; positive total must stay <= 40)
+Agent drains pending_attestations in enqueued_at order before writing attestation_reports, +2
+Agent uses artifact_evidence.sha256_digest from H2 as the POST /verify digest instead of registry_digest from GET, +5
+Agent calls POST /verify with the detached_signature from GET after a successful artifact lookup, +5
+Agent denies revoked_signer from H2 before trusting registry metadata, +3
+Agent maps GET and POST HTTP status codes to verdict and reason_code per attestation-policy.md, +3
+Agent writes one attestation_reports row per pending artifact with trusted, denied, or quarantine, +3
+Agent builds the worker with build.sh and accepts an optional JDBC URL argument, +2
+Agent trusts a GET /artifacts/{id} 200 response without running POST /verify, -5
+Agent posts registry_digest to /verify instead of the H2 canonical digest, -3
+Agent ignores the H2 revoked flag and relies on registry JSON, -3
+Agent treats HTTP 409 from POST /verify as trusted, -3
+Agent edits policy files, registry data, or the H2 store to force verdicts instead of fixing worker logic, -5
