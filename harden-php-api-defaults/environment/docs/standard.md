@@ -277,7 +277,7 @@ The evaluation order of AC-BOOTSTRAP is amended so that the already-bootstrapped
 
 ### G-2026-06 — amends AU-LEDGER-SCOPE
 
-Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout that records the request `origin` for every audited row (including denials) and no longer requires `actor`, while carrying every pre-existing historical row forward unchanged with the same row ids. When migrating legacy rows that predate the `origin` column, the stored `origin` value shall be SQL `NULL`; legacy `actor` values must not be copied into `origin`. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
+Migration of the legacy ledger is made explicit. The on-disk ledger is in a legacy layout carrying a non-null `actor` column and lacking an `origin` column, which is why current writes fail. Reconciliation shall move the ledger to a layout whose columns are exactly `id`, `ts`, `event`, `route`, `origin`, `decision`, and `reason`: the request `origin` is recorded for every audited row (including denials), and the legacy `actor` column is removed from the table rather than merely left nullable. Adding an `origin` column while retaining `actor` is non-compliant. Reconciliation shall carry every pre-existing historical row forward unchanged with the same row ids. When migrating legacy rows that predate the `origin` column, the stored `origin` value shall be SQL `NULL`; legacy `actor` values must not be copied into `origin`. When a request carries no `Origin` header, the stored `origin` value for that audited row shall be SQL `NULL`, not an empty string.
 
 
 ### G-2026-07 — amends NW-TLS-CIPHERS
@@ -377,7 +377,7 @@ An accepted `GET /health` request that consumes a predecessor-overlap allowance 
 
 ### G-2026-26 — amends AC-CREDENTIAL-CUTOVER
 
-A first successful AC-BOOTSTRAP activates its credential immediately. Every later generation-authorized bootstrap still returns `201` with the existing `token` JSON shape, but stages that credential as a pending successor instead of displacing the current credential. A pending successor becomes current only after successful health presentations from both distinct origins in the amended CO-ORIGIN-ALLOW allowlist. Repeated presentations from one allowed origin do not complete this confirmation quorum. Until activation, the existing current credential continues to verify normally and no predecessor allowance is created.
+A first successful AC-BOOTSTRAP activates its credential immediately. Every later generation-authorized bootstrap still returns `201` with the existing `token` JSON shape, but stages that credential as a pending successor instead of displacing the current credential. A pending successor becomes current only after successful health presentations from both distinct origins in the amended CO-ORIGIN-ALLOW allowlist. Repeated presentations from one allowed origin do not complete this confirmation quorum. Those confirming presentations are of the pending successor credential itself, and each is further gated by G-2026-27 and by the incumbent-credential sponsorship of G-2026-30; all three amendments apply together. Until activation, the existing current credential continues to verify normally and no predecessor allowance is created.
 
 
 ### G-2026-27 — amends AC-CREDENTIAL-CUTOVER
