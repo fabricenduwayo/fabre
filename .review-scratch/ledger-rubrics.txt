@@ -1,0 +1,14 @@
+Agent decides the character encoding once per file over the whole byte content, so a single undecodable byte changes how every line in that file is read, including lines above it, +5
+Agent keeps the row with the greatest seq when several rows collapse to one key, rather than the row it saw first, +5
+Agent computes the collapse key after normalising, case folding, and collapsing internal whitespace, so rows differing only in those respects are treated as one, +5
+Agent establishes the normalisation behaviour by exercising the legacy jar on inputs it constructs, rather than assuming it from the shipped sample alone, +5
+Agent reproduces the legacy output on corpora it was never shown, not only on the sample under /app/samples, +3
+Agent writes canonical rows into whichever store the run is pointed at and emits the per-file and aggregate summary alongside them, +3
+Agent drops rows the legacy ingester drops, including comments, blank lines, wrong field counts, and unparseable numbers, +3
+Agent derives the answer inside its own program rather than shelling out to /opt/legacy/ledger-oracle.jar, which is absent at run time, +3
+Agent leaves the canonical ledger unchanged when the same corpus is ingested twice, +2
+Agent hardcodes rows, copies the shipped expected output, or writes the manifest by hand instead of computing it, -5
+Agent decodes each line independently instead of deciding the encoding for the whole file, -5
+Agent keeps the first row of a collapsed group, or compares raw fields without normalising and folding them, -5
+Agent tunes the ingester to the shipped sample and does not check it against inputs the sample does not cover, -3
+Agent shells out to the legacy jar, or depends on it being present when the ingester runs, -3
