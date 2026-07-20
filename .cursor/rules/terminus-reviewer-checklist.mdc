@@ -1,0 +1,163 @@
+---
+description: Official Terminal Bench Edition 2 review checklist - the criteria and severities a reviewer grades against. Use it as the pre-submission bar, not just when reviewing others.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Terminus reviewer checklist (TB Edition 2)
+
+Source: `https://snorkel-ai.github.io/Terminus-EC-Training-stateful/portal/docs/reviewing-tasks/reviewer-checklist`
+(raw markdown at `/Terminus-EC-Training-stateful/docs/reviewing-tasks/reviewer-checklist.md`). Captured 2026-07-19.
+
+Apply this to my own tasks before submitting, not only when reviewing someone else's.
+
+## How to read severities
+
+- **High** - if any High criterion fails, the task must not be accepted. Every High must pass, every time.
+- **Medium** - failing several Mediums means the task should not be accepted. A single Medium
+  failure can still be accepted, but note it in the acceptance comments.
+- **Low** - Low-only failures do not block acceptance. If the task is going back for revision
+  anyway (a High or Medium failure), fold the Low fixes into the revision notes too.
+
+## Instruction prompt
+
+- **[High] Concise.** One sentence to three paragraphs. Reads like a human prompting a coding
+  agent: no emojis, little markdown, no long multi-requirement checklists. We want hard *coding*
+  problems, not hard *instruction-following*.
+- **[High] Well specified.** The goal must be clear. Reject tasks that are hard mainly because of
+  a pile of edge cases and requirements.
+- **[High] Interesting.** Some group of developers must find it useful or interesting.
+- **[High] No solution hints.** Requirements yes; stepwise instructions or hints no.
+- **[High] Environment contains no hidden instructions or hints.** No file, comment, README,
+  config, script, or TODO may carry a step-by-step walkthrough or reveal the solution approach.
+- **[High] Spec/doc files are realistic and do not bypass instruction rules.** Environment docs
+  (`spec.md`, architecture docs, API contracts, DB schemas, business-logic specs) must:
+  1. define only **what** the requirements/schemas/protocols are, never a step-by-step solution guide;
+  2. **not** be used to move a task's logical instructions out of `instruction.md` to dodge its
+     length limit - the prompt and goals stay in `instruction.md`;
+  3. read like a realistic engineering document, not an overly polished, hyper-structured
+     LLM-style prompt extension.
+- **[High] Unique** vs TB2, TB3, and Snorkel Terminal Bench Edition 1. Non-trivially different
+  initial state/instructions **or** non-trivially different expected output.
+- **[High] Absolute paths** for every path referenced in the instruction.
+- **[Medium] No canary string** in `instruction.md` (signals an old skeleton; it gets passed in the prompt).
+- **[Medium] No task name** in `instruction.md` (often a leftover first-line comment).
+
+## Environment
+
+- **[High] No web content at build time** other than package dependencies. Anything else must be stored locally.
+- **[High] `allow_internet` matches actual need.** `false` (default) when the task is solvable
+  offline with the provided files/deps. `true` **only** when genuinely required (current/external
+  info, web resources, an external model that cannot reasonably be bundled). Do not set `true` for
+  convenience or to look complex - an eval checks whether internet is actually needed.
+- **[High] Dependencies pinned** (High for packages; apt excluded).
+- **[High] No context from outside `environment/`** (e.g. no docker-compose `context: ../`).
+- **[High] No solution or ground truth in the environment.** Oracle scripts live only in
+  `solution/`; anything needed to verify lives only in `tests/`.
+- **[High] No dangerous Docker ops:** no `--privileged`, no `SYS_ADMIN`/`NET_ADMIN`/`SYS_MODULE`,
+  no mounting `/var/run/docker.sock`.
+- **[High] No conflicting volume mounts.** These are reserved for Harbor: `/logs/artifacts/`,
+  `/logs/verifier/`, `/tests/`, `/solution/`. Prefer no volume mounts at all.
+- **[High] No AI-framework scaffolding filenames** in the task environment - `CLAUDE.md`,
+  `skills.md`, and similar. They signal incomplete cleanup and raise authenticity concerns.
+- **[High] Every base image digest-pinned.** Every `FROM`, and any pulled `image:` in
+  docker-compose, needs `@sha256:<digest>`. Tags may stay for readability; tag-only is not acceptable.
+- **[High] Base image canonical, or justified.** Use a canonical Terminal-Bench base image for the
+  task's language when one matches. Outcome matrix:
+  - canonical -> passes
+  - non-canonical + present, credible justification (Dockerfile comment or task README) -> passes
+  - non-canonical + missing/vague/boilerplate justification -> blocked
+  Reject a justification that describes something a canonical image already covers.
+- **[High] Build context small:** `environment/` <= 100 MiB total, no single file > 50 MiB.
+- **[Medium] Apt clean and reproducible:** one
+  `apt-get update && apt-get install -y --no-install-recommends ... && rm -rf /var/lib/apt/lists/*`
+  per stage, no `apt-get upgrade`, pin niche packages where drift would change behavior.
+- **[Medium] `.dockerignore`** on any non-trivial environment: `.git`, `__pycache__/`, `*.pyc`,
+  `node_modules/`, `.env`, `solution/`, `tests/`.
+- **[Low] Avoid heredocs** in the Dockerfile (`cat << EOF`, `RUN cat > /app/script <<'EOF'`).
+
+## Oracle solution
+
+- **[High] Passes consistently, never flaky.** No randomization, no latency-dependent behavior,
+  no flaky tests.
+- **[High] Internet use matches `allow_internet`.** With `false`, the oracle must not download
+  anything; all solution dependencies are preinstalled in the environment.
+- **[High] Reflects `instruction.md`.** It must actually solve every requirement stated in the
+  instruction, not just the tested ones, and must be a real implementation rather than a
+  hardcoded answer.
+
+## Verifiers
+
+- **[High] Cannot exit before a reward is assigned.** `test.sh` must write `reward.txt` on success
+  and failure. Exiting early is acceptable only where continuing would unfairly penalize the agent.
+  **Do not flag a missing trailing `exit`:** the `if ... fi` reward block is the canonical end of
+  `test.sh`. Harbor reads `/logs/verifier/reward.txt`, not the exit code. Adding `exit $?` after
+  `fi` fails the `check_test_sh` gate.
+- **[High] Identical logic for oracle and agent runs.** No conditional branches that grade them differently.
+- **[High] Verifier internet use matches `allow_internet`.** With `false`, all verifier deps are
+  baked into the Dockerfile, never downloaded at runtime.
+- **[High] Binary rewards only** (0 or 1). No partial credit based on how many tests passed.
+- **[High] Aligned with the instruction.** Never test a requirement that is not explicitly or
+  implicitly stated in the instruction.
+- **[High] Check correctness, not just format.** Not merely high-level shape or file existence.
+
+## Rubrics
+
+Full rules in `terminus-rubrics.mdc`. Reviewer-graded criteria:
+
+- **[High]** No references to `/tests/` logic; no references to `task.toml` / `instruction.md`
+  metadata (the agent has no context for them).
+- **[High]** At least 3 negative criteria.
+- **[High]** Scores are one of +/- 1, 2, 3, 5, and positives carry an explicit `+`.
+- **[High]** Correct block format: one criterion per line, starts with `Agent`, ends `, <score>`.
+  Milestone tasks use `# Rubric N` headers per milestone; non-milestone tasks use a flat list.
+- **[High]** Criteria are detailed and precise, not vague.
+- **[Medium]** Each milestone rubric has >= 1 negative criterion.
+- **[Medium]** Scores map to importance (critical -> +/-5).
+- **[Medium]** Criteria phrased positively with a negative reward, not negated sentences.
+- **[Medium]** No mention of oracle/NOP runs.
+- **[Low]** 10-40 points per milestone.
+
+## Task structure
+
+- **[High] Required files.**
+  - Non-milestone: `environment/` (with `Dockerfile`), `solution/solve.sh`, `tests/test.sh`,
+    `instruction.md`, `task.toml`.
+  - Milestone: `environment/`, `task.toml` with one `[[steps]]` block per milestone, and
+    `steps/milestone_N/` each containing `instruction.md`, `tests/test.sh` + `tests/test_mN.py`,
+    `solution/solve.sh` + `solution/solveN.sh`. Milestone tasks must **not** have root-level
+    `instruction.md`, `tests/`, `solution/`, or `milestone_x.md`.
+- **[Low] No unnecessary files in the task's parent directory:** leftover `jobs/` logs, `README.md`,
+  stray `data/` (environment data belongs in `environment/`).
+
+## Task metadata
+
+- **[High] All required `task.toml` fields.** `version = "2.0"`; `[metadata]` with `author_name`,
+  `author_email`, `category`, `subcategories`, `difficulty`, `codebase_size`,
+  `number_of_milestones`, `languages`, `tags`, `expert_time_estimate_min`,
+  `junior_time_estimate_min`. Non-milestone only: `[verifier] timeout_sec`, `[agent] timeout_sec`.
+  Always: `[environment]` with `build_timeout_sec`, `cpus`, `memory_mb`, `storage_mb`,
+  `allow_internet`. Milestone only: `[environment] workdir` plus one `[[steps]]` block per
+  milestone with `[steps.agent] timeout_sec` and `[steps.verifier] timeout_sec`.
+- **[High] Flag compose tasks:** `custom_docker_compose = true` for any docker-compose task, plus
+  `is_multi_container = true` when it defines a multi-container system.
+- **[Medium] Tags, languages, category, subcategories must actually match the task.**
+- **[Low] Do not reject for omitted optional resource fields.** `gpus`, `gpu_types`, and
+  `docker_flags` are valid but **optional**. TB2 tasks are not required to use GPU, so a missing or
+  blank block is fine. `gpu_types` only matters when `gpus > 0`.
+
+## Milestone tasks
+
+- **[High] At least 2 milestones.** A single milestone is not a milestone task - convert it to a
+  non-milestone task or add another milestone.
+- **[High] `steps/` layout** with per-milestone `instruction.md`, `tests/`, `solution/`.
+- **[High] One `[[steps]]` block per milestone**, `name = "milestone_N"` matching the directory,
+  count equal to `number_of_milestones`, each with agent and verifier `timeout_sec`.
+- **[High] `solveN.sh` per milestone**, scoped to only that milestone, plus a `solve.sh` wrapper
+  that invokes it.
+- **[High] `test_mN.py` per milestone** with a `TestMilestoneN` class, plus a `test.sh` runner that
+  writes `/logs/verifier/reward.txt`. `solve1.sh` pairs with `test_m1.py`, and so on. Tests score
+  only that milestone.
+- **[Medium] Per-milestone `instruction.md` covers only that milestone.** Milestone 1 also carries
+  the overall task context; later ones can be shorter.

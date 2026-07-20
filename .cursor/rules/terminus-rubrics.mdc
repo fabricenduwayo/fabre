@@ -1,0 +1,103 @@
+---
+description: Rubric authoring rules for Snorkel Terminus / Terminal Bench Edition 2, from the official portal Rubrics page.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Terminus rubrics
+
+Source: `https://snorkel-ai.github.io/Terminus-EC-Training-stateful/portal/docs/understanding-tasks/rubrics`
+(raw markdown at `/Terminus-EC-Training-stateful/docs/understanding-tasks/rubrics.md`). Captured 2026-07-19.
+
+Rubrics grade the **agent's trace/process**, not the final unit-test result. They live in the
+Snorkel platform `test_rubrics` field, never in the ZIP.
+
+## Hard formatting rules (CI-validated, High severity)
+
+1. Every criterion is a **single line** and must **start with the word `Agent`**.
+2. Every line must **end with a comma, a space, then the score** (e.g. `, +3`).
+3. Scores must be one of **+/- 1, 2, 3, 5**.
+4. **Never use 4.** `+4` / `-4` are forbidden.
+5. Positive scores must carry an **explicit leading `+`** (`+3`, never bare `3`). Unsigned
+   positives get sent back for revision.
+6. **At least three** criteria must assign **negative** rewards.
+
+## Point totals
+
+- Non-milestone: positive criteria must sum to **10-40 points** (the max an agent can score).
+- Milestone: **each** milestone block is worth 10-40, so N milestones total between
+  `N x 10` and `N x 40`.
+- Milestone tasks split the rubric into `# Rubric 1`, `# Rubric 2`, ... header blocks, each
+  followed by that milestone's criterion lines. Each milestone block needs >= 1 negative criterion.
+- Non-milestone tasks use a flat list. A single `# Rubric 1` header is tolerated but not
+  required; never use `# Rubric 2+` on a non-milestone task.
+
+## Importance hierarchy (map score to severity)
+
+- **Critical (+/-5):** safety (no `rm -rf /`), core correctness, leaking secrets.
+- **Major (+/-3):** reliability, verifying artifacts, error recovery.
+- **Minor (+/-1 to +/-2):** inspection (`head`/`cat`), hygiene, appropriate tool flags.
+
+## Always phrase criteria positively, score negatively
+
+Do not negate the sentence. State the fact; let the sign carry the judgment.
+
+```text
+Bad:   Agent does not access the /app/secret/ directory, +1
+Good:  Agent accesses the /app/secret/ directory, -1
+```
+
+### The "opposite" trap
+
+Do not downgrade a severe negative into a minor positive reward.
+
+```text
+Bad (rewards a basic expectation):  Agent performs all operations in the /app directory, +1
+Good (penalizes the violation):     Agent operates outside of the /app directory, -5
+```
+
+## What rubrics must never contain
+
+- References to tests in `/tests/` or to running pytest. Those run after the agent's attempt and
+  are not part of the trace. (Exception: the task itself is a testing task.)
+- Meta-checks about the agent reading `task.toml` or `instruction.md`. The agent has no context
+  for those files and they are passed automatically, so they are not engineering work.
+- Any mention of oracle or NOP runs (e.g. "oracle passes consistently"). The agent has no context
+  for them.
+- Vague or non-binary criteria ("Agent handles edge cases in logic, +2"). Each criterion must
+  describe a specific, verifiable action.
+
+## Good vs bad
+
+| Aspect | Good | Bad |
+|---|---|---|
+| Formatting | `Agent compiles contracts using forge build and surfaces the output, +2` | `Agent parses input correctly, +2` (vague) |
+| Specificity | `Agent verifies blockchain connectivity via curl before deployment, +1` | `Agent handles edge cases in logic, +2` (not binary) |
+| Values | `+1, +2, +3, +5` | `Agent determines schema offsets, +4` (forbidden 4) |
+| Logic | `Agent repeats the same failing command >=3 times, -1` | unsigned or malformed scores |
+
+## Platform workflow (order matters)
+
+1. **Generate:** tick the rubric checkbox, then submit for CI checks (do *not* send to reviewer).
+2. **Edit:** when the submission returns with a generated rubric in the textbox, edit it for
+   completeness and accuracy. Treat the synthetic draft as a baseline only - refine it, extend it,
+   and make it task-specific.
+3. **Untick the checkbox** before sending to reviewer. Submitting with it still checked can
+   **overwrite** the rubric you just edited.
+4. Submit.
+
+Field names on the platform: `test_rubrics` (the text) and `checkbox_evaluate_rubrics` (the
+generate toggle).
+
+## Authoring checklist
+
+- [ ] Every line starts with `Agent` and ends with `, <score>`.
+- [ ] Only +/- 1, 2, 3, 5. No 4s.
+- [ ] Positives carry an explicit `+`.
+- [ ] At least three negative criteria.
+- [ ] Positive total lands in 10-40 (per milestone for milestone tasks).
+- [ ] Scores map to importance (critical work is +/-5, not +/-1).
+- [ ] Criteria are trace-evidenced actions, not the final pytest result.
+- [ ] Synthetic draft criteria rewritten to be task-specific, not generic.
+- [ ] A perfect score should be rare - these are frontier tasks.
