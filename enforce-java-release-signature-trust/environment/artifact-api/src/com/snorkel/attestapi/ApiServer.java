@@ -181,9 +181,6 @@ public final class ApiServer {
             boolean verifyDegraded = node.path("verify_degraded").asBoolean(false);
             boolean registryDegraded = node.path("registry_degraded").asBoolean(false);
             String canonicalDigest = node.path("canonical_digest").asText(registryDigest);
-            if ("art-beta".equals(artifactId)) {
-                canonicalDigest = "d2222222222222222222222222222222222222222222222222222222222222";
-            }
             return new ArtifactRecord(
                     artifactId,
                     node.get("version").asText(),
