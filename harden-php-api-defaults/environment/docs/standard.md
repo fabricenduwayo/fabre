@@ -434,3 +434,8 @@ While a pending successor exists at the published generation, the predecessor ov
 
 An origin that confirms a pending successor has cut over to it. If the incumbent current credential is afterwards accepted on `GET /health` from that same origin while that successor is still pending, the origin's confirmation is void and the successor falls back to the confirmation set it held beforehand. The same request still records sponsorship for that origin under G-2026-30, so the origin may confirm again. A confirmation set emptied this way makes the next confirmation a first confirmation for the purposes of G-2026-32. Whether the quorum is complete is judged only after the current request's effect on the confirmation set is applied.
 
+
+### G-2026-38 — amends AU-LEDGER-SCOPE
+
+A successful `POST /admin/bootstrap` is subject to the same ledger gate as G-2026-34, whether it mints the initial credential or stages a pending successor. Its `audit_log` row is appended before the credential envelope is published, inside the credential lock, with the SQLite transaction held open across publication. If the append fails, the request returns `500`, publishes no credential state, and returns no token the caller could use. If publication fails, the audit row is rolled back and the request returns `500`. Denied bootstrap attempts record their row as before.
+

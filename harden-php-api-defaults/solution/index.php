@@ -293,7 +293,12 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
 
     $presentedSecret = $_SERVER['HTTP_X_BOOTSTRAP_SECRET'] ?? null;
     try {
-        $result = with_token_state_lock($config, function () use ($config, $presentedSecret) {
+        $result = with_token_state_lock($config, function () use (
+            $config,
+            $presentedSecret,
+            $path,
+            $auditOrigin
+        ) {
             $generation = read_credential_generation($config);
             $record = read_token_state_unlocked($config);
             if ($generation === null) {
@@ -355,7 +360,17 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
                     strtolower(ascii_trim($liveSecret))
                 );
             }
-            write_token_state_unlocked($config, $state);
+            audit_log_then(
+                $config,
+                'bootstrap',
+                $path,
+                $auditOrigin,
+                'accepted',
+                null,
+                function () use ($config, $state) {
+                    write_token_state_unlocked($config, $state);
+                }
+            );
             return ['status' => 201, 'message' => null, 'reason' => null, 'token' => $token];
         });
     } catch (Throwable $error) {
@@ -364,7 +379,6 @@ if ($path === '/admin/bootstrap' && $method === 'POST') {
     }
 
     if ($result['status'] === 201) {
-        audit_log($config, 'bootstrap', $path, $auditOrigin, 'accepted', null);
         send_json($config, 201, ['token' => $result['token']]);
     } elseif ($result['reason'] !== null) {
         audit_log($config, 'bootstrap', $path, $auditOrigin, 'denied', $result['reason']);

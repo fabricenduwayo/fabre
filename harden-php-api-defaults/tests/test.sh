@@ -1,12 +1,13 @@
 #!/bin/bash
 set -uo pipefail
 
+mkdir -p /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+
 if [ "$PWD" = "/" ]; then
     echo "Error: No working directory set." >&2
-    exit 1
+    exit 0
 fi
-
-mkdir -p /logs/verifier
 
 APP=/app/harbordesk
 

@@ -1,5 +1,6 @@
 """Behavioral verifier for the amended HarborDesk API and credential lifecycle."""
 
+import hashlib
 import json
 import os
 import random
@@ -25,6 +26,7 @@ from helpers import (
     replay,
     request,
     reset_state,
+    seed_legacy_ledger,
     set_generation,
     shadow_audit_rows,
     simulate,
@@ -159,6 +161,186 @@ def test_cors_preflight_and_no_disclosure():
     assert "trace" not in body
 
 
+def set_bootstrap_audit_trigger(enabled):
+    """Turn a bootstrap audit-append failure on or off."""
+    conn = sqlite3.connect(AUDIT_DB, timeout=10)
+    try:
+        conn.execute("DROP TRIGGER IF EXISTS fail_bootstrap_audit")
+        if enabled:
+            conn.execute(
+                "CREATE TRIGGER fail_bootstrap_audit BEFORE INSERT ON audit_log "
+                "WHEN NEW.event = 'bootstrap' AND NEW.decision = 'accepted' "
+                "BEGIN SELECT RAISE(ABORT, 'blocked'); END"
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_failed_audit_append_cannot_publish_bootstrap_state():
+    """A bootstrap that cannot be audited mints nothing and publishes no state."""
+    reset_state()
+    # Reconcile the legacy ledger first: that rebuild drops triggers on audit_log.
+    assert health()[0] == 401
+
+    set_bootstrap_audit_trigger(True)
+    try:
+        assert bootstrap(read_secret())[0] == 500
+    finally:
+        set_bootstrap_audit_trigger(False)
+    assert not os.path.exists(TOKEN_FILE), "credential published without its audit row"
+    assert not [
+        row
+        for row in audit_rows()
+        if row["event"] == "bootstrap" and row["decision"] == "accepted"
+    ], "an accepted bootstrap row survived a failed append"
+
+    current = bootstrap_ok()
+    assert health(current, ALLOWED)[0] == 200
+
+    set_generation(INITIAL_GENERATION + 1)
+    with open(TOKEN_FILE, encoding="utf-8") as handle:
+        before = handle.read()
+    set_bootstrap_audit_trigger(True)
+    try:
+        assert bootstrap(read_secret())[0] == 500
+    finally:
+        set_bootstrap_audit_trigger(False)
+    with open(TOKEN_FILE, encoding="utf-8") as handle:
+        assert handle.read() == before, "successor staged without its audit row"
+    assert health(current, ALLOWED)[0] == 200
+
+    pending = bootstrap_ok()
+    activate_pending(current, pending)
+    assert health(pending, ALLOWED)[0] == 200
+
+
+def test_failed_publication_rolls_back_the_bootstrap_audit_row():
+    """If the envelope cannot be published, the audit row does not survive."""
+    reset_state()
+    # Reconcile the legacy ledger so audit_log carries the documented columns.
+    assert health()[0] == 401
+    if os.path.exists(TOKEN_FILE):
+        os.remove(TOKEN_FILE)
+    os.mkdir(TOKEN_FILE)
+    try:
+        before = len(audit_rows())
+        assert bootstrap(read_secret())[0] == 500
+        assert len(audit_rows()) == before, (
+            "an audit row survived a failed credential publication"
+        )
+    finally:
+        os.rmdir(TOKEN_FILE)
+
+    token = bootstrap_ok()
+    assert health(token, ALLOWED)[0] == 200
+
+
+def test_no_disclosure_on_unknown_routes_denials_and_failures():
+    """Unknown routes, denials, and an injected ledger fault reveal nothing internal."""
+    reset_state()
+    token = bootstrap_ok()
+    leaks = (
+        "Exception",
+        "Stack trace",
+        "SQLSTATE",
+        "SQLite3",
+        "/app/harbordesk",
+        ".php",
+        "Warning:",
+        "Fatal error",
+    )
+
+    def assert_clean(raw, headers, label):
+        assert header_ci(headers, "X-Debug-Mode") is None, f"{label}: debug header"
+        for needle in leaks:
+            assert needle not in raw, f"{label} leaked {needle!r}: {raw[:200]}"
+
+    for method, path in [
+        ("GET", "/nope"),
+        ("POST", "/nope"),
+        ("DELETE", "/health"),
+        ("PUT", "/admin/bootstrap"),
+    ]:
+        status, headers, raw, body = request(method, path)
+        assert status == 404, f"{method} {path} returned {status}"
+        assert body == {"error": "not found"}, f"{method} {path} body {body}"
+        assert_clean(raw, headers, f"{method} {path}")
+
+    status, headers, raw, _ = health()
+    assert status == 401
+    assert_clean(raw, headers, "missing credentials")
+    status, headers, raw, _ = health("not-a-real-token")
+    assert status == 401
+    assert_clean(raw, headers, "invalid token")
+    status, headers, raw, _ = bootstrap("wrong-secret")
+    assert status in (403, 409)
+    assert_clean(raw, headers, "wrong secret")
+
+    conn = sqlite3.connect(AUDIT_DB, timeout=10)
+    try:
+        conn.execute("DROP TRIGGER IF EXISTS fail_disclosure_audit")
+        conn.execute(
+            "CREATE TRIGGER fail_disclosure_audit BEFORE INSERT ON audit_log "
+            "BEGIN SELECT RAISE(ABORT, "
+            "'ledger blew up in /app/harbordesk/lib/audit.php'); END"
+        )
+        conn.commit()
+        status, headers, raw, _ = health(token, ALLOWED)
+        assert status == 500, f"injected ledger fault returned {status}"
+        assert_clean(raw, headers, "injected ledger fault")
+    finally:
+        conn.execute("DROP TRIGGER IF EXISTS fail_disclosure_audit")
+        conn.commit()
+        conn.close()
+
+
+def test_reconciled_ledger_keeps_history_and_documented_columns():
+    """Reconciliation yields exactly the documented columns and preserves history."""
+    reset_state()
+    expected_history = [
+        (1, "2026-01-02T08:00:00+00:00", "health", "/health", None, "accepted"),
+        (
+            2,
+            "2026-01-02T08:05:00+00:00",
+            "bootstrap",
+            "/admin/bootstrap",
+            None,
+            "denied",
+        ),
+    ]
+
+    def check_ledger(label):
+        conn = sqlite3.connect(AUDIT_DB, timeout=10)
+        try:
+            columns = [row[1] for row in conn.execute("PRAGMA table_info(audit_log)")]
+            assert columns == [
+                "id",
+                "ts",
+                "event",
+                "route",
+                "origin",
+                "decision",
+                "reason",
+            ], f"{label}: audit_log columns are {columns}"
+            rows = conn.execute(
+                "SELECT id, ts, event, route, origin, decision, reason "
+                "FROM audit_log WHERE reason = 'legacy_history' ORDER BY id"
+            ).fetchall()
+        finally:
+            conn.close()
+        assert [row[:6] for row in rows] == expected_history, (
+            f"{label}: seeded history changed to {rows}"
+        )
+
+    bootstrap_ok()
+    check_ledger("initial reconciliation")
+
+    seed_legacy_ledger()
+    assert health("not-a-real-token", ALLOWED)[0] == 401
+    check_ledger("live reconciliation")
+
+
 def test_bootstrap_order_secret_normalization_and_repeat():
     """Bootstrap normalizes the live secret and checks active state before it."""
     reset_state()
@@ -196,19 +378,63 @@ def test_secret_and_generation_are_live_deployment_inputs():
         handle.write(original + "\n")
 
 
+def envelope_strings():
+    """Raw credential envelope plus its string values, without pinning key names."""
+    with open(TOKEN_FILE, encoding="utf-8") as handle:
+        raw = handle.read()
+    values = {v for v in json.loads(raw).values() if isinstance(v, str)}
+    return raw, values
+
+
 def test_token_state_is_nonrecoverable_and_owner_only():
-    """Persisted current and predecessor state contains no raw bearer token."""
+    """Each lifecycle credential is stored only as its lowercase SHA-256 digest."""
+    reset_state()
+    first = bootstrap_ok()
+    digest = lambda token: hashlib.sha256(token.encode()).hexdigest()  # noqa: E731
+
+    raw, values = envelope_strings()
+    assert first not in raw and read_secret() not in raw
+    assert digest(first) in values, "current credential is not stored as its digest"
+
+    set_generation(INITIAL_GENERATION + 1)
+    second = bootstrap_ok()
+    raw, values = envelope_strings()
+    assert second not in raw and read_secret() not in raw
+    assert digest(second) in values, "pending credential is not stored as its digest"
+
+    activate_pending(first, second)
+    raw, values = envelope_strings()
+    assert first not in raw and second not in raw
+    assert digest(first) in values, "predecessor credential is not stored as its digest"
+    assert digest(second) in values, "activated credential is not stored as its digest"
+    assert all(
+        v == v.lower() for v in values if len(v) == 64
+    ), "digests must be lowercase hex"
+    assert stat.S_IMODE(os.stat(TOKEN_FILE).st_mode) == 0o600
+
+
+def test_credential_state_lives_only_in_admin_token():
+    """No sidecar file may carry credential state; only the lock may join it."""
     reset_state()
     first = bootstrap_ok()
     set_generation(INITIAL_GENERATION + 1)
     second = bootstrap_ok()
-    with open(TOKEN_FILE, encoding="utf-8") as handle:
-        stored = handle.read()
-    assert first not in stored
-    assert second not in stored
-    assert read_secret() not in stored
-    assert len(json.loads(stored)["pending_secret_digest"]) == 64
-    assert stat.S_IMODE(os.stat(TOKEN_FILE).st_mode) == 0o600
+    activate_pending(first, second)
+
+    data_dir = os.path.dirname(TOKEN_FILE)
+    permitted = {
+        "admin_token",
+        "admin_token.lock",
+        "allowed_origins",
+        "bootstrap_secret",
+        "credential_generation",
+    }
+    strays = [
+        name
+        for name in os.listdir(data_dir)
+        if name not in permitted and not name.startswith("audit.db")
+    ]
+    assert not strays, f"unexpected credential-state files: {sorted(strays)}"
 
 
 def test_health_reasons_and_origin_audit():
@@ -648,6 +874,44 @@ def test_pending_successor_freezes_predecessor_overlap():
         health(first, ALLOWED_2)[0],
         health(first, ALLOWED)[0],
     ] == [200, 200, 401]
+
+
+def test_repeating_a_confirmed_origin_keeps_the_other_sponsorship():
+    """Voiding one origin's confirmation must not disturb a fresh sponsorship."""
+    reset_state()
+    current = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    pending = bootstrap_ok()
+
+    assert health(current, ALLOWED)[0] == 200
+    assert health(pending, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+    assert health(current, ALLOWED)[0] == 200
+
+    assert health(pending, ALLOWED_2)[0] == 200, (
+        "the second origin's sponsorship should have survived the repeat"
+    )
+    assert audit_rows()[-1]["reason"] == "cutover_confirmation"
+
+
+def test_frozen_overlap_denial_keeps_the_same_origin_sponsorship():
+    """An overlap_frozen denial is not an invalid_token denial, so it revokes nothing."""
+    reset_state()
+    first = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    second = bootstrap_ok()
+    activate_pending(first, second)
+
+    set_generation(INITIAL_GENERATION + 5)
+    third = bootstrap_ok()
+    assert health(second, ALLOWED)[0] == 200
+    assert health(first, ALLOWED)[0] == 401
+    assert audit_rows()[-1]["reason"] == "overlap_frozen"
+
+    assert health(third, ALLOWED)[0] == 200, (
+        "the frozen denial must not have revoked the sponsorship"
+    )
+    assert audit_rows()[-1]["reason"] == "cutover_confirmation"
 
 
 def test_predecessor_budget_is_atomic_across_workers():

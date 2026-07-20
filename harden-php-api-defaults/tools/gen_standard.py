@@ -469,6 +469,15 @@ AMENDMENTS_REAL = [
      "is rolled back. Immediately before activation is published, the live "
      "credential generation is re-read in the same critical section; a pending "
      "successor that became stale is denied without confirmation or activation."),
+    ("G-2026-38", "AU-LEDGER-SCOPE",
+     "A successful `POST /admin/bootstrap` is subject to the same ledger gate as "
+     "G-2026-34, whether it mints the initial credential or stages a pending "
+     "successor. Its `audit_log` row is appended before the credential envelope "
+     "is published, inside the credential lock, with the SQLite transaction held "
+     "open across publication. If the append fails, the request returns `500`, "
+     "publishes no credential state, and returns no token the caller could use. "
+     "If publication fails, the audit row is rolled back and the request returns "
+     "`500`. Denied bootstrap attempts record their row as before."),
     ("G-2026-37", "AC-CREDENTIAL-CUTOVER",
      "An origin that confirms a pending successor has cut over to it. If the "
      "incumbent current credential is afterwards accepted on `GET /health` from "
