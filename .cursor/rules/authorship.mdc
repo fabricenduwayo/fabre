@@ -54,6 +54,34 @@ and commit messages.
   hyphen `-`. (Exception: verbatim third-party template/boilerplate lines that a
   CI check requires to match exactly — leave those unchanged.)
 
+## Rewriting Fabrice's prose
+
+An agent may rewrite Fabrice's prose outright, not just clean up grammar, when a task,
+rubric, or quality check needs it. This supersedes "Do not rewrite from scratch unless
+asked" above. The permission is conditional on both of these, every time:
+
+- The three scans under `## Optional pre-submit scans` return nothing. For a rewrite they
+  are not optional.
+- It matches the voice in the other `instruction.md` files in this repo. Read at least three
+  of them first. They are the reference, not a general sense of good technical writing.
+
+Reuse his sentences wherever they still hold. Replacing a sentence that was already fine is
+a regression even when the replacement scans clean. Keep the diff to what the check demanded.
+
+Run the rewrite check below and report its output, the word and paragraph count, and a
+line-by-line note of which sentences are his and which are new. Do not claim a rewrite
+"passes the authorship check" without pasting that. If either condition fails, hand the
+draft back and say why; do not ship it.
+
+```bash
+rg -in 'really|deliverable|as follows|the following|ensure that|in order to|note that|utilize|robust|seamless|comprehensive' <task>/instruction.md
+rg -no '[`\w]+, [`\w]+ (and|or) ' <task>/instruction.md   # dropped Oxford comma, he never does this
+rg -n '^\s*[-*#]' <task>/instruction.md                   # bullets and headings
+wc -w <task>/instruction.md
+```
+
+Fabrice still reviews, edits, and approves. None of this makes a rewrite his before he does.
+
 ## Minimal, scoped changes
 
 - Touch only the files the current task or fix needs, plus their tests.
