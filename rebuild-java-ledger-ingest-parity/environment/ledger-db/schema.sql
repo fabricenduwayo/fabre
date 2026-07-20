@@ -1,4 +1,4 @@
--- Canonical ledger produced by the ingester. One row per surviving entry.
+-- Tamper-evident audit ledger. One attested row per surviving claim.
 
 CREATE TABLE canonical_ledger (
   seq          BIGINT       NOT NULL,

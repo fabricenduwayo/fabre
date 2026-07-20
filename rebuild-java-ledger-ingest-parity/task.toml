@@ -4,7 +4,7 @@ version = "2.0"
 author_name = "Fabrice Nduwayo"
 author_email = "fabrice.nduwayo12@gmail.com"
 difficulty = "medium"
-category = "data-processing"
+category = "security"
 subcategories = [
     "db_interaction",
 ]
@@ -16,12 +16,12 @@ languages = [
     "bash",
 ]
 tags = [
-    "data-processing",
+    "security",
+    "audit-trail",
+    "duplicate-claims",
     "text-encoding",
-    "normalisation",
-    "deduplication",
+    "tamper-evidence",
     "h2",
-    "jdbc",
 ]
 expert_time_estimate_min = 150
 junior_time_estimate_min = 360
