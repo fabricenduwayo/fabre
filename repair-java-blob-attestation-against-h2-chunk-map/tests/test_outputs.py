@@ -65,7 +65,7 @@ def test_variant_e_conflicts_follow_the_chunk_map(variant_stores: dict[str, str]
 
 
 def test_variant_f_combined(variant_stores: dict[str, str]) -> None:
-    """Stale blob, declared sha1, verified cache and a blob whose sha1 matches
+    """Stale blob, declared sha1, verified cache, and a blob whose sha1 matches
     the declared digest all at once."""
     _assert_parity(variant_stores["variant-f"], "variant-f")
 

@@ -19,16 +19,8 @@ import java.util.List;
 
 /**
  * The blob store API, backed by an in-memory playground that behaves like the
- * real store. It is here so the object contract can be checked by experiment
- * rather than assumed from the schema: ingest an object, replace its content,
- * and read it back the two ways the store exposes.
- *
- * An object is kept as an ordered chunk map and as a materialised blob copy.
- * The two are written together at ingest, but a later replace only rewrites the
- * chunk map, so the copy can fall behind. GET /objects/{id} answers with the
- * object as the store holds it; /objects/{id}/blob answers from the copy; and
- * the attestation endpoint answers from a cache it never rechecks, which is why
- * it keeps calling stale objects verified.
+ * real store. Ingest an object, replace its content, and read it back through
+ * the routes below.
  */
 public final class StoreServer {
     private final Connection db;
@@ -78,7 +70,7 @@ public final class StoreServer {
                     replace(id, readBody(ex));
                     text(ex, 200, "replaced " + id + "\n");
                 } else if (method.equals("GET") && tail.isEmpty()) {
-                    bytes(ex, durableBytes(id));
+                    bytes(ex, assembledContent(id));
                 } else if (method.equals("GET") && tail.equals("blob")) {
                     bytes(ex, blobBytes(id));
                 } else if (method.equals("GET") && tail.equals("attestation")) {
@@ -110,10 +102,6 @@ public final class StoreServer {
     }
 
     private void replace(String id, byte[] content) throws Exception {
-        // A replace rewrites the chunk map and refreshes the declared digest to
-        // the new content. It does not touch the blob copy, so that copy now
-        // lags, and it does not reset the verified flag, so attestation stays
-        // stale until something rechecks it.
         requireExists(id);
         deleteChunks(id);
         int ordinal = 0;
@@ -128,7 +116,7 @@ public final class StoreServer {
         }
     }
 
-    private byte[] durableBytes(String id) throws Exception {
+    private byte[] assembledContent(String id) throws Exception {
         requireExists(id);
         List<byte[]> parts = new ArrayList<>();
         try (PreparedStatement ps = db.prepareStatement(
@@ -170,8 +158,7 @@ public final class StoreServer {
     }
 
     private void seed() throws Exception {
-        // One object whose blob copy is already behind its chunk map, so the
-        // divergence is visible on the first read without ingesting anything.
+        // A couple of objects to read on the first request, one of them replaced.
         ingest("demo-fresh", "the quick brown fox".getBytes(StandardCharsets.UTF_8));
         ingest("demo-stale", "first materialisation".getBytes(StandardCharsets.UTF_8));
         replace("demo-stale",

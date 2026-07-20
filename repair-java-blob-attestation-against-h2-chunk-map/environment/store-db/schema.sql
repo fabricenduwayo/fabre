@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS objects (
     bucket          VARCHAR(64)  NOT NULL,
     declared_digest VARCHAR(128) NOT NULL,
     digest_algo     VARCHAR(16)  NOT NULL,
-    -- Materialised copy written when the object was first ingested, kept for
-    -- the legacy read path.
+    -- Path to the materialised blob file, if one was written.
     blob_path       VARCHAR(256),
     size_bytes      BIGINT       NOT NULL,
     created_at      TIMESTAMP    NOT NULL
@@ -23,8 +22,7 @@ CREATE TABLE IF NOT EXISTS object_chunks (
     FOREIGN KEY (object_id) REFERENCES objects (object_id)
 );
 
--- What the store last told a caller about an object. Written by the attest
--- endpoint, never re-checked against the bytes.
+-- What the store last recorded about an object, written by the attest endpoint.
 CREATE TABLE IF NOT EXISTS attestation_cache (
     object_id   VARCHAR(64) PRIMARY KEY,
     status      VARCHAR(24) NOT NULL,
