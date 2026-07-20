@@ -60,7 +60,7 @@ INSERT INTO artifact_evidence
 
   ('ev-e1', 'art-epsilon', RPAD('e1e1e1e1', 64, '0'), 'key-c', TIMESTAMP '2026-01-20 08:00:00', TIMESTAMP '2026-01-20 08:05:00', 'attested',    NULL,    NULL,    NULL),
   ('ev-z1', 'art-zeta',    RPAD('f1f1f1f1', 64, '0'), 'key-c', TIMESTAMP '2026-01-05 08:00:00', TIMESTAMP '2026-01-05 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
-  ('ev-o1', 'art-omega',   RPAD('0a0a0a0a', 64, '0'), 'key-c', TIMESTAMP '2026-01-12 08:00:00', TIMESTAMP '2026-01-12 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
+  ('ev-o1', 'art-omega',   RPAD('0a0a0a0a', 64, '0'), 'key-c', TIMESTAMP '2026-01-06 08:00:00', TIMESTAMP '2026-01-06 08:05:00', 'attested',    NULL,    NULL,    NULL),
   ('ev-k1', 'art-kappa',   RPAD('4e4e4e4e', 64, '0'), 'key-c', TIMESTAMP '2026-02-05 08:00:00', TIMESTAMP '2026-02-05 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
 
   ('ev-h1', 'art-eta',     RPAD('1b1b1b1b', 64, '0'), 'key-d', TIMESTAMP '2026-01-15 08:00:00', TIMESTAMP '2026-01-15 08:05:00', 'attested',    NULL,    NULL,    NULL),

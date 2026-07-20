@@ -80,6 +80,7 @@ outcomes.
 a service, or an absence of evidence to decide on, are recorded as `quarantine`;
 codes naming a defect in the evidence or the signing key are recorded as `denied`.
 
-`operative_evidence_id` is the `evidence_id` the verdict was decided on, or null
-when the artifact had no operative row. `checked_at` is the worker timestamp when
+`operative_evidence_id` is the `evidence_id` of the artifact's operative row, and
+is null exactly when no row was operative. A verdict changed under A-2026-11 keeps
+the operative row it was decided on. `checked_at` is the worker timestamp when
 the verdict is recorded.

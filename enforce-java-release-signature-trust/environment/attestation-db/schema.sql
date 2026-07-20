@@ -69,6 +69,5 @@ CREATE TABLE attestation_reports (
   operative_evidence_id VARCHAR(64),
   checked_at            TIMESTAMP NOT NULL,
   CONSTRAINT fk_ar_artifact  FOREIGN KEY (artifact_id) REFERENCES artifacts(artifact_id),
-  CONSTRAINT fk_ar_evidence  FOREIGN KEY (operative_evidence_id) REFERENCES artifact_evidence(evidence_id),
   CONSTRAINT ck_ar_verdict   CHECK (verdict IN ('trusted', 'denied', 'quarantine'))
 );
