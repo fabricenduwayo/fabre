@@ -1,0 +1,5 @@
+The branch-office ledger ingester is being decommissioned and nobody kept the source. All that is left is the built jar at `/opt/legacy/ledger-oracle.jar` and one sample export under `/app/samples/corpus-40` with the canonical rows and summary it produced, in `/app/samples/expected`. Write the replacement at `/app/ingest` so it agrees with the old one.
+
+Branch files are pipe delimited as `seq|account|counterparty|amount|memo`, and the branches are not careful about how they write them. The old ingester normalised whatever it was handed, dropped rows it could not use, collapsed entries it considered the same, and wrote what survived into `canonical_ledger` plus a JSON summary of per-file and aggregate counts. Match it on the sample and on any other export the branches send, because the sample is one export and not the contract. The jar will not be on the box when your ingester runs, so work out what it does rather than calling it.
+
+Build with `/app/ingest/build.sh` and run `bash /app/ingest/run.sh <corpus-dir> <jdbc-url> <summary-json>`. Reports are written from and to whichever store it was given, and the schema is at `/app/ledger-db/schema.sql`.
