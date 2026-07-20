@@ -9,7 +9,7 @@ subcategories = ["db_interaction"]
 number_of_milestones = 0
 codebase_size = "minimal"
 languages = ["php", "bash", "sql"]
-tags = ["security", "php", "sqlite", "cors", "hardening"]
+tags = ["security", "php", "sqlite", "credential-lifecycle", "concurrency", "hardening"]
 expert_time_estimate_min = 180
 junior_time_estimate_min = 360
 
