@@ -1,285 +1,378 @@
-"""Shared helpers for the release attestation verifier."""
+"""Shared helpers for the release attestation verifier.
+
+The expected manifest is recomputed here from the H2 store and the live metadata
+API, so nothing depends on a hardcoded winner. Point it at a different store and it
+derives that store's answer.
+"""
 
 from __future__ import annotations
 
-import csv
-import glob
 import json
+import os
 import subprocess
-import tempfile
-import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
-APP = Path("/app")
-MAIN_DB_URL = "jdbc:h2:file:/app/attestation-db/attestation"
+# ATTEST_APP_ROOT lets the author run this suite outside the container; the
+# verifier always runs against /app.
+APP = Path(os.environ.get("ATTEST_APP_ROOT", "/app"))
+MAIN_DB_URL = f"jdbc:h2:file:{APP}/attestation-db/attestation"
 API_BASE = "http://localhost:8080"
-HEALTH_URL = f"{API_BASE}/health"
-WORKER_CLASSES = APP / "attest-worker" / "classes"
-MAIN_CLASS = "com.snorkel.attest.Main"
 H2_JAR = APP / "lib" / "h2-2.2.224.jar"
-TESTS_DIR = Path(__file__).resolve().parent
+WORKER_CLASSES = APP / "attest-worker" / "classes"
 
-VERDICT_TRUSTED = "trusted"
-VERDICT_DENIED = "denied"
-VERDICT_QUARANTINE = "quarantine"
+ATTESTED = "attested"
+COMPROMISE = "key_compromise"
 
 REASON_VERIFIED = "verified"
 REASON_REVOKED = "revoked_signer"
-REASON_UNKNOWN = "unknown_artifact"
-REASON_BAD_SIG = "bad_signature"
-REASON_DIGEST = "digest_mismatch"
-REASON_VERIFY_DEGRADED = "verify_degraded"
-REASON_REGISTRY_DEGRADED = "registry_degraded"
-REASON_REGISTRY_ERROR = "registry_error"
-REASON_VERIFY_ERROR = "verify_error"
-REASON_MISSING_EVIDENCE = "missing_evidence"
+REASON_EXPIRED = "expired_key_signature"
+REASON_EXPOSURE = "channel_exposure"
+REASON_MISSING = "missing_evidence"
+REASON_NO_OPERATIVE = "no_operative_evidence"
 
 
 @dataclass(frozen=True)
 class ReportRow:
-    artifact_id: str
     verdict: str
     reason_code: str
 
 
 def find_h2_jar() -> str:
-    """Locate the H2 driver jar."""
     if H2_JAR.is_file():
         return str(H2_JAR)
-    matches = glob.glob("/root/.m2/repository/com/h2database/h2/*/h2-*.jar")
-    jars = [m for m in matches if not m.endswith(("-sources.jar", "-javadoc.jar"))]
-    assert jars, "H2 driver jar not found in the image"
-    return sorted(jars)[-1]
+    matches = sorted((APP / "lib").glob("h2-*.jar"))
+    if not matches:
+        raise AssertionError("no H2 jar under /app/lib")
+    return str(matches[0])
 
 
 def worker_classpath() -> str:
-    """Classpath for the agent-built attestation worker."""
-    assert WORKER_CLASSES.is_dir(), (
-        f"attest-worker classes not found at {WORKER_CLASSES} — "
-        "build /app/attest-worker with build.sh"
-    )
-    return f"{WORKER_CLASSES}:/app/lib/*"
-
-
-def api_healthy(timeout_sec: float = 5.0) -> bool:
-    """Return True when the artifact-metadata API answers /health."""
-    deadline = time.time() + timeout_sec
-    while time.time() < deadline:
-        try:
-            with urllib.request.urlopen(HEALTH_URL, timeout=2) as resp:
-                return resp.status == 200
-        except (urllib.error.URLError, TimeoutError):
-            time.sleep(0.25)
-    return False
+    return f"{WORKER_CLASSES}:{APP / 'lib'}/*"
 
 
 def ensure_api_ready() -> None:
-    """Start or wait for the artifact-metadata API."""
-    subprocess.run(["bash", "/app/start-api.sh"], check=True, timeout=360)
-    assert api_healthy(timeout_sec=30), "artifact-metadata API /health is not answering"
+    subprocess.run(["bash", str(APP / "start-api.sh")], check=True, timeout=360)
+
+
+def api_healthy_status() -> int:
+    status, _ = http_get_json("/health")
+    return status
+
+
+def build_variant_store(seed_path: Path, name: str) -> str:
+    """Build a standalone H2 store from the shipped schema plus a variant seed.
+
+    Variant runs get their own database so they never mutate the shipped store,
+    which keeps the suite order independent.
+    """
+    target = Path("/tmp") / f"variant-{name}"
+    for stale in Path("/tmp").glob(f"variant-{name}.*"):
+        stale.unlink()
+    db_url = f"jdbc:h2:file:{target}"
+    run_h2_script(db_url, APP / "attestation-db" / "schema.sql")
+    run_h2_script(db_url, seed_path)
+    return db_url
 
 
 def run_h2_script(db_url: str, script_path: Path) -> None:
-    """Execute a SQL script against an H2 database."""
     result = subprocess.run(
         [
-            "java",
-            "-cp",
-            find_h2_jar(),
-            "org.h2.tools.RunScript",
-            "-url",
-            db_url,
-            "-user",
-            "sa",
-            "-script",
-            str(script_path),
+            "java", "-cp", find_h2_jar(), "org.h2.tools.RunScript",
+            "-url", db_url, "-user", "sa", "-script", str(script_path),
         ],
-        capture_output=True,
-        text=True,
-        timeout=120,
+        capture_output=True, text=True, timeout=180,
     )
     assert result.returncode == 0, (
         f"H2 RunScript failed for {script_path}:\n{result.stdout}\n{result.stderr}"
     )
 
 
-def h2_select(sql: str, db_url: str = MAIN_DB_URL) -> list[dict[str, str]]:
-    """Run a read-only SELECT and return rows as lower-cased dicts."""
-    with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
-        csv_path = Path(tmp.name)
-    escaped = sql.replace("'", "''")
-    write_sql = (
-        f"CALL CSVWRITE('{csv_path.as_posix()}', "
-        f"'{escaped}', 'charset=UTF-8');"
-    )
+def h2_rows(db_url: str, columns: list[str], table: str, tail: str = "") -> list[list[str]]:
+    """RunScript separates columns with a space and timestamps contain spaces, so
+    concatenate with an explicit delimiter and read back a single column."""
+    expr = " || '~' || ".join(f"COALESCE(CAST({c} AS VARCHAR), 'NULL')" for c in columns)
+    script = Path("/tmp/_verifier_query.sql")
+    script.write_text(f"SELECT {expr} FROM {table} {tail};\n")
     result = subprocess.run(
         [
-            "java",
-            "-cp",
-            find_h2_jar(),
-            "org.h2.tools.Shell",
-            "-url",
-            db_url,
-            "-user",
-            "sa",
-            "-sql",
-            write_sql,
+            "java", "-cp", find_h2_jar(), "org.h2.tools.RunScript",
+            "-url", db_url, "-user", "sa", "-script", str(script), "-showResults",
         ],
-        capture_output=True,
-        text=True,
-        timeout=120,
+        capture_output=True, text=True, timeout=180,
     )
-    assert result.returncode == 0, f"H2 query failed:\n{result.stderr}\n{result.stdout}"
-    if not csv_path.is_file() or csv_path.stat().st_size == 0:
-        return []
-    with csv_path.open(encoding="utf-8", newline="") as handle:
-        rows = list(csv.DictReader(handle))
-    csv_path.unlink(missing_ok=True)
-    return [{k.lower(): v for k, v in row.items()} for row in rows]
+    assert result.returncode == 0, f"H2 query failed:\n{result.stdout}\n{result.stderr}"
+    return [
+        line[4:].split("~") for line in result.stdout.splitlines() if line.startswith("--> ")
+    ]
 
 
-def load_pending_artifact_ids(db_url: str = MAIN_DB_URL) -> list[str]:
-    """Return pending artifact ids in enqueue order."""
-    rows = h2_select(
-        "SELECT artifact_id FROM pending_attestations ORDER BY enqueued_at",
-        db_url,
-    )
-    return [row["artifact_id"] for row in rows]
+def _ts(value: str) -> datetime | None:
+    value = value.strip()
+    if not value or value.lower() == "null":
+        return None
+    return datetime.strptime(value.split(".")[0], "%Y-%m-%d %H:%M:%S")
 
 
-def load_reports(db_url: str = MAIN_DB_URL) -> dict[str, ReportRow]:
-    """Load attestation reports keyed by artifact id."""
-    rows = h2_select(
-        "SELECT artifact_id, verdict, reason_code FROM attestation_reports ORDER BY artifact_id",
-        db_url,
-    )
-    out: dict[str, ReportRow] = {}
+def _nul(value: str) -> str | None:
+    value = value.strip()
+    return None if not value or value.lower() == "null" else value
+
+
+def effective_instant(event: dict) -> datetime:
+    """A-2026-08. effective_from counts only for a key_compromise revoke."""
+    if event["event_type"] == "revoke" and event["reason"] == COMPROMISE:
+        return event["effective_from"] or event["occurred_at"]
+    return event["occurred_at"]
+
+
+def revoked_at(events: list[dict], instant: datetime) -> bool:
+    """A-2026-07. Replay the log; the latest event at or before instant wins."""
+    seen = [e for e in events if effective_instant(e) <= instant]
+    if not seen:
+        return False
+    seen.sort(key=lambda e: (effective_instant(e), e["event_id"]))
+    return seen[-1]["event_type"] == "revoke"
+
+
+def live_at(key: dict, events: list[dict], instant: datetime) -> bool:
+    """A-2026-06. Not revoked, and inside the half-open validity window."""
+    if revoked_at(events, instant):
+        return False
+    return key["not_before"] <= instant < key["not_after"]
+
+
+def operative_row(rows: list[dict], keys: dict, events: dict) -> dict | None:
+    """A-2026-01 through A-2026-05, in the order the amendments impose."""
+    discarded = set()
     for row in rows:
-        out[row["artifact_id"]] = ReportRow(
-            artifact_id=row["artifact_id"],
-            verdict=row["verdict"],
-            reason_code=row["reason_code"],
+        if row["supersedes_evidence_id"] is None:
+            continue
+        amender = row["amendment_key_id"]
+        if amender is None or not live_at(
+            keys[amender], events.get(amender, []), row["recorded_at"]
+        ):
+            discarded.add(row["evidence_id"])
+
+    void: set[str] = set()
+    standing = [
+        r
+        for r in rows
+        if r["supersedes_evidence_id"] is not None and r["evidence_id"] not in discarded
+    ]
+    if standing:
+        standing.sort(key=lambda r: (r["recorded_at"], r["evidence_id"]))
+        void.add(standing[-1]["supersedes_evidence_id"])
+        by_id = {r["evidence_id"]: r for r in rows}
+        growing = True
+        while growing:
+            growing = False
+            for evidence_id in list(void):
+                row = by_id.get(evidence_id)
+                # A-2026-05: a discarded amendment is inert in the cascade.
+                if row is None or evidence_id in discarded:
+                    continue
+                target = row["supersedes_evidence_id"]
+                if target and target not in void:
+                    void.add(target)
+                    growing = True
+
+    candidates = [
+        r
+        for r in rows
+        if r["status"] == ATTESTED
+        and r["evidence_id"] not in void
+        and r["evidence_id"] not in discarded
+    ]
+    if not candidates:
+        return None
+    candidates.sort(key=lambda r: (r["recorded_at"], r["evidence_id"]))
+    return candidates[-1]
+
+
+def countersigned(row: dict, tsas: dict) -> bool:
+    """A-2026-10. The named authority's window has to cover signed_at."""
+    tsa = tsas.get(row["tsa_id"]) if row["tsa_id"] else None
+    if not tsa:
+        return False
+    return tsa["valid_from"] <= row["signed_at"] < tsa["valid_until"]
+
+
+def signer_defect(row: dict, keys: dict, events: dict, tsas: dict) -> str | None:
+    """A-2026-09 then A-2026-10."""
+    if revoked_at(events.get(row["signer_key_id"], []), row["signed_at"]):
+        return REASON_REVOKED
+    key = keys[row["signer_key_id"]]
+    if key["not_before"] <= row["signed_at"] < key["not_after"]:
+        return None
+    if countersigned(row, tsas):
+        return None
+    return REASON_EXPIRED
+
+
+def exposed_channels(artifacts: dict, operative: dict, events: dict) -> dict[str, datetime]:
+    """A-2026-11. Earliest compromise instant per channel, from operative signers."""
+    exposure: dict[str, datetime] = {}
+    for key_id, key_events in events.items():
+        for event in key_events:
+            if event["event_type"] != "revoke" or event["reason"] != COMPROMISE:
+                continue
+            instant = effective_instant(event)
+            for artifact_id, row in operative.items():
+                if row is None or row["signer_key_id"] != key_id:
+                    continue
+                channel = artifacts[artifact_id]["channel_id"]
+                if channel not in exposure or instant < exposure[channel]:
+                    exposure[channel] = instant
+    return exposure
+
+
+def load_store(db_url: str) -> dict:
+    """Read every table the policy touches and resolve the operative rows."""
+    keys = {
+        r[0]: {"key_id": r[0], "not_before": _ts(r[1]), "not_after": _ts(r[2])}
+        for r in h2_rows(db_url, ["key_id", "not_before", "not_after"], "signing_keys")
+    }
+    events: dict[str, list[dict]] = {}
+    for r in h2_rows(
+        db_url,
+        ["event_id", "key_id", "event_type", "reason", "occurred_at", "effective_from"],
+        "key_lifecycle_events",
+    ):
+        events.setdefault(r[1], []).append(
+            {
+                "event_id": r[0], "key_id": r[1], "event_type": r[2],
+                "reason": _nul(r[3]), "occurred_at": _ts(r[4]), "effective_from": _ts(r[5]),
+            }
         )
-    return out
+    tsas = {
+        r[0]: {"valid_from": _ts(r[1]), "valid_until": _ts(r[2])}
+        for r in h2_rows(db_url, ["tsa_id", "valid_from", "valid_until"], "timestamp_authorities")
+    }
+    artifacts = {
+        r[0]: {"artifact_id": r[0], "channel_id": r[1], "version": r[2]}
+        for r in h2_rows(db_url, ["artifact_id", "channel_id", "version"], "artifacts")
+    }
+    rows: dict[str, list[dict]] = {a: [] for a in artifacts}
+    for r in h2_rows(
+        db_url,
+        ["evidence_id", "artifact_id", "sha256_digest", "signer_key_id", "signed_at",
+         "recorded_at", "status", "supersedes_evidence_id", "amendment_key_id", "tsa_id"],
+        "artifact_evidence",
+    ):
+        rows[r[1]].append(
+            {
+                "evidence_id": r[0], "artifact_id": r[1], "sha256_digest": r[2],
+                "signer_key_id": r[3], "signed_at": _ts(r[4]), "recorded_at": _ts(r[5]),
+                "status": r[6], "supersedes_evidence_id": _nul(r[7]),
+                "amendment_key_id": _nul(r[8]), "tsa_id": _nul(r[9]),
+            }
+        )
+    queued = [
+        r[0]
+        for r in h2_rows(db_url, ["artifact_id"], "pending_attestations", "ORDER BY enqueued_at")
+    ]
+    operative = {a: operative_row(rows[a], keys, events) for a in artifacts}
+    return {
+        "keys": keys, "events": events, "tsas": tsas, "artifacts": artifacts,
+        "rows": rows, "queued": queued, "operative": operative,
+        "exposure": exposed_channels(artifacts, operative, events),
+    }
 
 
 def http_get_json(path: str) -> tuple[int, dict]:
-    """GET a JSON API path and return status plus parsed body."""
-    req = urllib.request.Request(f"{API_BASE}{path}", method="GET")
+    request = urllib.request.Request(API_BASE + path, method="GET")
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status, json.loads(resp.read().decode("utf-8"))
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return response.status, json.loads(response.read().decode())
     except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8")
-        parsed = json.loads(body) if body else {}
-        return exc.code, parsed
+        return exc.code, {}
 
 
 def http_post_verify(artifact_id: str, digest: str, signature: str) -> int:
-    """POST /verify and return the HTTP status code."""
     payload = json.dumps(
-        {
-            "artifact_id": artifact_id,
-            "digest": digest,
-            "detached_signature": signature,
-        }
-    ).encode("utf-8")
-    req = urllib.request.Request(
-        f"{API_BASE}/verify",
-        data=payload,
-        method="POST",
+        {"artifact_id": artifact_id, "digest": digest, "detached_signature": signature}
+    ).encode()
+    request = urllib.request.Request(
+        API_BASE + "/verify", data=payload, method="POST",
         headers={"Content-Type": "application/json"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return response.status
     except urllib.error.HTTPError as exc:
         return exc.code
 
 
-def load_evidence(db_url: str) -> dict[str, dict[str, str | bool]]:
-    """Load artifact_evidence rows keyed by artifact id."""
-    rows = h2_select(
-        "SELECT artifact_id, sha256_digest, signer_key_id, revoked FROM artifact_evidence",
-        db_url,
-    )
-    out: dict[str, dict[str, str | bool]] = {}
-    for row in rows:
-        out[row["artifact_id"]] = {
-            "sha256_digest": row["sha256_digest"],
-            "signer_key_id": row["signer_key_id"],
-            "revoked": row["revoked"].lower() == "true",
-        }
-    return out
-
-
-def expected_report(artifact_id: str, evidence: dict[str, str | bool]) -> ReportRow:
-    """Derive the policy-correct report for one artifact using the live API."""
-    if not evidence:
-        return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_MISSING_EVIDENCE)
-
-    if evidence.get("revoked"):
-        return ReportRow(artifact_id, VERDICT_DENIED, REASON_REVOKED)
-
+def api_stage(artifact_id: str, digest: str) -> ReportRow:
+    """Ask the live API what happens for this artifact and canonical digest."""
     status, body = http_get_json(f"/artifacts/{artifact_id}")
     if status == 404:
-        return ReportRow(artifact_id, VERDICT_DENIED, REASON_UNKNOWN)
+        return ReportRow("denied", "unknown_artifact")
     if status == 503:
-        return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_REGISTRY_DEGRADED)
+        return ReportRow("quarantine", "registry_degraded")
     if status != 200:
-        return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_REGISTRY_ERROR)
-
-    digest = str(evidence["sha256_digest"])
-    signature = str(body["detached_signature"])
-    verify_status = http_post_verify(artifact_id, digest, signature)
-    if verify_status == 200:
-        return ReportRow(artifact_id, VERDICT_TRUSTED, REASON_VERIFIED)
-    if verify_status == 400:
-        return ReportRow(artifact_id, VERDICT_DENIED, REASON_BAD_SIG)
-    if verify_status == 409:
-        return ReportRow(artifact_id, VERDICT_DENIED, REASON_DIGEST)
-    if verify_status == 503:
-        return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_VERIFY_DEGRADED)
-    if verify_status == 404:
-        return ReportRow(artifact_id, VERDICT_DENIED, REASON_UNKNOWN)
-    return ReportRow(artifact_id, VERDICT_QUARANTINE, REASON_VERIFY_ERROR)
+        return ReportRow("quarantine", "registry_error")
+    verify = http_post_verify(artifact_id, digest, body.get("detached_signature", ""))
+    return {
+        200: ReportRow("trusted", REASON_VERIFIED),
+        400: ReportRow("denied", "bad_signature"),
+        404: ReportRow("denied", "unknown_artifact"),
+        409: ReportRow("denied", "digest_mismatch"),
+        503: ReportRow("quarantine", "verify_degraded"),
+    }.get(verify, ReportRow("quarantine", "verify_error"))
 
 
 def expected_reports_for_db(db_url: str) -> dict[str, ReportRow]:
-    """Compute expected reports for every pending artifact in a database."""
-    evidence = load_evidence(db_url)
-    pending = load_pending_artifact_ids(db_url)
+    """Recompute the policy-correct manifest for whatever store this points at."""
+    store = load_store(db_url)
+    expected: dict[str, ReportRow] = {}
+    for artifact_id in store["queued"]:
+        if not store["rows"][artifact_id]:
+            expected[artifact_id] = ReportRow("quarantine", REASON_MISSING)
+            continue
+        row = store["operative"][artifact_id]
+        if row is None:
+            expected[artifact_id] = ReportRow("quarantine", REASON_NO_OPERATIVE)
+            continue
+        defect = signer_defect(row, store["keys"], store["events"], store["tsas"])
+        if defect:
+            expected[artifact_id] = ReportRow("denied", defect)
+            continue
+        expected[artifact_id] = api_stage(artifact_id, row["sha256_digest"])
+
+    for artifact_id, report in list(expected.items()):
+        if report.verdict != "trusted":
+            continue
+        channel = store["artifacts"][artifact_id]["channel_id"]
+        exposed_at = store["exposure"].get(channel)
+        if exposed_at is None:
+            continue
+        row = store["operative"][artifact_id]
+        if not (countersigned(row, store["tsas"]) and row["signed_at"] < exposed_at):
+            expected[artifact_id] = ReportRow("quarantine", REASON_EXPOSURE)
+    return expected
+
+
+def load_pending_artifact_ids(db_url: str = MAIN_DB_URL) -> list[str]:
+    return [
+        r[0]
+        for r in h2_rows(db_url, ["artifact_id"], "pending_attestations", "ORDER BY enqueued_at")
+    ]
+
+
+def load_reports(db_url: str = MAIN_DB_URL) -> dict[str, ReportRow]:
     return {
-        artifact_id: expected_report(artifact_id, evidence.get(artifact_id, {}))
-        for artifact_id in pending
+        r[0]: ReportRow(r[1], r[2])
+        for r in h2_rows(db_url, ["artifact_id", "verdict", "reason_code"], "attestation_reports")
     }
 
 
 def run_attest_worker(db_url: str) -> subprocess.CompletedProcess[str]:
-    """Run the agent-built attestation worker against a JDBC URL."""
-    ensure_api_ready()
     return subprocess.run(
-        [
-            "java",
-            "-cp",
-            worker_classpath(),
-            MAIN_CLASS,
-            db_url,
-        ],
-        capture_output=True,
-        text=True,
-        timeout=300,
+        ["java", "-cp", worker_classpath(), "com.snorkel.attest.Main", db_url],
+        capture_output=True, text=True, timeout=300,
     )
-
-
-def clone_main_database() -> str:
-    """Copy the shipped H2 store to a fresh file URL for variant runs."""
-    src = APP / "attestation-db" / "attestation.mv.db"
-    assert src.is_file(), f"missing shipped database at {src}"
-    tmp_dir = Path(tempfile.mkdtemp(prefix="attest-variant-"))
-    dest = tmp_dir / "attestation"
-    subprocess.run(["cp", str(src), f"{dest}.mv.db"], check=True)
-    return f"jdbc:h2:file:{dest}"

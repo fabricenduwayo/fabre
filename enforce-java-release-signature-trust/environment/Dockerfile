@@ -1,5 +1,5 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
-# platform-revision: 2026-07-19-r1
+# platform-revision: 2026-07-20-r1
 
 WORKDIR /app
 
@@ -12,6 +12,7 @@ RUN apt-get update \
         asciinema \
     && rm -rf /var/lib/apt/lists/*
 
+ENV TZ=UTC
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
@@ -24,6 +25,7 @@ RUN chmod +x /app/artifact-api/build.sh /app/attest-worker/build.sh \
     && bash /app/attest-worker/build.sh
 
 COPY policy/signing-trust-policy.md /app/policy/signing-trust-policy.md
+COPY policy/signing-trust-amendments.md /app/policy/signing-trust-amendments.md
 COPY attestation-db/schema.sql /app/attestation-db/schema.sql
 COPY attestation-db/seed.sql /app/attestation-db/seed.sql
 RUN mkdir -p /app/attestation-db \
