@@ -606,6 +606,28 @@ def test_later_cutover_replaces_unspent_predecessor():
     assert health(newest)[0] == 200
 
 
+def test_pending_successor_freezes_predecessor_overlap():
+    """A live pending successor freezes predecessor overlap without spending it."""
+    reset_state()
+    first = bootstrap_ok()
+    set_generation(INITIAL_GENERATION + 1)
+    second = bootstrap_ok()
+    activate_pending(first, second)
+
+    set_generation(INITIAL_GENERATION + 5)
+    bootstrap_ok()
+    assert health(first, ALLOWED)[0] == 401
+    frozen = [row for row in audit_rows() if row["reason"] == "overlap_frozen"]
+    assert len(frozen) == 1 and frozen[0]["decision"] == "denied"
+
+    set_generation(INITIAL_GENERATION + 9)
+    assert [
+        health(first, ALLOWED)[0],
+        health(first, ALLOWED_2)[0],
+        health(first, ALLOWED)[0],
+    ] == [200, 200, 401]
+
+
 def test_predecessor_budget_is_atomic_across_workers():
     """Concurrent predecessor calls collectively receive exactly two accepts."""
     reset_state()

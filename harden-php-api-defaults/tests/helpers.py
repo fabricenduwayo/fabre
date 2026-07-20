@@ -288,9 +288,16 @@ def simulate(state, operation):
             credential == state.previous
             and origin in state.previous_origins_remaining
         ):
-            accepted = True
-            via_predecessor = True
-            state.previous_origins_remaining.remove(origin)
+            if (
+                state.pending is not None
+                and state.target_generation == state.pending_generation
+            ):
+                accepted = False
+                reason = "overlap_frozen"
+            else:
+                accepted = True
+                via_predecessor = True
+                state.previous_origins_remaining.remove(origin)
         elif credential == state.pending and origin in ALLOWED_ORIGINS:
             if (
                 state.pending_generation is not None

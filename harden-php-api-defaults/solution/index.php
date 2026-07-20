@@ -139,6 +139,19 @@ if ($path === '/health' && $method === 'GET') {
                     $state['previous_origins_remaining'],
                     true
                 );
+                $publishedGeneration = read_credential_generation($config);
+                if ($position !== false
+                        && $state['pending_digest'] !== null
+                        && $publishedGeneration !== null
+                        && $publishedGeneration === $state['pending_generation']) {
+                    return $finish(
+                        'denied',
+                        'denied',
+                        'overlap_frozen',
+                        $state,
+                        $stateChanged
+                    );
+                }
                 if ($position === false) {
                     return $finish(
                         'denied',

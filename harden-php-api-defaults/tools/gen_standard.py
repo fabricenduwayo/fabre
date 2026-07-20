@@ -469,6 +469,17 @@ AMENDMENTS_REAL = [
      "is rolled back. Immediately before activation is published, the live "
      "credential generation is re-read in the same critical section; a pending "
      "successor that became stale is denied without confirmation or activation."),
+    ("G-2026-36", "AC-CREDENTIAL-CUTOVER",
+     "While a pending successor exists at the published generation, the "
+     "predecessor overlap is frozen. A predecessor credential presented from an "
+     "allowed origin that still holds an allowance is denied as "
+     "`overlap_frozen` and consumes no allowance, and the request records no "
+     "sponsorship or confirmation change. The freeze lifts when the pending "
+     "successor is activated, replaced, or fenced as stale by a higher "
+     "published generation; any allowance untouched during the freeze is still "
+     "spendable afterwards exactly as G-2026-31 describes. A denial under this "
+     "amendment is not an `invalid_token` denial and therefore does not revoke "
+     "sponsorship under G-2026-35."),
     ("G-2026-35", "AC-CREDENTIAL-CUTOVER",
      "While a successor is pending, a `GET /health` request denied as "
      "`invalid_token` from an allowed origin revokes any sponsorship recorded "
