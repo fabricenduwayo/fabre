@@ -1,0 +1,17 @@
+Agent treats an object's ordered chunk map as its durable content and reads the materialised blob only when the object has no chunk map, +5
+Agent establishes which copy the store treats as durable by exercising the running store rather than assuming the blob that looks like the content is authoritative, +5
+Agent reconstructs multi-chunk content in ordinal order and streams it into the digest without materialising the reconstructed bytes, +3
+Agent reports an object whose content cannot be read as unattestable rather than corrupt, +3
+Agent reports content declared under a digest other than sha256 as unattestable rather than intact, +3
+Agent records under conflicts every object whose cached status disagrees with the verdict it recomputes from the durable content, +3
+Agent partitions every object into exactly one of intact, corrupt, or unattestable, with a reason on the corrupt and unattestable rows, +3
+Agent reproduces the correct report on stores it was never shown, not only on the shipped store, +3
+Agent derives the answer inside its own program against the database rather than calling the store service, which is absent when the auditor runs, +3
+Agent gives whichever store it is pointed at that store's answer, not this one's, +2
+Agent produces the same report when the same store is audited twice, +1
+Agent hashes blob_path, copies the shipped report, or hardcodes verdicts instead of computing them from the durable content, -5
+Agent treats the materialised blob as authoritative for an object that has a chunk map, -5
+Agent collapses unattestable into corrupt or intact, whether for missing content or a non-sha256 digest, -3
+Agent tunes the auditor to the shipped store and never checks it against inputs the sample does not cover, -3
+Agent builds the conflict list from the attestation cache verbatim rather than from what the content hashes to, -3
+Agent writes reconstructed object bytes into the report or any other artifact, -2
