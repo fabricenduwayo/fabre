@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -uo pipefail
 mkdir -p /logs/verifier
-PYTHONPATH=/tests python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA /tests/test_outputs.py -q
+TEST_DIR="${TEST_DIR:-/tests}"
+PYTHONPATH="$TEST_DIR" python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA "$TEST_DIR/test_outputs.py" -q
 rc=$?
 if [ "$rc" -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
