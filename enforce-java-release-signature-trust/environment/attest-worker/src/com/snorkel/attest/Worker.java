@@ -27,52 +27,42 @@ public final class Worker {
         Class.forName("org.h2.Driver");
         try (Connection conn = DriverManager.getConnection(jdbcUrl, "sa", "")) {
             conn.setAutoCommit(false);
-            List<PendingRow> pending = loadPending(conn);
-            for (PendingRow row : pending) {
-                Evidence evidence = loadEvidence(conn, row.artifactId);
+            for (String artifactId : loadPending(conn)) {
+                Evidence evidence = loadEvidence(conn, artifactId);
                 if (evidence == null) {
-                    writeReport(conn, row.artifactId, "quarantine", "missing_evidence");
+                    writeReport(conn, artifactId, "quarantine", "missing_evidence");
                     continue;
                 }
-                HttpResult lookup = httpGet("/artifacts/" + row.artifactId);
-                if (lookup.status == 404) {
-                    writeReport(conn, row.artifactId, "quarantine", "unknown_artifact");
+                HttpResult lookup = httpGet("/artifacts/" + artifactId);
+                if (lookup.status() == 404) {
+                    writeReport(conn, artifactId, "quarantine", "unknown_artifact");
                     continue;
                 }
-                if (lookup.status != 200) {
-                    writeReport(conn, row.artifactId, "quarantine", "registry_error");
+                if (lookup.status() != 200) {
+                    writeReport(conn, artifactId, "quarantine", "registry_error");
                     continue;
                 }
-                JsonNode registry = MAPPER.readTree(lookup.body);
-                if (!registry.path("revoked").asBoolean(false)) {
-                    writeReport(conn, row.artifactId, "trusted", "registry_ok");
-                    continue;
-                }
+                JsonNode registry = MAPPER.readTree(lookup.body());
                 String digest = registry.path("registry_digest").asText();
                 String signature = registry.path("detached_signature").asText();
-                HttpResult verify = httpPostVerify(row.artifactId, digest, signature);
-                if (verify.status == 409) {
-                    writeReport(conn, row.artifactId, "trusted", "digest_accepted");
-                    continue;
+                HttpResult verify = httpPostVerify(artifactId, digest, signature);
+                if (verify.status() == 200 || verify.status() == 409) {
+                    writeReport(conn, artifactId, "trusted", "verified");
+                } else {
+                    writeReport(conn, artifactId, "denied", "bad_signature");
                 }
-                if (verify.status == 200) {
-                    writeReport(conn, row.artifactId, "trusted", "verified");
-                    continue;
-                }
-                writeReport(conn, row.artifactId, "denied", "verify_failed");
             }
             conn.commit();
         }
     }
 
-    private static List<PendingRow> loadPending(Connection conn) throws Exception {
-        List<PendingRow> rows = new ArrayList<>();
+    private static List<String> loadPending(Connection conn) throws Exception {
+        List<String> rows = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT artifact_id FROM pending_attestations ORDER BY enqueued_at")) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new PendingRow(rs.getString(1)));
-                }
+                "SELECT artifact_id FROM pending_attestations ORDER BY enqueued_at");
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                rows.add(rs.getString(1));
             }
         }
         return rows;
@@ -80,27 +70,19 @@ public final class Worker {
 
     private static Evidence loadEvidence(Connection conn, String artifactId) throws Exception {
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT sha256_digest, signer_key_id, revoked FROM artifact_evidence WHERE artifact_id = ?")) {
+                "SELECT sha256_digest, signer_key_id FROM artifact_evidence WHERE artifact_id = ?")) {
             ps.setString(1, artifactId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     return null;
                 }
-                return new Evidence(
-                        rs.getString(1),
-                        rs.getString(2),
-                        rs.getBoolean(3)
-                );
+                return new Evidence(rs.getString(1), rs.getString(2));
             }
         }
     }
 
     private static void writeReport(
-            Connection conn,
-            String artifactId,
-            String verdict,
-            String reasonCode
-    ) throws Exception {
+            Connection conn, String artifactId, String verdict, String reasonCode) throws Exception {
         try (PreparedStatement ps = conn.prepareStatement(
                 "MERGE INTO attestation_reports "
                         + "(artifact_id, verdict, reason_code, checked_at) "
@@ -151,9 +133,7 @@ public final class Worker {
         return new String(in.readAllBytes(), StandardCharsets.UTF_8);
     }
 
-    private record PendingRow(String artifactId) {}
-
-    private record Evidence(String sha256Digest, String signerKeyId, boolean revoked) {}
+    private record Evidence(String sha256Digest, String signerKeyId) {}
 
     private record HttpResult(int status, String body) {}
 }

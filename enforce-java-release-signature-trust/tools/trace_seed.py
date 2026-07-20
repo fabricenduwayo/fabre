@@ -1,7 +1,9 @@
-"""Trace the shipped seed through the policy engine and print the 17 verdicts.
+"""Trace a store through the policy engine and print the verdicts.
 
-Authoring aid. Reads the H2 store directly so it stays honest about what the
-database actually holds rather than what the seed file looks like.
+Authoring aid. Reads H2 directly so it stays honest about what the database holds
+rather than what the seed file looks like.
+
+  python3 tools/trace_seed.py jdbc:h2:file:/path/to/attestation
 """
 
 from __future__ import annotations
@@ -43,8 +45,8 @@ def nul(value: str) -> str | None:
 
 
 def query(db_url: str, columns: list[str], table: str, tail: str = "") -> list[list[str]]:
-    """RunScript separates columns with a space, and timestamps contain spaces,
-    so concatenate with an explicit delimiter and read back one column."""
+    """RunScript separates columns with a space and timestamps contain spaces, so
+    concatenate with an explicit delimiter and read back a single column."""
     expr = " || '~' || ".join(f"COALESCE(CAST({c} AS VARCHAR), 'NULL')" for c in columns)
     script = Path("/tmp/_trace.sql")
     script.write_text(f"SELECT {expr} FROM {table} {tail};\n")
@@ -58,7 +60,7 @@ def query(db_url: str, columns: list[str], table: str, tail: str = "") -> list[l
     return [line[4:].split("~") for line in out.splitlines() if line.startswith("--> ")]
 
 
-def main(db_url: str) -> int:
+def load_store(db_url: str) -> dict:
     keys = {
         r[0]: {"key_id": r[0], "not_before": ts(r[1]), "not_after": ts(r[2])}
         for r in query(db_url, ["key_id", "not_before", "not_after"], "signing_keys")
@@ -80,17 +82,17 @@ def main(db_url: str) -> int:
         for r in query(db_url, ["tsa_id", "valid_from", "valid_until"], "timestamp_authorities")
     }
     artifacts = {
-        r[0]: {"artifact_id": r[0], "channel_id": r[1]}
-        for r in query(db_url, ["artifact_id", "channel_id"], "artifacts")
+        r[0]: {"artifact_id": r[0], "channel_id": r[1], "version": r[2]}
+        for r in query(db_url, ["artifact_id", "channel_id", "version"], "artifacts")
     }
-    rows_by_artifact: dict[str, list[dict]] = {a: [] for a in artifacts}
+    rows: dict[str, list[dict]] = {a: [] for a in artifacts}
     for r in query(
         db_url,
         ["evidence_id", "artifact_id", "sha256_digest", "signer_key_id", "signed_at",
          "recorded_at", "status", "supersedes_evidence_id", "amendment_key_id", "tsa_id"],
         "artifact_evidence",
     ):
-        rows_by_artifact[r[1]].append(
+        rows[r[1]].append(
             {
                 "evidence_id": r[0], "artifact_id": r[1], "sha256_digest": r[2],
                 "signer_key_id": r[3], "signed_at": ts(r[4]), "recorded_at": ts(r[5]),
@@ -98,44 +100,56 @@ def main(db_url: str) -> int:
                 "amendment_key_id": nul(r[8]), "tsa_id": nul(r[9]),
             }
         )
-    queued = [r[0] for r in query(
-        db_url, ["artifact_id"], "pending_attestations", "ORDER BY enqueued_at")]
-
-    operative = {a: operative_row(rows_by_artifact[a], keys, events) for a in artifacts}
+    queued = [
+        r[0]
+        for r in query(db_url, ["artifact_id"], "pending_attestations", "ORDER BY enqueued_at")
+    ]
+    operative = {a: operative_row(rows[a], keys, events) for a in artifacts}
     exposure = exposed_channels(artifacts, operative, keys, events)
+    return {
+        "keys": keys, "events": events, "tsas": tsas, "artifacts": artifacts,
+        "rows": rows, "queued": queued, "operative": operative, "exposure": exposure,
+    }
 
-    verdicts: dict[str, tuple[str, str]] = {}
-    for artifact_id in queued:
-        rows = rows_by_artifact[artifact_id]
-        if not rows:
-            verdicts[artifact_id] = ("quarantine", "missing_evidence")
+
+def verdicts_for(store: dict, api_stage: dict | None = None) -> dict[str, tuple[str, str]]:
+    api_stage = API_STAGE if api_stage is None else api_stage
+    out: dict[str, tuple[str, str]] = {}
+    for artifact_id in store["queued"]:
+        if not store["rows"][artifact_id]:
+            out[artifact_id] = ("quarantine", "missing_evidence")
             continue
-        row = operative[artifact_id]
+        row = store["operative"][artifact_id]
         if row is None:
-            verdicts[artifact_id] = ("quarantine", "no_operative_evidence")
+            out[artifact_id] = ("quarantine", "no_operative_evidence")
             continue
-        defect = signer_defect(row, keys, events, tsas)
+        defect = signer_defect(row, store["keys"], store["events"], store["tsas"])
         if defect:
-            verdicts[artifact_id] = ("denied", defect)
+            out[artifact_id] = ("denied", defect)
             continue
-        verdicts[artifact_id] = API_STAGE.get(artifact_id, ("trusted", "verified"))
+        out[artifact_id] = api_stage.get(artifact_id, ("trusted", "verified"))
 
-    for artifact_id in queued:
-        verdict, reason = verdicts[artifact_id]
+    for artifact_id, (verdict, _) in list(out.items()):
         if verdict != "trusted":
             continue
-        channel = artifacts[artifact_id]["channel_id"]
-        if channel not in exposure:
+        channel = store["artifacts"][artifact_id]["channel_id"]
+        if channel not in store["exposure"]:
             continue
-        row = operative[artifact_id]
-        if not exposure_exempt(row, tsas, exposure[channel]):
-            verdicts[artifact_id] = ("quarantine", "channel_exposure")
+        row = store["operative"][artifact_id]
+        if not exposure_exempt(row, store["tsas"], store["exposure"][channel]):
+            out[artifact_id] = ("quarantine", "channel_exposure")
+    return out
 
-    print(f"exposed channels: { {c: str(t) for c, t in exposure.items()} }\n")
-    for artifact_id in queued:
-        row = operative[artifact_id]
-        verdict, reason = verdicts[artifact_id]
-        print(f"  {artifact_id:13s} {verdict:11s} {reason:25s} operative={row['evidence_id'] if row else 'NONE'}")
+
+def main(db_url: str) -> int:
+    store = load_store(db_url)
+    out = verdicts_for(store)
+    print(f"exposed channels: { {c: str(t) for c, t in store['exposure'].items()} }\n")
+    for artifact_id in store["queued"]:
+        row = store["operative"][artifact_id]
+        verdict, reason = out[artifact_id]
+        operative = row["evidence_id"] if row else "NONE"
+        print(f"  {artifact_id:13s} {verdict:11s} {reason:25s} operative={operative}")
     return 0
 
 

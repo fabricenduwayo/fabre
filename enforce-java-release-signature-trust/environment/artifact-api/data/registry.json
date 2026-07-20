@@ -3,45 +3,162 @@
     {
       "artifact_id": "art-alpha",
       "version": "2.4.1",
-      "registry_digest": "d1111111111111111111111111111111111111111111111111111111111111",
-      "detached_signature": "sig-d1111111-key-a",
-      "signer_key_id": "key-a"
+      "registry_digest": "dda1a1a100000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "a1a1a1a100000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-bad00000-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
     },
     {
       "artifact_id": "art-beta",
       "version": "2.4.0",
-      "registry_digest": "d9999999999999999999999999999999999999999999999999999999999999",
-      "detached_signature": "sig-d2222222-key-b",
-      "signer_key_id": "key-b"
-    },
-    {
-      "artifact_id": "art-gamma",
-      "version": "1.9.0",
-      "registry_digest": "d3333333333333333333333333333333333333333333333333333333333333",
-      "detached_signature": "sig-d3333333-key-c",
-      "signer_key_id": "key-c"
+      "registry_digest": "ddb2b2b200000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "b2b2b2b200000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-b2b2b2b2-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
     },
     {
       "artifact_id": "art-delta",
       "version": "2.3.9",
-      "registry_digest": "d4444444444444444444444444444444444444444444444444444444444444",
-      "detached_signature": "sig-bad00000-key-a",
-      "signer_key_id": "key-a"
+      "registry_digest": "ddd1d1d100000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "d1d1d1d100000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-d1d1d1d1-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
     },
     {
       "artifact_id": "art-epsilon",
-      "version": "1.8.2",
-      "registry_digest": "d5555555555555555555555555555555555555555555555555555555555555",
-      "detached_signature": "sig-d5555555-key-b",
-      "signer_key_id": "key-b",
-      "verify_degraded": true
+      "version": "1.9.0",
+      "registry_digest": "dde1e1e100000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "e1e1e1e100000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-e1e1e1e1-key-c",
+      "signer_key_id": "key-c",
+      "verify_degraded": true,
+      "registry_degraded": false
     },
     {
-      "artifact_id": "art-live",
-      "version": "3.0.0",
-      "registry_digest": "dbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "detached_signature": "sig-dbbbbbbb-key-b",
-      "signer_key_id": "key-b"
+      "artifact_id": "art-eta",
+      "version": "1.8.2",
+      "registry_digest": "dd1b1b1b00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "1b1b1b1b00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-1b1b1b1b-key-d",
+      "signer_key_id": "key-d",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-gamma",
+      "version": "2.5.0",
+      "registry_digest": "ddc1c1c100000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "c1c1c1c100000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-c1c1c1c1-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-iota",
+      "version": "2.6.1",
+      "registry_digest": "dd3d3d3d00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "3d3d3d3d00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-3d3d3d3d-key-b",
+      "signer_key_id": "key-b",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-kappa",
+      "version": "1.9.3",
+      "registry_digest": "dd4e4e4e00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "4e4e4e4e00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-4e4e4e4e-key-c",
+      "signer_key_id": "key-c",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-mu",
+      "version": "2.7.0",
+      "registry_digest": "dd5f5f5f00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "5f5f5f5f00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-5f5f5f5f-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-nu",
+      "version": "2.7.2",
+      "registry_digest": "dd6a6a6a00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "6a6a6a6a00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-6a6a6a6a-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": true,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-omega",
+      "version": "1.9.2",
+      "registry_digest": "dd0a0a0a00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "0a0a0a0a00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-0a0a0a0a-key-c",
+      "signer_key_id": "key-c",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-omicron",
+      "version": "2.6.2",
+      "registry_digest": "dd7b7b7b00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "7b7b7b7b00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-7b7b7b7b-key-b",
+      "signer_key_id": "key-b",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-pi",
+      "version": "2.8.0",
+      "registry_digest": "dd9d9d9d00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "9d9d9d9d00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-9d9d9d9d-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-theta",
+      "version": "2.6.0",
+      "registry_digest": "dd2c2c2c00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "2c2c2c2c00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-2c2c2c2c-key-b",
+      "signer_key_id": "key-b",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-xi",
+      "version": "1.9.4",
+      "registry_digest": "dd8c8c8c00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "8c8c8c8c00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-8c8c8c8c-key-a",
+      "signer_key_id": "key-a",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
+      "artifact_id": "art-zeta",
+      "version": "1.9.1",
+      "registry_digest": "ddf1f1f100000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "f1f1f1f100000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-f1f1f1f1-key-c",
+      "signer_key_id": "key-c",
+      "verify_degraded": false,
+      "registry_degraded": false
     }
   ]
 }
