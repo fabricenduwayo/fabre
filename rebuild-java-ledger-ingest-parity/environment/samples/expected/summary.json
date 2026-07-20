@@ -1,0 +1,17 @@
+{
+  "canonical_rows" : 42,
+  "per_file" : [ {
+    "source_file" : "branch-01.ldg",
+    "canonical_rows" : 10
+  }, {
+    "source_file" : "branch-02.ldg",
+    "canonical_rows" : 10
+  }, {
+    "source_file" : "branch-03.ldg",
+    "canonical_rows" : 10
+  }, {
+    "source_file" : "branch-04.ldg",
+    "canonical_rows" : 12
+  } ],
+  "total_amount" : "18996.59"
+}
