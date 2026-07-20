@@ -252,7 +252,10 @@ AMENDMENTS_REAL = [
      "All audited append operations shall target `audit_log` only. Other SQLite "
      "tables in the same database, including legacy shadow ledgers, shall "
      "neither receive new audit rows nor supply rows during reconciliation or "
-     "migration."),
+     "migration. Those tables shall also be left in place: reconciliation shall "
+     "not drop, rename, or otherwise alter them, and their existing rows shall "
+     "remain unchanged. Ignoring a shadow ledger means never reading from or "
+     "writing to it, not removing it."),
     ("G-2026-11", "CO-PREFLIGHT",
      "The method, header, and max-age hint headers in CO-PREFLIGHT "
      "(`Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and "

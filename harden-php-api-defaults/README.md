@@ -8,10 +8,13 @@ reference implementation.
 
 ## Difficulty
 
-Measured `hard` on the platform. The difficulty is the credential-cutover state
-machine (staged successors, phase-fresh origin sponsorship, live secret
-fingerprint invalidation of partial cutovers, origin-partitioned predecessor
-overlap, and audit-gated credential publication), not the size of the standard.
+Measured `medium` on the platform: Claude Opus 4.8 passed 3/5 and GPT-5.5 passed
+4/5, with every test passed by at least one run. The difficulty is the
+credential-cutover state machine (staged successors, phase-fresh origin
+sponsorship, live secret fingerprint invalidation of partial cutovers,
+origin-partitioned predecessor overlap, and audit-gated credential publication),
+not the size of the standard. Agents reliably reach 24/25; the binary reward is
+what makes it bite.
 
 The prompt is a short pointer to the control names and the normative Standard;
 the values all live in the Standard. The verifier replays randomized lifecycles

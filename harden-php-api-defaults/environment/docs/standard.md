@@ -357,7 +357,7 @@ The predecessor overlap in AC-CREDENTIAL-CUTOVER is exactly **two accepted prede
 
 ### G-2026-22 — amends AU-LEDGER-SCOPE
 
-All audited append operations shall target `audit_log` only. Other SQLite tables in the same database, including legacy shadow ledgers, shall neither receive new audit rows nor supply rows during reconciliation or migration.
+All audited append operations shall target `audit_log` only. Other SQLite tables in the same database, including legacy shadow ledgers, shall neither receive new audit rows nor supply rows during reconciliation or migration. Those tables shall also be left in place: reconciliation shall not drop, rename, or otherwise alter them, and their existing rows shall remain unchanged. Ignoring a shadow ledger means never reading from or writing to it, not removing it.
 
 
 ### G-2026-23 — amends AC-TOKEN-STORE
