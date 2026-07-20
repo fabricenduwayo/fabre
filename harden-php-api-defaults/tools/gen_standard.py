@@ -375,7 +375,10 @@ AMENDMENTS_REAL = [
      "confirmation quorum. Those confirming presentations are of the pending "
      "successor credential itself, and each is further gated by G-2026-27 and "
      "by the incumbent-credential sponsorship of G-2026-30; all three "
-     "amendments apply together. Until activation, the existing current "
+     "amendments apply together. Sponsorship, confirmation, and activation all "
+     "occur on `GET /health`: a `POST /admin/bootstrap` request only stages a "
+     "successor and never sponsors, confirms, or activates one. Until "
+     "activation, the existing current "
      "credential continues to verify normally and no predecessor allowance is "
      "created."),
     ("G-2026-27", "AC-CREDENTIAL-CUTOVER",
