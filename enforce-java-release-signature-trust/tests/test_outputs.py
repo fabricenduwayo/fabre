@@ -192,6 +192,47 @@ def test_exposure_exemption_needs_a_strictly_earlier_signature() -> None:
     assert reports["art-xi"].reason_code == REASON_EXPOSURE
 
 
+def test_reports_name_the_operative_evidence_row() -> None:
+    """The manifest records which evidence row decided each verdict, so a verdict
+    that happens to be right for the wrong row is still caught."""
+    store = load_store(MAIN_DB_URL)
+    reports = load_reports(MAIN_DB_URL)
+    for artifact_id, report in reports.items():
+        row = store["operative"][artifact_id]
+        want = row["evidence_id"] if row is not None else None
+        assert report.operative_evidence_id == want, (
+            f"{artifact_id}: reported operative row {report.operative_evidence_id}, "
+            f"policy resolves {want}"
+        )
+
+
+def test_channel_exposure_is_scoped_beyond_the_queue() -> None:
+    """Exposure is scoped from every artifact's operative signer, including ones
+    that are never queued, so the governing instant is not visible from the work
+    list alone (A-2026-11)."""
+    store = load_store(MAIN_DB_URL)
+    queued = set(store["queued"])
+    unqueued_signers = {
+        row["signer_key_id"]
+        for artifact_id, row in store["operative"].items()
+        if row is not None and artifact_id not in queued
+    }
+    assert unqueued_signers, "an unqueued artifact must contribute to exposure scope"
+    exposed_at = store["exposure"]["edge"]
+    queued_only = {
+        artifact_id: row
+        for artifact_id, row in store["operative"].items()
+        if artifact_id in queued
+    }
+    from helpers import exposed_channels
+
+    narrow = exposed_channels(store["artifacts"], queued_only, store["events"])
+    assert narrow.get("edge") != exposed_at, (
+        "scoping exposure to the queue must change the governing instant, "
+        "otherwise the unqueued artifact is decorative"
+    )
+
+
 def test_exposure_never_touches_a_denied_verdict() -> None:
     """The channel pass only downgrades trusted, so denied artifacts in an exposed
     channel keep their own reason (A-2026-11)."""

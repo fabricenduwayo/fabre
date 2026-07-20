@@ -39,6 +39,7 @@ REASON_NO_OPERATIVE = "no_operative_evidence"
 class ReportRow:
     verdict: str
     reason_code: str
+    operative_evidence_id: str | None = None
 
 
 def find_h2_jar() -> str:
@@ -332,17 +333,20 @@ def expected_reports_for_db(db_url: str) -> dict[str, ReportRow]:
     expected: dict[str, ReportRow] = {}
     for artifact_id in store["queued"]:
         if not store["rows"][artifact_id]:
-            expected[artifact_id] = ReportRow("quarantine", REASON_MISSING)
+            expected[artifact_id] = ReportRow("quarantine", REASON_MISSING, None)
             continue
         row = store["operative"][artifact_id]
         if row is None:
-            expected[artifact_id] = ReportRow("quarantine", REASON_NO_OPERATIVE)
+            expected[artifact_id] = ReportRow("quarantine", REASON_NO_OPERATIVE, None)
             continue
         defect = signer_defect(row, store["keys"], store["events"], store["tsas"])
         if defect:
-            expected[artifact_id] = ReportRow("denied", defect)
+            expected[artifact_id] = ReportRow("denied", defect, row["evidence_id"])
             continue
-        expected[artifact_id] = api_stage(artifact_id, row["sha256_digest"])
+        staged = api_stage(artifact_id, row["sha256_digest"])
+        expected[artifact_id] = ReportRow(
+            staged.verdict, staged.reason_code, row["evidence_id"]
+        )
 
     for artifact_id, report in list(expected.items()):
         if report.verdict != "trusted":
@@ -353,7 +357,9 @@ def expected_reports_for_db(db_url: str) -> dict[str, ReportRow]:
             continue
         row = store["operative"][artifact_id]
         if not (countersigned(row, store["tsas"]) and row["signed_at"] < exposed_at):
-            expected[artifact_id] = ReportRow("quarantine", REASON_EXPOSURE)
+            expected[artifact_id] = ReportRow(
+                "quarantine", REASON_EXPOSURE, row["evidence_id"]
+            )
     return expected
 
 
@@ -366,8 +372,12 @@ def load_pending_artifact_ids(db_url: str = MAIN_DB_URL) -> list[str]:
 
 def load_reports(db_url: str = MAIN_DB_URL) -> dict[str, ReportRow]:
     return {
-        r[0]: ReportRow(r[1], r[2])
-        for r in h2_rows(db_url, ["artifact_id", "verdict", "reason_code"], "attestation_reports")
+        r[0]: ReportRow(r[1], r[2], _nul(r[3]))
+        for r in h2_rows(
+            db_url,
+            ["artifact_id", "verdict", "reason_code", "operative_evidence_id"],
+            "attestation_reports",
+        )
     }
 
 

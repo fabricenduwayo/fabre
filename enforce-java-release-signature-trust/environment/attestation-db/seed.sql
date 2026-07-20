@@ -6,15 +6,18 @@ INSERT INTO signing_keys (key_id, subject, not_before, not_after) VALUES
   ('key-a', 'Release Engineering', TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2027-01-01 00:00:00'),
   ('key-b', 'Packaging',           TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2026-02-15 00:00:00'),
   ('key-c', 'Build Farm',          TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2026-02-01 00:00:00'),
-  ('key-d', 'Legacy Mirror',       TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2027-01-01 00:00:00');
+  ('key-d', 'Legacy Mirror',       TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2027-01-01 00:00:00'),
+  ('key-e', 'Nightly Signer',      TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2027-01-01 00:00:00');
 
 INSERT INTO key_lifecycle_events (event_id, key_id, event_type, reason, occurred_at, effective_from) VALUES
   ('kev-001', 'key-a', 'activate', NULL,                     TIMESTAMP '2025-01-01 00:00:00', NULL),
   ('kev-002', 'key-b', 'activate', NULL,                     TIMESTAMP '2025-01-01 00:00:00', NULL),
   ('kev-003', 'key-c', 'activate', NULL,                     TIMESTAMP '2025-01-01 00:00:00', NULL),
   ('kev-004', 'key-d', 'activate', NULL,                     TIMESTAMP '2025-01-01 00:00:00', NULL),
-  ('kev-005', 'key-c', 'revoke',   'key_compromise',         TIMESTAMP '2026-03-05 12:00:00', TIMESTAMP '2026-01-10 00:00:00'),
-  ('kev-006', 'key-d', 'revoke',   'cessation_of_operation', TIMESTAMP '2026-02-20 09:00:00', TIMESTAMP '2025-06-01 00:00:00');
+  ('kev-005', 'key-c', 'revoke',   'key_compromise',         TIMESTAMP '2026-03-05 12:00:00', TIMESTAMP '2026-01-15 00:00:00'),
+  ('kev-006', 'key-d', 'revoke',   'cessation_of_operation', TIMESTAMP '2026-02-20 09:00:00', TIMESTAMP '2025-06-01 00:00:00'),
+  ('kev-007', 'key-e', 'activate', NULL,                     TIMESTAMP '2025-01-01 00:00:00', NULL),
+  ('kev-008', 'key-e', 'revoke',   'key_compromise',         TIMESTAMP '2026-03-08 10:00:00', TIMESTAMP '2026-01-10 00:00:00');
 
 INSERT INTO timestamp_authorities (tsa_id, name, valid_from, valid_until) VALUES
   ('tsa-1', 'Corp TSA',   TIMESTAMP '2025-01-01 00:00:00', TIMESTAMP '2027-01-01 00:00:00'),
@@ -37,7 +40,8 @@ INSERT INTO artifacts (artifact_id, channel_id, version) VALUES
   ('art-nu',      'stable', '2.7.2'),
   ('art-omicron', 'stable', '2.6.2'),
   ('art-xi',      'edge',   '1.9.4'),
-  ('art-pi',      'stable', '2.8.0');
+  ('art-pi',      'stable', '2.8.0'),
+  ('art-rho',     'edge',   '0.9.5');
 
 INSERT INTO artifact_evidence
   (evidence_id, artifact_id, sha256_digest, signer_key_id, signed_at, recorded_at,
@@ -56,7 +60,7 @@ INSERT INTO artifact_evidence
 
   ('ev-e1', 'art-epsilon', RPAD('e1e1e1e1', 64, '0'), 'key-c', TIMESTAMP '2026-01-20 08:00:00', TIMESTAMP '2026-01-20 08:05:00', 'attested',    NULL,    NULL,    NULL),
   ('ev-z1', 'art-zeta',    RPAD('f1f1f1f1', 64, '0'), 'key-c', TIMESTAMP '2026-01-05 08:00:00', TIMESTAMP '2026-01-05 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
-  ('ev-o1', 'art-omega',   RPAD('0a0a0a0a', 64, '0'), 'key-c', TIMESTAMP '2026-01-06 08:00:00', TIMESTAMP '2026-01-06 08:05:00', 'attested',    NULL,    NULL,    NULL),
+  ('ev-o1', 'art-omega',   RPAD('0a0a0a0a', 64, '0'), 'key-c', TIMESTAMP '2026-01-12 08:00:00', TIMESTAMP '2026-01-12 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
   ('ev-k1', 'art-kappa',   RPAD('4e4e4e4e', 64, '0'), 'key-c', TIMESTAMP '2026-02-05 08:00:00', TIMESTAMP '2026-02-05 08:05:00', 'attested',    NULL,    NULL,    'tsa-1'),
 
   ('ev-h1', 'art-eta',     RPAD('1b1b1b1b', 64, '0'), 'key-d', TIMESTAMP '2026-01-15 08:00:00', TIMESTAMP '2026-01-15 08:05:00', 'attested',    NULL,    NULL,    NULL),
@@ -74,7 +78,9 @@ INSERT INTO artifact_evidence
 
   ('ev-p1', 'art-pi',      RPAD('9d9d9d9d', 64, '0'), 'key-a', TIMESTAMP '2026-02-05 08:00:00', TIMESTAMP '2026-02-05 08:05:00', 'attested',    NULL,    NULL,    NULL),
   ('ev-p2', 'art-pi',      RPAD('aeaeaeae', 64, '0'), 'key-a', TIMESTAMP '2026-03-01 08:00:00', TIMESTAMP '2026-03-01 08:05:00', 'attested',    'ev-p1', 'key-c', NULL),
-  ('ev-p3', 'art-pi',      RPAD('bfbfbfbf', 64, '0'), 'key-a', TIMESTAMP '2026-03-15 08:00:00', TIMESTAMP '2026-03-15 08:05:00', 'withdrawn',   'ev-p2', 'key-a', NULL);
+  ('ev-p3', 'art-pi',      RPAD('bfbfbfbf', 64, '0'), 'key-a', TIMESTAMP '2026-03-15 08:00:00', TIMESTAMP '2026-03-15 08:05:00', 'withdrawn',   'ev-p2', 'key-a', NULL),
+
+  ('ev-r1', 'art-rho',     RPAD('cacacaca', 64, '0'), 'key-e', TIMESTAMP '2026-01-09 08:00:00', TIMESTAMP '2026-01-09 08:05:00', 'attested',    NULL,    NULL,    NULL);
 
 INSERT INTO pending_attestations (queue_id, artifact_id, enqueued_at) VALUES
   ('q-001', 'art-alpha',   TIMESTAMP '2026-03-20 09:00:00'),

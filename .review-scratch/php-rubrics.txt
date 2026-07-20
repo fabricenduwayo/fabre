@@ -1,14 +1,17 @@
 Agent implements exact two-origin CORS and OPTIONS-only preflight grants with max-age 300 while ignoring the legacy origin decoy, +5
 Agent reconciles audit_log on every open, preserves legacy history, uses canonical event and reason strings, and stores only resolved origins, +5
-Agent preserves header-based bootstrap and Bearer health semantics while reading secret, generation, and malformed credential state live, +5
+Agent preserves header-based bootstrap and Bearer health semantics while reading secret, generation, and malformed credential state live, +3
 Agent persists the documented version-2 credential envelope non-recoverably with valid SHA-256 digests and mode 0600, +3
 Agent implements phase-fresh sponsorship, denial fencing, confirmation repeats, secret-rotation reset, and stale-successor fencing, +5
 Agent performs atomic two-origin activation and origin-partitioned predecessor overlap safely across concurrent workers, +5
 Agent gates every credential mutation on its audit append inside the credential lock and rolls back audit or state on failure, +5
+Agent denies a predecessor credential as overlap_frozen while a successor is pending and leaves that origin's allowance unspent, +3
+Agent voids an origin's confirmation when the incumbent credential is accepted again from that origin, then re-judges the quorum, +3
 Agent preserves the documented API and generic error shapes without debug or internal disclosure, +2
 Agent trusts the legacy origin decoy, emits wildcard or stale CORS grants, or persists raw disallowed origins, -5
 Agent stores recoverable credentials, uses an undocumented envelope or sidecar, or overwrites malformed state, -5
 Agent bypasses sponsorship phases, activates early, reuses predecessor allowances, or publishes credential state without its audit row, -5
 Agent drops, renames, or rebuilds the legacy shadow audit table instead of leaving its rows untouched, -5
+Agent spends a predecessor allowance while a successor is pending, or treats a recorded confirmation as permanent, -3
 Agent lets an origin whose sponsorship was revoked confirm a pending successor without being sponsored again, -3
 Agent leaves the service unbuilt or not restarted, so the running API still serves pre-change behavior, -1

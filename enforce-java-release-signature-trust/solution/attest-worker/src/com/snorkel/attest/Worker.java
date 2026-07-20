@@ -69,12 +69,14 @@ public final class Worker {
                     continue;
                 }
                 if (!exposureExempt(operative.get(entry.getKey()), tsas, exposedAt)) {
-                    entry.setValue(new Verdict("quarantine", "channel_exposure"));
+                    entry.setValue(new Verdict(
+                            "quarantine", "channel_exposure", current.operativeEvidenceId()));
                 }
             }
 
             for (Map.Entry<String, Verdict> entry : verdicts.entrySet()) {
-                writeReport(conn, entry.getKey(), entry.getValue().verdict(), entry.getValue().reasonCode());
+                Verdict v = entry.getValue();
+                writeReport(conn, entry.getKey(), v.verdict(), v.reasonCode(), v.operativeEvidenceId());
             }
             conn.commit();
         }
@@ -89,38 +91,38 @@ public final class Worker {
             Map<String, Tsa> tsas
     ) throws IOException {
         if (evidence.getOrDefault(artifactId, List.of()).isEmpty()) {
-            return new Verdict("quarantine", "missing_evidence");
+            return new Verdict("quarantine", "missing_evidence", null);
         }
         Evidence row = operative.get(artifactId);
         if (row == null) {
-            return new Verdict("quarantine", "no_operative_evidence");
+            return new Verdict("quarantine", "no_operative_evidence", null);
         }
         String defect = signerDefect(row, keys, events, tsas);
         if (defect != null) {
-            return new Verdict("denied", defect);
+            return new Verdict("denied", defect, row.evidenceId());
         }
 
         HttpResult lookup = httpGet("/artifacts/" + artifactId);
         if (lookup.status() == 404) {
-            return new Verdict("denied", "unknown_artifact");
+            return new Verdict("denied", "unknown_artifact", row.evidenceId());
         }
         if (lookup.status() == 503) {
-            return new Verdict("quarantine", "registry_degraded");
+            return new Verdict("quarantine", "registry_degraded", row.evidenceId());
         }
         if (lookup.status() != 200) {
-            return new Verdict("quarantine", "registry_error");
+            return new Verdict("quarantine", "registry_error", row.evidenceId());
         }
         JsonNode registry = MAPPER.readTree(lookup.body());
         String signature = registry.path("detached_signature").asText();
 
         HttpResult verify = httpPostVerify(artifactId, row.sha256Digest(), signature);
         return switch (verify.status()) {
-            case 200 -> new Verdict("trusted", "verified");
-            case 400 -> new Verdict("denied", "bad_signature");
-            case 404 -> new Verdict("denied", "unknown_artifact");
-            case 409 -> new Verdict("denied", "digest_mismatch");
-            case 503 -> new Verdict("quarantine", "verify_degraded");
-            default -> new Verdict("quarantine", "verify_error");
+            case 200 -> new Verdict("trusted", "verified", row.evidenceId());
+            case 400 -> new Verdict("denied", "bad_signature", row.evidenceId());
+            case 404 -> new Verdict("denied", "unknown_artifact", row.evidenceId());
+            case 409 -> new Verdict("denied", "digest_mismatch", row.evidenceId());
+            case 503 -> new Verdict("quarantine", "verify_degraded", row.evidenceId());
+            default -> new Verdict("quarantine", "verify_error", row.evidenceId());
         };
     }
 
@@ -384,15 +386,21 @@ public final class Worker {
     }
 
     private static void writeReport(
-            Connection conn, String artifactId, String verdict, String reasonCode) throws Exception {
+            Connection conn,
+            String artifactId,
+            String verdict,
+            String reasonCode,
+            String operativeEvidenceId
+    ) throws Exception {
         try (PreparedStatement ps = conn.prepareStatement(
                 "MERGE INTO attestation_reports "
-                        + "(artifact_id, verdict, reason_code, checked_at) "
-                        + "KEY (artifact_id) VALUES (?, ?, ?, ?)")) {
+                        + "(artifact_id, verdict, reason_code, operative_evidence_id, checked_at) "
+                        + "KEY (artifact_id) VALUES (?, ?, ?, ?, ?)")) {
             ps.setString(1, artifactId);
             ps.setString(2, verdict);
             ps.setString(3, reasonCode);
-            ps.setTimestamp(4, Timestamp.from(Instant.now()));
+            ps.setString(4, operativeEvidenceId);
+            ps.setTimestamp(5, Timestamp.from(Instant.now()));
             ps.executeUpdate();
         }
     }
@@ -461,7 +469,7 @@ public final class Worker {
             String amendmentKeyId,
             String tsaId) {}
 
-    private record Verdict(String verdict, String reasonCode) {}
+    private record Verdict(String verdict, String reasonCode, String operativeEvidenceId) {}
 
     private record HttpResult(int status, String body) {}
 }

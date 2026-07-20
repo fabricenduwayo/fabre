@@ -18,12 +18,11 @@ wherever they disagree.
 `artifact_evidence` in H2 is authoritative for `sha256_digest`, `signer_key_id`,
 `signed_at`, and the countersignature. Registry JSON from the artifact-metadata API
 is not. An artifact has at most one operative evidence row and only that row bears
-on trust; A-2026-01 through A-2026-05 settle which row it is.
+on trust; the amendments settle which row it is.
 
 Signing keys are described by `signing_keys` and their history by
 `key_lifecycle_events`. There is no revocation column anywhere; key state is
-derived, and it is a fact about a key at an instant rather than a fact about an
-artifact. A-2026-06 through A-2026-10 settle it.
+derived. The amendments settle it.
 
 `GET http://localhost:8080/artifacts/{id}` returns registry metadata including
 `registry_digest` and `detached_signature`. The registry digest may lag H2; never
@@ -41,9 +40,8 @@ JSON:
 A `GET` success does not skip verify. Detached-signature validation happens only on
 `POST /verify`.
 
-Everything an artifact can fail on before the registry is contacted is settled
-without contacting it. `missing_evidence`, `no_operative_evidence`,
-`revoked_signer`, and `expired_key_signature` are all reached with no API call.
+An artifact the amendments already resolve to a verdict is never sent to the
+registry.
 
 ## API outcomes
 
@@ -82,4 +80,6 @@ outcomes.
 a service, or an absence of evidence to decide on, are recorded as `quarantine`;
 codes naming a defect in the evidence or the signing key are recorded as `denied`.
 
-`checked_at` is the worker timestamp when the verdict is recorded.
+`operative_evidence_id` is the `evidence_id` the verdict was decided on, or null
+when the artifact had no operative row. `checked_at` is the worker timestamp when
+the verdict is recorded.

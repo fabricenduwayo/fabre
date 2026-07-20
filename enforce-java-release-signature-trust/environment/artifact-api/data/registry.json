@@ -131,6 +131,16 @@
       "registry_degraded": false
     },
     {
+      "artifact_id": "art-rho",
+      "version": "0.9.5",
+      "registry_digest": "ddcacaca00000000000000000000000000000000000000000000000000000000",
+      "canonical_digest": "cacacaca00000000000000000000000000000000000000000000000000000000",
+      "detached_signature": "sig-cacacaca-key-e",
+      "signer_key_id": "key-e",
+      "verify_degraded": false,
+      "registry_degraded": false
+    },
+    {
       "artifact_id": "art-theta",
       "version": "2.6.0",
       "registry_digest": "dd2c2c2c00000000000000000000000000000000000000000000000000000000",

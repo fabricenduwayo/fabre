@@ -63,10 +63,12 @@ CREATE TABLE pending_attestations (
 );
 
 CREATE TABLE attestation_reports (
-  artifact_id VARCHAR(64) PRIMARY KEY,
-  verdict     VARCHAR(16) NOT NULL,
-  reason_code VARCHAR(64) NOT NULL,
-  checked_at  TIMESTAMP NOT NULL,
-  CONSTRAINT fk_ar_artifact FOREIGN KEY (artifact_id) REFERENCES artifacts(artifact_id),
-  CONSTRAINT ck_ar_verdict  CHECK (verdict IN ('trusted', 'denied', 'quarantine'))
+  artifact_id           VARCHAR(64) PRIMARY KEY,
+  verdict               VARCHAR(16) NOT NULL,
+  reason_code           VARCHAR(64) NOT NULL,
+  operative_evidence_id VARCHAR(64),
+  checked_at            TIMESTAMP NOT NULL,
+  CONSTRAINT fk_ar_artifact  FOREIGN KEY (artifact_id) REFERENCES artifacts(artifact_id),
+  CONSTRAINT fk_ar_evidence  FOREIGN KEY (operative_evidence_id) REFERENCES artifact_evidence(evidence_id),
+  CONSTRAINT ck_ar_verdict   CHECK (verdict IN ('trusted', 'denied', 'quarantine'))
 );
