@@ -5,7 +5,7 @@ evidence: an artifact is trusted only when its detached signature verifies again
 the canonical digest under a signing key that has not been revoked. Registry
 metadata is convenience data, not a basis for trust.
 
-The worker at `/app/attest-worker` drains `pending_attestations` in `enqueued_at` order and writes one row per artifact into `attestation_reports`.
+The worker at `/app/attest-worker` processes every row in `pending_attestations` in `enqueued_at` order and writes one row per artifact into `attestation_reports`. The queue is an input, not a work list to consume: rows stay in `pending_attestations` after a run, and the worker never deletes or updates them.
 
 ## Canonical evidence
 
