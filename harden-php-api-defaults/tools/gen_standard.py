@@ -469,6 +469,15 @@ AMENDMENTS_REAL = [
      "is rolled back. Immediately before activation is published, the live "
      "credential generation is re-read in the same critical section; a pending "
      "successor that became stale is denied without confirmation or activation."),
+    ("G-2026-39", "AC-BOOTSTRAP",
+     "Only a regular file at `/app/harbordesk/data/admin_token` is an "
+     "administrative token file. A path occupied by any other filesystem "
+     "object (for example a directory) does not make the node already "
+     "bootstrapped: eligibility under G-2026-19 treats it as no token on "
+     "disk, secret validation proceeds, and the attempt then fails at "
+     "publication, which G-2026-38 resolves as `500` with the audit row "
+     "rolled back and nothing minted. Such a request is never refused as "
+     "`already_bootstrapped`."),
     ("G-2026-38", "AU-LEDGER-SCOPE",
      "A successful `POST /admin/bootstrap` is subject to the same ledger gate as "
      "G-2026-34, whether it mints the initial credential or stages a pending "

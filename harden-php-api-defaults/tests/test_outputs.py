@@ -215,6 +215,31 @@ def test_failed_audit_append_cannot_publish_bootstrap_state():
     assert health(pending, ALLOWED)[0] == 200
 
 
+def test_failed_publication_rolls_back_the_bootstrap_audit_row():
+    """A non-file at the token path is not a token: bootstrap proceeds, fails at
+    publication per G-2026-39, returns 500, and its audit row is rolled back."""
+    reset_state()
+    # Reconcile the legacy ledger so audit_log carries the documented columns.
+    assert health()[0] == 401
+    if os.path.exists(TOKEN_FILE):
+        os.remove(TOKEN_FILE)
+    os.mkdir(TOKEN_FILE)
+    try:
+        before = len(audit_rows())
+        assert bootstrap(read_secret())[0] == 500, (
+            "a directory at the token path must fail publication, not read as "
+            "already_bootstrapped"
+        )
+        assert len(audit_rows()) == before, (
+            "an audit row survived a failed credential publication"
+        )
+    finally:
+        os.rmdir(TOKEN_FILE)
+
+    token = bootstrap_ok()
+    assert health(token, ALLOWED)[0] == 200
+
+
 def test_no_disclosure_on_unknown_routes_denials_and_failures():
     """Unknown routes, denials, and an injected ledger fault reveal nothing internal."""
     reset_state()

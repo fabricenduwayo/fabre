@@ -439,3 +439,8 @@ An origin that confirms a pending successor has cut over to it. If the incumbent
 
 A successful `POST /admin/bootstrap` is subject to the same ledger gate as G-2026-34, whether it mints the initial credential or stages a pending successor. Its `audit_log` row is appended before the credential envelope is published, inside the credential lock, with the SQLite transaction held open across publication. If the append fails, the request returns `500`, publishes no credential state, and returns no token the caller could use. If publication fails, the audit row is rolled back and the request returns `500`. Denied bootstrap attempts record their row as before.
 
+
+### G-2026-39 — amends AC-BOOTSTRAP
+
+Only a regular file at `/app/harbordesk/data/admin_token` is an administrative token file. A path occupied by any other filesystem object (for example a directory) does not make the node already bootstrapped: eligibility under G-2026-19 treats it as no token on disk, secret validation proceeds, and the attempt then fails at publication, which G-2026-38 resolves as `500` with the audit row rolled back and nothing minted. Such a request is never refused as `already_bootstrapped`.
+
