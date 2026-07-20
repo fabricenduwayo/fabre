@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Submit repair-java-release-attestation-worker with ZIP + explanations + rubric."""
+"""Submit enforce-java-release-signature-trust with ZIP + explanations + rubric."""
 import os
 import re
 import sys
@@ -30,7 +30,7 @@ AHT_MINUTES = int(os.environ.get("AHT_MINUTES", "180"))
 SUBMISSION_ID = os.environ.get("SUBMISSION_ID", "")
 INSPIRATION_ID = os.environ.get("INSPIRATION_ID", "")
 FOLDER = Path(
-    "/Users/fabrice-mac-mini/Documents/snorkel-ai/repair-java-release-attestation-worker"
+    "/Users/fabrice-mac-mini/Documents/snorkel-ai/enforce-java-release-signature-trust"
 )
 RUBRIC = Path(
     "/Users/fabrice-mac-mini/Documents/snorkel-ai/.review-scratch/attestation-rubrics.txt"

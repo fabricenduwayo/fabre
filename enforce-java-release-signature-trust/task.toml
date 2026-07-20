@@ -18,10 +18,10 @@ languages = [
 ]
 tags = [
     "attestation",
-    "release-governance",
-    "h2",
-    "jdbc",
-    "http-api",
+    "code-signing",
+    "signature-verification",
+    "key-revocation",
+    "supply-chain",
 ]
 expert_time_estimate_min = 90
 junior_time_estimate_min = 240

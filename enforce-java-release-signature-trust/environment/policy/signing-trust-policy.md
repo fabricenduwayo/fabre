@@ -1,14 +1,19 @@
-# Release attestation policy
+# Artifact signing trust policy
+
+This policy governs how a release artifact earns trust. Trust follows the signing
+evidence: an artifact is trusted only when its detached signature verifies against
+the canonical digest under a signing key that has not been revoked. Registry
+metadata is convenience data, not a basis for trust.
 
 The worker at `/app/attest-worker` drains `pending_attestations` in `enqueued_at` order and writes one row per artifact into `attestation_reports`.
 
 ## Canonical evidence
 
-`artifact_evidence` in H2 is authoritative for `sha256_digest`, `signer_key_id`, and `revoked`. Registry JSON from the artifact-metadata API is not.
+`artifact_evidence` in H2 is authoritative for `sha256_digest`, `signer_key_id`, and `revoked`. Registry JSON from the artifact-metadata API is not. A revoked signing key denies the artifact before any registry call is made.
 
 `GET http://localhost:8080/artifacts/{id}` returns registry metadata including `registry_digest` and `detached_signature`. The registry digest may lag H2; never use it as the verify digest.
 
-## Verify step
+## Signature verification
 
 After a successful artifact lookup, call `POST http://localhost:8080/verify` with JSON:
 

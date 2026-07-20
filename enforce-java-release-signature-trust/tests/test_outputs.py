@@ -1,4 +1,4 @@
-"""Verifier tests for repair-java-release-attestation-worker.
+"""Verifier tests for enforce-java-release-signature-trust.
 
 The suite checks attestation_reports against the policy using the live
 artifact-metadata API and reruns the agent-built worker on variant H2 stores

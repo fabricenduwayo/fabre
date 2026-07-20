@@ -23,7 +23,7 @@ RUN chmod +x /app/artifact-api/build.sh /app/attest-worker/build.sh \
     && bash /app/artifact-api/build.sh \
     && bash /app/attest-worker/build.sh
 
-COPY policy/attestation-policy.md /app/policy/attestation-policy.md
+COPY policy/signing-trust-policy.md /app/policy/signing-trust-policy.md
 COPY attestation-db/schema.sql /app/attestation-db/schema.sql
 COPY attestation-db/seed.sql /app/attestation-db/seed.sql
 RUN mkdir -p /app/attestation-db \
