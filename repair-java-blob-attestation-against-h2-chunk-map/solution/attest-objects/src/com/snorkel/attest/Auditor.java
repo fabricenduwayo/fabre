@@ -18,13 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Attests a blob store's objects against what they were declared to hold.
+ * Attests each object in a blob store against the declaration it was accepted
+ * under.
  *
- * Each object declares a byte length and a digest. Its bytes are kept as an
- * ordered chunk map and as a materialised blob, and either copy can drift. An
- * object is attested against the declaration: the copy that still reproduces the
- * declared length and digest vouches for it, whichever copy that is. Bytes are
- * read to be hashed and then discarded; nothing reconstructed is written out.
+ * The declared length and digest are the evidence; the chunk map and the
+ * materialised blob are copies the store kept, and either can be tampered with or
+ * lost. An object is trusted only when a surviving copy still proves out against
+ * the declaration, whichever copy that is. Bytes are read to be hashed and then
+ * discarded; nothing reconstructed is written out.
  */
 public final class Auditor {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -42,19 +43,19 @@ public final class Auditor {
     }
 
     private static Verdict attest(Connection conn, Path root, Obj obj) throws Exception {
-        List<byte[]> declaredLength = new ArrayList<>();
+        List<byte[]> surviving = new ArrayList<>();
         for (byte[] copy : new byte[][] {chunkCopy(conn, root, obj), blobCopy(root, obj)}) {
             if (copy != null && copy.length == obj.size) {
-                declaredLength.add(copy);
+                surviving.add(copy);
             }
         }
-        if (declaredLength.isEmpty()) {
+        if (surviving.isEmpty()) {
             return new Verdict(obj.id, "unattestable", "missing_content");
         }
         if (!"sha256".equalsIgnoreCase(obj.algo)) {
             return new Verdict(obj.id, "unattestable", "unsupported_digest");
         }
-        for (byte[] copy : declaredLength) {
+        for (byte[] copy : surviving) {
             if (sha256Hex(copy).equalsIgnoreCase(obj.declared)) {
                 return new Verdict(obj.id, "intact", null);
             }

@@ -1,12 +1,13 @@
 """Build a blob store: content files under a store root plus the seed SQL.
 
 The shipped store and every held-out variant come out of this one code path so
-they cannot drift apart. An object declares a byte length and a digest; the
-store keeps its bytes as a chunk map and/or a materialised blob, and either can
-drift from the declaration. The shipped store is degenerate: for every object
-the chunk map and the blob agree and both match the declared length, so an
-auditor that reads whichever copy is handy reproduces the correct report on
-everything the agent can see. The held-out stores are where the copies disagree.
+they cannot drift apart. An object declares a byte length and a digest; the store
+keeps its bytes as a chunk map and/or a materialised blob, and either copy can be
+tampered with or lost while the declaration stands. The shipped store is
+degenerate: for every object the chunk map and the blob agree and both match the
+declared length, so an auditor that trusts whichever copy is handy reproduces the
+correct report on everything the agent can see. The held-out stores are where the
+copies disagree.
 
   python3 tests/corpus.py <store-root> --profile sample
 """
