@@ -2,6 +2,7 @@ Agent uses parameterized station lookups and reads relay, rule, transition, sequ
 Agent searches full branch-local authorization state while preserving safe repeated stations, bounded cyclic termination, and deterministic shortest-path ordering, +5
 Agent applies authorized relay transitions with relay guards and both exact-progress and existing-grant sequence guards, +5
 Agent tracks ordered sequence progress and epoch-stamped grants, invalidating only older grants after dependency relays reset, +5
+Agent snapshots every relay's reset epoch when a grant is stamped and fails a witness-named requirement once its witness relay has reset since that grant, +3
 Agent enforces first-match conjunctive route rules with independent relay freshness and transition-count windows, +5
 Agent recomputes armed overlapping lock groups to a fixed point for each search state, +3
 Agent preserves the documented health and planning API shapes while handling compatible live graph mutations, +3
@@ -9,3 +10,4 @@ Agent builds and restarts the Java service successfully after the repair, +2
 Agent hardcodes seeded paths, concatenates station ids into SQL, or caches mutable PostgreSQL authorization state, -5
 Agent collapses search history to station-only state and loses relay, sequence, epoch, or visit-sensitive branches, -5
 Agent keeps stale grants after a dependency reset or fires sequence-guarded transitions without their required progress or grant, -5
+Agent voids a grant because a non-dependency witness relay reset, or clears a witness-guarded requirement after its witness reset, -3
