@@ -13,7 +13,11 @@ RUN apt-get update \
         procps \
         tmux \
         asciinema \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean
+# The apt package index is kept on purpose. The agent harness runs
+# "apt-get update && apt-get install -y curl procps" at setup; if that runs with
+# a degraded network it needs the cached index to see curl and procps are already
+# present, otherwise the install aborts and the agent never starts.
 
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --require-hashes --no-deps -r /tmp/requirements.txt \
