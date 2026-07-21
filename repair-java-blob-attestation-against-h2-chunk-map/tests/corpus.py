@@ -41,6 +41,7 @@ class Obj:
     bucket: str
     declared: bytes
     chunks: list[bytes] | None = None
+    superseded: list[bytes] | None = None
     blob: bytes | None = None
     algo: str = "sha256"
     declared_digest: str | None = None
@@ -128,16 +129,18 @@ def variant_a(rng: random.Random) -> list[Obj]:
 
 
 def variant_b(rng: random.Random) -> list[Obj]:
-    """Stale chunk map, blob holds the content: intact on the blob, so an
-    auditor that reads the chunk map whenever one exists calls it corrupt. The
-    declared length is what separates the copy that holds the content from the
-    copy that does not."""
+    """Superseded chunk generations. Re-materialising an object appended a new
+    generation of chunk rows and left the older rows in place, so only the latest
+    generation is the object's current content. An auditor that reads every chunk
+    row, or the wrong generation, reconstructs stale content and calls a sound
+    object corrupt; here the blob is stale too, so the current generation is the
+    only copy that holds the declared content."""
     out = []
     for oid, n in [("obj-b001", 340), ("obj-b002", 260)]:
         content = body(rng, n, oid)
-        stale_chunks = [body(rng, n - 80, f"{oid}-stale")]
-        out.append(Obj(oid, "prod", content, chunks=stale_chunks, blob=content,
-                       cache="verified"))
+        old = body(rng, n - 40, f"{oid}-old")
+        out.append(Obj(oid, "prod", content, chunks=[content], superseded=[old],
+                       blob=body(rng, n - 90, f"{oid}-stale"), cache="verified"))
     out.append(sound(rng, "obj-b003", 210))
     return out
 
@@ -227,6 +230,11 @@ def variant_f(rng: random.Random) -> list[Obj]:
     f5 = body(rng, 240, "obj-f005")
     out.append(Obj("obj-f005", "prod", f5, chunks=[body(rng, 150, "f005-stale")],
                    blob=body(rng, 150, "f005-blob-stale"), algo="sha1", cache="verified"))
+    # Superseded generation whose current chunks hold the content, with a stale
+    # blob: sound only if the latest generation is the one that is read.
+    f6 = body(rng, 300, "obj-f006")
+    out.append(Obj("obj-f006", "prod", f6, chunks=[f6], superseded=[body(rng, 260, "f006-old")],
+                   blob=body(rng, 210, "f006-stale"), cache="verified"))
     return out
 
 
@@ -276,14 +284,23 @@ def build(root: Path, profile: str, seed: int) -> tuple[list[Obj], Path]:
         )
 
         if obj.chunks is not None:
-            for ordinal, chunk in enumerate(obj.chunks):
-                rel = f"chunks/{obj.oid}.{ordinal:03d}"
-                if ordinal not in obj.drop_chunks:
-                    (root / rel).write_bytes(chunk)
-                chunk_rows.append(
-                    "INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) "
-                    f"VALUES ({sql_str(obj.oid)}, {ordinal}, {sql_str(rel)}, {len(chunk)});"
-                )
+            current_gen = 1 if obj.superseded is not None else 0
+
+            def emit(gen: int, parts: list[bytes]) -> None:
+                for ordinal, chunk in enumerate(parts):
+                    rel = f"chunks/{obj.oid}.g{gen}.{ordinal:03d}"
+                    if not (gen == current_gen and ordinal in obj.drop_chunks):
+                        (root / rel).write_bytes(chunk)
+                    chunk_rows.append(
+                        "INSERT INTO object_chunks "
+                        "(object_id, generation, ordinal, chunk_path, size_bytes) "
+                        f"VALUES ({sql_str(obj.oid)}, {gen}, {ordinal}, {sql_str(rel)}, "
+                        f"{len(chunk)});"
+                    )
+
+            if obj.superseded is not None:
+                emit(0, obj.superseded)
+            emit(current_gen, obj.chunks)
 
         if obj.cache:
             digest = obj.digest() if obj.cache == "verified" else None

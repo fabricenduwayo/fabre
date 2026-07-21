@@ -8,6 +8,7 @@
 **/node_modules/
 **/*.jar
 !lib/**
+!ref/**
 **/*.mv.db
 **/*.trace.db
 *.log

@@ -66,18 +66,34 @@ public final class Auditor {
     /** The chunk map concatenated in ordinal order, or null if the object has no
      *  chunk rows or any chunk file is missing. */
     private static byte[] chunkCopy(Connection conn, Path root, Obj obj) throws Exception {
-        List<String> paths = new ArrayList<>();
+        List<int[]> keys = new ArrayList<>();
+        List<String> allPaths = new ArrayList<>();
+        int latest = Integer.MIN_VALUE;
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT chunk_path FROM object_chunks WHERE object_id = ? ORDER BY ordinal")) {
+                "SELECT generation, ordinal, chunk_path FROM object_chunks WHERE object_id = ?")) {
             ps.setString(1, obj.id);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    paths.add(rs.getString(1));
+                    int gen = rs.getInt(1);
+                    keys.add(new int[] {gen, rs.getInt(2)});
+                    allPaths.add(rs.getString(3));
+                    latest = Math.max(latest, gen);
                 }
             }
         }
-        if (paths.isEmpty()) {
+        if (allPaths.isEmpty()) {
             return null;
+        }
+        List<int[]> current = new ArrayList<>();
+        for (int i = 0; i < keys.size(); i++) {
+            if (keys.get(i)[0] == latest) {
+                current.add(new int[] {keys.get(i)[1], i});
+            }
+        }
+        current.sort((a, b) -> Integer.compare(a[0], b[0]));
+        List<String> paths = new ArrayList<>();
+        for (int[] entry : current) {
+            paths.add(allPaths.get(entry[1]));
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (String rel : paths) {

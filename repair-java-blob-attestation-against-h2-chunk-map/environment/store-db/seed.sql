@@ -15,20 +15,20 @@ INSERT INTO objects (object_id, bucket, declared_digest, digest_algo, blob_path,
 INSERT INTO objects (object_id, bucket, declared_digest, digest_algo, blob_path, size_bytes, created_at) VALUES ('obj-0013', 'archive', 'b99d4c8c3609548e626b1bdf5cbf4d2e4420dab8b9dba734e1a74e10df603bcc', 'sha256', 'blobs/obj-0013.bin', 210, '2026-04-13 03:15:00');
 INSERT INTO objects (object_id, bucket, declared_digest, digest_algo, blob_path, size_bytes, created_at) VALUES ('obj-0014', 'prod', '874f21907e7f3af381eae92f2f32f43ee605b42e277782f4a5b5366e7559e737', 'sha256', 'blobs/obj-0014.bin', 200, '2026-05-14 04:15:00');
 
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0001', 0, 'chunks/obj-0001.000', 211);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0002', 0, 'chunks/obj-0002.000', 222);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0003', 0, 'chunks/obj-0003.000', 233);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0004', 0, 'chunks/obj-0004.000', 244);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0005', 0, 'chunks/obj-0005.000', 120);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0005', 1, 'chunks/obj-0005.001', 130);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0006', 0, 'chunks/obj-0006.000', 120);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0006', 1, 'chunks/obj-0006.001', 130);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0007', 0, 'chunks/obj-0007.000', 277);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0008', 0, 'chunks/obj-0008.000', 288);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0009', 0, 'chunks/obj-0009.000', 300);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0010', 0, 'chunks/obj-0010.000', 180);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0013', 0, 'chunks/obj-0013.000', 210);
-INSERT INTO object_chunks (object_id, ordinal, chunk_path, size_bytes) VALUES ('obj-0014', 0, 'chunks/obj-0014.000', 200);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0001', 0, 0, 'chunks/obj-0001.g0.000', 211);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0002', 0, 0, 'chunks/obj-0002.g0.000', 222);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0003', 0, 0, 'chunks/obj-0003.g0.000', 233);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0004', 0, 0, 'chunks/obj-0004.g0.000', 244);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0005', 0, 0, 'chunks/obj-0005.g0.000', 120);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0005', 0, 1, 'chunks/obj-0005.g0.001', 130);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0006', 0, 0, 'chunks/obj-0006.g0.000', 120);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0006', 0, 1, 'chunks/obj-0006.g0.001', 130);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0007', 0, 0, 'chunks/obj-0007.g0.000', 277);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0008', 0, 0, 'chunks/obj-0008.g0.000', 288);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0009', 0, 0, 'chunks/obj-0009.g0.000', 300);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0010', 0, 0, 'chunks/obj-0010.g0.000', 180);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0013', 0, 0, 'chunks/obj-0013.g0.000', 210);
+INSERT INTO object_chunks (object_id, generation, ordinal, chunk_path, size_bytes) VALUES ('obj-0014', 0, 0, 'chunks/obj-0014.g0.000', 200);
 
 INSERT INTO attestation_cache (object_id, status, digest, verified_at) VALUES ('obj-0001', 'verified', '7c96d9c62f996a8a7a13bbb3a159b8e31865fecedcd582079d8bcbf1212f24e3', '2026-01-10 00:15:00');
 INSERT INTO attestation_cache (object_id, status, digest, verified_at) VALUES ('obj-0002', 'verified', '3d537591896c8cc685a99e51775c2018f14eb0f7e058450f751e21fb09748bb1', '2026-02-11 01:15:00');

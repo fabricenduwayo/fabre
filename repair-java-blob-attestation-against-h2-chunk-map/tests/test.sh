@@ -10,6 +10,10 @@ if [ "$PWD" = "/" ]; then
   exit 0
 fi
 
+# The reference attestor was the agent's to reverse-engineer, not to shell out
+# to. Move it out of the way so parity has to come from the agent's own control.
+rm -rf /app/ref
+
 PYTHONPATH=/tests python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA /tests/test_outputs.py -q
 rc=$?
 if [ "$rc" -eq 0 ]; then

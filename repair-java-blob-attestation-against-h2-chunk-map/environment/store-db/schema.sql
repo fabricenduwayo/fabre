@@ -12,13 +12,14 @@ CREATE TABLE IF NOT EXISTS objects (
     created_at      TIMESTAMP    NOT NULL
 );
 
--- The chunk map. Rows carry an explicit ordinal.
+-- The chunk map. Rows carry an ordinal and the generation they were written in.
 CREATE TABLE IF NOT EXISTS object_chunks (
     object_id  VARCHAR(64)  NOT NULL,
+    generation INT          NOT NULL,
     ordinal    INT          NOT NULL,
     chunk_path VARCHAR(256) NOT NULL,
     size_bytes BIGINT       NOT NULL,
-    PRIMARY KEY (object_id, ordinal),
+    PRIMARY KEY (object_id, generation, ordinal),
     FOREIGN KEY (object_id) REFERENCES objects (object_id)
 );
 

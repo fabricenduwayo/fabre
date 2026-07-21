@@ -96,10 +96,13 @@ def build_store(dest: Path, profile: str, seed: int) -> str:
 
 
 def _chunk_copy(root: Path, db_url: str, object_id: str) -> bytes | None:
-    """The chunk map concatenated in ordinal order, or None when the object has
-    no chunk rows or any chunk file is missing."""
+    """The current chunk map, the latest generation's rows in ordinal order, or
+    None when the object has no chunk rows or any of those files is missing."""
     rows = h2_select(
-        f"SELECT chunk_path FROM object_chunks WHERE object_id = '{object_id}' ORDER BY ordinal",
+        "SELECT chunk_path FROM object_chunks "
+        f"WHERE object_id = '{object_id}' AND generation = "
+        f"(SELECT MAX(generation) FROM object_chunks WHERE object_id = '{object_id}') "
+        "ORDER BY ordinal",
         db_url,
     )
     if not rows:
