@@ -5,7 +5,7 @@ object is to prove that the bytes it still holds are the bytes that were declare
 for it. The store fails closed: it refuses to vouch for anything it cannot prove.
 
 Its attestation has become unreliable and has to be re-established. The reference
-attestor at `/app/ref/attest-ref.jar` reaches the verdict the store should report
+attestor at `/app/ref/attest-ref` reaches the verdict the store should report
 for every object; how it reaches each verdict from the declaration and the copies
 the store kept is the behaviour to match. This policy fixes the verdicts it can
 reach and the shape of the record; the rule that assigns them is the reference's.

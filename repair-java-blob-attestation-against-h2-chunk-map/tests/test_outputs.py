@@ -1,10 +1,11 @@
 """Verifier tests for repair-java-blob-attestation-against-h2-chunk-map.
 
 Every parity check recomputes the correct report from the store the auditor was
-pointed at and compares it to what the auditor wrote. The shipped store is one
-input, where an object's chunk map and blob agree; the six variant stores are
-inputs the auditor was never shown, each pulling the two copies apart so that
-attesting the object means judging each copy against what the object declares.
+pointed at, mirroring the reference attestor, and compares it to what the auditor
+wrote. The shipped store is one input, where every object is single generation
+and its chunk map and blob agree; the six variant stores are inputs the auditor
+was never shown, each pulling the copies apart so that attesting an object means
+judging what actually survives against what was declared.
 """
 
 from __future__ import annotations
@@ -41,10 +42,10 @@ def test_variant_a_stale_blob_uses_chunk_map(variant_stores: dict[str, str]) -> 
     _assert_parity(variant_stores["variant-a"], "variant-a")
 
 
-def test_variant_b_stale_chunk_map_uses_blob(variant_stores: dict[str, str]) -> None:
-    """Where the chunk map is stale and the blob still holds the declared
-    content, the object is intact on the blob, so reading the chunk map whenever
-    one exists is wrong. The declared length is what tells the copies apart."""
+def test_variant_b_superseded_generations(variant_stores: dict[str, str]) -> None:
+    """Re-materialised objects keep their older chunk rows. Only the latest
+    generation is the current content, so a reader that concatenates every chunk
+    row reconstructs superseded remnants and condemns a sound object."""
     _assert_parity(variant_stores["variant-b"], "variant-b")
 
 
@@ -67,22 +68,23 @@ def test_variant_e_conflicts_from_recompute(variant_stores: dict[str, str]) -> N
 
 
 def test_variant_f_combined(variant_stores: dict[str, str]) -> None:
-    """A stale chunk map, a content-bearing blob declared under sha1, a blob
-    rescue, and a verified cache row all in one store."""
+    """Stale chunks under a sha1 declaration, a blob rescue, a superseded
+    generation, and a verified cache row all in one store."""
     _assert_parity(variant_stores["variant-f"], "variant-f")
 
 
 def test_intact_can_come_from_either_copy(variant_stores: dict[str, str]) -> None:
-    """Objects are intact whether the surviving copy is the chunk map (variant a)
-    or the blob (variant b), so neither copy is privileged."""
+    """Objects are intact whether the copy that still proves out is the chunk
+    map (variant a, stale blob) or the blob (variant d, broken chunk map), so
+    neither copy is privileged."""
     a = expected_report(variant_stores["variant-a"])
-    b = expected_report(variant_stores["variant-b"])
+    d = expected_report(variant_stores["variant-d"])
     assert "obj-a001" in a["intact"], "variant a: stale blob should not sink a sound chunk map"
-    assert "obj-b001" in b["intact"], "variant b: stale chunk map should not sink a sound blob"
+    assert "obj-d001" in d["intact"], "variant d: a broken chunk map should not sink a sound blob"
     got_a = normalise(run_agent(variant_stores["variant-a"], _report_path("either-a")))
-    got_b = normalise(run_agent(variant_stores["variant-b"], _report_path("either-b")))
+    got_d = normalise(run_agent(variant_stores["variant-d"], _report_path("either-d")))
     assert got_a == normalise(a)
-    assert got_b == normalise(b)
+    assert got_d == normalise(d)
 
 
 def test_missing_content_never_lands_in_corrupt(variant_stores: dict[str, str]) -> None:
