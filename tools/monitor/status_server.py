@@ -100,110 +100,162 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Terminus submissions</title>
+<title>Terminus pipeline</title>
 <style>
 :root{
-  --bg:#0a0c10; --surface:#12161d; --raise:#1a2029; --line:#232b36;
-  --ink:#e9edf4; --dim:#8b96a7; --faint:#5b6675;
-  --needs:#ffa63d; --eval:#4d9cff; --review:#b08cff; --accept:#3ddc97; --offer:#6b7789;
+  --bg:#0d0d0c; --surface:#1a1a19; --raise:#222220; --raise2:#2a2a27;
+  --line:#302f2b; --line2:#3c3b36;
+  --ink:#ffffff; --ink2:#c3c2b7; --muted:#87867a; --faint:#61605a;
+  /* validated status palette on the dark surface */
+  --good:#0ca30c; --warn:#fab219; --review:#b18cf2; --info:#3987e5; --neutral:#8a8a80;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);
-  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased;padding-bottom:40px}
+body{
+  background:
+    radial-gradient(1100px 520px at 78% -8%, rgba(57,135,229,.10), transparent 60%),
+    radial-gradient(900px 480px at 8% 0%, rgba(250,178,25,.06), transparent 55%),
+    var(--bg);
+  color:var(--ink); min-height:100vh; padding-bottom:44px;
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px}
 
-header{position:sticky;top:0;z-index:10;background:rgba(10,12,16,.86);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 18px 0}
-.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-h1{margin:0;font-size:16px;font-weight:650;letter-spacing:-.01em}
-.sub{color:var(--faint);font-size:12px;margin-top:2px}
-.stamp{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums}
-
-button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);
-  background:var(--raise);color:var(--ink);padding:7px 13px;font-size:13px;
-  display:inline-flex;align-items:center;gap:7px;transition:.15s}
+header{position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,rgba(13,13,12,.94),rgba(13,13,12,.72));
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hin{max-width:900px;margin:0 auto;padding:15px 16px 0;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:11px}
+.spark{width:30px;height:30px;border-radius:9px;flex:0 0 auto;position:relative;
+  background:linear-gradient(150deg,#3987e5,#0ca30c);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
+.spark::after{content:"";position:absolute;inset:8px;border-radius:4px;
+  background:var(--bg);box-shadow:0 0 12px rgba(57,135,229,.5)}
+h1{margin:0;font-size:16px;font-weight:680;letter-spacing:-.02em}
+.tag{color:var(--faint);font-size:12px;margin-top:1px;letter-spacing:.01em}
+.right{text-align:right;flex:0 0 auto}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line2);
+  background:var(--raise);color:var(--ink);padding:7px 13px;font-size:13px;font-weight:520;
+  display:inline-flex;align-items:center;gap:8px;transition:.15s}
+button:hover{background:var(--raise2);border-color:#494840}
 button:active{transform:scale(.97)}
-button[disabled]{opacity:.6;cursor:default}
+button[disabled]{opacity:.55;cursor:default}
 .spin{width:12px;height:12px;border:2px solid var(--faint);border-top-color:var(--ink);
   border-radius:50%;animation:sp .7s linear infinite;display:none}
 button.busy .spin{display:block}
 @keyframes sp{to{transform:rotate(360deg)}}
+.stamp{color:var(--muted);font-size:11.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+.stamp b{color:var(--ink2);font-weight:600}
 
-.bar{height:2px;margin:12px -18px 0;background:transparent;overflow:hidden}
-.bar.on{background:rgba(77,156,255,.18)}
-.bar.on::after{content:"";display:block;height:100%;width:35%;background:var(--eval);
+.bar{height:2px;margin-top:14px;background:transparent;overflow:hidden}
+.bar.on{background:rgba(57,135,229,.16)}
+.bar.on::after{content:"";display:block;height:100%;width:32%;
+  background:linear-gradient(90deg,transparent,var(--info),transparent);
   animation:slide 1.1s ease-in-out infinite}
-@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+@keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
 
-.chips{display:flex;gap:7px;overflow-x:auto;padding:12px 18px 13px;
-  scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);
-  color:var(--dim);border-radius:999px;padding:5px 11px;font-size:12.5px;
-  display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
-  transition:.15s;white-space:nowrap}
-.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--c);opacity:.35}
-.chip.on{color:var(--ink);border-color:var(--c);background:var(--raise)}
-.chip.on .dot{opacity:1}
-.chip b{font-variant-numeric:tabular-nums;font-weight:600}
+/* pipeline funnel */
+.flow{display:flex;align-items:stretch;gap:6px;margin:18px 0 6px;overflow-x:auto;
+  scrollbar-width:none;padding-bottom:2px}
+.flow::-webkit-scrollbar{display:none}
+.stage{flex:1 1 0;min-width:112px;position:relative;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:12px 13px 13px;cursor:pointer;transition:.16s;color:inherit;overflow:hidden}
+.stage:hover{border-color:var(--line2);transform:translateY(-1px)}
+.stage::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c);opacity:.9}
+.stage.off{opacity:.4}
+.stage.off .num{color:var(--muted)}
+.stage.on{box-shadow:0 0 0 1px var(--c) inset, 0 6px 18px -12px var(--c)}
+.srow{display:flex;align-items:center;gap:7px;color:var(--c)}
+.glyph{font-size:13px;line-height:1;width:16px;text-align:center}
+.slabel{font-size:11px;font-weight:640;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2)}
+.num{font-size:30px;font-weight:720;letter-spacing:-.03em;margin-top:6px;
+  font-variant-numeric:tabular-nums;line-height:1}
+.snote{color:var(--faint);font-size:11px;margin-top:3px}
+.chev{flex:0 0 auto;align-self:center;color:var(--line2);font-size:15px;user-select:none}
+.pulse::after{content:"";position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;
+  background:var(--warn);box-shadow:0 0 0 0 rgba(250,178,25,.6);animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(250,178,25,.5)}70%{box-shadow:0 0 0 8px rgba(250,178,25,0)}100%{box-shadow:0 0 0 0 rgba(250,178,25,0)}}
 
-main{padding:4px 18px 0;max-width:720px;margin:0 auto}
+.hint{color:var(--faint);font-size:11.5px;margin:2px 2px 14px}
+
+/* cards */
+.err{background:rgba(250,178,25,.10);border:1px solid rgba(250,178,25,.32);
+  color:var(--warn);border-radius:12px;padding:10px 13px;margin-bottom:12px;font-size:13px}
+.list.busy{opacity:.5;transition:.2s}
 .card{position:relative;background:var(--surface);border:1px solid var(--line);
-  border-radius:12px;padding:14px 15px 13px 18px;margin-bottom:9px;overflow:hidden}
+  border-radius:14px;padding:14px 15px 13px 18px;margin-bottom:10px;overflow:hidden;transition:.16s}
+.card:hover{border-color:var(--line2);transform:translateY(-1px)}
 .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
 .ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.folder{font-weight:600;font-size:14.5px;letter-spacing:-.01em;word-break:break-word;line-height:1.35}
+.folder{font-weight:640;font-size:15px;letter-spacing:-.01em;word-break:break-word;line-height:1.35}
 .folder.none{color:var(--faint);font-weight:400;font-style:italic}
-.state{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.07em;
-  color:var(--c);display:flex;align-items:center;gap:5px;padding-top:2px}
-.state .dot{width:6px;height:6px;border-radius:50%;background:var(--c)}
-.meta{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:9px;
-  color:var(--dim);font-size:12px}
+.pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 8px;
+  border-radius:999px;font-size:11px;font-weight:640;letter-spacing:.03em;
+  color:var(--c);background:color-mix(in srgb, var(--c) 15%, transparent);
+  border:1px solid color-mix(in srgb, var(--c) 34%, transparent);white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:6px 13px;margin-top:10px;color:var(--muted);font-size:12px;align-items:center}
 .meta .id{color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
-.note{color:var(--c);opacity:.85}
+.pay{border:1px solid var(--line2);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--ink2)}
+.pay.win{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent);
+  background:color-mix(in srgb,var(--good) 12%,transparent)}
+.empty{color:var(--faint);text-align:center;padding:38px 0;font-size:13.5px}
 
-.sk{height:74px;border-radius:12px;margin-bottom:9px;border:1px solid var(--line);
+.sk{height:78px;border-radius:14px;margin-bottom:10px;border:1px solid var(--line);
   background:linear-gradient(90deg,var(--surface) 25%,var(--raise) 37%,var(--surface) 63%);
   background-size:400% 100%;animation:sh 1.3s ease infinite}
 @keyframes sh{0%{background-position:100% 50%}100%{background-position:0 50%}}
-.list.busy{opacity:.45;transition:.2s}
-.err{background:rgba(255,166,61,.1);border:1px solid rgba(255,166,61,.3);
-  color:var(--needs);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:13px}
-.empty{color:var(--faint);text-align:center;padding:34px 0;font-size:13.5px}
+
+@media (max-width:600px){
+  .chev{display:none}
+  .flow{flex-wrap:wrap}
+  .stage{flex:1 1 44%;min-width:0}
+  .num{font-size:26px}
+}
 </style></head><body>
 
 <header>
-  <div class="hrow">
-    <div>
-      <h1>Terminus submissions</h1>
-      <div class="sub">Terminus-2nd-Edition</div>
+  <div class="hin">
+    <div class="brand">
+      <div class="spark"></div>
+      <div>
+        <h1>Terminus</h1>
+        <div class="tag">submission pipeline</div>
+      </div>
     </div>
-    <div style="text-align:right">
+    <div class="right">
       <button id="rf"><span class="spin"></span><span id="rfl">Refresh</span></button>
-      <div class="stamp" id="up" style="margin-top:5px">-</div>
+      <div class="stamp">updated <b id="up">-</b></div>
     </div>
   </div>
   <div class="bar" id="bar"></div>
-  <div class="chips" id="chips"></div>
 </header>
 
-<main>
+<div class="wrap">
+  <div class="flow" id="flow"></div>
+  <div class="hint" id="hint"></div>
   <div id="err"></div>
   <div class="list" id="list"></div>
-</main>
+</div>
 
 <script>
-const COLOR = {NEEDS_REVISION:"var(--needs)",EVALUATION_PENDING:"var(--eval)",
-  REVIEW_PENDING:"var(--review)",ACCEPTED:"var(--accept)",OFFERED:"var(--offer)"};
-const KEY = "tsb-hidden";
+const STATES = {
+  OFFERED:            {label:"Offered",    note:"unclaimed",        color:"var(--neutral)", glyph:"\\u25CB"},
+  EVALUATION_PENDING: {label:"Evaluating", note:"autoeval running", color:"var(--info)",    glyph:"\\u25D0"},
+  NEEDS_REVISION:     {label:"Needs you",  note:"your move",        color:"var(--warn)",    glyph:"\\u25C6"},
+  REVIEW_PENDING:     {label:"In review",  note:"with a reviewer",  color:"var(--review)",  glyph:"\\u25D1"},
+  ACCEPTED:           {label:"Accepted",   note:"done",             color:"var(--good)",    glyph:"\\u2713"},
+};
+const PIPELINE = ["OFFERED","EVALUATION_PENDING","NEEDS_REVISION","REVIEW_PENDING","ACCEPTED"];
+const KEY = "tsb-hidden-v2";
 let data = null, busy = false;
 let hidden = new Set(JSON.parse(localStorage.getItem(KEY) || '["OFFERED"]'));
 
 const esc = s => (s||"").replace(/[&<>"]/g, c =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const pretty = s => esc((s||"").replace(/_/g," ").toLowerCase());
-const col = s => COLOR[s] || "var(--offer)";
+const meta = s => STATES[s] || {label:s, note:"", color:"var(--neutral)", glyph:"\\u25CB"};
+const save = () => localStorage.setItem(KEY, JSON.stringify([...hidden]));
 
 function paintBusy(){
   document.getElementById("bar").className = "bar" + (busy ? " on" : "");
@@ -218,42 +270,60 @@ function render(){
   paintBusy();
   const list = document.getElementById("list");
   if(!data){
-    list.innerHTML = busy ? '<div class="sk"></div>'.repeat(4) : '';
+    document.getElementById("flow").innerHTML = "";
+    list.innerHTML = busy ? '<div class="sk"></div>'.repeat(4) : "";
     return;
   }
   document.getElementById("up").textContent = data.updated;
   document.getElementById("err").innerHTML = data.error
     ? '<div class="err">' + esc(data.error) + ' &middot; showing last good data</div>' : '';
 
-  document.getElementById("chips").innerHTML = data.counts.map(c =>
-    '<div class="chip ' + (hidden.has(c.state) ? '' : 'on') + '" data-s="' + c.state +
-    '" style="--c:' + col(c.state) + '"><span class="dot"></span>' +
-    pretty(c.state) + ' <b>' + c.n + '</b></div>').join("");
+  const cnt = {}; (data.counts||[]).forEach(c => cnt[c.state] = c.n);
 
-  const rows = data.rows.filter(r => !hidden.has(r.state));
-  list.innerHTML = rows.length ? rows.map(r =>
-    '<div class="card" style="--c:' + col(r.state) + '">' +
+  document.getElementById("flow").innerHTML = PIPELINE.map((s, i) => {
+    const m = meta(s), n = cnt[s] || 0, on = !hidden.has(s);
+    const attn = s === "NEEDS_REVISION" && n > 0 ? " pulse" : "";
+    const tile =
+      '<button class="stage ' + (on ? 'on' : 'off') + attn + '" data-s="' + s +
+        '" style="--c:' + m.color + '">' +
+        '<div class="srow"><span class="glyph">' + m.glyph + '</span>' +
+        '<span class="slabel">' + esc(m.label) + '</span></div>' +
+        '<div class="num">' + n + '</div>' +
+        '<div class="snote">' + esc(m.note) + '</div>' +
+      '</button>';
+    const chev = i < PIPELINE.length - 1 ? '<span class="chev">\\u203A</span>' : '';
+    return tile + chev;
+  }).join("");
+
+  const shown = data.rows.filter(r => !hidden.has(r.state));
+  document.getElementById("hint").textContent =
+    shown.length + " of " + data.total + " shown \\u00B7 tap a stage to filter";
+
+  list.innerHTML = shown.length ? shown.map(r => {
+    const m = meta(r.state);
+    const win = /PAYOUT/i.test(r.payment);
+    return '<div class="card" style="--c:' + m.color + '">' +
       '<div class="ctop">' +
         '<span class="folder' + (r.folder ? '' : ' none') + '">' +
           esc(r.folder || "unclaimed slot") + '</span>' +
-        '<span class="state"><span class="dot"></span>' + pretty(r.state) + '</span>' +
+        '<span class="pill"><span class="glyph">' + m.glyph + '</span>' + esc(m.label) + '</span>' +
       '</div>' +
       '<div class="meta">' +
-        '<span class="note">' + esc(r.note) + '</span>' +
+        '<span>' + esc(r.note) + '</span>' +
         '<span>' + esc(r.created) + '</span>' +
-        '<span>' + pretty(r.payment) + '</span>' +
+        (r.payment ? '<span class="pay' + (win ? ' win' : '') + '">' +
+           esc(r.payment.replace(/_/g," ").toLowerCase()) + '</span>' : '') +
         '<span class="id">' + esc(r.id.slice(0,8)) + '</span>' +
-      '</div></div>').join("")
-    : '<div class="empty">Nothing to show &middot; every state is filtered out</div>';
+      '</div></div>';
+  }).join("") : '<div class="empty">Nothing here \\u00B7 every stage is filtered out</div>';
 }
 
-document.getElementById("chips").onclick = e => {
-  const chip = e.target.closest(".chip");
-  if(!chip) return;
-  const s = chip.dataset.s;
+document.getElementById("flow").onclick = e => {
+  const st = e.target.closest(".stage");
+  if(!st) return;
+  const s = st.dataset.s;
   hidden.has(s) ? hidden.delete(s) : hidden.add(s);
-  localStorage.setItem(KEY, JSON.stringify([...hidden]));
-  render();
+  save(); render();
 };
 
 async function load(force){
