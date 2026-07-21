@@ -56,6 +56,41 @@ SHOULD NOT DO:
 - Do not treat "AutoEval Failure" as the diagnosis or ask Terminus Bot to explain
   it — the bot is literal and will chase the wrapper, not the LLMaJ summary.
 
+## Category and policy status (snapshot: 2026-07-20)
+
+This is a **live** platform gate that changes; always re-check the portal's Task
+Category Status page before starting a new task. Tasks already in the revision
+queue or awaiting review are **not** affected by a block — they continue through
+to Accepted. Blocked categories are hidden from the Task Gallery.
+
+**Categories — blocked (do not start new tasks here):**
+- `data-processing` — blocked Jul 10, 2026
+- `debugging` — blocked Jun 18, 2026
+- `software-engineering` — blocked Jun 18, 2026
+
+**Categories — open:** `system-administration`, `build-and-dependency-management`,
+`games`, `machine-learning`, `security`, `scientific-computing`.
+
+The `category_classifier` static check reads task **content**, not the declared
+`category`, and blocks a task whose predicted category is blocked (seen firing at
+0.95 confidence). A `repair-*` / bug-fix task reads as `software-engineering`
+even when tagged `security`. Fixing this is a genuine reorientation of the task
+(folder name, instruction framing, policy/spec focus), not a metadata relabel or
+one reworded sentence — see the `enforce-java-release-signature-trust` reframe.
+
+**Milestones:** new milestone tasks are blocked (since Jun 29, 2026) regardless
+of category.
+
+**Policies and settings:**
+- `allow_internet = true` — allowed only when genuinely required; an eval checks
+  whether internet is actually needed (Jul 13, 2026).
+- `codebase_size = "minimal"` — re-allowed (May 11, 2026).
+- Base images — canonical list preferred; non-canonical needs a credible
+  justification (Jun 12, 2026). The pinned `public.ecr.aws/.../python:3.13-slim-bookworm`
+  digest counts as canonical (the static checker reports it "sanctioned" and
+  "matches the canonical Python image by digest"); there is no canonical PHP
+  base, so Python-base + language-via-apt is the sanctioned dual-language pattern.
+
 ## Submission and review flow
 
 SHOULD DO:
