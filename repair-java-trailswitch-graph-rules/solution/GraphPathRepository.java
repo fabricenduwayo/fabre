@@ -63,7 +63,7 @@ public class GraphPathRepository {
     public Map<String, List<SequenceRequirement>> loadSequenceRequirements() {
         return jdbc.query(
                 "SELECT rule_id, requirement_order, sequence_id, freshness_relay_id, "
-                        + "min_transitions_since, max_transitions_since "
+                        + "min_transitions_since, max_transitions_since, witness_relay_id "
                         + "FROM route_rule_sequence_requirements "
                         + "ORDER BY rule_id, requirement_order",
                 rs -> {
@@ -76,7 +76,8 @@ public class GraphPathRepository {
                                         rs.getString("sequence_id"),
                                         rs.getString("freshness_relay_id"),
                                         (Integer) rs.getObject("min_transitions_since"),
-                                        (Integer) rs.getObject("max_transitions_since"));
+                                        (Integer) rs.getObject("max_transitions_since"),
+                                        rs.getString("witness_relay_id"));
                         grouped.computeIfAbsent(
                                         requirement.ruleId(), ignored -> new ArrayList<>())
                                 .add(requirement);

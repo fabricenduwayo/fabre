@@ -153,6 +153,28 @@ def restore_yard_reset_transition() -> None:
     )
 
 
+def remove_witness_reset_transition() -> None:
+    """Remove the V-to-W siding bolt reset so the witness never resets."""
+    run_sql(
+        "DELETE FROM edge_relay_transitions "
+        "WHERE edge_id = 'e_v_w' AND relay_id = 'siding_bolt';"
+    )
+
+
+def restore_witness_reset_transition() -> None:
+    """Restore the seeded V-to-W siding bolt reset transition."""
+    run_sql(
+        "INSERT INTO edge_relay_transitions ("
+        "edge_id, transition_order, relay_id, from_state, to_state, "
+        "requires_relay_id, requires_relay_state, "
+        "requires_sequence_id, requires_sequence_progress"
+        ") VALUES ("
+        "'e_v_w', 1, 'siding_bolt', 'open', 'sealed', "
+        "NULL, NULL, NULL, NULL"
+        ") ON CONFLICT (edge_id, transition_order, relay_id) DO NOTHING;"
+    )
+
+
 def tighten_departure_transition_window() -> None:
     """Require zero yard transitions for the visit-based departure clearance."""
     run_sql(

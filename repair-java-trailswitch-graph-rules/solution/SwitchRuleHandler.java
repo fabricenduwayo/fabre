@@ -27,7 +27,8 @@ public class SwitchRuleHandler {
             Map<String, String> relayState,
             Map<String, Integer> transitionCounts,
             Set<String> visitedStations,
-            Map<String, SequenceGrant> sequenceGrants) {
+            Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> relayResetEpochs) {
         Set<String> locked = new HashSet<>();
         List<RouteRule> rules = repository.loadRules();
         Map<String, Boolean> edgeDecided = new HashMap<>();
@@ -41,6 +42,7 @@ public class SwitchRuleHandler {
                     transitionCounts,
                     visitedStations,
                     sequenceGrants,
+                    relayResetEpochs,
                     rule)) {
                 if ("clear".equalsIgnoreCase(rule.ruleAction())) {
                     edgeDecided.put(rule.edgeId(), true);
@@ -145,7 +147,11 @@ public class SwitchRuleHandler {
             epochsAtGrant.put(relayId, resetEpochs.getOrDefault(relayId, 0));
             countsAtGrant.put(relayId, transitionCounts.getOrDefault(relayId, 0));
         }
-        return new SequenceGrant(sequenceId, Map.copyOf(epochsAtGrant), Map.copyOf(countsAtGrant));
+        return new SequenceGrant(
+                sequenceId,
+                Map.copyOf(epochsAtGrant),
+                Map.copyOf(countsAtGrant),
+                Map.copyOf(resetEpochs));
     }
 
     private void voidStaleGrants(
@@ -207,6 +213,7 @@ public class SwitchRuleHandler {
             Map<String, Integer> transitionCounts,
             Set<String> visitedStations,
             Map<String, SequenceGrant> sequenceGrants,
+            Map<String, Integer> relayResetEpochs,
             RouteRule rule) {
         if (rule.lockSw1() != null
                 && !switches.getOrDefault("sw1", "").equalsIgnoreCase(rule.lockSw1())) {
@@ -240,7 +247,7 @@ public class SwitchRuleHandler {
         }
         for (SequenceRequirement requirement : requirementsForRule(rule)) {
             if (!sequenceRequirementSatisfied(
-                    requirement, sequenceGrants, transitionCounts)) {
+                    requirement, sequenceGrants, transitionCounts, relayResetEpochs)) {
                 return false;
             }
         }
@@ -265,6 +272,7 @@ public class SwitchRuleHandler {
                             rule.requiresCompletedSequence(),
                             null,
                             null,
+                            null,
                             null));
         }
         return requirements;
@@ -273,10 +281,18 @@ public class SwitchRuleHandler {
     private boolean sequenceRequirementSatisfied(
             SequenceRequirement requirement,
             Map<String, SequenceGrant> sequenceGrants,
-            Map<String, Integer> transitionCounts) {
+            Map<String, Integer> transitionCounts,
+            Map<String, Integer> relayResetEpochs) {
         SequenceGrant grant = sequenceGrants.get(requirement.sequenceId());
         if (grant == null) {
             return false;
+        }
+        if (requirement.witnessRelayId() != null) {
+            int currentEpoch = relayResetEpochs.getOrDefault(requirement.witnessRelayId(), 0);
+            int atGrant = grant.witnessEpochsAtGrant().getOrDefault(requirement.witnessRelayId(), 0);
+            if (currentEpoch > atGrant) {
+                return false;
+            }
         }
         if (requirement.freshnessRelayId() == null) {
             return true;

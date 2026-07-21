@@ -58,7 +58,8 @@ public class PathPlanner {
                             current.relays(),
                             current.transitionCounts(),
                             current.visited(),
-                            current.sequenceGrants());
+                            current.sequenceGrants(),
+                            current.relayResetEpochs());
             for (EdgeRow edge : repository.loadOutgoing(current.station())) {
                 if (locked.contains(edge.edgeId())) {
                     continue;

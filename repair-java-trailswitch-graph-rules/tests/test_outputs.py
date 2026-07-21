@@ -9,12 +9,14 @@ from helpers import (
     ensure_service,
     plan,
     remove_quoted_station_probe,
+    remove_witness_reset_transition,
     remove_yard_reset_transition,
     reset_relays,
     restore_checkpoint_freshness_window,
     restore_departure_transition_window,
     restore_release_transition_progress_guard,
     restore_spur_transition_grant_guard,
+    restore_witness_reset_transition,
     restore_yard_reset_transition,
     run_sql,
     set_relay_state,
@@ -209,6 +211,26 @@ def test_equal_length_routes_use_first_differing_edge_id():
     assert result["reachable"] is True
     assert result["path"] == ["H", "A", "B"]
     assert result["cycle_guard"] is True
+
+
+def test_witness_relay_reset_fails_only_the_contingent_requirement():
+    """The siding gate needs the siding_release grant with siding_bolt unreset.
+
+    The only path to S resets siding_bolt after the grant, so the witness-guarded
+    requirement fails even though the grant survives; removing the reset transition
+    leaves the witness intact and opens the gate.
+    """
+    switches = {"sw1": "south", "sw2": "north"}
+    blocked = plan("P", "S", switches)
+    assert blocked["reachable"] is False
+    assert blocked["path"] == []
+    remove_witness_reset_transition()
+    try:
+        cleared = plan("P", "S", switches)
+        assert cleared["reachable"] is True
+        assert cleared["path"] == ["P", "Q", "R", "V", "W", "S"]
+    finally:
+        restore_witness_reset_transition()
 
 
 def test_sequence_grant_voids_when_yard_returns_to_initial():

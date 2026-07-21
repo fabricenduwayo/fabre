@@ -116,3 +116,57 @@ INSERT INTO route_rule_sequence_requirements (
 ) VALUES
     ('r_cj_recirc_clear', 1, 'approach_release', 'yard_release', 0, 2),
     ('r_cj_recirc_clear', 2, 'arrival_return', 'spur_seal', 0, 1);
+
+-- Siding line: a self-contained branch used only to exercise witness-relay
+-- contingency. The siding_release sequence depends on siding_arm; the gate at
+-- W->S names siding_bolt as a witness. siding_bolt is not a sequence dependency,
+-- so its reset does not void the grant, but it does fail the witness-guarded
+-- requirement.
+INSERT INTO stations (station_id, label) VALUES
+    ('P', 'Siding Depot'),
+    ('Q', 'Siding Junction'),
+    ('R', 'Siding Muster'),
+    ('V', 'Bolt Approach'),
+    ('W', 'Bolt Gate'),
+    ('S', 'Siding Exit');
+
+INSERT INTO relay_latches (relay_id, relay_state) VALUES
+    ('siding_arm', 'held'),
+    ('siding_bolt', 'sealed');
+
+INSERT INTO edges (edge_id, from_station, to_station, requires_sw1, requires_sw2) VALUES
+    ('e_p_q', 'P', 'Q', 'south', 'north'),
+    ('e_q_r', 'Q', 'R', 'south', 'north'),
+    ('e_r_v', 'R', 'V', 'south', 'north'),
+    ('e_v_w', 'V', 'W', 'south', 'north'),
+    ('e_w_s', 'W', 'S', 'south', 'north');
+
+INSERT INTO edge_relay_transitions (
+    edge_id, transition_order, relay_id, from_state, to_state,
+    requires_relay_id, requires_relay_state,
+    requires_sequence_id, requires_sequence_progress
+) VALUES
+    ('e_p_q', 1, 'siding_arm', 'held', 'released', NULL, NULL, NULL, NULL),
+    ('e_r_v', 1, 'siding_bolt', 'sealed', 'open', NULL, NULL, NULL, NULL),
+    ('e_v_w', 1, 'siding_bolt', 'open', 'sealed', NULL, NULL, NULL, NULL);
+
+INSERT INTO release_sequences (sequence_id, step_order, edge_id) VALUES
+    ('siding_release', 1, 'e_p_q'),
+    ('siding_release', 2, 'e_q_r');
+
+INSERT INTO route_rules (
+    rule_id, edge_id, rule_priority, lock_sw1, lock_sw2, rule_action,
+    match_relay_id, match_relay_state, count_relay_id,
+    min_transition_count, max_transition_count, requires_visited_station,
+    requires_completed_sequence
+) VALUES
+    ('r_siding_gate', 'e_w_s', 1, NULL, NULL, 'clear',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+    ('r_siding_default', 'e_w_s', 2, 'south', 'north', 'lock',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+INSERT INTO route_rule_sequence_requirements (
+    rule_id, requirement_order, sequence_id,
+    freshness_relay_id, min_transitions_since, max_transitions_since, witness_relay_id
+) VALUES
+    ('r_siding_gate', 1, 'siding_release', NULL, NULL, NULL, 'siding_bolt');

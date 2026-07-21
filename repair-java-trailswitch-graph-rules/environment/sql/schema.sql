@@ -88,6 +88,7 @@ CREATE TABLE route_rule_sequence_requirements (
     freshness_relay_id TEXT REFERENCES relay_latches(relay_id),
     min_transitions_since INTEGER,
     max_transitions_since INTEGER,
+    witness_relay_id TEXT REFERENCES relay_latches(relay_id),
     PRIMARY KEY (rule_id, requirement_order),
     CONSTRAINT route_rule_seq_freshness_pair CHECK (
         (freshness_relay_id IS NULL

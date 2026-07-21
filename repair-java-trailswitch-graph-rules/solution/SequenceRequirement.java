@@ -6,4 +6,5 @@ public record SequenceRequirement(
         String sequenceId,
         String freshnessRelayId,
         Integer minTransitionsSince,
-        Integer maxTransitionsSince) {}
+        Integer maxTransitionsSince,
+        String witnessRelayId) {}
