@@ -2,9 +2,9 @@
 
 Every parity check recomputes the correct report from the store the auditor was
 pointed at and compares it to what the auditor wrote. The shipped store is one
-input; the six variant stores are inputs the auditor was never shown, each
-isolating one way the attestation cache or the blob copy disagrees with what the
-durable chunk map actually hashes to.
+input, where an object's chunk map and blob agree; the six variant stores are
+inputs the auditor was never shown, each pulling the two copies apart so that
+attesting the object means judging each copy against what the object declares.
 """
 
 from __future__ import annotations
@@ -35,15 +35,16 @@ def test_sample_store(sample_db_url: str) -> None:
     _assert_parity(sample_db_url, "sample")
 
 
-def test_variant_a_chunk_authority(variant_stores: dict[str, str]) -> None:
-    """Objects whose blob copy is a stale materialisation are judged on their
-    chunk map, not on the blob."""
+def test_variant_a_stale_blob_uses_chunk_map(variant_stores: dict[str, str]) -> None:
+    """Where the blob is a stale materialisation and the chunk map still holds
+    the declared content, the object is intact, so hashing the blob is wrong."""
     _assert_parity(variant_stores["variant-a"], "variant-a")
 
 
-def test_variant_b_partial_materialisation(variant_stores: dict[str, str]) -> None:
-    """A blob copy holding only the first chunk of a multi-chunk object does not
-    stand in for the object."""
+def test_variant_b_stale_chunk_map_uses_blob(variant_stores: dict[str, str]) -> None:
+    """Where the chunk map is stale and the blob still holds the declared
+    content, the object is intact on the blob, so reading the chunk map whenever
+    one exists is wrong. The declared length is what tells the copies apart."""
     _assert_parity(variant_stores["variant-b"], "variant-b")
 
 
@@ -52,36 +53,51 @@ def test_variant_c_unsupported_digest(variant_stores: dict[str, str]) -> None:
     _assert_parity(variant_stores["variant-c"], "variant-c")
 
 
-def test_variant_d_missing_chunk_is_unattestable(variant_stores: dict[str, str]) -> None:
-    """A chunk row pointing at a missing file makes the object unattestable, not
-    corrupt, even when a stale blob copy is present."""
+def test_variant_d_blob_rescues_missing_chunk(variant_stores: dict[str, str]) -> None:
+    """A missing chunk file does not condemn an object whose blob still holds the
+    declared content; only when no readable copy matches the declared length is
+    the object unattestable."""
     _assert_parity(variant_stores["variant-d"], "variant-d")
 
 
-def test_variant_e_conflicts_follow_the_chunk_map(variant_stores: dict[str, str]) -> None:
-    """The conflict set is the disagreement between the cache and what the chunk
-    map hashes to, so it cannot be produced from the blob copy."""
+def test_variant_e_conflicts_from_recompute(variant_stores: dict[str, str]) -> None:
+    """Conflicts are the disagreement between the cache and the recomputed
+    verdict, in both directions, so they cannot be read back from the cache."""
     _assert_parity(variant_stores["variant-e"], "variant-e")
 
 
 def test_variant_f_combined(variant_stores: dict[str, str]) -> None:
-    """Stale blob, declared sha1, verified cache, and a blob whose sha1 matches
-    the declared digest all at once."""
+    """A stale chunk map, a content-bearing blob declared under sha1, a blob
+    rescue, and a verified cache row all in one store."""
     _assert_parity(variant_stores["variant-f"], "variant-f")
 
 
+def test_intact_can_come_from_either_copy(variant_stores: dict[str, str]) -> None:
+    """Objects are intact whether the surviving copy is the chunk map (variant a)
+    or the blob (variant b), so neither copy is privileged."""
+    a = expected_report(variant_stores["variant-a"])
+    b = expected_report(variant_stores["variant-b"])
+    assert "obj-a001" in a["intact"], "variant a: stale blob should not sink a sound chunk map"
+    assert "obj-b001" in b["intact"], "variant b: stale chunk map should not sink a sound blob"
+    got_a = normalise(run_agent(variant_stores["variant-a"], _report_path("either-a")))
+    got_b = normalise(run_agent(variant_stores["variant-b"], _report_path("either-b")))
+    assert got_a == normalise(a)
+    assert got_b == normalise(b)
+
+
 def test_missing_content_never_lands_in_corrupt(variant_stores: dict[str, str]) -> None:
-    """No object whose content cannot be read is reported corrupt; it is
-    unattestable with a missing-content reason."""
+    """No object whose content cannot be read at the declared length is reported
+    corrupt; it is unattestable with a missing-content reason."""
     got = run_agent(variant_stores["variant-d"], _report_path("d-buckets"))
     want = expected_report(variant_stores["variant-d"])
     corrupt_ids = {row["object_id"] for row in got.get("corrupt", [])}
     unattestable = {row["object_id"]: row.get("reason") for row in got.get("unattestable", [])}
-    for row in want["unattestable"]:
-        if row["reason"] == "missing_content":
-            assert row["object_id"] not in corrupt_ids, (
-                f"{row['object_id']} with missing content was reported corrupt")
-            assert unattestable.get(row["object_id"]) == "missing_content"
+    missing = [row for row in want["unattestable"] if row["reason"] == "missing_content"]
+    assert missing, "variant-d should carry a missing-content object"
+    for row in missing:
+        assert row["object_id"] not in corrupt_ids, (
+            f"{row['object_id']} with missing content was reported corrupt")
+        assert unattestable.get(row["object_id"]) == "missing_content"
 
 
 def test_conflicts_include_cache_verified_but_corrupt(variant_stores: dict[str, str]) -> None:
@@ -108,8 +124,7 @@ def test_report_is_a_judgment_not_content(variant_stores: dict[str, str]) -> Non
     """The report carries verdicts and object ids, never reconstructed bytes."""
     report_text = _report_path("no-content")
     run_agent(variant_stores["variant-f"], report_text)
-    raw = report_text.read_text()
-    parsed = json.loads(raw)
+    parsed = json.loads(report_text.read_text())
     assert set(parsed) <= {"intact", "corrupt", "unattestable", "conflicts"}
     for row in parsed.get("corrupt", []) + parsed.get("unattestable", []):
         assert set(row) <= {"object_id", "reason"}

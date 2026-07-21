@@ -1,11 +1,13 @@
 """Shared helpers for the attestation verifier.
 
 The expected report is recomputed from whichever store the auditor is pointed
-at, not from the fixture generator's memory. Durable content is the chunk map
-concatenated in ordinal order when an object has one, otherwise blob_path.
-Only sha256 attests; content that cannot be read is unattestable. Nothing here
-hardcodes a verdict, so the same machinery grades the shipped store and every
-verifier-built variant and a fixture-tuned auditor does not pass.
+at, not from the fixture generator's memory. Each object is attested against its
+declared length and digest: among the stored copies (chunk map, blob) that read
+back at the declared length, one matching the declared digest makes it intact, a
+length match with no digest match is corrupt, and no length match is
+unattestable. Only sha256 attests. Nothing here hardcodes a verdict, so the same
+machinery grades the shipped store and every verifier-built variant and a
+fixture-tuned auditor does not pass.
 """
 
 from __future__ import annotations
@@ -93,30 +95,43 @@ def build_store(dest: Path, profile: str, seed: int) -> str:
     return db_url
 
 
-def _durable_content(root: Path, db_url: str, object_id: str, blob_path: str | None) -> bytes | None:
-    chunks = h2_select(
+def _chunk_copy(root: Path, db_url: str, object_id: str) -> bytes | None:
+    """The chunk map concatenated in ordinal order, or None when the object has
+    no chunk rows or any chunk file is missing."""
+    rows = h2_select(
         f"SELECT chunk_path FROM object_chunks WHERE object_id = '{object_id}' ORDER BY ordinal",
         db_url,
     )
-    if chunks:
-        parts = []
-        for row in chunks:
-            path = root / row["chunk_path"]
-            if not path.is_file():
-                return None
-            parts.append(path.read_bytes())
-        return b"".join(parts)
-    if blob_path:
-        path = root / blob_path
-        return path.read_bytes() if path.is_file() else None
-    return None
+    if not rows:
+        return None
+    parts = []
+    for row in rows:
+        path = root / row["chunk_path"]
+        if not path.is_file():
+            return None
+        parts.append(path.read_bytes())
+    return b"".join(parts)
+
+
+def _blob_copy(root: Path, blob_path: str | None) -> bytes | None:
+    if not blob_path:
+        return None
+    path = root / blob_path
+    return path.read_bytes() if path.is_file() else None
 
 
 def expected_report(db_url: str) -> dict:
-    """Recompute the correct report by reading the store the CLI is pointed at."""
+    """Recompute the correct report by reading the store the CLI is pointed at.
+
+    An object is attested against its declaration: among the copies that still
+    read back at the declared length, one that matches the declared digest makes
+    it intact; if a copy matches the length but none matches the digest it is
+    corrupt; if no copy matches the length it is unattestable.
+    """
     root = store_root(db_url)
     objects = h2_select(
-        "SELECT object_id, declared_digest, digest_algo, blob_path FROM objects", db_url)
+        "SELECT object_id, declared_digest, digest_algo, blob_path, size_bytes FROM objects",
+        db_url)
     cache = {
         row["object_id"]: row["status"]
         for row in h2_select("SELECT object_id, status FROM attestation_cache", db_url)
@@ -125,12 +140,16 @@ def expected_report(db_url: str) -> dict:
     intact, corrupt, unattestable, conflicts = [], [], [], []
     for obj in sorted(objects, key=lambda o: o["object_id"]):
         oid = obj["object_id"]
-        content = _durable_content(root, db_url, oid, obj["blob_path"] or None)
-        if content is None:
+        size = int(obj["size_bytes"])
+        copies = [_chunk_copy(root, db_url, oid), _blob_copy(root, obj["blob_path"] or None)]
+        declared_length = [c for c in copies if c is not None and len(c) == size]
+        declared = obj["declared_digest"].lower()
+
+        if not declared_length:
             status, reason = "unattestable", "missing_content"
         elif obj["digest_algo"].lower() != "sha256":
             status, reason = "unattestable", "unsupported_digest"
-        elif hashlib.sha256(content).hexdigest() == obj["declared_digest"].lower():
+        elif any(hashlib.sha256(c).hexdigest() == declared for c in declared_length):
             status, reason = "intact", None
         else:
             status, reason = "corrupt", "digest_mismatch"

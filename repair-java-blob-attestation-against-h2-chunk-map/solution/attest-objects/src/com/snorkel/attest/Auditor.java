@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,13 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Audits a blob store against what its objects actually hash to.
+ * Attests a blob store's objects against what they were declared to hold.
  *
- * The durable bytes of an object are its chunk map concatenated in ordinal
- * order. blob_path is a materialised copy the store keeps for the legacy read
- * path; a replace rewrites the chunk map and leaves that copy alone, so it is
- * not authoritative and is only read when an object has no chunk map. Bytes are
- * streamed into the digest and discarded, never written anywhere.
+ * Each object declares a byte length and a digest. Its bytes are kept as an
+ * ordered chunk map and as a materialised blob, and either copy can drift. An
+ * object is attested against the declaration: the copy that still reproduces the
+ * declared length and digest vouches for it, whichever copy that is. Bytes are
+ * read to be hashed and then discarded; nothing reconstructed is written out.
  */
 public final class Auditor {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -42,45 +42,61 @@ public final class Auditor {
     }
 
     private static Verdict attest(Connection conn, Path root, Obj obj) throws Exception {
-        List<Path> parts = durableParts(conn, root, obj);
-        MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-        for (Path part : parts) {
-            if (!Files.isRegularFile(part)) {
-                return new Verdict(obj.id, "unattestable", "missing_content");
+        List<byte[]> declaredLength = new ArrayList<>();
+        for (byte[] copy : new byte[][] {chunkCopy(conn, root, obj), blobCopy(root, obj)}) {
+            if (copy != null && copy.length == obj.size) {
+                declaredLength.add(copy);
             }
-            try (InputStream in = Files.newInputStream(part)) {
-                byte[] buf = new byte[8192];
-                int read;
-                while ((read = in.read(buf)) != -1) {
-                    sha256.update(buf, 0, read);
-                }
-            }
+        }
+        if (declaredLength.isEmpty()) {
+            return new Verdict(obj.id, "unattestable", "missing_content");
         }
         if (!"sha256".equalsIgnoreCase(obj.algo)) {
             return new Verdict(obj.id, "unattestable", "unsupported_digest");
         }
-        String actual = hex(sha256.digest());
-        if (actual.equalsIgnoreCase(obj.declared)) {
-            return new Verdict(obj.id, "intact", null);
+        for (byte[] copy : declaredLength) {
+            if (sha256Hex(copy).equalsIgnoreCase(obj.declared)) {
+                return new Verdict(obj.id, "intact", null);
+            }
         }
         return new Verdict(obj.id, "corrupt", "digest_mismatch");
     }
 
-    private static List<Path> durableParts(Connection conn, Path root, Obj obj) throws Exception {
-        List<Path> parts = new ArrayList<>();
+    /** The chunk map concatenated in ordinal order, or null if the object has no
+     *  chunk rows or any chunk file is missing. */
+    private static byte[] chunkCopy(Connection conn, Path root, Obj obj) throws Exception {
+        List<String> paths = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT chunk_path FROM object_chunks WHERE object_id = ? ORDER BY ordinal")) {
             ps.setString(1, obj.id);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    parts.add(root.resolve(rs.getString(1)));
+                    paths.add(rs.getString(1));
                 }
             }
         }
-        if (parts.isEmpty() && obj.blobPath != null) {
-            parts.add(root.resolve(obj.blobPath));
+        if (paths.isEmpty()) {
+            return null;
         }
-        return parts;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (String rel : paths) {
+            Path file = root.resolve(rel);
+            if (!Files.isRegularFile(file)) {
+                return null;
+            }
+            out.write(Files.readAllBytes(file));
+        }
+        return out.toByteArray();
+    }
+
+    /** The materialised blob, or null if the object records no blob or its file
+     *  is missing. */
+    private static byte[] blobCopy(Path root, Obj obj) throws Exception {
+        if (obj.blobPath == null) {
+            return null;
+        }
+        Path file = root.resolve(obj.blobPath);
+        return Files.isRegularFile(file) ? Files.readAllBytes(file) : null;
     }
 
     private static void writeReport(Connection conn, List<Verdict> verdicts, String outputPath)
@@ -150,13 +166,15 @@ public final class Auditor {
         List<Obj> objects = new ArrayList<>();
         try (Statement st = conn.createStatement();
                 ResultSet rs = st.executeQuery(
-                        "SELECT object_id, declared_digest, digest_algo, blob_path FROM objects")) {
+                        "SELECT object_id, declared_digest, digest_algo, blob_path, size_bytes "
+                                + "FROM objects")) {
             while (rs.next()) {
                 objects.add(new Obj(
                         rs.getString("object_id"),
                         rs.getString("declared_digest"),
                         rs.getString("digest_algo"),
-                        rs.getString("blob_path")));
+                        rs.getString("blob_path"),
+                        rs.getLong("size_bytes")));
             }
         }
         return objects;
@@ -180,9 +198,10 @@ public final class Auditor {
         return dbUrl.contains("IFEXISTS") ? dbUrl : dbUrl + ";IFEXISTS=TRUE";
     }
 
-    private static String hex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
+    private static String sha256Hex(byte[] bytes) throws Exception {
+        byte[] digest = MessageDigest.getInstance("SHA-256").digest(bytes);
+        StringBuilder sb = new StringBuilder(digest.length * 2);
+        for (byte b : digest) {
             sb.append(Character.forDigit((b >> 4) & 0xF, 16));
             sb.append(Character.forDigit(b & 0xF, 16));
         }
@@ -196,12 +215,14 @@ public final class Auditor {
         final String declared;
         final String algo;
         final String blobPath;
+        final long size;
 
-        Obj(String id, String declared, String algo, String blobPath) {
+        Obj(String id, String declared, String algo, String blobPath, long size) {
             this.id = id;
             this.declared = declared;
             this.algo = algo;
             this.blobPath = blobPath;
+            this.size = size;
         }
     }
 
