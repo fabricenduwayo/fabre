@@ -75,9 +75,21 @@ SHOULD DO:
   `test_rubrics`, and `checkbox_evaluate_rubrics` via API in that same call, or
   fill them in the UI before submit.
 - Fill all three explanation fields before every submit/resubmit — reviewers
-  reject blank ones. Short paragraphs in your own words: why it is hard for an
-  agent, the high-level pipeline approach, how per-milestone (or final) tests
-  confirm correctness. Applies to milestone tasks too.
+  reject blank ones. Each is **roughly one paragraph, about 4-6 sentences**, in
+  Fabrice's own words (authorship rules apply: no em-dashes, no AI-smell). The
+  whole set should take ~5 minutes; do not overwrite it. The platform prompts:
+  - `difficulty_explanation` — "Describe in your own words why this task is hard
+    for humans and agents to solve."
+  - `solution_explanation` — "Describe your high-level approach to the task and
+    the key insights behind your solution." High-level approach and insights,
+    **not** a step-by-step command walkthrough.
+  - `verification_explanation` — "Explain how your tests are verifying
+    correctness." Say what the tests drive (real service/CLI/DB, not source),
+    the count, and how expected values are derived or replayed.
+  Keep the three mutually consistent and current with the shipped task (matching
+  test counts, amendment counts, no stale wording like "long" once the corpus is
+  trimmed). Re-check them whenever the task changes materially. Applies to
+  milestone tasks too.
 - Populate rubrics in the platform `test_rubrics` field (not in the ZIP):
   - **Non-milestone:** flat list, at least 3 negative criteria.
   - **Milestone (`number_of_milestones` > 0):** one `# Rubric N` block per
