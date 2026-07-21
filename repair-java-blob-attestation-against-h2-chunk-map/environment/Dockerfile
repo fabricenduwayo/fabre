@@ -31,6 +31,7 @@ COPY policy/ /app/policy/
 # works out how it decides and reimplements it, and the verifier moves it out of
 # the way before grading so parity comes from the agent's own control.
 COPY ref/ /app/ref/
+RUN chmod +x /app/ref/attest-ref /app/ref/attest-ref-*
 
 # Build the shipped store: schema and seed load into an H2 file whose blob and
 # chunk files sit alongside it under /app/store.

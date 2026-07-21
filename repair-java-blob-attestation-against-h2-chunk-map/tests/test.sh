@@ -14,6 +14,18 @@ fi
 # to. Move it out of the way so parity has to come from the agent's own control.
 rm -rf /app/ref
 
+# Grade the agent's own source: recompile it so a dropped-in classes directory
+# cannot stand in for a real reimplementation. A build failure fails closed.
+if [ -d /app/attest-objects/src ]; then
+  rm -rf /app/attest-objects/classes
+  if ! bash /app/attest-objects/build.sh >/tmp/agent-build.log 2>&1; then
+    echo "agent build failed:" >&2
+    cat /tmp/agent-build.log >&2
+    echo 0 > /logs/verifier/reward.txt
+    exit 0
+  fi
+fi
+
 PYTHONPATH=/tests python3 -m pytest --ctrf /logs/verifier/ctrf.json -p no:cacheprovider -rA /tests/test_outputs.py -q
 rc=$?
 if [ "$rc" -eq 0 ]; then
