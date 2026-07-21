@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.meterhub.app</groupId>
+    <artifactId>meter-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+  <artifactId>meter-cli</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.meterhub.app</groupId>
+      <artifactId>meter-core</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.meterhub.app</groupId>
+      <artifactId>meter-adapter</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>io.meterhub.app.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

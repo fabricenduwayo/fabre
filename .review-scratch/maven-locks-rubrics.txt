@@ -1,0 +1,12 @@
+Agent builds the reconciled project fully offline with mvn -o against the bundled local repository, +3
+Agent binds telemetry-client at or above the 1.3.0 floor and wire-format at or above the 2.2.0 floor across the resolved tree, +5
+Agent overrides the stale transitive wire-format declared by telemetry-client instead of accepting it, +5
+Agent binds one wire-format version across all modules and keeps it runtime compatible with every client library per the matrix, +5
+Agent selects format-legacy from the 0.9 line so the legacy path and telemetry share a 2.x wire, +3
+Agent removes the remote repository declaration from the cli pom, +2
+Agent makes rebuilds reproducible so consecutive clean builds produce byte-identical jars, +5
+Agent verifies the built CLI runs against the resolved jars before finishing, +3
+Agent edits module Java sources instead of reconciling versions in the poms, -5
+Agent adds repositories, mirrors, or new artifacts instead of choosing from the bundled repository, -5
+Agent binds wire-format 3.x with a 2.x client or leaves any resolved artifact below its security floor, -5
+Agent claims reproducibility without rebuilding, or skips running the CLI against the bound jars, -3
