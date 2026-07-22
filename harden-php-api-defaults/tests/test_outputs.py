@@ -56,6 +56,29 @@ def activate_pending(current, pending):
     return first, second
 
 
+def read_envelope():
+    """Load the published credential envelope JSON."""
+    with open(TOKEN_FILE, encoding="utf-8") as handle:
+        return json.loads(handle.read())
+
+
+def live_secret_fingerprint(secret=None):
+    """Case-normalized SHA-256 fingerprint of the live bootstrap secret."""
+    raw = (secret if secret is not None else read_secret()).strip().lower()
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def assert_generic_error(body, label):
+    """Require EH-NO-DISCLOSE generic JSON with exactly one error key."""
+    assert isinstance(body, dict), f"{label}: body is not an object: {body!r}"
+    assert set(body) == {"error"}, (
+        f"{label}: expected only error key, got {sorted(body)}"
+    )
+    assert isinstance(body["error"], str) and body["error"], (
+        f"{label}: error message must be a non-empty string"
+    )
+
+
 def assert_cors(headers, origin=None, preflight=False):
     """Assert the resolved CORS grant for one response."""
     if origin in ALLOWED_ORIGINS:
@@ -216,7 +239,7 @@ def test_failed_audit_append_cannot_publish_bootstrap_state():
 
 
 def test_failed_publication_rolls_back_the_bootstrap_audit_row():
-    """A non-file at the token path is not a token: bootstrap proceeds, fails at
+    """A directory at the token path is not a token: bootstrap proceeds, fails at
     publication per G-2026-39, returns 500, and its audit row is rolled back."""
     reset_state()
     # Reconcile the legacy ledger so audit_log carries the documented columns.
@@ -243,7 +266,6 @@ def test_failed_publication_rolls_back_the_bootstrap_audit_row():
 def test_no_disclosure_on_unknown_routes_denials_and_failures():
     """Unknown routes, denials, and an injected ledger fault reveal nothing internal."""
     reset_state()
-    token = bootstrap_ok()
     leaks = (
         "Exception",
         "Stack trace",
@@ -260,6 +282,13 @@ def test_no_disclosure_on_unknown_routes_denials_and_failures():
         for needle in leaks:
             assert needle not in raw, f"{label} leaked {needle!r}: {raw[:200]}"
 
+    status, headers, raw, body = bootstrap("wrong-secret")
+    assert status == 403, f"wrong secret returned {status}"
+    assert_generic_error(body, "wrong secret")
+    assert_clean(raw, headers, "wrong secret")
+
+    token = bootstrap_ok()
+
     for method, path in [
         ("GET", "/nope"),
         ("POST", "/nope"),
@@ -271,15 +300,14 @@ def test_no_disclosure_on_unknown_routes_denials_and_failures():
         assert body == {"error": "not found"}, f"{method} {path} body {body}"
         assert_clean(raw, headers, f"{method} {path}")
 
-    status, headers, raw, _ = health()
+    status, headers, raw, body = health()
     assert status == 401
+    assert_generic_error(body, "missing credentials")
     assert_clean(raw, headers, "missing credentials")
-    status, headers, raw, _ = health("not-a-real-token")
+    status, headers, raw, body = health("not-a-real-token")
     assert status == 401
+    assert_generic_error(body, "invalid token")
     assert_clean(raw, headers, "invalid token")
-    status, headers, raw, _ = bootstrap("wrong-secret")
-    assert status in (403, 409)
-    assert_clean(raw, headers, "wrong secret")
 
     conn = sqlite3.connect(AUDIT_DB, timeout=10)
     try:
@@ -290,8 +318,9 @@ def test_no_disclosure_on_unknown_routes_denials_and_failures():
             "'ledger blew up in /app/harbordesk/lib/audit.php'); END"
         )
         conn.commit()
-        status, headers, raw, _ = health(token, ALLOWED)
+        status, headers, raw, body = health(token, ALLOWED)
         assert status == 500, f"injected ledger fault returned {status}"
+        assert_generic_error(body, "injected ledger fault")
         assert_clean(raw, headers, "injected ledger fault")
     finally:
         conn.execute("DROP TRIGGER IF EXISTS fail_disclosure_audit")
@@ -402,6 +431,38 @@ def envelope_strings():
                 yield from walk(value)
 
     return raw, set(walk(json.loads(raw)))
+
+
+def test_pending_secret_digest_tracks_staging_rebind_and_activation():
+    """pending_secret_digest is null, staged, rebound, then cleared per G-2026-33."""
+    reset_state()
+    current = bootstrap_ok()
+    assert read_envelope()["pending_secret_digest"] is None
+
+    set_generation(INITIAL_GENERATION + 1)
+    secret = read_secret()
+    pending = bootstrap_ok(secret)
+    envelope = read_envelope()
+    assert envelope["pending_secret_digest"] == live_secret_fingerprint(secret)
+    assert len(envelope["pending_secret_digest"]) == 64
+    assert envelope["pending_secret_digest"] == envelope["pending_secret_digest"].lower()
+
+    rotated = "hd-cutover-rotated-7f19"
+    try:
+        with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+            handle.write(rotated + "\n")
+        assert health(pending, ALLOWED)[0] == 401
+        rebound = read_envelope()["pending_secret_digest"]
+        assert rebound == live_secret_fingerprint(rotated)
+        assert rebound != live_secret_fingerprint(secret)
+    finally:
+        with open(SECRET_FILE, "w", encoding="utf-8") as handle:
+            handle.write(secret + "\n")
+
+    assert health(current, ALLOWED)[0] == 200
+    assert health(current, ALLOWED_2)[0] == 200
+    activate_pending(current, pending)
+    assert read_envelope()["pending_secret_digest"] is None
 
 
 def test_token_state_is_nonrecoverable_and_owner_only():
