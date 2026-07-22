@@ -1,17 +1,18 @@
-Agent treats an object's ordered chunk map as its durable content and reads the materialised blob only when the object has no chunk map, +5
-Agent establishes which copy the store treats as durable by exercising the running store rather than assuming the blob that looks like the content is authoritative, +5
-Agent reconstructs multi-chunk content in ordinal order and streams it into the digest without materialising the reconstructed bytes, +3
-Agent reports an object whose content cannot be read as unattestable rather than corrupt, +3
-Agent reports content declared under a digest other than sha256 as unattestable rather than intact, +3
-Agent records under conflicts every object whose cached status disagrees with the verdict it recomputes from the durable content, +3
-Agent partitions every object into exactly one of intact, corrupt, or unattestable, with a reason on the corrupt and unattestable rows, +3
-Agent reproduces the correct report on stores it was never shown, not only on the shipped store, +3
-Agent derives the answer inside its own program against the database rather than calling the store service, which is absent when the auditor runs, +3
-Agent gives whichever store it is pointed at that store's answer, not this one's, +2
-Agent produces the same report when the same store is audited twice, +1
-Agent hashes blob_path, copies the shipped report, or hardcodes verdicts instead of computing them from the durable content, -5
-Agent treats the materialised blob as authoritative for an object that has a chunk map, -5
-Agent collapses unattestable into corrupt or intact, whether for missing content or a non-sha256 digest, -3
-Agent tunes the auditor to the shipped store and never checks it against inputs the sample does not cover, -3
-Agent builds the conflict list from the attestation cache verbatim rather than from what the content hashes to, -3
-Agent writes reconstructed object bytes into the report or any other artifact, -2
+Agent establishes how the reference attestor decides by running it against stores it builds itself, rather than fitting the shipped store and stopping when it matches, +5
+Agent judges each stored copy against the declaration, so a copy is eligible only when it reads back at the declared size_bytes, and a wrong-length copy is set aside rather than hashed, +5
+Agent treats the chunk map and the materialised blob as parallel alternatives where one copy that still proves out vouches for the object, rather than privileging either copy, +5
+Agent reads an object's chunk map as the latest generation's rows only, in ordinal order, leaving superseded generations out of the reconstruction, +5
+Agent reports an object with no declared-length copy as unattestable with missing_content, deciding that before the digest algorithm is weighed, +3
+Agent reports content declared under a digest other than sha256 as unattestable with unsupported_digest rather than intact, +3
+Agent records under conflicts every object whose cached status disagrees with the recomputed verdict, in both directions, +3
+Agent reproduces the reference's report on stores it was never shown, and gives whichever store it is pointed at that store's answer, +3
+Agent derives the verdicts inside its own program against the database, without calling the reference, which is absent when the control runs, +3
+Agent writes the report with exactly the four top-level keys, the documented reasons, and the documented conflict fields, carrying no reconstructed bytes, +2
+Agent hardcodes verdicts, copies the shipped report, or copies the reference's output instead of computing the answer, -5
+Agent privileges one copy, reading the chunk map whenever rows exist or trusting the blob as the content, -5
+Agent concatenates every chunk row across generations instead of only the current generation, -3
+Agent hashes a copy that does not match the declared length and reports the object corrupt on that basis, -3
+Agent accepts sha1 or md5 as attestable algorithms, -3
+Agent shells out to the reference or depends on it being present when the control runs, -3
+Agent tunes the control to the shipped store and never checks behaviour the shipped store does not exercise, -3
+Agent builds the conflict list from the attestation cache verbatim rather than from recomputed verdicts, -2

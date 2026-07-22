@@ -1,0 +1,238 @@
+📦 Creating submission
+   From folder: /Users/fabrice-mac-mini/Documents/snorkel-ai/rebuild-java-ledger-ingest-parity
+   Project: Terminus-2nd-Edition (bfe79c33-8ab0-4061-9849-08d3207c9927)
+
+📦 Zipping folder contents...
+✓ Created zip file: /var/folders/_y/s7yt89ld12j14754my8wxy200000gn/T/rebuild-java-ledger-ingest-parity.zip
+   Size: 4535.87 KB
+
+📤 Uploading...
+⏳ Running checks...
+✓ Feedback completed with outcome: FAIL
+
+📄 Feedback Details:
+
+   Check: Check 1
+   Status: UNKNOWN
+   Logs:
+   ----------------------------------------------------------------------
+   [Container] 2026/07/20 19:07:32.629409 Running on CodeBuild On-demand
+   [Container] 2026/07/20 19:07:32.629425 Waiting for agent ping
+   [Container] 2026/07/20 19:07:32.782210 Waiting for DOWNLOAD_SOURCE
+   [Container] 2026/07/20 19:07:33.693195 Phase is DOWNLOAD_SOURCE
+   [Container] 2026/07/20 19:07:33.694464 CODEBUILD_SRC_DIR=/codebuild/output/src3765173788/src
+   [Container] 2026/07/20 19:07:33.695131 YAML location is /codebuild/readonly/buildspec.yml
+   [Container] 2026/07/20 19:07:33.697261 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.697344 Processing environment variables
+   [Container] 2026/07/20 19:07:33.700141 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.763373 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.804225 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.844616 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.884040 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.922292 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:33.988859 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:34.025146 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:34.062797 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:34.101910 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:34.140234 Setting HTTP client timeout to higher timeout for S3 source
+   [Container] 2026/07/20 19:07:34.260178 Moving to directory /codebuild/output/src3765173788/src
+   [Container] 2026/07/20 19:07:34.260201 Cache is not defined in the buildspec
+   [Container] 2026/07/20 19:07:34.307860 Skip cache due to: no paths specified to be cached
+   [Container] 2026/07/20 19:07:34.308195 Registering with agent
+   [Container] 2026/07/20 19:07:34.344298 Phases found in YAML: 2
+   [Container] 2026/07/20 19:07:34.344316  PRE_BUILD: 3 commands
+   [Container] 2026/07/20 19:07:34.344321  BUILD: 6 commands
+   [Container] 2026/07/20 19:07:34.344583 Phase complete: DOWNLOAD_SOURCE State: SUCCEEDED
+   [Container] 2026/07/20 19:07:34.344596 Phase context status code:  Message: 
+   [Container] 2026/07/20 19:07:34.457006 Entering phase INSTALL
+   [Container] 2026/07/20 19:07:34.497368 Phase complete: INSTALL State: SUCCEEDED
+   [Container] 2026/07/20 19:07:34.497389 Phase context status code:  Message: 
+   [Container] 2026/07/20 19:07:34.536625 Entering phase PRE_BUILD
+   [Container] 2026/07/20 19:07:34.575523 Running command echo "================================================"
+   ================================================
+   [Container] 2026/07/20 19:07:34.579321 Running command echo "Running quality checks in envgen environment"
+   Running quality checks in envgen environment
+   [Container] 2026/07/20 19:07:34.582860 Running command echo "================================================"
+   ================================================
+   [Container] 2026/07/20 19:07:34.586526 Phase complete: PRE_BUILD State: SUCCEEDED
+   [Container] 2026/07/20 19:07:34.586537 Phase context status code:  Message: 
+   [Container] 2026/07/20 19:07:34.627529 Entering phase BUILD
+   [Container] 2026/07/20 19:07:34.628433 Running command mkdir -p ~/tasks/tbench-task
+   [Container] 2026/07/20 19:07:34.632639 Running command cp -r $CODEBUILD_SRC_DIR/* ~/tasks/tbench-task/
+   [Container] 2026/07/20 19:07:34.640601 Running command export REVIEW_MODEL="claude-haiku-4-5"
+   [Container] 2026/07/20 19:07:34.644038 Running command export REVIEW_API_KEY="$PORTKEY_API_KEY"
+   [Container] 2026/07/20 19:07:34.647735 Running command export INTERNET_REQUIREMENT_FAILURE_CATEGORY="error"
+   [Container] 2026/07/20 19:07:34.651073 Running command python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2
+   ✅ /root/tasks/tbench-task/task.toml: Category 'security' is valid
+   ✅ /root/tasks/tbench-task/task.toml: Subcategories ['db_interaction'] are valid
+   ✅ /root/tasks/tbench-task/task.toml: Difficulty 'medium' is valid
+   ✅ /root/tasks/tbench-task/task.toml: codebase_size 'small' matches environment file count (20 files)
+   ✅ /root/tasks/tbench-task/task.toml: Codebase size 'small' is valid
+   ✅ /root/tasks/tbench-task/task.toml: verifier.timeout_sec (900.0) is within valid range
+   ✅ /root/tasks/tbench-task/task.toml: agent.timeout_sec (900.0) is within valid range
+   ✅ /root/tasks/tbench-task/environment: No docker-compose file found (single-container task)
+   ❌ [category_classifier] Predicted category 'data-processing' (confidence 0.95) is blocked for this project. Rework the task so it does not fall into a blocked category.
+   ⚠️ [template_detection] Possible template match 'stripped_cli_tool' (confidence 0.85); needs human review.
+   ✅ /root/tasks/tbench-task/tests/test.sh: Uses pytest
+   ✅ /root/tasks/tbench-task/tests/test.sh: pytest uses -rA option
+   ✅ /root/tasks/tbench-task: ruff check passed
+   ✅ /root/tasks/tbench-task/tests/test.sh: Ends with correct reward section
+   ✅ /root/tasks/tbench-task: No blacklisted commercial databases detected
+   ✅ [instruction_check] Instruction review passed.
+   ⚠️ [internet_requirement/parse_error] Could not parse assessment output. NoneType: None
+   ✅ [long_context_quality/skip] Not a long_context task; check skipped
+   ✅ /root/tasks/tbench-task/environment/.dockerignore: .dockerignore contains all required exclusions.
+   ✅ /root/tasks/tbench-task/environment: build context size is 4.7 MiB, within the 100.0 MiB total limit and 50.0 MiB per-file limit for lazy-pull locality.
+   ✅ /root/tasks/tbench-task/environment/Dockerfile:1: FROM digest-pinned (public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb AS legacy-build)
+   ✅ /root/tasks/tbench-task/environment/Dockerfile:14: FROM digest-pinned (public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb)
+   ✅ /root/tasks/tbench-task/environment/Dockerfile:14: final-stage base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm' is sanctioned
+   ✅ /root/tasks/tbench-task/environment/Dockerfile:1: base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb' matches the canonical Python image by digest
+   ✅ /root/tasks/tbench-task/environment/Dockerfile:14: base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb' matches the canonical Python image by digest
+   ✅ /root/tasks/tbench-task/environment: no build-context pollution detected.
+   ✅ /root/tasks/tbench-task/tests/test.sh: no internet / download commands found
+   ✅ /root/tasks/tbench-task/environment/Dockerfile: apt/apt-get usage follows the hygiene rules
+   ⚠️ /root/tasks/tbench-task/environment/Dockerfile:36: archive `/opt/legacy/ledger-oracle.jar` is COPY'd into the image but never extracted. Follow the COPY with e.g. `RUN tar -xzf /opt/legacy/ledger-oracle.jar -C <dst> && rm /opt/legacy/ledger-oracle.jar` so the opaque archive doesn't ship in the image layer.
+   ⚠️ /root/tasks/tbench-task/environment/Dockerfile:36: archive `/opt/legacy/ledger-oracle.jar` is COPY'd into the image but never removed after extraction. Add `&& rm /opt/legacy/ledger-oracle.jar` to the RUN that extracts it (or follow up with a `RUN rm /opt/legacy/ledger-oracle.jar`) so the opaque archive doesn't ship in the image layer.
+   ✅ /root/tasks/tbench-task/environment/Dockerfile: no heredocs found
+   ✅ /root/tasks/tbench-task/environment/Dockerfile stage 1: layers ordered least → most volatile
+   ✅ /root/tasks/tbench-task/environment/Dockerfile stage 2: layers ordered least → most volatile
+   ✅ /root/tasks/tbench-task/environment/Dockerfile: multi-stage Dockerfile (2 stages, builder stage detected); no build tools in final runtime stage
+   ✅ /root/tasks/tbench-task/environment/Dockerfile: no recursive permission changes found
+   ✅ /root/tasks/tbench-task/environment/Dockerfile: build looks reproducible (no unverified curl|sh; every install command has a lockfile sibling)
+   ❌ Static checks failed with 1 error(s)
+   [Container] 2026/07/20 19:08:45.872354 Command did not exit successfully python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2 exit status 1
+   [Container] 2026/07/20 19:08:45.877352 Phase complete: BUILD State: FAILED
+   [Container] 2026/07/20 19:08:45.877379 Phase context status code: COMMAND_EXECUTION_ERROR Message: Error while executing command: python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2. Reason: exit status 1
+   [Container] 2026/07/20 19:08:45.924424 Entering phase POST_BUILD
+   [Container] 2026/07/20 19:08:45.927892 Phase complete: POST_BUILD State: SUCCEEDED
+   [Container] 2026/07/20 19:08:45.927909 Phase context status code:  Message: 
+   [Container] 2026/07/20 19:08:45.973731 Set report auto-discover timeout to 5 seconds
+   [Container] 2026/07/20 19:08:45.973775 Expanding base directory path:  .
+   [Container] 2026/07/20 19:08:45.975144 Assembling file list
+   [Container] 2026/07/20 19:08:45.975158 Expanding .
+   [Container] 2026/07/20 19:08:45.976574 Expanding file paths for base directory .
+   [Container] 2026/07/20 19:08:45.976583 Assembling file list
+   [Container] 2026/07/20 19:08:45.976586 Expanding **/*
+   [Container] 2026/07/20 19:08:45.978243 No matching auto-discover report paths found
+   [Container] 2026/07/20 19:08:45.978266 Report auto-discover file discovery took 0.004534 seconds
+   [Container] 2026/07/20 19:08:45.978279 Phase complete: UPLOAD_ARTIFACTS State: SUCCEEDED
+   [Container] 2026/07/20 19:08:45.978289 Phase context status code:  Message: 
+   ----------------------------------------------------------------------
+Error: ❌ Feedback did not pass (outcome: FAIL).
+
+Details:
+  [Container] 2026/07/20 19:07:32.629409 Running on CodeBuild On-demand
+  [Container] 2026/07/20 19:07:32.629425 Waiting for agent ping
+  [Container] 2026/07/20 19:07:32.782210 Waiting for DOWNLOAD_SOURCE
+  [Container] 2026/07/20 19:07:33.693195 Phase is DOWNLOAD_SOURCE
+  [Container] 2026/07/20 19:07:33.694464 CODEBUILD_SRC_DIR=/codebuild/output/src3765173788/src
+  [Container] 2026/07/20 19:07:33.695131 YAML location is /codebuild/readonly/buildspec.yml
+  [Container] 2026/07/20 19:07:33.697261 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.697344 Processing environment variables
+  [Container] 2026/07/20 19:07:33.700141 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.763373 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.804225 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.844616 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.884040 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.922292 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:33.988859 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:34.025146 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:34.062797 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:34.101910 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:34.140234 Setting HTTP client timeout to higher timeout for S3 source
+  [Container] 2026/07/20 19:07:34.260178 Moving to directory /codebuild/output/src3765173788/src
+  [Container] 2026/07/20 19:07:34.260201 Cache is not defined in the buildspec
+  [Container] 2026/07/20 19:07:34.307860 Skip cache due to: no paths specified to be cached
+  [Container] 2026/07/20 19:07:34.308195 Registering with agent
+  [Container] 2026/07/20 19:07:34.344298 Phases found in YAML: 2
+  [Container] 2026/07/20 19:07:34.344316  PRE_BUILD: 3 commands
+  [Container] 2026/07/20 19:07:34.344321  BUILD: 6 commands
+  [Container] 2026/07/20 19:07:34.344583 Phase complete: DOWNLOAD_SOURCE State: SUCCEEDED
+  [Container] 2026/07/20 19:07:34.344596 Phase context status code:  Message: 
+  [Container] 2026/07/20 19:07:34.457006 Entering phase INSTALL
+  [Container] 2026/07/20 19:07:34.497368 Phase complete: INSTALL State: SUCCEEDED
+  [Container] 2026/07/20 19:07:34.497389 Phase context status code:  Message: 
+  [Container] 2026/07/20 19:07:34.536625 Entering phase PRE_BUILD
+  [Container] 2026/07/20 19:07:34.575523 Running command echo "================================================"
+  ================================================
+  
+  [Container] 2026/07/20 19:07:34.579321 Running command echo "Running quality checks in envgen environment"
+  Running quality checks in envgen environment
+  
+  [Container] 2026/07/20 19:07:34.582860 Running command echo "================================================"
+  ================================================
+  
+  [Container] 2026/07/20 19:07:34.586526 Phase complete: PRE_BUILD State: SUCCEEDED
+  [Container] 2026/07/20 19:07:34.586537 Phase context status code:  Message: 
+  [Container] 2026/07/20 19:07:34.627529 Entering phase BUILD
+  [Container] 2026/07/20 19:07:34.628433 Running command mkdir -p ~/tasks/tbench-task
+  
+  [Container] 2026/07/20 19:07:34.632639 Running command cp -r $CODEBUILD_SRC_DIR/* ~/tasks/tbench-task/
+  
+  [Container] 2026/07/20 19:07:34.640601 Running command export REVIEW_MODEL="claude-haiku-4-5"
+  
+  [Container] 2026/07/20 19:07:34.644038 Running command export REVIEW_API_KEY="$PORTKEY_API_KEY"
+  
+  [Container] 2026/07/20 19:07:34.647735 Running command export INTERNET_REQUIREMENT_FAILURE_CATEGORY="error"
+  
+  [Container] 2026/07/20 19:07:34.651073 Running command python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2
+  ✅ /root/tasks/tbench-task/task.toml: Category 'security' is valid
+  ✅ /root/tasks/tbench-task/task.toml: Subcategories ['db_interaction'] are valid
+  ✅ /root/tasks/tbench-task/task.toml: Difficulty 'medium' is valid
+  ✅ /root/tasks/tbench-task/task.toml: codebase_size 'small' matches environment file count (20 files)
+  ✅ /root/tasks/tbench-task/task.toml: Codebase size 'small' is valid
+  ✅ /root/tasks/tbench-task/task.toml: verifier.timeout_sec (900.0) is within valid range
+  ✅ /root/tasks/tbench-task/task.toml: agent.timeout_sec (900.0) is within valid range
+  ✅ /root/tasks/tbench-task/environment: No docker-compose file found (single-container task)
+  ❌ [category_classifier] Predicted category 'data-processing' (confidence 0.95) is blocked for this project. Rework the task so it does not fall into a blocked category.
+  ⚠️ [template_detection] Possible template match 'stripped_cli_tool' (confidence 0.85); needs human review.
+  ✅ /root/tasks/tbench-task/tests/test.sh: Uses pytest
+  ✅ /root/tasks/tbench-task/tests/test.sh: pytest uses -rA option
+  ✅ /root/tasks/tbench-task: ruff check passed
+  ✅ /root/tasks/tbench-task/tests/test.sh: Ends with correct reward section
+  ✅ /root/tasks/tbench-task: No blacklisted commercial databases detected
+  ✅ [instruction_check] Instruction review passed.
+  ⚠️ [internet_requirement/parse_error] Could not parse assessment output. NoneType: None
+  ✅ [long_context_quality/skip] Not a long_context task; check skipped
+  ✅ /root/tasks/tbench-task/environment/.dockerignore: .dockerignore contains all required exclusions.
+  ✅ /root/tasks/tbench-task/environment: build context size is 4.7 MiB, within the 100.0 MiB total limit and 50.0 MiB per-file limit for lazy-pull locality.
+  ✅ /root/tasks/tbench-task/environment/Dockerfile:1: FROM digest-pinned (public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb AS legacy-build)
+  ✅ /root/tasks/tbench-task/environment/Dockerfile:14: FROM digest-pinned (public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb)
+  ✅ /root/tasks/tbench-task/environment/Dockerfile:14: final-stage base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm' is sanctioned
+  ✅ /root/tasks/tbench-task/environment/Dockerfile:1: base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb' matches the canonical Python image by digest
+  ✅ /root/tasks/tbench-task/environment/Dockerfile:14: base 'public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb' matches the canonical Python image by digest
+  ✅ /root/tasks/tbench-task/environment: no build-context pollution detected.
+  ✅ /root/tasks/tbench-task/tests/test.sh: no internet / download commands found
+  ✅ /root/tasks/tbench-task/environment/Dockerfile: apt/apt-get usage follows the hygiene rules
+  ⚠️ /root/tasks/tbench-task/environment/Dockerfile:36: archive `/opt/legacy/ledger-oracle.jar` is COPY'd into the image but never extracted. Follow the COPY with e.g. `RUN tar -xzf /opt/legacy/ledger-oracle.jar -C <dst> && rm /opt/legacy/ledger-oracle.jar` so the opaque archive doesn't ship in the image layer.
+  ⚠️ /root/tasks/tbench-task/environment/Dockerfile:36: archive `/opt/legacy/ledger-oracle.jar` is COPY'd into the image but never removed after extraction. Add `&& rm /opt/legacy/ledger-oracle.jar` to the RUN that extracts it (or follow up with a `RUN rm /opt/legacy/ledger-oracle.jar`) so the opaque archive doesn't ship in the image layer.
+  ✅ /root/tasks/tbench-task/environment/Dockerfile: no heredocs found
+  ✅ /root/tasks/tbench-task/environment/Dockerfile stage 1: layers ordered least → most volatile
+  ✅ /root/tasks/tbench-task/environment/Dockerfile stage 2: layers ordered least → most volatile
+  ✅ /root/tasks/tbench-task/environment/Dockerfile: multi-stage Dockerfile (2 stages, builder stage detected); no build tools in final runtime stage
+  ✅ /root/tasks/tbench-task/environment/Dockerfile: no recursive permission changes found
+  ✅ /root/tasks/tbench-task/environment/Dockerfile: build looks reproducible (no unverified curl|sh; every install command has a lockfile sibling)
+  
+  ❌ Static checks failed with 1 error(s)
+  
+  [Container] 2026/07/20 19:08:45.872354 Command did not exit successfully python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2 exit status 1
+  [Container] 2026/07/20 19:08:45.877352 Phase complete: BUILD State: FAILED
+  [Container] 2026/07/20 19:08:45.877379 Phase context status code: COMMAND_EXECUTION_ERROR Message: Error while executing command: python3 /app/scripts/harbor/run_static_checks.py --task-dir ~/tasks/tbench-task --version edition_2. Reason: exit status 1
+  [Container] 2026/07/20 19:08:45.924424 Entering phase POST_BUILD
+  [Container] 2026/07/20 19:08:45.927892 Phase complete: POST_BUILD State: SUCCEEDED
+  [Container] 2026/07/20 19:08:45.927909 Phase context status code:  Message: 
+  [Container] 2026/07/20 19:08:45.973731 Set report auto-discover timeout to 5 seconds
+  [Container] 2026/07/20 19:08:45.973775 Expanding base directory path:  .
+  [Container] 2026/07/20 19:08:45.975144 Assembling file list
+  [Container] 2026/07/20 19:08:45.975158 Expanding .
+  [Container] 2026/07/20 19:08:45.976574 Expanding file paths for base directory .
+  [Container] 2026/07/20 19:08:45.976583 Assembling file list
+  [Container] 2026/07/20 19:08:45.976586 Expanding **/*
+  [Container] 2026/07/20 19:08:45.978243 No matching auto-discover report paths found
+  [Container] 2026/07/20 19:08:45.978266 Report auto-discover file discovery took 0.004534 seconds
+  [Container] 2026/07/20 19:08:45.978279 Phase complete: UPLOAD_ARTIFACTS State: SUCCEEDED
+  [Container] 2026/07/20 19:08:45.978289 Phase context status code:  Message: 
+  
+
+
+Submission will not be created.

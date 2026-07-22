@@ -97,6 +97,8 @@ def main() -> None:
                 "submission-explanations",
                 "tools/",
                 "readme.md",
+                "/target/",
+                ".ds_store",
             )
         )
     ]
@@ -150,7 +152,7 @@ def main() -> None:
     payload["solution_explanation"] = solution
     payload["verification_explanation"] = verification
     payload["test_rubrics"] = test_rubrics
-    payload["checkbox_evaluate_rubrics"] = True
+    payload["checkbox_evaluate_rubrics"] = False
     payload["checkbox_send_to_reviewer"] = None
     payload["task_type_discriminator"] = task_type_str
     payload[aht_field] = AHT_MINUTES

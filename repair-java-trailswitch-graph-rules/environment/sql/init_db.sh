@@ -4,10 +4,20 @@ set -euo pipefail
 PG_VERSION=15
 PG_CLUSTER=main
 
-install -d -m 2775 -o postgres -g postgres /var/run/postgresql 2>/dev/null || true
+if [ "$(id -u)" -eq 0 ]; then
+    install -d -m 2775 -o postgres -g postgres /var/run/postgresql 2>/dev/null || true
+fi
+
+run_pg() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    else
+        sudo -u postgres -- "$@"
+    fi
+}
 
 if ! pg_isready -q 2>/dev/null; then
-    pg_ctlcluster "${PG_VERSION}" "${PG_CLUSTER}" start
+    run_pg pg_ctlcluster "${PG_VERSION}" "${PG_CLUSTER}" start
 fi
 
 TRIES=0

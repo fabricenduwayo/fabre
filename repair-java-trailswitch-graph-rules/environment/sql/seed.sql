@@ -117,11 +117,6 @@ INSERT INTO route_rule_sequence_requirements (
     ('r_cj_recirc_clear', 1, 'approach_release', 'yard_release', 0, 2),
     ('r_cj_recirc_clear', 2, 'arrival_return', 'spur_seal', 0, 1);
 
--- Siding line: a self-contained branch used only to exercise witness-relay
--- contingency. The siding_release sequence depends on siding_arm; the gate at
--- W->S names siding_bolt as a witness. siding_bolt is not a sequence dependency,
--- so its reset does not void the grant, but it does fail the witness-guarded
--- requirement.
 INSERT INTO stations (station_id, label) VALUES
     ('P', 'Siding Depot'),
     ('Q', 'Siding Junction'),

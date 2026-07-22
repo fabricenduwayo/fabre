@@ -48,6 +48,15 @@ planning must derive authorization from the current database on every request.
 - Sequence progress and grants belong to one candidate path. Visits and relay state
   do not substitute for crossing the listed edges in order.
 
+## Seeded siding witness branch
+
+The siding stations (`P` through `S`) exercise witness-only requirements. Sequence
+`siding_release` depends on relay `siding_arm`. Route rule `r_siding_gate` on edge
+`e_w_s` clears only when a grant for `siding_release` names `siding_bolt` as
+`witness_relay_id`. Because `siding_bolt` is not a dependency relay of that
+sequence, resetting `siding_bolt` after the grant does not void the grant; it fails
+only the witness-guarded requirement until a fresh grant is earned.
+
 ## Route and lock semantics
 
 - Rules are ordered by ascending priority then rule id. The first matching rule per

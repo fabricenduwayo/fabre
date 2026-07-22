@@ -1,7 +1,7 @@
 FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
 # Canonical Python runtime is required by Harbor's pytest verifier; the same
 # container runs the Java 17 service, so the JDK and Maven are installed by apt.
-# platform-revision: 2026-07-19-r67
+# platform-revision: 2026-07-22-r69
 
 WORKDIR /app
 
@@ -13,6 +13,7 @@ RUN apt-get update \
         postgresql-client \
         curl \
         procps \
+        sudo \
         tmux \
         asciinema \
     && rm -rf /var/lib/apt/lists/*
@@ -30,7 +31,20 @@ RUN chmod +x /app/sql/init_db.sh /app/trailswitch/build.sh /app/trailswitch/star
     && runuser -u postgres -- psql -c "CREATE DATABASE trailswitch OWNER trailswitch;" \
     && runuser -u postgres -- psql -d trailswitch -f /app/sql/schema.sql \
     && runuser -u postgres -- psql -d trailswitch -f /app/sql/seed.sql \
+    && runuser -u postgres -- psql -d trailswitch -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO trailswitch;" \
+    && runuser -u postgres -- psql -d trailswitch -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO trailswitch;" \
+    && runuser -u postgres -- psql -d trailswitch -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO trailswitch;" \
     && pg_ctlcluster 15 main stop \
-    && bash /app/trailswitch/build.sh
+    && bash /app/trailswitch/build.sh \
+    && cp -a /root/.m2 /app/.m2 \
+    && rm -rf /app/trailswitch/target \
+    && groupadd -r trailswitch \
+    && useradd -r -g trailswitch -d /app -s /bin/bash trailswitch \
+    && echo 'trailswitch ALL=(postgres) NOPASSWD: /usr/bin/pg_ctlcluster, /usr/bin/pg_isready' > /etc/sudoers.d/trailswitch \
+    && chmod 440 /etc/sudoers.d/trailswitch \
+    && chown -R trailswitch:trailswitch /app
+
+ENV HOME=/app
 
 EXPOSE 8080
+USER trailswitch

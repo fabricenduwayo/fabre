@@ -32,22 +32,16 @@ def ensure_service() -> None:
     raise RuntimeError("TrailSwitch service did not become ready")
 
 
+def _psql(sql: str) -> None:
+    """Execute SQL against the live TrailSwitch database."""
+    subprocess.run(["psql", "-d", "trailswitch", "-c", sql], check=True)
+
+
 def set_relay_state(relay_id: str, state: str) -> None:
     """Set a relay latch state in PostgreSQL."""
-    subprocess.run(
-        [
-            "runuser",
-            "-u",
-            "postgres",
-            "--",
-            "psql",
-            "-d",
-            "trailswitch",
-            "-c",
-            f"UPDATE relay_latches SET relay_state = '{state}' "
-            f"WHERE relay_id = '{relay_id}';",
-        ],
-        check=True,
+    _psql(
+        f"UPDATE relay_latches SET relay_state = '{state}' "
+        f"WHERE relay_id = '{relay_id}';"
     )
 
 
@@ -70,10 +64,7 @@ def plan(from_station: str, to_station: str, switches: dict[str, str]) -> dict:
 
 def run_sql(sql: str) -> None:
     """Execute verifier-owned SQL against the live TrailSwitch database."""
-    subprocess.run(
-        ["runuser", "-u", "postgres", "--", "psql", "-d", "trailswitch", "-c", sql],
-        check=True,
-    )
+    _psql(sql)
 
 
 def add_quoted_station_probe() -> None:
